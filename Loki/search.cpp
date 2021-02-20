@@ -218,6 +218,10 @@ namespace Search {
 
 				if (abs(score) > MATE) {
 					std::cout << "score mate " << to_mate(score);
+
+					// Here we find the right pvLine length for the mate.
+					pvLine.length = (INF - abs(score));
+
 				}
 				else {
 					std::cout << "score cp " << to_cp(score);
@@ -230,7 +234,8 @@ namespace Search {
 				
 				std::cout << " pv ";
 
-				
+				// We need to only display the PV containing the mate, if abs(score) > MATE.
+				// Otherwise we'd get weird lines from previous PV's Loki has found before seeing the mate.
 				for (int n = 0; n < pvLine.length; n++) {
 					std::cout << printMove(pvLine.pv[n]) << " ";
 				}
