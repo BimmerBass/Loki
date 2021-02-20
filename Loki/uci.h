@@ -11,7 +11,7 @@ enum InfoParameters :int { NAME = 0, VERSION = 1, AUTHOR = 2 };
 // Current rating measured against TSCP (1725 elo) (1 min + 0 s, 40 move tc): 1773 elo
 static std::map<InfoParameters, std::string> EngineInfo {
 	{NAME, "Loki"},
-	{ VERSION, "2.2" },
+	{ VERSION, "1.0" },
 	{ AUTHOR, "Niels Abildskov" }
 };
 
