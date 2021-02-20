@@ -236,7 +236,11 @@ namespace Search {
 
 				// We need to only display the PV containing the mate, if abs(score) > MATE.
 				// Otherwise we'd get weird lines from previous PV's Loki has found before seeing the mate.
-				for (int n = 0; n < pvLine.length; n++) {
+				// We also want to make sure that we're only displaying a PV with the same length as the depth we're searching to or shorter.
+				for (int n = 0; n < ((pvLine.length > currDepth) ? currDepth : pvLine.length); n++) {
+					if (pvLine.pv[n] == NOMOVE) { // If we're somehow out of moves to display, we'll just break
+						break;
+					}
 					std::cout << printMove(pvLine.pv[n]) << " ";
 				}
 				std::cout << "\n";
@@ -518,6 +522,7 @@ namespace Search {
 		SIDE Them = (Us == WHITE) ? BLACK : WHITE;
 
 		SearchPv line;
+		pvLine->length = 0;
 
 		// Step 1. Transposition table probing. This is done before quiescence since it is quite fast, and if we can get a cutoff before going into quiescence,
 		//		we'll of course use that. Probing before quiescence search contributed with ~17 elo.
