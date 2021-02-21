@@ -86,7 +86,9 @@ int late_move_reduction(int d, int c, int pv, int i) {
 
 int late_move_pruning(int depth, bool improving) {
 	return std::round((4.0 * std::exp(0.37 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
+	
 	//return std::round((4.0 * std::exp(0.51 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
+
 }
 
 
@@ -384,6 +386,7 @@ namespace Search {
 		
 		int score = -INF;
 		int best_move = NOMOVE;
+		int new_depth = depth;
 
 		bool raised_alpha = false;
 		int legal = 0;
@@ -394,7 +397,7 @@ namespace Search {
 		// Step 1. In-check extensions.
 		bool in_check = ss->pos->in_check();
 		if (in_check) {
-			depth++;
+			new_depth++;
 		}
 
 		
@@ -443,21 +446,20 @@ namespace Search {
 				uci_moveinfo(move, depth, legal);
 			}
 
-			int new_depth = depth - 1;
-
+			
 			// Set the previous move such that we can use the countermove heuristic.
 			ss->moves_path[ss->pos->ply] = move;
 
 			// Step 3. Principal Variation search. We search all moves with the full window until one raises alpha. Afterwards we'll search with a null window
 			//		and only widen it if the null window search raises alpha, which is assumed unlikely.
 			if (!raised_alpha) {
-				score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+				score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
 			}
 			else {
-				score = -alphabeta(ss, new_depth, -alpha - 1, -alpha, true, &line);
+				score = -alphabeta(ss, new_depth - 1, -alpha - 1, -alpha, true, &line);
 
 				if (score > alpha) {
-					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+					score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
 				}
 			}
 
@@ -774,14 +776,16 @@ namespace Search {
 
 			// Step 11. Late move pruning (~21 elo). If the move is tactically boring and late, we can probably safely prune it.
 			//			We set the lmp flag before incrementing legal, such that if late_move_pruning() returns 0, we are ensured to have searched a move.
-			lmp = (extensions == 0) ? (legal > late_move_pruning(depth, improving)) : false;
-			
-			if (lmp && !in_check && !gives_check && !capture && !is_pv
+			int lmp_limit = late_move_pruning(depth, improving);
+			 lmp = (extensions == 0) ? (legal > late_move_pruning(depth, improving)) : false;
+
+			if (lmp && !in_check && !gives_check && !is_pv
 				&& SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && SPECIAL(move) != CASTLING) {
 				ss->pos->undo_move();
 			
 				continue;
 			}
+			
 
 
 			// Step 12. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
@@ -805,6 +809,15 @@ namespace Search {
 			
 				reductions++;
 			}
+			//if (!in_check && !gives_check && SPECIAL(move) != PROMOTION && extensions == 0
+			//	&& legal > lmr_limit && score > -MATE) {
+			//
+			//	reduction = late_move_reduction(depth, legal, is_pv, improving) + 1;
+			//
+			//	new_depth = std::max(depth - reduction - 1, 0);
+			//
+			//	reductions++;
+			//}
 
 
 			// Increment the legal move counter.

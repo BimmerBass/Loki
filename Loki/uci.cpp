@@ -177,6 +177,11 @@ void UCI::UCI_loop() {
 			std::cout << "Unknown command: " << line << std::endl;
 			continue;
 		}
+
+		// If we've been told to quit in the search, we should do it.
+		if (info.quit == true) {
+			break;
+		}
 	}
 
 	//delete pos;
