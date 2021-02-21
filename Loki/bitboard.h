@@ -264,7 +264,7 @@ inline int bitScanForward(Bitboard bb) { // Find the LS1B
 	assert(bb != 0);
 
 #if defined(__GNUC__) // GCC intrinsic.
-	return int(__builtin_ctzll(b));
+	return int(__builtin_ctzll(bb));
 #elif defined(_MSC_VER)
 
 #if defined(_WIN64) // Windows 64-bit

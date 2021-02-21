@@ -238,11 +238,7 @@ namespace Search {
 
 				// We need to only display the PV containing the mate, if abs(score) > MATE.
 				// Otherwise we'd get weird lines from previous PV's Loki has found before seeing the mate.
-				// We also want to make sure that we're only displaying a PV with the same length as the depth we're searching to or shorter.
-				for (int n = 0; n < ((pvLine.length > currDepth) ? currDepth : pvLine.length); n++) {
-					if (pvLine.pv[n] == NOMOVE) { // If we're somehow out of moves to display, we'll just break
-						break;
-					}
+				for (int n = 0; n < pvLine.length; n++) {
 					std::cout << printMove(pvLine.pv[n]) << " ";
 				}
 				std::cout << "\n";
@@ -524,7 +520,6 @@ namespace Search {
 		SIDE Them = (Us == WHITE) ? BLACK : WHITE;
 
 		SearchPv line;
-		pvLine->length = 0;
 
 		// Step 1. Transposition table probing. This is done before quiescence since it is quite fast, and if we can get a cutoff before going into quiescence,
 		//		we'll of course use that. Probing before quiescence search contributed with ~17 elo.
@@ -809,15 +804,6 @@ namespace Search {
 			
 				reductions++;
 			}
-			//if (!in_check && !gives_check && SPECIAL(move) != PROMOTION && extensions == 0
-			//	&& legal > lmr_limit && score > -MATE) {
-			//
-			//	reduction = late_move_reduction(depth, legal, is_pv, improving) + 1;
-			//
-			//	new_depth = std::max(depth - reduction - 1, 0);
-			//
-			//	reductions++;
-			//}
 
 
 			// Increment the legal move counter.
@@ -1176,7 +1162,8 @@ void Search::INIT() {
 
 		for (int c = 1; c < MAXPOSITIONMOVES; c++) {
 			//Reductions[d][c] = std::round(0.75 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
-			Reductions[d][c] = std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
+			//Reductions[d][c] = std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
+			Reductions[d][c] = std::round(1 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
 		}
 
 	}

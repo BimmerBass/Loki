@@ -8,8 +8,8 @@
 #include "transposition.h"
 
 #include <cmath>
-#include <thread>
 #include <atomic>
+#include <thread>
 #include <vector>
 
 
