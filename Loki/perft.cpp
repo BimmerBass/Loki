@@ -3,9 +3,11 @@
 
 
 namespace Perft {
-
+#if defined(PERFT_TT)
 	PerftTable* pt = new PerftTable(32);
-
+#else
+	PerftTable* pt = nullptr;
+#endif
 	long long leaf_count = 0;
 
 
@@ -18,7 +20,7 @@ namespace Perft {
 				return;
 			}
 
-
+#if defined(PERFT_TT)
 			bool tableHit = false;
 			PerftEntry* entry = pt->probe_table(pos->posKey, depth, tableHit);
 
@@ -26,7 +28,7 @@ namespace Perft {
 				leaf_count += entry->nodeCount;
 				return;
 			}
-
+#endif
 
 			MoveList* moves = moveGen::generate<ALL>(pos);
 			long long previous_cnt = leaf_count;
@@ -42,8 +44,9 @@ namespace Perft {
 
 			}
 
+#if defined(PERFT_TT)
 			pt->store_entry(pos->posKey, depth, leaf_count - previous_cnt);
-
+#endif
 		}
 
 	}
