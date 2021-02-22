@@ -8,7 +8,7 @@ ifeq ($(KERNEL),Linux)
 endif
 
 ### Definitions
-Bit = 32
+Bit = 64
 optimize = yes
 use_popcount = yes
 
@@ -16,17 +16,16 @@ use_popcount = yes
 ### Add compiler sepcific flags
 CXXFLAGS = -std=c++11 -lstdc++
 
+### Add options
 ifeq ($(optimize), yes)
 CXXFLAGS += -O3
 endif
-
-##ifeq ($(use_popcount), yes)
-##CFLAGS += -DUSE_POPCNT
-##endif
-##
-##ifeq ($(Bit), 64)
-##CFLAGS += -DIS_64BIT
-##endif
+ifeq ($(use_popcount), yes)
+CXXFLAGS += -DUSE_POPCNT
+endif
+ifeq ($(Bit), 64)
+CFLAGS += -DIS_64BIT
+endif
 
 
 SRC_PATH=Loki

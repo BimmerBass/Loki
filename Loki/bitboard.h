@@ -196,7 +196,7 @@ constexpr uint64_t m2 = 0x3333333333333333;
 constexpr uint64_t m4 = 0x0f0f0f0f0f0f0f0f;
 constexpr uint64_t h01 = 0x0101010101010101;
 inline int countBits(uint64_t x) { // Count amount of turned on bits in a uint64_t number
-#if ((defined(__INTEL_COMPILER) || defined(_MSC_VER)) && defined(_WIN64))
+#if ((defined(__INTEL_COMPILER) || defined(_MSC_VER)) && defined(_WIN64)) && defined(USE_POPCNT)
 	return _mm_popcnt_u64(x);
 #else
 	x -= (x >> 1) & m1;
