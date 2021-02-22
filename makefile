@@ -36,6 +36,5 @@ SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
 OUTFILE=Loki.exe
 
-# g++ produces code that is around ten times faster than gcc, but if g++ isn't available, just change it to gcc in the last line
 all:
 	gcc ${SOURCES} -o $(OUTFILE) ${CXXFLAGS}
