@@ -52,6 +52,14 @@ The evaluation is very simple at the moment, and a good elo increased is expecte
     - Futility pruning for individual moves.
 With all the above mentioned move ordering techniques, Loki achieves a cutoff on the first move around 85%-90% of the time.
 
+
+## Building Loki
+Loki has been tested to build without errors on both MSVC and GCC (with some warnings by both). If Loki should be compiled to a non-native popcount version one will have to either:
+1. If compiling on MSVC, the global preprocessor variable USE_POPCNT should be removed in the project properties.
+2. If compiling on GCC, the variable use_popcount in makefile should be set to "no".
+3. 
+It is also possible to change the amount of optimizations with both compilers by (if MSVC) going to the project properties or (if GCC) setting optimize to "no" in the makefile.
+
 ##### TO-DO
 - Optimize existing pruning techniques.
 - Make LMR and LMP more aggresive.
