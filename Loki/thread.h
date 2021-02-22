@@ -4,6 +4,7 @@
 #include "search_const.h"
 
 
+
 class SearchInfo_t {
 public:
 	long long starttime = 0;

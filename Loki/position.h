@@ -5,6 +5,10 @@
 #include "bitboard.h"
 #include "move.h"
 
+#if !defined(_MSC_VER)
+#include <cstring> // To use strcpy with GCC
+#endif
+
 
 // Class for saving all info that has been lost when making a move.
 class SavedInfo_t {

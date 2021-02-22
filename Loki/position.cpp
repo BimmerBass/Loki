@@ -157,8 +157,12 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 	int sq = 0;
 
 	char* fen = new char[FEN_STR.length() + 1];
+	
+#if defined(_MSC_VER)
 	strcpy_s(fen, FEN_STR.length() + 1, FEN_STR.c_str());
-
+#else
+	strcpy(fen, FEN_STR.c_str());
+#endif
 
 	int count = 0;
 
