@@ -27,7 +27,7 @@ endif
 ifeq ($(Bit), 64)
 CXXFLAGS += -DIS_64BIT
 endif
-ifeq ($perft_transposition_table, yes)
+ifeq ($(perft_transposition_table), yes)
 CXXFLAGS += -DPERFT_TT
 endif
 
