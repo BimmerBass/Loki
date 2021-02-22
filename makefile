@@ -14,10 +14,10 @@ use_popcount = yes
 
 
 ### Add compiler sepcific flags
-CFLAGS = -std=c++11 -lstdc++
+CXXFLAGS = -std=c++11 -lstdc++
 
 ifeq ($(optimize), yes)
-CFLAGS += -O3
+CXXFLAGS += -O3
 endif
 
 ##ifeq ($(use_popcount), yes)
@@ -39,4 +39,4 @@ OUTFILE=Loki.exe
 
 # g++ produces code that is around ten times faster than gcc, but if g++ isn't available, just change it to gcc in the last line
 all:
-	g++ ${SOURCES} -o $(OUTFILE) ${CFLAGS}
+	gcc ${SOURCES} -o $(OUTFILE) ${CXXFLAGS}
