@@ -37,10 +37,9 @@ void CheckUp(SearchThread_t* ss) {
 
 
 void ChangePV(int move, SearchPv* parent, SearchPv* child) {
-
-	parent->pv[0] = move;
-	memcpy(parent->pv + 1, child->pv, child->length * sizeof(int));
 	parent->length = child->length + 1;
+	parent->pv[0] = move;
+	memcpy(parent->pv + 1, child->pv, sizeof(int) * child->length);
 }
 
 
@@ -336,7 +335,6 @@ namespace Search {
 		}
 
 	asp_loop:
-		line->length = 0;
 		score = search_root(ss, depth, alpha, beta, line);
 
 
@@ -376,9 +374,10 @@ namespace Search {
 	int search_root(SearchThread_t* ss, int depth, int alpha, int beta, SearchPv* pvLine) {
 		assert(depth > 0);
 
-		SearchPv line;
-
 		ss->info->nodes++;
+
+		pvLine->length = 0;
+		SearchPv line;
 		
 		int score = -INF;
 		int best_move = NOMOVE;
@@ -425,6 +424,7 @@ namespace Search {
 
 		// Now we'll loop through the move list.
 		for (int m = 0; m < moves->size(); m++) {
+
 			ss->pickNextMove(m, moves);
 			
 			int move = (*moves)[m]->move;
@@ -469,6 +469,8 @@ namespace Search {
 				ss->info->fh++;
 
 				tt->store_entry(ss->pos, move, score, depth, BETA);
+
+				ChangePV(move, pvLine, &line);
 
 				delete moves;
 
@@ -516,10 +518,11 @@ namespace Search {
 	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null, SearchPv* pvLine) {
 		assert(beta > alpha);
 
+		SearchPv line;
+		pvLine->length = 0;
+
 		SIDE Us = ss->pos->side_to_move;
 		SIDE Them = (Us == WHITE) ? BLACK : WHITE;
-
-		SearchPv line;
 
 		// Step 1. Transposition table probing. This is done before quiescence since it is quite fast, and if we can get a cutoff before going into quiescence,
 		//		we'll of course use that. Probing before quiescence search contributed with ~17 elo.
@@ -648,7 +651,6 @@ namespace Search {
 			assert(depth - reduction - 1 >= 0);
 		
 			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
-			line.length = 0;
 		
 			ss->pos->undo_nullmove(old_enpassant);
 		
@@ -712,14 +714,12 @@ namespace Search {
 			// We'll reduce the depth.
 			new_depth = depth - iid_reduction;
 		
-			SearchPv iid_pv;
-		
-			score = alphabeta(ss, new_depth, alpha, beta, true, &iid_pv);
+			score = alphabeta(ss, new_depth, alpha, beta, true, &line);
 		
 			// Now we'll set the ttHit and ttMove if we found a good move.
-			if (iid_pv.pv[0] != NOMOVE) {
+			if (line.pv[0] != NOMOVE) {
 				ttHit = true;
-				ttMove = iid_pv.pv[0];
+				ttMove = line.pv[0];
 			}
 		}
 
@@ -874,6 +874,8 @@ namespace Search {
 				
 
 				tt->store_entry(ss->pos, move, score, depth, BETA);
+
+				ChangePV(move, pvLine, &line);
 
 				delete moves;
 

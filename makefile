@@ -37,4 +37,4 @@ SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 OUTFILE=Loki.exe
 
 all:
-	gcc ${SOURCES} -o $(OUTFILE) ${CXXFLAGS}
+	g++ ${SOURCES} -o $(OUTFILE) ${CXXFLAGS}
