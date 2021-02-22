@@ -14,7 +14,7 @@ use_popcount = yes
 
 
 ### Add compiler sepcific flags
-CFLAGS = -std=gnu++11 -pthread
+CFLAGS = -std=c++11 -lstdc++
 
 ifeq ($(optimize), yes)
 CFLAGS += -O3
@@ -29,9 +29,6 @@ endif
 ##endif
 
 
-
-
-
 SRC_PATH=Loki
 
 FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cpp movegen.cpp perft.cpp position.cpp psqt.cpp search.cpp thread.cpp transposition.cpp uci.cpp
@@ -40,5 +37,6 @@ SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
 OUTFILE=Loki.exe
 
+# g++ produces code that is around ten times faster than gcc, but if g++ isn't available, just change it to gcc in the last line
 all:
 	g++ ${SOURCES} -o $(OUTFILE) ${CFLAGS}
