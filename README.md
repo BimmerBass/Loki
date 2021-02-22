@@ -62,6 +62,7 @@ It is also possible to change the amount of optimizations with both compilers by
 
 ##### TO-DO
 - Optimize existing pruning techniques.
+- Make compilation with GCC more efficient and add native methods for countBits, bitScanForward and bitScanReverse for different systems and architectures.
 - Make LMR and LMP more aggresive.
 - Try the following additions:
     - Static exhange evaluation.
