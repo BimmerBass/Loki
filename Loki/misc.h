@@ -5,7 +5,10 @@
 #include <chrono>
 
 #if (defined(_WIN32) || defined(_WIN64))
+
+#if defined(_MSC_VER)
 #define NOMINMAX
+#endif
 
 #include <windows.h>
 #include <io.h>

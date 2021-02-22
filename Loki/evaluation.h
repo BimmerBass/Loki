@@ -38,19 +38,15 @@ namespace Eval {
 
 	// Returns true if no checkmate can be forced by either side.
 	bool material_draw(GameState_t* pos);
+	
 
-
-	enum mgValues : int {
+	enum pieceValues : int {
 		pawnValMg = 100,
 		knightValMg = 320,
 		bishopValMg = 350,
 		rookValMg = 500,
 		queenValMg = 900,
-		kingValMg = 20000
-	};
-	
-	
-	enum egValues : int {
+		kingValMg = 20000,
 		pawnValEg = 100,
 		knightValEg = 320,
 		bishopValEg = 350,
@@ -58,22 +54,6 @@ namespace Eval {
 		queenValEg = 900,
 		kingValEg = 20000
 	};
-	
-	//enum mgValues :int {
-	//	pawnValMg = 150,
-	//	knightValMg = 465,
-	//	bishopValMg = 480,
-	//	rookValMg = 1170,
-	//	queenValMg = 2190
-	//};
-	//
-	//enum egValues :int {
-	//	pawnValEg = 240,
-	//	knightValEg = 511,
-	//	bishopValEg = 528,
-	//	rookValEg = 1240,
-	//	queenValEg = 2321
-	//};
 
 	/*
 	

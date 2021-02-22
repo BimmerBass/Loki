@@ -12,8 +12,8 @@ void UCI::UCI_loop() {
 	// Initialize board, searchinfo and make sure the tt size is correct.
 	//GameState_t* pos = new GameState_t();
 	//SearchInfo_t* info = new SearchInfo_t();
-	GameState_t pos;
-	SearchInfo_t info;
+	GameState_t* pos = new GameState_t();
+	SearchInfo_t* info = new SearchInfo_t();
 
 
 	if (tt->size() != TT_DEFAULT_SIZE) {
@@ -87,7 +87,7 @@ void UCI::UCI_loop() {
 
 		else if (!strncmp(line, "setoption name Threads value ", 29)) {
 #if (defined(_WIN32) || defined(_WIN64))
-			sscanf_s(line, "%*s %*s %*s %*s %d", &threadNum, threadNum);
+			sscanf_s(line, "%*s %*s %*s %*s %d", &threadNum);
 #else
 			sscanf(line, "%*s %*s %*s %*s %d", &threadNum);
 #endif
@@ -103,17 +103,17 @@ void UCI::UCI_loop() {
 
 		else if (!strncmp(line, "ucinewgame", 10)) {
 			std::string newLine = "position startpos\n";
-			parse_position(newLine, &pos);
+			parse_position(newLine, pos);
 			continue;
 		}
 
 		else if (!strncmp(line, "position", 8)) {
-			parse_position(line, &pos);
+			parse_position(line, pos);
 			continue;
 		}
 
 		else if (!strncmp(line, "probetable", 10)) {
-			printHashEntry(&pos);
+			printHashEntry(pos);
 			continue;
 		}
 
@@ -133,7 +133,7 @@ void UCI::UCI_loop() {
 					for (int i = 0; i < 5; i++) {
 						moveStr += *(ptr + i);
 					}
-					MoveList* ml = moveGen::generate<ALL>(&pos);
+					MoveList* ml = moveGen::generate<ALL>(pos);
 
 					int move = parseMove(moveStr, ml);
 
@@ -142,7 +142,7 @@ void UCI::UCI_loop() {
 					}
 					Move_t m;
 					m.move = move;
-					pos.make_move(&m);
+					pos->make_move(&m);
 
 					delete ml;
 				}
@@ -150,26 +150,26 @@ void UCI::UCI_loop() {
 		}
 
 		else if (!strncmp(line, "undo", 4)) {
-			pos.undo_move();
+			pos->undo_move();
 			continue;
 		}
 
 		else if (!strncmp(line, "go", 2)) {
-			parse_go(std::string(line), &pos, &info);
+			parse_go(std::string(line), pos, info);
 		}
 
 		else if (!strncmp(line, "d", 1)) {
-			pos.displayBoardState();
+			pos->displayBoardState();
 			continue;
 		}
 
 		else if (!strncmp(line, "perft", 5)) {
-			goPerft(std::string(line), &pos);
+			goPerft(std::string(line), pos);
 			continue;
 		}
 
 		else if (!strncmp(line, "quit", 4)) {
-			info.quit = true;
+			info->quit = true;
 			break;
 		}
 
@@ -179,7 +179,7 @@ void UCI::UCI_loop() {
 		}
 
 		// If we've been told to quit in the search, we should do it.
-		if (info.quit == true) {
+		if (info->quit == true) {
 			break;
 		}
 	}

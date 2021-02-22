@@ -4,7 +4,7 @@
 
 
 namespace Perft {
-	extern long leaf_count;
+	extern long long leaf_count;
 
 	
 	void perftTest(GameState_t* pos, int depth);

@@ -61,7 +61,7 @@ int nullmove_reduction(int depth, int lead) {
 	
 	//return std::round((depth / 2) + 1.5 * std::log(double(lead)));
 	if (lead >= 100) { // For lead < 100 we'd get negative values for ln(lead)
-		return ((depth > 6) ? 3 : 2) + std::round(1.5 * std::log(double(lead) / 100));
+		return ((depth > 6) ? 3 : 2) + (int)std::round(1.5 * std::log(double(lead) / 100));
 	}
 	return (depth > 6) ? 3 : 2;
 }
@@ -85,7 +85,7 @@ int late_move_reduction(int d, int c, int pv, int i) {
 
 
 int late_move_pruning(int depth, bool improving) {
-	return std::round((4.0 * std::exp(0.37 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
+	return (int)std::round((4.0 * std::exp(0.37 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
 	
 	//return std::round((4.0 * std::exp(0.51 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
 
@@ -175,7 +175,7 @@ namespace Search {
 		double branching_factor = 0.0;
 
 		long long nps = 0;
-		long long move_ordering = 0;
+		double move_ordering = 0;
 
 		double reduction_failed = 0.0;
 
@@ -209,7 +209,7 @@ namespace Search {
 
 			branching_factor = std::pow(nodes, 1 / double(currDepth));
 
-			nps = nodes / ((getTimeMs() - ss->info->starttime) / 1000.0);
+			nps = (double)nodes / (((double)getTimeMs() - (double)ss->info->starttime) / 1000.0);
 
 			// Get the best move from the pvLine stack
 			best_move = pvLine.pv[0];
@@ -351,7 +351,7 @@ namespace Search {
 			alpha = std::max(-INF, score - delta);
 
 			// Increase the window size.
-			delta += std::round(0.25 * double(aspiration_window));
+			delta += (int)std::round(0.25 * double(aspiration_window));
 
 			goto asp_loop;
 		}
@@ -361,7 +361,7 @@ namespace Search {
 			beta = std::min(INF, score + delta);
 
 			// Increase the window size.
-			delta += std::round(0.25 * double(aspiration_window));
+			delta += (int)std::round(0.25 * double(aspiration_window));
 			
 			goto asp_loop;
 		}
@@ -1163,7 +1163,7 @@ void Search::INIT() {
 		for (int c = 1; c < MAXPOSITIONMOVES; c++) {
 			//Reductions[d][c] = std::round(0.75 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
 			//Reductions[d][c] = std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
-			Reductions[d][c] = std::round(1 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
+			Reductions[d][c] = (int)std::round(1 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
 		}
 
 	}

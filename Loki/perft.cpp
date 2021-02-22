@@ -6,7 +6,7 @@ namespace Perft {
 
 	PerftTable* pt = new PerftTable(32);
 
-	long leaf_count = 0;
+	long long leaf_count = 0;
 
 
 	namespace {
@@ -91,7 +91,7 @@ namespace Perft {
 
 
 	PerftTable::PerftTable(size_t mb_size) {
-		num_entries = (MB(mb_size) / sizeof(PerftEntry));
+		num_entries = int(MB(mb_size) / sizeof(PerftEntry));
 
 		entries = new PerftEntry[num_entries];
 	}
