@@ -8,7 +8,7 @@
 enum TT_FLAG :int { ALPHA = 0, BETA = 1, EXACT = 2, NO_FLAG = 3 };
 
 
-struct EntryData {
+volatile struct EntryData {
 	volatile int move;
 	volatile int score;
 	volatile int depth;
@@ -16,7 +16,7 @@ struct EntryData {
 };
 
 
-struct TT_Entry {
+volatile struct TT_Entry {
 	volatile uint64_t key; // The key is the posKey XORed with the data
 
 	volatile EntryData data;
@@ -44,8 +44,7 @@ private:
 };
 
 
-extern TranspositionTable* tt;
-
+extern TranspositionTable tt;
 
 
 

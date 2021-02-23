@@ -1,7 +1,7 @@
 #include "transposition.h"
 #include "movegen.h"
 
-TranspositionTable* tt = new TranspositionTable(TT_DEFAULT_SIZE);
+TranspositionTable tt(TT_DEFAULT_SIZE);
 
 TranspositionTable::TranspositionTable(uint64_t size) {
 	numEntries = int(MB(size) / sizeof(TT_Entry));

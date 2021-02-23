@@ -406,7 +406,7 @@ namespace Search {
 		// Step 3. Probe transposition table --> If there is a move from previous iterations, we'll assume the best move from that as the best move now, and
 		//	order that first.
 		bool ttHit = false;
-		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		volatile TT_Entry* entry = tt.probe_tt(ss->pos->posKey, ttHit);
 		int pvMove = NOMOVE;
 
 		if (ttHit) {
@@ -468,7 +468,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				tt->store_entry(ss->pos, move, score, depth, BETA);
+				tt.store_entry(ss->pos, move, score, depth, BETA);
 
 				ChangePV(move, pvLine, &line);
 
@@ -503,10 +503,10 @@ namespace Search {
 		if (raised_alpha) {
 			assert(best_move == pvLine->pv[0]);
 
-			tt->store_entry(ss->pos, best_move, alpha, depth, EXACT);
+			tt.store_entry(ss->pos, best_move, alpha, depth, EXACT);
 		}
 		else {
-			tt->store_entry(ss->pos, best_move, alpha, depth, ALPHA);
+			tt.store_entry(ss->pos, best_move, alpha, depth, ALPHA);
 		}
 	
 		return alpha;
@@ -527,7 +527,7 @@ namespace Search {
 		// Step 1. Transposition table probing. This is done before quiescence since it is quite fast, and if we can get a cutoff before going into quiescence,
 		//		we'll of course use that. Probing before quiescence search contributed with ~17 elo.
 		bool ttHit = false;
-		TT_Entry* volatile entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		volatile TT_Entry* entry = tt.probe_tt(ss->pos->posKey, ttHit);
 
 		volatile int ttScore = (ttHit) ? entry->data.score : -INF;
 		volatile int ttMove = (ttHit) ? entry->data.move : NOMOVE;
@@ -873,7 +873,7 @@ namespace Search {
 				}
 				
 
-				tt->store_entry(ss->pos, move, score, depth, BETA);
+				tt.store_entry(ss->pos, move, score, depth, BETA);
 
 				ChangePV(move, pvLine, &line);
 
@@ -904,12 +904,12 @@ namespace Search {
 
 		
 		if (raised_alpha) {
-			tt->store_entry(ss->pos, best_move, alpha, depth, EXACT);
+			tt.store_entry(ss->pos, best_move, alpha, depth, EXACT);
 
 			assert(best_move == pvLine->pv[0]);
 		}
 		else{
-			tt->store_entry(ss->pos, best_move, alpha, depth, ALPHA);
+			tt.store_entry(ss->pos, best_move, alpha, depth, ALPHA);
 		}
 
 

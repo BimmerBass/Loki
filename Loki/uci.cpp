@@ -16,8 +16,8 @@ void UCI::UCI_loop() {
 	SearchInfo_t* info = new SearchInfo_t();
 
 
-	if (tt->size() != TT_DEFAULT_SIZE) {
-		tt->resize(uint64_t(TT_DEFAULT_SIZE));
+	if (tt.size() != TT_DEFAULT_SIZE) {
+		tt.resize(uint64_t(TT_DEFAULT_SIZE));
 	}
 
 
@@ -80,7 +80,7 @@ void UCI::UCI_loop() {
 				mb = TT_MAX_SIZE;
 			}
 
-			tt->resize(uint64_t(mb));
+			tt.resize(uint64_t(mb));
 			continue;
 		}
 
@@ -364,7 +364,8 @@ void UCI::parse_go(std::string goLine, GameState_t* pos, SearchInfo_t* info) {
 
 void UCI::printHashEntry(GameState_t* pos) {
 	bool ttHit = false;
-	TT_Entry* entry = tt->probe_tt(pos->posKey, ttHit);
+
+	volatile TT_Entry* entry = tt.probe_tt(pos->posKey, ttHit);
 
 	if (ttHit) {
 		pos->displayBoardState();
