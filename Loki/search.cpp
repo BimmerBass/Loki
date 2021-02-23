@@ -527,12 +527,12 @@ namespace Search {
 		// Step 1. Transposition table probing. This is done before quiescence since it is quite fast, and if we can get a cutoff before going into quiescence,
 		//		we'll of course use that. Probing before quiescence search contributed with ~17 elo.
 		bool ttHit = false;
-		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		TT_Entry* volatile entry = tt->probe_tt(ss->pos->posKey, ttHit);
 
-		int ttScore = (ttHit) ? entry->data.score : -INF;
-		int ttMove = (ttHit) ? entry->data.move : NOMOVE;
-		int ttDepth = (ttHit) ? entry->data.depth : 0;
-		int ttFlag = (ttHit) ? entry->data.flag : NO_FLAG;
+		volatile int ttScore = (ttHit) ? entry->data.score : -INF;
+		volatile int ttMove = (ttHit) ? entry->data.move : NOMOVE;
+		volatile int ttDepth = (ttHit) ? entry->data.depth : 0;
+		volatile int ttFlag = (ttHit) ? entry->data.flag : NO_FLAG;
 
 		if (ttScore > MATE && ttHit) {
 			ttScore -= ss->pos->ply;

@@ -48,13 +48,13 @@ public:
 	template<C_RIGHTS cr>
 	bool can_castle();
 
-	int ply = 0;
+	volatile int ply = 0;
 	int fiftyMove = 0;
 
 
 
 	// The zobrist hash of the position.
-	Bitboard posKey = 0;
+	volatile Bitboard posKey = 0;
 	void generate_poskey();
 
 

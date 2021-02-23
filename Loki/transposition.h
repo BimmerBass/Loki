@@ -9,17 +9,17 @@ enum TT_FLAG :int { ALPHA = 0, BETA = 1, EXACT = 2, NO_FLAG = 3 };
 
 
 struct EntryData {
-	int move;
-	int score;
-	int depth;
-	int flag;
+	volatile int move;
+	volatile int score;
+	volatile int depth;
+	volatile int flag;
 };
 
 
 struct TT_Entry {
-	uint64_t key; // The key is the posKey XORed with the data
+	volatile uint64_t key; // The key is the posKey XORed with the data
 
-	EntryData data;
+	volatile EntryData data;
 };
 
 class TranspositionTable {
@@ -38,7 +38,7 @@ public:
 private:
 	void clear_table();
 
-	TT_Entry* entries;
+	TT_Entry* volatile entries;
 
 	int numEntries;
 };

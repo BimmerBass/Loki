@@ -48,8 +48,8 @@ void TranspositionTable::clear_table() {
 
 // When probing the transposition table, we won't use time validating the entry while probing. Rather this will be done in search, so we'll just return the entry
 TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
-	TT_Entry* slot = &entries[key & (uint64_t(numEntries) - 1)];
-	uint64_t* data = (uint64_t*) &slot->data;
+	TT_Entry* volatile slot = &entries[key & (uint64_t(numEntries) - 1)];
+	uint64_t* volatile data = (uint64_t*) &slot->data;
 
 	if (slot->key == (key ^ *data)) {
 		hit = true;
@@ -63,8 +63,8 @@ TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
 
 // For now we are just using a replace all strategy
 void TranspositionTable::store_entry(const GameState_t* pos, int move, int score, int depth, int flag) {
-	TT_Entry* slot = &entries[pos->posKey & (uint64_t(numEntries) - 1)];
-	uint64_t* data = (uint64_t*) &slot->data;
+	TT_Entry* volatile slot = &entries[pos->posKey & (uint64_t(numEntries) - 1)];
+	uint64_t* volatile data = (uint64_t*) &slot->data;
 
 	assert(flag >= 0 && flag <= 2);
 

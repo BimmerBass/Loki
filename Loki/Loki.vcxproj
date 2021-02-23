@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>USE_POPCNT</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,6 +135,7 @@
       <PreprocessorDefinitions>USE_POPCNT</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
