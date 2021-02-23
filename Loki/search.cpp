@@ -482,13 +482,7 @@ namespace Search {
 				return beta;
 			}
 
-			//if (score > alpha) {
-			//	best_move = move;
-			//	alpha = score;
-			//	raised_alpha = true;
-			//
-			//	ChangePV(best_move, pvLine, &line);
-			//}
+
 			if (score > best_score) {
 				best_score = score;
 				best_move = move;
