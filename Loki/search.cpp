@@ -3,6 +3,8 @@
 
 static long long reductions = 0;
 static long long re_searches = 0;
+static long long tt_hits = 0;
+static long long tt_root_hits = 0;
 
 ThreadPool_t* Search::threads = nullptr;
 
@@ -410,6 +412,7 @@ namespace Search {
 		int pvMove = NOMOVE;
 
 		if (ttHit) {
+			tt_root_hits++;
 			pvMove = entry->data.move;
 
 			// Loop through the move list and find the pvMove
@@ -544,6 +547,7 @@ namespace Search {
 		}
 
 		if (ttHit && ttDepth >= depth) {
+			tt_hits++;
 			switch (ttFlag) {
 			case ALPHA:
 				if (ttScore <= alpha) {
@@ -774,9 +778,9 @@ namespace Search {
 			// Step 11. Late move pruning (~21 elo). If the move is tactically boring and late, we can probably safely prune it.
 			//			We set the lmp flag before incrementing legal, such that if late_move_pruning() returns 0, we are ensured to have searched a move.
 			int lmp_limit = late_move_pruning(depth, improving);
-			 lmp = (extensions == 0) ? (legal > late_move_pruning(depth, improving)) : false;
+			lmp = (extensions == 0) ? (legal > lmp_limit) : false;
 
-			if (lmp && !in_check && !gives_check && !is_pv
+			if (lmp && !in_check && !capture && !gives_check && !is_pv
 				&& SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && SPECIAL(move) != CASTLING) {
 				ss->pos->undo_move();
 			
@@ -841,6 +845,13 @@ namespace Search {
 
 			ss->pos->undo_move();
 
+			if (score > alpha) {
+				alpha = score;
+				raised_alpha = true;
+				best_move = move;
+
+				ChangePV(best_move, pvLine, &line);
+			}
 
 			if (score >= beta) {
 				if (legal == 1) {
@@ -858,12 +869,12 @@ namespace Search {
 
 					// History heuristic update
 					ss->history[ss->pos->side_to_move][FROMSQ(move)][TOSQ(move)] += depth * depth;
-					
-					
+
+
 					// If the history score becomes higher than the killer scores, we should scale down the whole table, since history moves
 					//	are usually worse than killer moves.
 					if (ss->history[ss->pos->side_to_move][FROMSQ(move)][TOSQ(move)] >= countermove_bonus) {
-					
+
 						for (int i = 0; i < 64; i++) {
 							for (int j = 0; j < 64; j++) {
 								if (ss->pos->side_to_move < BLACK || ss->pos->side_to_move > WHITE) {
@@ -877,7 +888,7 @@ namespace Search {
 					}
 
 				}
-				
+
 
 				tt->store_entry(ss->pos, move, score, depth, BETA);
 
@@ -888,13 +899,6 @@ namespace Search {
 				return beta;
 			}
 
-			if (score > alpha) {
-				alpha = score;
-				raised_alpha = true;
-				best_move = move;
-
-				ChangePV(best_move, pvLine, &line);
-			}
 		}
 
 		delete moves;
