@@ -35,7 +35,7 @@ void UCI::UCI_loop() {
 	std::cout << "uciok" << std::endl;
 
 	
-	char line[INPUTBUFFER];
+	char line[INPUTBUFFER] = { 0 };
 	int mb = TT_DEFAULT_SIZE;
 
 	while (true) {

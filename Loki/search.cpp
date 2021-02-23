@@ -7,6 +7,8 @@ static long long tt_hits = 0;
 static long long tt_root_hits = 0;
 
 ThreadPool_t* Search::threads = nullptr;
+std::vector<std::thread> Search::threads_running;
+std::atomic<bool> Search::isStop(true);
 
 
 // The checkup function sees if we need to stop the search
@@ -41,7 +43,9 @@ void CheckUp(SearchThread_t* ss) {
 void ChangePV(int move, SearchPv* parent, SearchPv* child) {
 	parent->length = child->length + 1;
 	parent->pv[0] = move;
-	memcpy(parent->pv + 1, child->pv, sizeof(int) * child->length);
+
+	// Here we copy the PV that the child node found into the parent while keeping the parent's first move as "move"
+	std::copy(std::begin(child->pv), std::begin(child->pv) + child->length, std::begin(parent->pv) + 1);
 }
 
 
@@ -57,7 +61,6 @@ Search parameter formulas
 */
 
 // Here the idea is to increase the null move reduction depending on the lead in evaluation: lead = eval - beta.
-// The exact formula is R(d, l) = 0.5 * d + 1.5 * ln(l)
 int nullmove_reduction(int depth, int lead) {
 	
 	//return std::round((depth / 2) + 1.5 * std::log(double(lead)));
@@ -166,9 +169,9 @@ namespace Search {
 		clearForSearch(ss);
 
 		// Here we get an estimate of the value of the position. Used for creating the aspiration windows
-		SearchPv guess_pv;
-		int score = alphabeta(ss, 1, -INF, INF, true, &guess_pv);
-		int best_move = guess_pv.pv[0];
+		int score = alphabeta(ss, 1, -INF, INF, true);
+		int best_move = NOMOVE;
+		SearchPv pvLine;
 
 		// These are just some parameters to print for UCI
 		long long nodes = 0;
@@ -185,7 +188,7 @@ namespace Search {
 
 		// Iterative deepening
 		for (int currDepth = 1; currDepth <= ss->info->depth; currDepth++) {
-			SearchPv pvLine;
+			pvLine.clear();
 
 			// Search the position. Use the previous score to center the aspiration windows.
 			score = aspiration_search(ss, currDepth, score, &pvLine);
@@ -199,6 +202,7 @@ namespace Search {
 					best_move = pvLine.pv[0];
 				}
 				
+				assert(best_move != NOMOVE);
 
 				// If we're the main thread, we'll tell the other threads to stop searching
 				if (ss->thread_id == 0) { isStop = true; }
@@ -221,10 +225,6 @@ namespace Search {
 
 				if (abs(score) > MATE) {
 					std::cout << "score mate " << to_mate(score);
-
-					// Here we find the right pvLine length for the mate.
-					pvLine.length = (INF - abs(score));
-
 				}
 				else {
 					std::cout << "score cp " << to_cp(score);
@@ -240,6 +240,7 @@ namespace Search {
 				// We need to only display the PV containing the mate, if abs(score) > MATE.
 				// Otherwise we'd get weird lines from previous PV's Loki has found before seeing the mate.
 				for (int n = 0; n < pvLine.length; n++) {
+					assert(pvLine.pv[n] != NOMOVE);
 					std::cout << printMove(pvLine.pv[n]) << " ";
 				}
 				std::cout << "\n";
@@ -382,6 +383,7 @@ namespace Search {
 		SearchPv line;
 		
 		int score = -INF;
+		int best_score = -INF;
 		int best_move = NOMOVE;
 		int new_depth = depth;
 
@@ -452,13 +454,13 @@ namespace Search {
 			// Step 3. Principal Variation search. We search all moves with the full window until one raises alpha. Afterwards we'll search with a null window
 			//		and only widen it if the null window search raises alpha, which is assumed unlikely.
 			if (!raised_alpha) {
-				score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
+				score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true);
 			}
 			else {
-				score = -alphabeta(ss, new_depth - 1, -alpha - 1, -alpha, true, &line);
+				score = -alphabeta(ss, new_depth - 1, -alpha - 1, -alpha, true);
 
 				if (score > alpha) {
-					score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
+					score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true);
 				}
 			}
 
@@ -480,12 +482,26 @@ namespace Search {
 				return beta;
 			}
 
-			if (score > alpha) {
+			//if (score > alpha) {
+			//	best_move = move;
+			//	alpha = score;
+			//	raised_alpha = true;
+			//
+			//	ChangePV(best_move, pvLine, &line);
+			//}
+			if (score > best_score) {
+				best_score = score;
 				best_move = move;
-				alpha = score;
-				raised_alpha = true;
 
-				ChangePV(best_move, pvLine, &line);
+				if (score > alpha) {
+					alpha = score;
+					raised_alpha = true;
+
+					ChangePV(best_move, pvLine, &line);
+				}
+				else if (legal == 1) { // If this is the first legal move, we need to copy it as a new PV because we need to return something in case we don't raise alpha
+					ChangePV(best_move, pvLine, &line);
+				}
 			}
 
 		}
@@ -518,11 +534,8 @@ namespace Search {
 
 
 
-	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null, SearchPv* pvLine) {
+	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null) {
 		assert(beta > alpha);
-
-		SearchPv line;
-		pvLine->length = 0;
 
 		SIDE Us = ss->pos->side_to_move;
 		SIDE Them = (Us == WHITE) ? BLACK : WHITE;
@@ -566,7 +579,6 @@ namespace Search {
 
 
 		if (depth <= 0) {
-			pvLine->length = 0;
 			ss->info->nodes--; // Since quiescence also adds a node, we need to subtract one here, since alphabeta isn't really the function searching this node.
 			return quiescence(ss, alpha, beta);
 		}
@@ -656,7 +668,7 @@ namespace Search {
 			
 			assert(depth - reduction - 1 >= 0);
 		
-			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
+			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false);
 		
 			ss->pos->undo_nullmove(old_enpassant);
 		
@@ -713,21 +725,21 @@ namespace Search {
 		// Step 9. Internal Iterative Deepening (IID) (~5 elo): If the transposition table didn't return a move, we'll search the position to a shallower
 		//		depth in the hopes of finding the PV.
 		// This will only be done if we are in a PV-node and at a high depth. At low depths, the search is very fast anyways.
-		if (!ttHit && is_pv && depth > iid_depth) {
-			assert(iid_depth >= iid_reduction);
-			assert(ttMove == NOMOVE);
-		
-			// We'll reduce the depth.
-			new_depth = depth - iid_reduction;
-		
-			score = alphabeta(ss, new_depth, alpha, beta, true, &line);
-		
-			// Now we'll set the ttHit and ttMove if we found a good move.
-			if (line.pv[0] != NOMOVE) {
-				ttHit = true;
-				ttMove = line.pv[0];
-			}
-		}
+		//if (!ttHit && is_pv && depth > iid_depth) {
+		//	assert(iid_depth >= iid_reduction);
+		//	assert(ttMove == NOMOVE);
+		//
+		//	// We'll reduce the depth.
+		//	new_depth = depth - iid_reduction;
+		//
+		//	score = alphabeta(ss, new_depth, alpha, beta, true);
+		//
+		//	// Now we'll set the ttHit and ttMove if we found a good move.
+		//	//if (line.pv[0] != NOMOVE) {
+		//	//	ttHit = true;
+		//	//	ttMove = line.pv[0];
+		//	//}
+		//}
 
 
 		// If the transposition table returned a move, this is probably the best, so we'll score it highest.
@@ -821,13 +833,13 @@ namespace Search {
 
 			// Step 14. Principal Variation Search.
 			if (!raised_alpha) {
-				score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+				score = -alphabeta(ss, new_depth, -beta, -alpha, true);
 			}
 			else {
-				score = -alphabeta(ss, new_depth, -alpha - 1, -alpha, true, &line);
+				score = -alphabeta(ss, new_depth, -alpha - 1, -alpha, true);
 
 				if (score > alpha) {
-					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+					score = -alphabeta(ss, new_depth, -beta, -alpha, true);
 				}
 			}
 
@@ -849,8 +861,6 @@ namespace Search {
 				alpha = score;
 				raised_alpha = true;
 				best_move = move;
-
-				ChangePV(best_move, pvLine, &line);
 			}
 
 			if (score >= beta) {
@@ -892,8 +902,6 @@ namespace Search {
 
 				tt->store_entry(ss->pos, move, score, depth, BETA);
 
-				ChangePV(move, pvLine, &line);
-
 				delete moves;
 
 				return beta;
@@ -916,7 +924,6 @@ namespace Search {
 		if (raised_alpha) {
 			tt->store_entry(ss->pos, best_move, alpha, depth, EXACT);
 
-			assert(best_move == pvLine->pv[0]);
 		}
 		else{
 			tt->store_entry(ss->pos, best_move, alpha, depth, ALPHA);

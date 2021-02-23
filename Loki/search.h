@@ -13,12 +13,19 @@
 #include <vector>
 
 
-// Taken from chessprogramming.org
+
 struct SearchPv {
-	int length;
+	int length = 0;
 	int pv[MAXDEPTH] = { 0 };
 
 	SearchPv(){
+		length = 0;
+	}
+
+	void clear() {
+		for (int i = 0; i < MAXDEPTH; i++) {
+			pv[i] = 0;
+		}
 		length = 0;
 	}
 };
@@ -26,13 +33,12 @@ struct SearchPv {
 
 
 namespace Search {
-	static int thread_count = 1;
 	extern ThreadPool_t* threads;
-	//static ThreadPool_t threads;
-	static std::vector<std::thread> threads_running;
+	extern std::vector<std::thread> threads_running;
 
 	// isStop is a flag to signal to all the threads that the search should stop immediately.
-	static std::atomic<bool> isStop(true);
+	extern std::atomic<bool> isStop;
+
 
 	void runSearch(GameState_t* pos, SearchInfo_t* info, int num_threads);
 
@@ -46,7 +52,7 @@ namespace Search {
 
 	int search_root(SearchThread_t* ss, int depth, int alpha, int beta, SearchPv* pvLine);
 
-	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null, SearchPv* pvLine);
+	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null);
 
 	int quiescence(SearchThread_t* ss, int alpha, int beta);
 

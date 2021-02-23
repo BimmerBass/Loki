@@ -94,9 +94,9 @@ public:
 	}
 
 private:
-	SearchThread_t* threads;
+	SearchThread_t* threads = nullptr;
 
-	int threadNum;
+	int threadNum = 0;
 };
 
 

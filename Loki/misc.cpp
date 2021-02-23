@@ -40,7 +40,7 @@ int InputWaiting()
 }
 
 void ReadInput(bool& isStop, bool& isQuit) {
-	int             bytes;
+	int             bytes = 0;
 	char            input[256] = "", * endc;
 
 	if (InputWaiting()) {

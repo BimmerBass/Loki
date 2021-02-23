@@ -10,9 +10,10 @@
 #include <xmmintrin.h> // Used for _mm_prefetch
 #endif
 
-#define MAXPOSITIONMOVES 256  // Maximum amount of expected moves for a position (more than enough)
-#define MAXGAMEMOVES 512 // Wayy more than enough, but just to be on the safe side...
-#define NOMOVE 0
+
+constexpr int MAXPOSITIONMOVES = 256;
+constexpr int MAXGAMEMOVES = 1024;
+constexpr int NOMOVE = 0;
 
 
 const std::string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

@@ -180,8 +180,8 @@ namespace Magics {
 	Bitboard _bishopAttacks[64][512] = { {0} };
 	Bitboard _rookAttacks[64][4096] = { {0} };
 
-	Bitboard magic_rook_masks[64] = { {0} };
-	Bitboard magic_bishop_masks[64] = { {0} };
+	Bitboard magic_rook_masks[64] = { 0 };
+	Bitboard magic_bishop_masks[64] = { 0 };
 
 
 	Bitboard set_occupancy(int index, int bit_cnt, Bitboard mask) {

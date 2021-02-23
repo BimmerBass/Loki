@@ -58,10 +58,10 @@ public:
 		last = moveList;
 	}
 private:
-	Move_t* moveList;// = new Move_t[MAXPOSITIONMOVES];
+	Move_t* moveList = nullptr;
 
 	// Last element in the moveList. Used to get the size.
-	Move_t* last;
+	Move_t* last = nullptr; 
 };
 
 const std::string FILES[8] = { "a", "b", "c", "d", "e", "f", "g", "h" };
