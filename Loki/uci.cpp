@@ -199,8 +199,8 @@ void UCI::goPerft(std::string l, GameState_t* pos) {
 #endif
 
 	char* ptr = nullptr;
-	
-	if ((ptr = strstr(cStr, "depth"))) {
+	ptr = strstr(cStr, "depth");
+	if (ptr != 0) {
 		int depth = atoi(ptr + 6);
 
 		Perft::perftTest(pos, depth);

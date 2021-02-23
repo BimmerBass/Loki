@@ -169,9 +169,9 @@ namespace Search {
 		clearForSearch(ss);
 
 		// Here we get an estimate of the value of the position. Used for creating the aspiration windows
-		int score = alphabeta(ss, 1, -INF, INF, true);
-		int best_move = NOMOVE;
 		SearchPv pvLine;
+		int score = alphabeta(ss, 1, -INF, INF, true, &pvLine);
+		int best_move = NOMOVE;
 
 		// These are just some parameters to print for UCI
 		long long nodes = 0;
@@ -411,7 +411,7 @@ namespace Search {
 		//	order that first.
 		bool ttHit = false;
 		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
-		int pvMove = NOMOVE;
+		unsigned int pvMove = NOMOVE;
 
 		if (ttHit) {
 			tt_root_hits++;
@@ -454,13 +454,13 @@ namespace Search {
 			// Step 3. Principal Variation search. We search all moves with the full window until one raises alpha. Afterwards we'll search with a null window
 			//		and only widen it if the null window search raises alpha, which is assumed unlikely.
 			if (!raised_alpha) {
-				score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true);
+				score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
 			}
 			else {
-				score = -alphabeta(ss, new_depth - 1, -alpha - 1, -alpha, true);
+				score = -alphabeta(ss, new_depth - 1, -alpha - 1, -alpha, true, &line);
 
 				if (score > alpha) {
-					score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true);
+					score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
 				}
 			}
 
@@ -534,7 +534,7 @@ namespace Search {
 
 
 
-	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null) {
+	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null, SearchPv* pvLine) {
 		assert(beta > alpha);
 
 		SIDE Us = ss->pos->side_to_move;
@@ -548,7 +548,7 @@ namespace Search {
 		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
 
 		int ttScore = (ttHit) ? entry->data.score : -INF;
-		int ttMove = (ttHit) ? entry->data.move : NOMOVE;
+		unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
 		int ttDepth = (ttHit) ? entry->data.depth : 0;
 		int ttFlag = (ttHit) ? entry->data.flag : NO_FLAG;
 
@@ -603,8 +603,9 @@ namespace Search {
 			return Eval::evaluate(ss->pos);
 		}
 
-
 		int score = -INF;
+		int best_score = -INF;
+
 		bool raised_alpha = false;
 		int best_move = NOMOVE;
 
@@ -615,6 +616,9 @@ namespace Search {
 		// We are in a PV-node if we aren't in a null window.
 		// In a null window, beta = alpha + 1, which means that beta - alpha = 1, so if this isn't true, we're not in a null window.
 		bool is_pv = (beta - alpha == 1) ? false : true;
+
+		// Create a new PV
+		SearchPv line;
 
 		// Idea from stockfish: Are we improving our static evaluations over plies? This can be used for pruning decisions.
 		bool improving = false;
@@ -668,8 +672,11 @@ namespace Search {
 			
 			assert(depth - reduction - 1 >= 0);
 		
-			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false);
-		
+			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
+			
+			// Clear the pv
+			line.clear();
+
 			ss->pos->undo_nullmove(old_enpassant);
 		
 			if (score >= beta && abs(score) < MATE) {
@@ -725,21 +732,23 @@ namespace Search {
 		// Step 9. Internal Iterative Deepening (IID) (~5 elo): If the transposition table didn't return a move, we'll search the position to a shallower
 		//		depth in the hopes of finding the PV.
 		// This will only be done if we are in a PV-node and at a high depth. At low depths, the search is very fast anyways.
-		//if (!ttHit && is_pv && depth > iid_depth) {
-		//	assert(iid_depth >= iid_reduction);
-		//	assert(ttMove == NOMOVE);
-		//
-		//	// We'll reduce the depth.
-		//	new_depth = depth - iid_reduction;
-		//
-		//	score = alphabeta(ss, new_depth, alpha, beta, true);
-		//
-		//	// Now we'll set the ttHit and ttMove if we found a good move.
-		//	//if (line.pv[0] != NOMOVE) {
-		//	//	ttHit = true;
-		//	//	ttMove = line.pv[0];
-		//	//}
-		//}
+		if (!ttHit && is_pv && depth > iid_depth) {
+			assert(iid_depth >= iid_reduction);
+			assert(ttMove == NOMOVE);
+		
+			// We'll reduce the depth.
+			new_depth = depth - iid_reduction;
+		
+			score = alphabeta(ss, new_depth, alpha, beta, true, &line);
+		
+			// Now we'll set the ttHit and ttMove if we found a good move.
+			if (line.pv[0] != NOMOVE) {
+				ttHit = true;
+				ttMove = line.pv[0];
+			}
+
+			line.clear();
+		}
 
 
 		// If the transposition table returned a move, this is probably the best, so we'll score it highest.
@@ -833,13 +842,13 @@ namespace Search {
 
 			// Step 14. Principal Variation Search.
 			if (!raised_alpha) {
-				score = -alphabeta(ss, new_depth, -beta, -alpha, true);
+				score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 			}
 			else {
-				score = -alphabeta(ss, new_depth, -alpha - 1, -alpha, true);
+				score = -alphabeta(ss, new_depth, -alpha - 1, -alpha, true, &line);
 
 				if (score > alpha) {
-					score = -alphabeta(ss, new_depth, -beta, -alpha, true);
+					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 				}
 			}
 
@@ -856,12 +865,6 @@ namespace Search {
 
 
 			ss->pos->undo_move();
-
-			if (score > alpha) {
-				alpha = score;
-				raised_alpha = true;
-				best_move = move;
-			}
 
 			if (score >= beta) {
 				if (legal == 1) {
@@ -902,10 +905,34 @@ namespace Search {
 
 				tt->store_entry(ss->pos, move, score, depth, BETA);
 
+				// Change the PV even when failing high
+				ChangePV(move, pvLine, &line);
+
 				delete moves;
 
 				return beta;
 			}
+
+
+			if (score > best_score) {
+				best_score = alpha;
+				best_move = move;
+
+				if (score > alpha) {
+					alpha = score;
+					raised_alpha = true;
+
+					// Change PV
+					ChangePV(move, pvLine, &line);
+				}
+
+				// If it is the first move, and score <= alpha, we risk failing low on every move, so we will copy this as a possible PV for the ALL-node
+				else if (legal == 1) {
+					ChangePV(move, pvLine, &line);
+				}
+
+			}
+
 
 		}
 
@@ -1180,7 +1207,7 @@ void Search::INIT() {
 	for (int d = 1; d < MAXDEPTH; d++) {
 
 		for (int c = 1; c < MAXPOSITIONMOVES; c++) {
-			Reductions[d][c] = std::round(0.75 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
+			Reductions[d][c] = (int)std::round(0.75 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
 			//Reductions[d][c] = std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
 		}
 

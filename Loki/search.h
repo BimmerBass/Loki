@@ -18,14 +18,8 @@ struct SearchPv {
 	int length = 0;
 	int pv[MAXDEPTH] = { 0 };
 
-	SearchPv(){
-		length = 0;
-	}
-
 	void clear() {
-		for (int i = 0; i < MAXDEPTH; i++) {
-			pv[i] = 0;
-		}
+		std::fill(std::begin(pv), std::end(pv), 0);
 		length = 0;
 	}
 };
@@ -52,7 +46,7 @@ namespace Search {
 
 	int search_root(SearchThread_t* ss, int depth, int alpha, int beta, SearchPv* pvLine);
 
-	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null);
+	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null, SearchPv* pvLine);
 
 	int quiescence(SearchThread_t* ss, int alpha, int beta);
 

@@ -262,7 +262,7 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 
 	for (int pce = PAWN; pce <= KING; pce++) {
 
-		for (int sq = 0; sq < 64; sq++) {
+		for (sq = 0; sq < 64; sq++) {
 			if (piece_list[WHITE][sq] == pce) {
 				pieceBBS[pce][WHITE] |= (uint64_t(1) << sq);
 

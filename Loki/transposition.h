@@ -9,7 +9,7 @@ enum TT_FLAG :int { ALPHA = 0, BETA = 1, EXACT = 2, NO_FLAG = 3 };
 
 
 struct EntryData {
-	int move = NOMOVE;
+	unsigned int move = NOMOVE;
 	int score = -INF;
 	int depth = 0;
 	int flag = NO_FLAG;
