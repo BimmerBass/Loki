@@ -9,15 +9,15 @@ enum TT_FLAG :int { ALPHA = 0, BETA = 1, EXACT = 2, NO_FLAG = 3 };
 
 
 struct EntryData {
-	volatile int move;
-	volatile int score;
-	volatile int depth;
-	volatile int flag;
+	volatile int move = NOMOVE;
+	volatile int score = -INF;
+	volatile int depth = 0;
+	volatile int flag = NO_FLAG;
 };
 
 
 struct TT_Entry {
-	volatile uint64_t key; // The key is the posKey XORed with the data
+	volatile uint64_t key = 0; // The key is the posKey XORed with the data
 
 	volatile EntryData data;
 };
@@ -38,9 +38,9 @@ public:
 private:
 	void clear_table();
 
-	TT_Entry* volatile entries;
+	TT_Entry* volatile entries = nullptr;
 
-	int numEntries;
+	int numEntries = 0;
 };
 
 

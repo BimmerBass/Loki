@@ -49,13 +49,6 @@ constexpr int MATE = INF - MAXDEPTH;
 constexpr int VALUE_NONE = 50000;
 
 
-// Not really random, but useful for generation of hashkeys
-#define RAND_64     ((uint64_t)std::rand() | \
-					(uint64_t)std::rand() << 15 | \
-					(uint64_t)std::rand() << 30 | \
-					(uint64_t)std::rand() << 45 | \
-					((uint64_t)std::rand() & 0xf) << 60 )
-
 // Used to allocate size x in megabytes of caches.
 #define KB(x) (x << 10)
 #define MB(x) (x << 20)

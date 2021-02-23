@@ -1,5 +1,7 @@
 #include "bitboard.h"
 
+#include <random>
+
 Bitboard BBS::knight_attacks[64] = { 0 };
 
 void BBS::init_knightAttacks() {
@@ -56,24 +58,27 @@ Bitboard BBS::Zobrist::castling_keys[16] = { 0 };
 
 
 void BBS::Zobrist::init_zobrist() {
+	std::mt19937_64 rng(0x1234);
 
 	for (int pce = PAWN; pce < NO_TYPE; pce++) {
 
 		for (int sq = 0; sq < 64; sq++) {
-			piece_keys[WHITE][pce][sq] = RAND_64;
-			piece_keys[BLACK][pce][sq] = RAND_64;
+			//piece_keys[WHITE][pce][sq] = RAND_64;
+			//piece_keys[BLACK][pce][sq] = RAND_64;
+			piece_keys[WHITE][pce][sq] = rng();
+			piece_keys[BLACK][pce][sq] = rng();
 		}
 	}
 
 	for (int sq = 0; sq < 64; sq++) {
-		empty_keys[sq] = RAND_64;
+		empty_keys[sq] = rng();
 	}
 
 	// Side Key
-	side_key = RAND_64;
+	side_key = rng();
 
 	for (int c = 0; c < 16; c++) {
-		castling_keys[c] = RAND_64;
+		castling_keys[c] = rng();
 	}
 }
 
