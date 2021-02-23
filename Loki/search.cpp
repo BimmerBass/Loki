@@ -613,6 +613,7 @@ namespace Search {
 
 		// Create a new PV
 		SearchPv line;
+		pvLine->length = 0;
 
 		// Idea from stockfish: Are we improving our static evaluations over plies? This can be used for pruning decisions.
 		bool improving = false;
@@ -709,7 +710,6 @@ namespace Search {
 		
 			int razoring_window = alpha - razoring_margin(depth, improving);
 			score = quiescence(ss, razoring_window, razoring_window + 1); // Do a null window quiescence to prove we can't raise alpha over  alpha - margin
-			//score = quiescence(ss, alpha, beta);
 		
 			if (score + razoring_margin(depth, improving) <= alpha) {// && depth - 1 <= 0) {
 				// Even though we're in a fail-hard negamax framework, we'll return the score here since razoring is supposed to act as an early quiescence search.
