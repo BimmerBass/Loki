@@ -297,34 +297,43 @@ void UCI::parse_go(std::string goLine, GameState_t* pos, SearchInfo_t* info) {
 
 	char* ptr = nullptr;
 
-	if ((ptr = strstr(go_line, "infinite"))) {
+	ptr = strstr(go_line, "infinite");
+	if (ptr) {
 		;
 	}
 
-	if ((ptr = strstr(go_line, "binc")) && pos->side_to_move == BLACK) {
+	ptr = strstr(go_line, "binc");
+	if (ptr && pos->side_to_move == BLACK) {
 		inc = atoi(ptr + 5);
 	}
 
-	if ((ptr = strstr(go_line, "winc")) && pos->side_to_move == WHITE) {
+	ptr = strstr(go_line, "winc");
+	if (ptr && pos->side_to_move == WHITE) {
 		inc = atoi(ptr + 5);
 	}
 
-	if ((ptr = strstr(go_line, "wtime")) && pos->side_to_move == WHITE) {
-		time = atoi(ptr + 6);
-	}
-	if ((ptr = strstr(go_line, "btime")) && pos->side_to_move == BLACK) {
+	ptr = strstr(go_line, "wtime");
+	if (ptr && pos->side_to_move == WHITE) {
 		time = atoi(ptr + 6);
 	}
 
-	if ((ptr = strstr(go_line, "movestogo"))) {
+	ptr = strstr(go_line, "btime");
+	if (ptr && pos->side_to_move == BLACK) {
+		time = atoi(ptr + 6);
+	}
+
+	ptr = strstr(go_line, "movestogo");
+	if (ptr) {
 		movestogo = atoi(ptr + 10);
 	}
 
-	if ((ptr = strstr(go_line, "movetime"))) {
+	ptr = strstr(go_line, "movetime");
+	if (ptr) {
 		movetime = atoi(ptr + 9);
 	}
 
-	if ((ptr = strstr(go_line, "depth"))) {
+	ptr = strstr(go_line, "depth");
+	if (ptr) {
 		depth = atoi(ptr + 6);
 	}
 

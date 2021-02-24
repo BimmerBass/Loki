@@ -44,12 +44,12 @@ struct SearchThread_t {
 
 
 	int moves_path[MAXDEPTH] = { 0 };
-	int counterMoves[64][64] = { {0} };
+	unsigned int counterMoves[64][64] = { {0} };
 
 	// Indexed by history[color][fromsq][tosq]
 	int history[2][64][64] = { {{0}} };
 	
-	int killers[MAXDEPTH][2] = { {0} };
+	unsigned int killers[MAXDEPTH][2] = { {0} };
 
 	int static_eval[MAXDEPTH] = { 0 };
 

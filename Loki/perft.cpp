@@ -31,7 +31,10 @@ namespace Perft {
 #endif
 
 			MoveList* moves = moveGen::generate<ALL>(pos);
+
+#if defined(PERFT_TT) // Just a pedantic suppression of C4189 when not using perft_tt
 			long long previous_cnt = leaf_count;
+#endif
 
 			for (int m = 0; m < moves->size(); m++) {
 				if (!pos->make_move((*moves)[m])) {
@@ -70,7 +73,7 @@ namespace Perft {
 			}
 
 			legal += 1;
-			long old_nodes = leaf_count;
+			long long old_nodes = leaf_count;
 
 			perft(pos, depth - 1);
 

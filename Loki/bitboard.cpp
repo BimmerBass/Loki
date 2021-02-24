@@ -447,12 +447,12 @@ namespace Magics {
 				Bitboard occupancy = set_occupancy(count, bit_count, mask);
 
 				if (is_rook) {
-					uint64_t magic_index = occupancy * rook_magics[sq] >> 64 - rook_relevant_bits[sq];
+					uint64_t magic_index = occupancy * rook_magics[sq] >> (64 - rook_relevant_bits[sq]);
 					_rookAttacks[sq][magic_index] = _getSlowAttack<ROOK>(sq, occupancy);
 				}
 
 				else {
-					uint64_t magic_index = occupancy * bishop_magics[sq] >> 64 - bishop_relevant_bits[sq];
+					uint64_t magic_index = occupancy * bishop_magics[sq] >> (64 - bishop_relevant_bits[sq]);
 					_bishopAttacks[sq][magic_index] = _getSlowAttack<BISHOP>(sq, occupancy);
 				}
 			}
@@ -468,7 +468,7 @@ namespace Magics {
 		//return _rookAttacks[sq][(occ & magic_rook_masks[sq]) * rook_magics[sq] >> 64 - rook_relevant_bits[sq]];
 		occ &= magic_rook_masks[sq];
 		occ *= rook_magics[sq];
-		occ >>= 64 - rook_relevant_bits[sq];
+		occ >>= (64 - rook_relevant_bits[sq]);
 
 		return _rookAttacks[sq][occ];
 	}
@@ -478,7 +478,7 @@ namespace Magics {
 		//return _bishopAttacks[sq][(occ & magic_bishop_masks[sq]) * bishop_magics[sq] >> 64 - bishop_relevant_bits[sq]];
 		occ &= magic_bishop_masks[sq];
 		occ *= bishop_magics[sq];
-		occ >>= 64 - bishop_relevant_bits[sq];
+		occ >>= (64 - bishop_relevant_bits[sq]);
 
 		return _bishopAttacks[sq][occ];
 	}

@@ -156,7 +156,7 @@ namespace Eval {
 				sq = PopBit(&pawnBoard);
 				relative_sq = (side == WHITE) ? sq : PSQT::Mirror64[sq];
 
-				int r = relative_ranks[sq / 8];
+				//int r = relative_ranks[sq / 8];
 				int f = sq % 8;
 
 				// Passed pawn bonus

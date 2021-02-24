@@ -214,7 +214,7 @@ namespace Search {
 
 			branching_factor = std::pow(nodes, 1 / double(currDepth));
 
-			nps = (double)nodes / (((double)getTimeMs() - (double)ss->info->starttime) / 1000.0);
+			nps = nodes / ((getTimeMs() - ss->info->starttime) / 1000.0);
 
 			// Get the best move from the pvLine stack
 			best_move = pvLine.pv[0];
@@ -1025,7 +1025,6 @@ namespace Search {
 			
 			move = (*ml)[m]->move;
 			int piece_captured = ss->pos->piece_list[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][TOSQ(move)];
-			int piece_moved = ss->pos->piece_list[ss->pos->side_to_move][FROMSQ(move)];
 
 			// Step 1. Futility pruning (~6 elo). If the value of the piece captured, plus some margin (~200cp) is still not enough to raise alpha, we won't bother searching it.
 			// We'll just have to make sure, that there has been tested at least one legal move, so we don't miss a checkmate

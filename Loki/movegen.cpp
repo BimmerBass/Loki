@@ -29,7 +29,7 @@ namespace moveGen {
 		int index = 0;
 
 		// The only quiet moves pawns make are one square up or two squares up.
-		if (type == QUIET) {
+		if constexpr (type == QUIET) {
 			/*
 			We don't want to generate promotions here, so we'll remove the eighth and first rank from the toSq boards.
 			*/
@@ -56,7 +56,7 @@ namespace moveGen {
 
 
 		// Here we'll generate all captures and promotions.
-		else if (type == CAPTURES) {
+		else if constexpr (type == CAPTURES) {
 
 			Bitboard left_attacks = shift<upLeft>(pawnBrd) & OPPONENT_PIECES;
 			Bitboard right_attacks = shift<upRight>(pawnBrd) & OPPONENT_PIECES;
@@ -113,7 +113,7 @@ namespace moveGen {
 			if (pos->enPasSq != NO_SQ) {
 				Bitboard epBrd = uint64_t(1) << pos->enPasSq;
 				
-				if (me == WHITE) {
+				if constexpr (me == WHITE) {
 					if (((epBrd & ~BBS::FileMasks8[FILE_A]) >> 9) & pawnBrd) {
 						move_list->add_move(pos->enPasSq, pos->enPasSq - 9, 0, ENPASSANT);
 					}
@@ -209,7 +209,7 @@ namespace moveGen {
 			if (pos->enPasSq != NO_SQ) {
 				Bitboard epBrd = uint64_t(1) << pos->enPasSq;
 
-				if (me == WHITE) {
+				if constexpr (me == WHITE) {
 					if (((epBrd & ~BBS::FileMasks8[FILE_A]) >> 9) & pawnBrd) {
 						move_list->add_move(pos->enPasSq, pos->enPasSq - 9, 0, ENPASSANT);
 					}
@@ -249,7 +249,7 @@ namespace moveGen {
 		int attack_sq = 0;
 		Bitboard attack_board = 0;
 
-		if (type == QUIET) {
+		if constexpr (type == QUIET) {
 
 			while (knightBrd) {
 				index = PopBit(&knightBrd);
@@ -267,7 +267,7 @@ namespace moveGen {
 		}
 
 		
-		else if (type == CAPTURES) {
+		else if constexpr (type == CAPTURES) {
 			while (knightBrd) {
 				index = PopBit(&knightBrd);
 
@@ -320,7 +320,7 @@ namespace moveGen {
 		int dest = 0;
 		Bitboard attacks = 0;
 
-		if (type == QUIET) {
+		if constexpr (type == QUIET) {
 			while (sliderBrd) {
 				sq = PopBit(&sliderBrd);
 
@@ -336,7 +336,7 @@ namespace moveGen {
 			return;
 		}
 
-		else if (type == CAPTURES) {
+		else if constexpr (type == CAPTURES) {
 			while (sliderBrd) {
 				sq = PopBit(&sliderBrd);
 
@@ -381,7 +381,7 @@ namespace moveGen {
 		Bitboard friendly_pieces = pos->all_pieces[me];
 		Bitboard opponent_pieces = pos->all_pieces[(me == WHITE) ? BLACK : WHITE];
 
-		if (me == WHITE) {
+		if constexpr (me == WHITE) {
 			if (pos->can_castle<WKCA>() && ((friendly_pieces | opponent_pieces) & key_squares_kingside) == 0
 				&& !pos->square_attacked(E1, BLACK) && !pos->square_attacked(F1, BLACK) && !pos->square_attacked(G1, BLACK)) {
 				move_list->add_move(G1, E1, 0, CASTLING);
@@ -417,7 +417,7 @@ namespace moveGen {
 		Bitboard opponent_pieces = pos->all_pieces[(me == WHITE) ? BLACK : WHITE];
 		Bitboard friendly_pieces = pos->all_pieces[me];
 
-		if (type == QUIET) {
+		if constexpr (type == QUIET) {
 			gen_castle_moves<me>(pos, move_list);
 			attackBrd = BBS::king_attacks[pos->king_squares[me]] & ~(opponent_pieces | friendly_pieces);
 			
@@ -429,7 +429,7 @@ namespace moveGen {
 			return;
 		}
 
-		else if (type == CAPTURES) {
+		else if constexpr (type == CAPTURES) {
 			attackBrd = BBS::king_attacks[pos->king_squares[me]] & opponent_pieces;
 
 			while (attackBrd) {
@@ -440,7 +440,7 @@ namespace moveGen {
 			return;
 		}
 
-		else if (type == CASTLE) {
+		else if constexpr (type == CASTLE) {
 			gen_castle_moves<me>(pos, move_list);
 			
 			return;
@@ -481,7 +481,7 @@ namespace moveGen {
 
 
 
-	bool moveExists(GameState_t* pos, int move) {
+	bool moveExists(GameState_t* pos, unsigned int move) {
 		MoveList* ml = (pos->side_to_move == WHITE) ? generate_all<ALL, WHITE>(pos) : generate_all<ALL, BLACK>(pos);
 
 		for (int i = 0; i < ml->size(); i++) {
