@@ -15,7 +15,7 @@ perft_transposition_table = no # Only used to make perft faster when testing mov
 
 
 ### Add compiler sepcific flags
-CXXFLAGS = -std=c++11 -lstdc++
+CXXFLAGS = -std=c++17 -lstdc++
 
 ### Add options
 ifeq ($(optimize), yes)
