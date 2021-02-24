@@ -558,15 +558,18 @@ namespace Search {
 			switch (ttFlag) {
 			case ALPHA:
 				if (ttScore <= alpha) {
+					pvLine->length = 0;
 					return alpha;
 				}
 				break;
 			case BETA:
 				if (ttScore >= beta) {
+					pvLine->length = 0;
 					return beta;
 				}
 				break;
 			case EXACT:
+				pvLine->length = 0;
 				return ttScore;
 			}
 		}
@@ -757,6 +760,8 @@ namespace Search {
 
 		int move = NOMOVE;
 		int legal = 0;
+		int moves_searched = 0;
+
 		for (int m = 0; m < moves->size(); m++) {
 			ss->pickNextMove(m, moves);
 
@@ -786,6 +791,9 @@ namespace Search {
 				continue;
 			}
 			
+			// Increment legal when we've made a move. This is used so as to not prune potential checkmates or stalemates.
+			legal++;
+
 			bool gives_check = ss->pos->in_check();			
 
 
@@ -827,8 +835,8 @@ namespace Search {
 			}
 
 
-			// Increment the legal move counter.
-			legal++;
+			// Increment moves tried. This is used to get a PV even when failing low, and move ordering statistics
+			moves_searched++;
 
 			ss->moves_path[ss->pos->ply] = move;
 
@@ -860,8 +868,10 @@ namespace Search {
 
 			ss->pos->undo_move();
 
+			if (ss->info->stopped) { return 0; }
+
 			if (score >= beta) {
-				if (legal == 1) {
+				if (moves_searched == 1) {
 					ss->info->fhf++;
 				}
 				ss->info->fh++;
@@ -921,7 +931,7 @@ namespace Search {
 				}
 
 				// If it is the first move, and score <= alpha, we risk failing low on every move, so we will copy this as a possible PV for the ALL-node
-				else if (legal == 1) {
+				else if (moves_searched == 1) {
 					ChangePV(move, pvLine, &line);
 				}
 
