@@ -919,7 +919,7 @@ namespace Search {
 
 
 			if (score > best_score) {
-				best_score = alpha;
+				best_score = score;
 				best_move = move;
 
 				if (score > alpha) {
@@ -927,12 +927,12 @@ namespace Search {
 					raised_alpha = true;
 
 					// Change PV
-					ChangePV(move, pvLine, &line);
+					ChangePV(best_move, pvLine, &line);
 				}
 
 				// If it is the first move, and score <= alpha, we risk failing low on every move, so we will copy this as a possible PV for the ALL-node
 				else if (moves_searched == 1) {
-					ChangePV(move, pvLine, &line);
+					ChangePV(best_move, pvLine, &line);
 				}
 
 			}
