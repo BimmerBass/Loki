@@ -11,15 +11,15 @@
 #include <atomic>
 #include <thread>
 #include <vector>
-
-
+#include <array>
 
 struct SearchPv {
 	int length = 0;
-	int pv[MAXDEPTH] = { 0 };
+	//int pv[MAXDEPTH] = { 0 };
+	std::array<int, MAXDEPTH + 1> pv = { 0 };
 
 	void clear() {
-		std::fill(std::begin(pv), std::end(pv), 0);
+		pv.fill(0);
 		length = 0;
 	}
 };
@@ -64,11 +64,11 @@ namespace Search {
 Helper function for search parameters.
 
 */
-
+extern int NM_Reductions[MAXDEPTH][2000];
 extern int nullmove_reduction(int depth, int lead);
 
 extern int Reductions[MAXDEPTH][MAXPOSITIONMOVES];
-extern int late_move_reduction(int d, int c, int pv, int i);
+extern int late_move_reduction(int d, int c, bool pv, bool i);
 extern int late_move_pruning(int depth, bool improving);
 
 extern int futility_margin(int depth, bool improving);

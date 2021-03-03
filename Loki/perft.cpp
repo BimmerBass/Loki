@@ -30,14 +30,14 @@ namespace Perft {
 			}
 #endif
 
-			MoveList* moves = moveGen::generate<ALL>(pos);
+			MoveList moves; moveGen::generate<ALL>(pos, &moves);
 
 #if defined(PERFT_TT) // Just a pedantic suppression of C4189 when not using perft_tt
 			long long previous_cnt = leaf_count;
 #endif
 
-			for (int m = 0; m < moves->size(); m++) {
-				if (!pos->make_move((*moves)[m])) {
+			for (int m = 0; m < moves.size(); m++) {
+				if (!pos->make_move(moves[m])) {
 					continue;
 				}
 
@@ -61,14 +61,14 @@ namespace Perft {
 		std::cout << "Starting perft test to depth " << depth << std::endl;
 
 
-		MoveList* moves = moveGen::generate<ALL>(pos);
+		MoveList moves; moveGen::generate<ALL>(pos, &moves);
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();
 
 		int legal = 0;
 
-		for (int m = 0; m < moves->size(); m++) {
-			if (!pos->make_move((*moves)[m])) {
+		for (int m = 0; m < moves.size(); m++) {
+			if (!pos->make_move(moves[m])) {
 				continue;
 			}
 
@@ -79,7 +79,7 @@ namespace Perft {
 
 			pos->undo_move();
 
-			std::cout << "[" << legal << "] " << printMove((*moves)[m]->move) << "	---> " << (leaf_count - old_nodes) << " nodes." << std::endl;
+			std::cout << "[" << legal << "] " << printMove(moves[m]->move) << "	---> " << (leaf_count - old_nodes) << " nodes." << std::endl;
 		}
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> end_time = std::chrono::high_resolution_clock::now();

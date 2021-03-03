@@ -8,12 +8,17 @@ Helper functions for SearchThread move-picking
 
 */
 
-MoveList* SearchThread_t::generate_moves(bool qsearch) {
-	MoveList* ml = (qsearch == false) ? moveGen::generate<ALL>(pos) : moveGen::generate<CAPTURES>(pos);
+void SearchThread_t::generate_moves(MoveList* moves, bool qsearch) {
+	// Generate the moves
+	if (qsearch) {
+		moveGen::generate<CAPTURES>(pos, moves);
+	}
+	else {
+		moveGen::generate<ALL>(pos, moves);
+	}
 
-	score_moves(ml);
+	score_moves(moves);
 
-	return ml;
 }
 
 
@@ -85,6 +90,60 @@ void SearchThread_t::pickNextMove(int index, MoveList* ml) {
 	// Insert best_move at index and place temp_move (the previous move at index) at best_index.
 	ml->replace(index, best_move);
 	ml->replace(best_index, temp_move);
+}
+
+
+
+void SearchThread_t::update_move_heuristics(int move, int depth) {
+	// Set the new killer moves
+	setKillers(pos->ply, move);
+
+	// Update the countermove heuristic
+	if (pos->ply > 0) { // Prevent overflow
+		counterMoves[FROMSQ(moves_path[pos->ply - 1])][TOSQ(moves_path[pos->ply - 1])] = move;
+	}
+
+	// The below history update is taken from http://www.talkchess.com/forum3/viewtopic.php?f=7&t=76540, but won't be implemented until i fully understand how it works.
+	//int bonus = std::min(depth * depth, max_delta);
+	//history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] += multiplier * bonus - history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] * (abs(bonus) / divisor);
+
+	history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] += std::min(depth * depth, 400);
+
+	// Handle history table overflows
+	if (history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] >= countermove_bonus) {
+
+		for (int i = 0; i < 64; i++) {
+
+			for (int j = 0; j < 64; j++) {
+
+				history[0][i][j] /= 2;
+				history[1][i][j] /= 2;
+			}
+		}
+	}
+}
+
+
+void SearchThread_t::clear_move_heuristics() {
+
+	for (int i = 0; i < 64; i++) {
+
+		for (int j = 0; j < 64; j++) {
+			counterMoves[i][j] = 0;
+
+			history[0][i][j] = 0;
+			history[1][i][j] = 0;
+		}
+
+	}
+
+	for (int d = 0; d < MAXDEPTH; d++) {
+		moves_path[d] = 0;
+		static_eval[d] = 0;
+
+		killers[d][0] = 0;
+		killers[d][1] = 0;
+	}
 }
 
 

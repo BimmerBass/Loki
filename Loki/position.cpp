@@ -835,12 +835,13 @@ void GameState_t::undo_nullmove(int oldEnPas) {
 
 /*
 
-Determines if it is safe to do null moves. True if the side to move has any non pawn material
+Determines if it is safe to do null moves. True if the side to move has any slider
 
 */
 
 bool GameState_t::safe_nullmove() {
-	return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0) ? true : false;
+	//return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0) ? true : false;
+	return ((pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0) ? true : false;
 }
 
 
@@ -852,6 +853,19 @@ Used for delta pruning. Determines if we are in a late endgame
 
 bool GameState_t::is_endgame() {
 	return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) == 0) ? true : false;
+}
+
+
+/*
+
+Used for razoring
+
+*/
+
+bool GameState_t::non_pawn_material() {
+	SIDE Them = (side_to_move == WHITE) ? BLACK : WHITE;
+	return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0 ? true : false)
+		&& ((pieceBBS[KNIGHT][Them] | pieceBBS[BISHOP][Them] | pieceBBS[ROOK][Them] | pieceBBS[QUEEN][Them]) != 0 ? true : false);
 }
 
 

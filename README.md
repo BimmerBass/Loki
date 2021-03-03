@@ -51,7 +51,7 @@ The evaluation is very simple at the moment, and a good elo increased is expecte
     - Delta pruning.
     - Futility pruning for individual moves.
 With all the above mentioned move ordering techniques, Loki achieves a cutoff on the first move around 85%-90% of the time.
-
+##### Note: **Late move reductions and late move pruning are disabled at the moment. This is because the evaluation function needs to be more accurate in order for them to work optimally.**
 
 ## Building Loki
 Loki has been tested to build without errors on both MSVC and GCC (with some warnings by both). If Loki should be compiled to a non-native popcount version one will have to either:

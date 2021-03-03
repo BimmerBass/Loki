@@ -461,9 +461,7 @@ namespace moveGen {
 
 	
 	template <MoveType type, SIDE me>
-	MoveList* generate_all(GameState_t* pos) {
-		MoveList* move_list = new MoveList();
-		
+	void generate_all(GameState_t* pos, MoveList* move_list) {		
 		generate_pawn_moves<type, me>(pos, move_list);
 		generate_knight_moves<type, me>(pos, move_list);
 
@@ -473,8 +471,6 @@ namespace moveGen {
 
 		generate_king_moves<type, me>(pos, move_list);
 
-		return move_list;
-
 	}
 
 	
@@ -482,37 +478,57 @@ namespace moveGen {
 
 
 	bool moveExists(GameState_t* pos, unsigned int move) {
-		MoveList* ml = (pos->side_to_move == WHITE) ? generate_all<ALL, WHITE>(pos) : generate_all<ALL, BLACK>(pos);
+		MoveList ml;
 
-		for (int i = 0; i < ml->size(); i++) {
-			if ((*ml)[i]->move == move) {
+		if (pos->side_to_move == WHITE) { generate_all<ALL, WHITE>(pos, &ml); }
+		else { generate_all<ALL, BLACK>(pos, &ml); }
+
+		for (int i = 0; i < ml.size(); i++) {
+			if (ml[i]->move == move) {
 				return true;
 			}
 		}
 		return false;
 	}
-
 };
 
 template<MoveType T>
-MoveList* moveGen::generate(GameState_t* pos) {
+void moveGen::generate(GameState_t* pos, MoveList* move_list) {
 	SIDE me = pos->side_to_move;
 	
-	return (me == WHITE) ? generate_all<T, WHITE>(pos) : generate_all<T, BLACK>(pos);
+	//return (me == WHITE) ? generate_all<T, WHITE>(pos) : generate_all<T, BLACK>(pos);
+	if (me == WHITE) {
+		generate_all<T, WHITE>(pos);
+	}
+	else {
+		generate_all<T, BLACK>(pos);
+	}
 }
 
 
 template<>
-MoveList* moveGen::generate<ALL>(GameState_t* pos) {
+void moveGen::generate<ALL>(GameState_t* pos, MoveList* move_list) {
 	SIDE me = pos->side_to_move;
 
-	return (me == WHITE) ? generate_all<ALL, WHITE>(pos) : generate_all<ALL, BLACK>(pos);
+	//return (me == WHITE) ? generate_all<ALL, WHITE>(pos) : generate_all<ALL, BLACK>(pos);
+	if (me == WHITE) {
+		generate_all<ALL, WHITE>(pos, move_list);
+	}
+	else {
+		generate_all<ALL, BLACK>(pos, move_list);
+	}
 }
 
 
 template<>
-MoveList* moveGen::generate<CAPTURES>(GameState_t* pos) {
+void moveGen::generate<CAPTURES>(GameState_t* pos, MoveList* move_list) {
 	SIDE me = pos->side_to_move;
 
-	return (me == WHITE) ? generate_all<CAPTURES, WHITE>(pos) : generate_all<CAPTURES, BLACK>(pos);
+	//return (me == WHITE) ? generate_all<CAPTURES, WHITE>(pos) : generate_all<CAPTURES, BLACK>(pos);
+	if (me == WHITE) {
+		generate_all<CAPTURES, WHITE>(pos, move_list);
+	}
+	else {
+		generate_all<CAPTURES, BLACK>(pos, move_list);
+	}
 }

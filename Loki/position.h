@@ -83,9 +83,12 @@ public:
 	// Returns true if we're in the late endgame
 	bool is_endgame();
 
+	// Returns true if both sides have pieces on the board.
+	bool non_pawn_material();
+
 	// Returns true if the position has been had before.
 	bool is_repetition();
-
+	
 
 	/*
 	SEE functions - the SEE algorithm itself will be implemented later

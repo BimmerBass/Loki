@@ -63,8 +63,6 @@ void BBS::Zobrist::init_zobrist() {
 	for (int pce = PAWN; pce < NO_TYPE; pce++) {
 
 		for (int sq = 0; sq < 64; sq++) {
-			//piece_keys[WHITE][pce][sq] = RAND_64;
-			//piece_keys[BLACK][pce][sq] = RAND_64;
 			piece_keys[WHITE][pce][sq] = rng();
 			piece_keys[BLACK][pce][sq] = rng();
 		}

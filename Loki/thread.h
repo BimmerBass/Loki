@@ -55,7 +55,10 @@ struct SearchThread_t {
 
 
 
-	MoveList* generate_moves(bool qsearch = false);
+	void generate_moves(MoveList* moves, bool qsearch = false);
+
+	void update_move_heuristics(int move, int depth);
+	void clear_move_heuristics();
 	~SearchThread_t() {
 		delete pos;
 		delete info;

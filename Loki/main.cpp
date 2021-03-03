@@ -8,9 +8,7 @@ int main() {
 	Eval::INIT();
 	PSQT::INIT();
 
-
 	UCI::UCI_loop();
-	
 
 	return 0;
 }

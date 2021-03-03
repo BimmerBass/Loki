@@ -102,7 +102,8 @@ void UCI::UCI_loop() {
 
 
 		else if (!strncmp(line, "ucinewgame", 10)) {
-			std::string newLine = "position startpos\n";
+			tt->clear_table();
+			char newLine[] = "position startpos\n";
 			parse_position(newLine, pos);
 			continue;
 		}
@@ -133,9 +134,9 @@ void UCI::UCI_loop() {
 					for (int i = 0; i < 5; i++) {
 						moveStr += *(ptr + i);
 					}
-					MoveList* ml = moveGen::generate<ALL>(pos);
+					MoveList ml; moveGen::generate<ALL>(pos, &ml);
 
-					int move = parseMove(moveStr, ml);
+					int move = parseMove(moveStr, &ml);
 
 					if (move == NOMOVE) {
 						break;
@@ -143,8 +144,6 @@ void UCI::UCI_loop() {
 					Move_t m;
 					m.move = move;
 					pos->make_move(&m);
-
-					delete ml;
 				}
 			}
 		}
@@ -154,8 +153,15 @@ void UCI::UCI_loop() {
 			continue;
 		}
 
+		else if (!strncmp(line, "printmovelist", 13)) {
+			MoveList ml;
+			moveGen::generate<ALL>(pos, &ml);
+			printMoveList(&ml);
+			continue;
+		}
+
 		else if (!strncmp(line, "go", 2)) {
-			parse_go(std::string(line), pos, info);
+			parse_go(line, pos, info);
 		}
 
 		else if (!strncmp(line, "d", 1)) {
@@ -184,8 +190,8 @@ void UCI::UCI_loop() {
 		}
 	}
 
-	//delete pos;
-	//delete info;
+	delete pos;
+	delete info;
 }
 
 
@@ -205,29 +211,23 @@ void UCI::goPerft(std::string l, GameState_t* pos) {
 
 		Perft::perftTest(pos, depth);
 	}
+
+	delete[] cStr;
 }
 
 
 
-void UCI::parse_position(std::string posLine, GameState_t* pos) {
-	// We're converting std::string to char* because it is easier to parse.
-	char* cStr = new char[posLine.length() + 1];
-#if defined(_WIN32) || defined(_WIN64)
-	strcpy_s(cStr, posLine.length() + 1, posLine.c_str());
-#else
-	strcpy(cStr, posLine.c_str());
-#endif
+void UCI::parse_position(char* posLine, GameState_t* pos) {
+	posLine += 9;
 
+	char* ptrChar = posLine;
 
-	char* ptrChar = cStr;
-	ptrChar += 9;
-
-	if (!strncmp(cStr, "startpos", 8)) {
+	if (!strncmp(posLine, "startpos", 8)) {
 		pos->parseFen(START_FEN);
 	}
 
 	else {
-		ptrChar = strstr(cStr, "fen");
+		ptrChar = strstr(posLine, "fen");
 
 		if (ptrChar == nullptr) {
 			pos->parseFen(START_FEN);
@@ -239,7 +239,7 @@ void UCI::parse_position(std::string posLine, GameState_t* pos) {
 		}
 	}
 
-	ptrChar = strstr(cStr, "moves");
+	ptrChar = strstr(posLine, "moves");
 	int move = NOMOVE;
 
 	if (ptrChar != nullptr) {
@@ -249,13 +249,13 @@ void UCI::parse_position(std::string posLine, GameState_t* pos) {
 		while (*ptrChar) {
 			moveStr = "";
 
-			MoveList* ml = moveGen::generate<ALL>(pos);
+			MoveList ml; moveGen::generate<ALL>(pos, &ml);
 
 			for (int i = 0; i < 5; i++) {
 				moveStr += *(ptrChar + i);
 			}
 
-			move = parseMove(moveStr, ml);
+			move = parseMove(moveStr, &ml);
 
 			if (move == NOMOVE) {
 				break;
@@ -271,68 +271,56 @@ void UCI::parse_position(std::string posLine, GameState_t* pos) {
 				ptrChar++;
 			}
 			ptrChar++;
-
-			delete ml;
 		}
 	}
-
-
-	delete[] cStr;
 }
 
 
 
-void UCI::parse_go(std::string goLine, GameState_t* pos, SearchInfo_t* info) {
-	// Again, we convert goLine to a char* for easier parsing. FIXME: do the parsing with a std::string
-	char* go_line = new char[goLine.length() + 1];
-#if defined(_WIN32) || defined(_WIN64)
-	strcpy_s(go_line, goLine.length() + 1, goLine.c_str());
-#else
-	strcpy(go_line, goLine.c_str());
-#endif
-
+void UCI::parse_go(char* goLine, GameState_t* pos, SearchInfo_t* info) {
+	
 	int depth = -1, movestogo = 30, movetime = -1;
 	long long time = -1, inc = 0;
 	info->timeset = false;
 
 	char* ptr = nullptr;
 
-	ptr = strstr(go_line, "infinite");
+	ptr = strstr(goLine, "infinite");
 	if (ptr) {
 		;
 	}
 
-	ptr = strstr(go_line, "binc");
+	ptr = strstr(goLine, "binc");
 	if (ptr && pos->side_to_move == BLACK) {
 		inc = atoi(ptr + 5);
 	}
 
-	ptr = strstr(go_line, "winc");
+	ptr = strstr(goLine, "winc");
 	if (ptr && pos->side_to_move == WHITE) {
 		inc = atoi(ptr + 5);
 	}
 
-	ptr = strstr(go_line, "wtime");
+	ptr = strstr(goLine, "wtime");
 	if (ptr && pos->side_to_move == WHITE) {
 		time = atoi(ptr + 6);
 	}
 
-	ptr = strstr(go_line, "btime");
+	ptr = strstr(goLine, "btime");
 	if (ptr && pos->side_to_move == BLACK) {
 		time = atoi(ptr + 6);
 	}
 
-	ptr = strstr(go_line, "movestogo");
+	ptr = strstr(goLine, "movestogo");
 	if (ptr) {
 		movestogo = atoi(ptr + 10);
 	}
 
-	ptr = strstr(go_line, "movetime");
+	ptr = strstr(goLine, "movetime");
 	if (ptr) {
 		movetime = atoi(ptr + 9);
 	}
 
-	ptr = strstr(go_line, "depth");
+	ptr = strstr(goLine, "depth");
 	if (ptr) {
 		depth = atoi(ptr + 6);
 	}
@@ -383,7 +371,7 @@ void UCI::printHashEntry(GameState_t* pos) {
 		std::cout << "Move:		" << printMove(entry->data.move) << std::endl;
 		std::cout << "Score:	" << entry->data.score << std::endl;
 		std::cout << "Depth:	" << entry->data.depth << std::endl;
-		std::cout << "Flag:		" << (entry->data.flag == EXACT ? "EXACT" : ((entry->data.flag == BETA) ? "BETA" : "ALPHA")) << std::endl;
+		std::cout << "Flag:		" << (entry->data.flag == ttFlag::EXACT ? "EXACT" : ((entry->data.flag == ttFlag::BETA) ? "BETA" : "ALPHA")) << std::endl;
 	}
 	else {
 		std::cout << "Position is not stored in transposition table" << std::endl;

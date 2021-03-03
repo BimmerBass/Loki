@@ -41,7 +41,7 @@ constexpr int hash_move_sort = 100000000;
 /*
 Aspiration windows
 */
-constexpr int aspiration_window = 40;
+constexpr int aspiration_window = 50;
 constexpr int aspiration_depth = 5;
 
 
@@ -49,7 +49,8 @@ constexpr int aspiration_depth = 5;
 Late move reductions
 */
 constexpr int lmr_limit = 4;
-
+constexpr int lmr_depth = 2;
+constexpr int lmr_pieceVals[5] = { 100, 300, 300, 500, 900 };
 
 /*
 Razoring

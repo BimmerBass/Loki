@@ -11,7 +11,7 @@ enum InfoParameters :int { NAME = 0, VERSION = 1, AUTHOR = 2 };
 // Current rating measured against TSCP (1725 elo) (1 min + 0 s, 40 move tc): 1773 elo
 static std::map<InfoParameters, std::string> EngineInfo {
 	{NAME, "Loki"},
-	{ VERSION, "1.1.0" },
+	{ VERSION, "1.2.0" },
 	{ AUTHOR, "Niels Abildskov" }
 };
 
@@ -20,9 +20,9 @@ namespace UCI {
 
 	void UCI_loop();
 
-	void parse_position(std::string posLine, GameState_t* pos);
+	void parse_position(char* posLine, GameState_t* pos);
 
-	void parse_go(std::string goLine, GameState_t* pos, SearchInfo_t* info);
+	void parse_go(char* goLine, GameState_t* pos, SearchInfo_t* info);
 
 	void goPerft(std::string l, GameState_t* pos);
 

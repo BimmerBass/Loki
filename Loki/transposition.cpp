@@ -4,8 +4,9 @@
 TranspositionTable *tt = new TranspositionTable(TT_DEFAULT_SIZE);
 
 TranspositionTable::TranspositionTable(uint64_t size) {
-	numEntries = int(MB(size) / sizeof(TT_Entry));
-
+	uint64_t upperSize = MB(size) / sizeof(TT_Entry);
+	numEntries = shrink_to_fit(upperSize); // numEntries should be a power of two.
+	
 	entries = new TT_Entry[numEntries];
 
 	clear_table();
@@ -19,13 +20,14 @@ TranspositionTable::~TranspositionTable() {
 
 // We shift the size by twenty to go from bytes to megabytes
 size_t TranspositionTable::size() {
-	return (((unsigned long long)numEntries * sizeof(TT_Entry)) >> 20) + 1;
+	return ((numEntries * sizeof(TT_Entry)) >> 20) + 1;
 }
 
 void TranspositionTable::resize(uint64_t size) {
 	delete[] entries;
 
-	numEntries = int(MB(size) / sizeof(TT_Entry));
+	uint64_t upperSize = MB(size) / sizeof(TT_Entry);
+	numEntries = shrink_to_fit(upperSize);
 
 	entries = new TT_Entry[numEntries];
 
@@ -42,13 +44,13 @@ void TranspositionTable::clear_table() {
 		entries[i].data.move = NOMOVE;
 		entries[i].data.score = 0;
 		entries[i].data.depth = 0;
-		entries[i].data.flag = NO_FLAG;
+		entries[i].data.flag = ttFlag::NO_FLAG;
 	}
 }
 
-// When probing the transposition table, we won't use time validating the entry while probing. Rather this will be done in search, so we'll just return the entry
+
 TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
-	TT_Entry* slot = &entries[key & (uint64_t(numEntries) - 1)];
+	TT_Entry* slot = &entries[key % numEntries];
 	uint64_t* data = (uint64_t*) &slot->data;
 
 	if (slot->key == (key ^ *data)) {
@@ -62,11 +64,11 @@ TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
 
 
 // For now we are just using a replace all strategy
-void TranspositionTable::store_entry(const GameState_t* pos, int move, int score, int depth, int flag) {
-	TT_Entry* slot = &entries[pos->posKey & (uint64_t(numEntries) - 1)];
+void TranspositionTable::store_entry(const GameState_t* pos, int move, int score, unsigned int depth, ttFlag flag) {
+	TT_Entry* slot = &entries[pos->posKey % numEntries];
 	uint64_t* data = (uint64_t*) &slot->data;
 
-	assert(flag >= 0 && flag <= 2);
+	assert(flag >= ttFlag::ALPHA && flag <= ttFlag::EXACT);
 
 	/*
 	Here we use the so-called "under-cut" replacement scheme as suggested by H.G. Muller on the talkchess forum.
@@ -75,7 +77,7 @@ void TranspositionTable::store_entry(const GameState_t* pos, int move, int score
 	if (depth >= slot->data.depth || depth == slot->data.depth - 1) {
 		slot->key = pos->posKey ^ *data;
 		slot->data.move = move;
-		slot->data.score = score;
+		slot->data.score = value_to_tt(score, pos->ply);
 		slot->data.depth = depth;
 		slot->data.flag = flag;
 	}

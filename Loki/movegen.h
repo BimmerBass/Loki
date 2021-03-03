@@ -6,10 +6,10 @@
 namespace moveGen {
 
 	template<MoveType T>
-	MoveList* generate(GameState_t* pos);
+	void generate(GameState_t* pos, MoveList* move_list);
 
 	// Checks if the move exists for the current position
-	bool moveExists(GameState_t* pos, int move);
+	bool moveExists(GameState_t* pos, unsigned int move);
 }
 
 
