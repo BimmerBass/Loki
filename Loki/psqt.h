@@ -1,9 +1,28 @@
 #ifndef PSQT_H
 #define PSQT_H
 #include <cmath>
+#include <vector>
 
 
 namespace PSQT {
+	class Score {
+	public:
+		Score(int m, int e) {
+			mgVal = m; egVal = e;
+		}
+
+		int mg() const {
+			return mgVal;
+		}
+		int eg() const {
+			return egVal;
+		}
+
+	private:
+		int mgVal = 0;
+		int egVal = 0;
+	};
+
 	/*
 	Piece square table
 	*/
@@ -33,6 +52,9 @@ namespace PSQT {
 	extern const int Mirror64[64];
 
 	extern int ManhattanDistance[64][64];
+	
+	//extern const Score* mobilityBonus[4];
+	extern const std::vector<std::vector<Score>> mobilityBonus;
 
 	void initManhattanDistance();
 

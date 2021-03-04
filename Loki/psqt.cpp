@@ -189,6 +189,34 @@ namespace PSQT {
 	};
 
 
+
+
+	/*
+	
+	Mobility bonuses
+	
+	*/
+#define S(mg, eg) Score(mg, eg)
+	const std::vector<Score> knightMobility = { S(-20, -16), S(5, 6), S(10, 12), S(15, 18), S(30, 45), S(60, 90), S(75, 80), S(90, 100), S(100, 120) };
+	const std::vector<Score> bishopMobility = { S(-25, -16), S(1, 2), S(3, 5), S(5, 7), S(10, 15), S(13, 18), S(18, 22), S(21, 26),
+		S(27, 30), S(35, 42), S(45, 50), S(55, 65), S(75, 80), S(90, 100), S(110, 130) };
+
+	const std::vector<Score> rookMobility = { S(2, 10), S(4, 20), S(8, 35),  S(12, 45),  S(24, 50),  S(32, 75),  S(40, 100),  S(50, 125),
+		S(65, 150),  S(80, 165),  S(100, 180),  S(125, 200),  S(140, 220),  S(155, 240),  S(170, 250) };
+
+	const std::vector<Score> queenMobility = { S(0, -20), S(3, 0), S(5, 8),  S(8, 12),  S(12, 17),  S(15, 25),  S(20, 30),  S(23, 35),  S(24, 45),
+		S(26, 60),  S(27, 75),  S(30, 85),  S(40, 95),  S(45, 105),  S(50, 120),  S(55, 150),  S(63, 160),  S(66, 175),
+		S(70, 185),  S(80, 195),  S(90, 210),  S(100, 215),  S(110, 225),  S(120, 240),  S(135, 250),  S(140, 265),  S(150, 275),  S(160, 280),  S(175, 300) };
+
+	const std::vector<std::vector<Score>> mobilityBonus = {
+		knightMobility,
+		bishopMobility,
+		rookMobility,
+		queenMobility
+	};
+
+#undef S
+
 	namespace {
 
 		int compute_md(int sq1, int sq2) {

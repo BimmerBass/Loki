@@ -93,7 +93,7 @@ namespace Eval {
 		
 		*/
 		template<SIDE side, GamePhase phase>
-		int king_safety(GameState_t* pos){
+		int king_safety(GameState_t* pos, Evaluation& eval){
 			int v = 0;
 
 			int king_square = pos->king_squares[side];
@@ -365,6 +365,89 @@ namespace Eval {
 
 
 
+		/*
+		
+		Mobility
+		
+		*/
+
+		template<SIDE side, int pce>
+		void mobility(GameState_t* pos, Evaluation& Eval) {
+			int mg = 0;
+			int eg = 0;
+
+			Bitboard attacks = 0; // All attacks from all pieces of type pce used to populate the bitmasks in Eval
+			Bitboard piece_attacks = 0; // Individual piece attacks.
+
+			Bitboard friends = pos->all_pieces[side];
+			Bitboard pceBoard = pos->pieceBBS[pce][side];
+			int sq = 0;
+
+
+			if (pce < KNIGHT || pce > QUEEN || pceBoard == 0) {
+				return;
+			}
+
+			while (pceBoard != 0) {
+				sq = PopBit(&pceBoard);
+
+				if constexpr (pce == KNIGHT) {
+					piece_attacks = BBS::knight_attacks[sq];
+					attacks |= piece_attacks;
+					piece_attacks &= ~friends;
+					
+					int attack_cnt = countBits(piece_attacks);
+					assert(attack_cnt < 9);
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+				}
+
+				else if constexpr (pce == BISHOP) {
+					piece_attacks = Magics::attacks_bb<BISHOP>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
+					attacks |= piece_attacks;
+					piece_attacks &= ~friends;
+
+					int attack_cnt = countBits(piece_attacks);
+					assert(attack_cnt < 15);
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+				}
+
+				else if constexpr (pce == ROOK) {
+					piece_attacks = Magics::attacks_bb<ROOK>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
+					attacks |= piece_attacks;
+					piece_attacks &= ~friends;
+
+					int attack_cnt = countBits(piece_attacks);
+					assert(attack_cnt < 15);
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+				}
+
+				else if constexpr (pce == QUEEN) {
+					piece_attacks = Magics::attacks_bb<QUEEN>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
+					attacks |= piece_attacks;
+					piece_attacks &= ~friends;
+
+					int attack_cnt = countBits(piece_attacks);
+					assert(attack_cnt < 29);
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+				}
+
+				else { // Just in case we went into the loop without a proper piece-type.
+					assert(pce >= KNIGHT && pce <= QUEEN); // Raise an error.
+					return;
+				}
+			}
+
+			// Populate attacks bitmask for the piece and side in Eval.
+			Eval.attacks[pce][side] = attacks;
+
+			// Make the scores side-relative.
+			Eval.mg += (side == WHITE) ? mg : -mg;
+			Eval.eg += (side == WHITE) ? eg : -eg;
+		}
 	}
 
 
@@ -382,6 +465,11 @@ namespace Eval {
 
 		// Pawn structure evaluation
 		pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
+		
+		mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
+		mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
+		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
+		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
 
 		// Piece evaluations --> loses elo at the moment
 		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);

@@ -8,6 +8,7 @@
 enum GamePhase :int { MG = 0, EG = 1 };
 
 namespace Eval {
+
 	struct Evaluation {
 		Evaluation(int m, int e) {
 			mg = m; eg = e;
@@ -47,6 +48,7 @@ namespace Eval {
 		rookValMg = 500,
 		queenValMg = 900,
 		kingValMg = 20000,
+
 		pawnValEg = 100,
 		knightValEg = 320,
 		bishopValEg = 350,
