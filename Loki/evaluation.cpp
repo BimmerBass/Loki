@@ -455,10 +455,10 @@ namespace Eval {
 	int evaluate(GameState_t* pos) {
 		int v = 0;
 
-		// Material draw check --> loses elo at the moment.
-		//if (material_draw(pos)) {
-		//	return 0;
-		//}
+		// Material draw check (~22 elo)
+		if (material_draw(pos)) {
+			return 0;
+		}
 
 		// Create an evaluation object holding the middlegame and endgamescore separately.
 		Evaluation eval(mg_evaluate(pos), eg_evaluate(pos));
@@ -472,7 +472,7 @@ namespace Eval {
 		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
 		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
 
-		// Piece evaluations --> loses elo at the moment
+		// Piece evaluations --> loses elo (~50) at the moment
 		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
 		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
 		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
@@ -529,44 +529,47 @@ namespace Eval {
 			return true;
 		}
 
-		// We assume that any number of major pieces can force a checkmate.
-		if (pos->pieceBBS[QUEEN][WHITE] == 0 && pos->pieceBBS[ROOK][WHITE] == 0 && pos->pieceBBS[QUEEN][BLACK] == 0 && pos->pieceBBS[ROOK][BLACK] == 0) {
-			// If there are no bishops
-			if (pos->pieceBBS[BISHOP][WHITE] == 0 && pos->pieceBBS[BISHOP][BLACK] == 0) {
-				if (countBits(pos->pieceBBS[KNIGHT][WHITE]) <= 2 && countBits(pos->pieceBBS[KNIGHT][BLACK]) <= 2) { return true; }
-			}
-
-			// If there are no knights
-			else if (pos->pieceBBS[KNIGHT][WHITE] == 0 && pos->pieceBBS[KNIGHT][BLACK] == 0) {
-				if (abs(countBits(pos->pieceBBS[BISHOP][WHITE]) - countBits(pos->pieceBBS[BISHOP][BLACK])) < 2) { return true; }
-			}
-
-			else if ((countBits(pos->pieceBBS[KNIGHT][WHITE]) < 3 && pos->pieceBBS[BISHOP][WHITE] == 0) || (countBits(pos->pieceBBS[BISHOP][WHITE]) == 1 && pos->pieceBBS[KNIGHT][WHITE] == 0)) {
-				if (((countBits(pos->pieceBBS[KNIGHT][BLACK]) < 3 && pos->pieceBBS[BISHOP][BLACK] == 0) || (countBits(pos->pieceBBS[BISHOP][BLACK]) == 1 && pos->pieceBBS[KNIGHT][BLACK] == 0))) {
-					return true;
+		// If there are still pawns on the board, it is not a material draw due to the possibility of promotions
+		if (pos->pieceBBS[PAWN][WHITE] == 0 && pos->pieceBBS[PAWN][BLACK] == 0) {
+			// We assume that any number of major pieces can force a checkmate.
+			if (pos->pieceBBS[QUEEN][WHITE] == 0 && pos->pieceBBS[ROOK][WHITE] == 0 && pos->pieceBBS[QUEEN][BLACK] == 0 && pos->pieceBBS[ROOK][BLACK] == 0) {
+				// If there are no bishops
+				if (pos->pieceBBS[BISHOP][WHITE] == 0 && pos->pieceBBS[BISHOP][BLACK] == 0) {
+					if (countBits(pos->pieceBBS[KNIGHT][WHITE]) <= 2 && countBits(pos->pieceBBS[KNIGHT][BLACK]) <= 2) { return true; }
 				}
-			}
-		}
 
-		else if (pos->pieceBBS[QUEEN][WHITE] == 0 && pos->pieceBBS[QUEEN][BLACK] == 0) {
-			if (countBits(pos->pieceBBS[ROOK][WHITE]) == 1 && countBits(pos->pieceBBS[ROOK][BLACK]) == 1) {
-				if (countBits(pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[BISHOP][WHITE]) < 2 && countBits(pos->pieceBBS[KNIGHT][BLACK] | pos->pieceBBS[BISHOP][BLACK]) < 2) { return true; }
-			}
+				// If there are no knights
+				else if (pos->pieceBBS[KNIGHT][WHITE] == 0 && pos->pieceBBS[KNIGHT][BLACK] == 0) {
+					if (abs(countBits(pos->pieceBBS[BISHOP][WHITE]) - countBits(pos->pieceBBS[BISHOP][BLACK])) < 2) { return true; }
+				}
 
-			else if (countBits(pos->pieceBBS[ROOK][WHITE]) == 1 && pos->pieceBBS[ROOK][BLACK] == 0) {
-				if ((pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[BISHOP][WHITE]) == 0 &&
-					(countBits(pos->pieceBBS[KNIGHT][BLACK] | pos->pieceBBS[BISHOP][BLACK]) == 1 || countBits(pos->pieceBBS[KNIGHT][BLACK] | pos->pieceBBS[BISHOP][BLACK]) == 2)) {
-					return true;
+				else if ((countBits(pos->pieceBBS[KNIGHT][WHITE]) < 3 && pos->pieceBBS[BISHOP][WHITE] == 0) || (countBits(pos->pieceBBS[BISHOP][WHITE]) == 1 && pos->pieceBBS[KNIGHT][WHITE] == 0)) {
+					if (((countBits(pos->pieceBBS[KNIGHT][BLACK]) < 3 && pos->pieceBBS[BISHOP][BLACK] == 0) || (countBits(pos->pieceBBS[BISHOP][BLACK]) == 1 && pos->pieceBBS[KNIGHT][BLACK] == 0))) {
+						return true;
+					}
 				}
 			}
 
-			else if (pos->pieceBBS[ROOK][WHITE] == 0 && countBits(pos->pieceBBS[ROOK][BLACK]) == 1) {
-				if ((pos->pieceBBS[KNIGHT][BLACK] | pos->pieceBBS[BISHOP][BLACK]) == 0 &&
-					(countBits(pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[BISHOP][WHITE]) == 1 || countBits(pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[BISHOP][WHITE]) == 2)) {
-					return true;
+			else if (pos->pieceBBS[QUEEN][WHITE] == 0 && pos->pieceBBS[QUEEN][BLACK] == 0) {
+				if (countBits(pos->pieceBBS[ROOK][WHITE]) == 1 && countBits(pos->pieceBBS[ROOK][BLACK]) == 1) {
+					if (countBits(pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[BISHOP][WHITE]) < 2 && countBits(pos->pieceBBS[KNIGHT][BLACK] | pos->pieceBBS[BISHOP][BLACK]) < 2) { return true; }
 				}
-			}
 
+				else if (countBits(pos->pieceBBS[ROOK][WHITE]) == 1 && pos->pieceBBS[ROOK][BLACK] == 0) {
+					if ((pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[BISHOP][WHITE]) == 0 &&
+						(countBits(pos->pieceBBS[KNIGHT][BLACK] | pos->pieceBBS[BISHOP][BLACK]) == 1 || countBits(pos->pieceBBS[KNIGHT][BLACK] | pos->pieceBBS[BISHOP][BLACK]) == 2)) {
+						return true;
+					}
+				}
+
+				else if (pos->pieceBBS[ROOK][WHITE] == 0 && countBits(pos->pieceBBS[ROOK][BLACK]) == 1) {
+					if ((pos->pieceBBS[KNIGHT][BLACK] | pos->pieceBBS[BISHOP][BLACK]) == 0 &&
+						(countBits(pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[BISHOP][WHITE]) == 1 || countBits(pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[BISHOP][WHITE]) == 2)) {
+						return true;
+					}
+				}
+
+			}
 		}
 
 		return false;
