@@ -21,12 +21,13 @@ Loki uses bitboards as its main board representation
 - Overall **Perft @ depth = 5 speed of 450ms** from starting position, without bulk-counting.
 
 #### Evaluation
-The evaluation is very simple at the moment, and a good elo increased is expected when I get around to improving it.
+The evaluation is very simple at the moment, and a good elo increase is expected when I get around to improving it.
 - Material.
 - Piece-square tables.
 - Pawn structure and passed pawns.
 - Tapered eval to interpolate between game phases.
-- Specialized piece evaluation. This has been implemented, but showed a small elo decrease, so I will test it after adding mobility, since these should hopefully work pretty nicely together.
+- Piece mobility evaluation.
+- Specialized piece evaluation. This has been implemented, but showed a small elo decrease, but in the near future, it will be tested in conjunction with mobility in the hopes that they compliment each other.
 
 #### Search
 - Lazy SMP supporting up to 8 threads.
@@ -75,7 +76,6 @@ It is also possible to change the amount of optimizations with both compilers by
     - Null move reductions.
     - Null move threat extensions.
     - King safety in evaluation.
-    - Mobility in evaluation.
     - Mobility + pieces in evaluation.
 - If Loki ever reaches an elo on CCRL of ~2300 I will implement an optimization algorithm called [AdamSPSA](https://arxiv.org/pdf/1910.03591.pdf) 
 (see page 4 for parameter updates), in order to tune the evaluation function and search parameters.
