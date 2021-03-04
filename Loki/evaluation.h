@@ -40,6 +40,12 @@ namespace Eval {
 	// Returns true if no checkmate can be forced by either side.
 	bool material_draw(GameState_t* pos);
 	
+	// Returns a bitboard with all squares, that the king can move to, together with the king square itself
+	inline Bitboard king_ring(int kingSq) {
+		assert(kingSq >= A1 && kingSq <= H8);
+
+		return (BBS::king_attacks[kingSq] | (uint64_t(1) << kingSq));
+	}
 
 	enum pieceValues : int {
 		pawnValMg = 100,

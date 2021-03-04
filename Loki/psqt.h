@@ -48,13 +48,20 @@ namespace PSQT {
 	Other square tables
 	*/
 	extern const int passedPawnTable[64];
+	extern const int castledPawnAdvancementMg[64];
 
 	extern const int Mirror64[64];
 
 	extern int ManhattanDistance[64][64];
 	
-	//extern const Score* mobilityBonus[4];
 	extern const std::vector<std::vector<Score>> mobilityBonus;
+
+
+	/*
+	King safety table.
+	*/
+	extern const Score safety_table[100];
+
 
 	void initManhattanDistance();
 

@@ -92,24 +92,52 @@ namespace Eval {
 		King safety
 		
 		*/
-		template<SIDE side, GamePhase phase>
-		int king_safety(GameState_t* pos, Evaluation& eval){
-			int v = 0;
 
+		template<SIDE side>
+		void king_safety(GameState_t* pos, Evaluation& eval){
+			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
+			constexpr int relative_ranks[8] = { (side == WHITE) ? RANK_1 : RANK_8, (side == WHITE) ? RANK_2 : RANK_7,
+				(side == WHITE) ? RANK_3 : RANK_6, (side == WHITE) ? RANK_4 : RANK_5, (side == WHITE) ? RANK_5 : RANK_4,
+				(side == WHITE) ? RANK_6 : RANK_3, (side == WHITE) ? RANK_7 : RANK_2, (side == WHITE) ? RANK_8 : RANK_1 };
+			
+			int mg = 0;
+			int eg = 0;
+
+			int attack_units = 0; // Used to index safety table.
 			int king_square = pos->king_squares[side];
+			Bitboard kingRing = king_ring(king_square);
 
 			// Penalize the side depending on the distance to the pawns on the king's flank.
 			Bitboard king_pawns = pos->pieceBBS[PAWN][side] & king_flanks[king_square % 8];
 			int sq;
 			while (king_pawns) {
 				sq = PopBit(&king_pawns);
+				mg += PSQT::castledPawnAdvancementMg[(side == WHITE) ? sq : PSQT::Mirror64[sq]];
 
-				v -= 2 * (PSQT::ManhattanDistance[king_square][sq] * PSQT::ManhattanDistance[king_square][sq]);
+				// In the endgame we want the king in the center, but more specifically close to the pawns, so here we'll also give a smaller penalty for pawn distance on the king flank
+				eg -= 2 * PSQT::ManhattanDistance[king_square][sq];
 			}
 
+			// If the opponent king is on another flank, give bonus proportional to the distance to all pawns on our flank.
+			// This is a simple way of avoiding pawn storms 
 
+			// Now we'll gather information on attack units.
+			// We give each attack by a minor two attack units, rook attacks get 3 and queens get 5.
+			attack_units += 2 * (countBits((kingRing & eval.attacks[KNIGHT][Them]) | (kingRing & eval.attacks[BISHOP][Them])));
+			attack_units += 3 * (countBits(kingRing & eval.attacks[ROOK][Them]));
+			attack_units += 5 * (countBits(kingRing & eval.attacks[QUEEN][Them]));
 
-			return v;
+			attack_units += 2 * (3 - std::min(3, countBits(pos->pieceBBS[PAWN][side] & king_flanks[king_square % 8])));
+
+			if (attack_units > 99) { // Prevent overflow when accessing safety table.
+				attack_units = 99;
+			}
+
+			mg -= PSQT::safety_table[attack_units].mg();
+			eg -= PSQT::safety_table[attack_units].eg();
+
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
@@ -472,6 +500,9 @@ namespace Eval {
 		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
 		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
 
+		// Simple king safety evaluation (~11 elo --> too little?!)
+		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
+
 		// Piece evaluations --> loses elo (~50) at the moment
 		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
 		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
@@ -583,18 +614,18 @@ namespace Eval {
 		Bitboard flank;
 
 		for (int f = FILE_A; f <= FILE_H; f++) {
-			flank = 0;
-			
-			flank |= BBS::FileMasks8[f];
-
-			if (f > FILE_A) {
-				flank |= BBS::FileMasks8[f - 1];
+			if (f < FILE_D) {
+				king_flanks[f] = (BBS::FileMasks8[FILE_A] | BBS::FileMasks8[FILE_B] | BBS::FileMasks8[FILE_C]);
 			}
-			if (f < FILE_H) {
-				flank |= BBS::FileMasks8[f + 1];
+			else if (f == FILE_D) {
+				king_flanks[f] = (BBS::FileMasks8[FILE_C] | BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E]);
 			}
-
-			king_flanks[f] = flank;
+			else if (f == FILE_E) {
+				king_flanks[f] = (BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E] | BBS::FileMasks8[FILE_F]);
+			}
+			else if (f > FILE_E) {
+				king_flanks[f] = (BBS::FileMasks8[FILE_F] | BBS::FileMasks8[FILE_G] | BBS::FileMasks8[FILE_H]);
+			}
 		}
 	}
 

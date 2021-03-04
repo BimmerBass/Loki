@@ -174,6 +174,18 @@ namespace PSQT {
 		0	,	0	,	0	,	0	,	0	,	0	,	0	,	0
 	};
 
+	// This table contains the penalties for advanced pawns in front of the king.
+	const int castledPawnAdvancementMg[64] = {
+		0	,	 0	,	0	,	 0	,	 0	,	 0	,	 0	,	 0	,
+		0	,	 0	,	0	,	 0	,	 0	,	 0	,	 0	,	 0	,
+		-4	,	-10	,	-15	,	 0	,	 0	,	 -5	,	-10	,	 -7	,
+		-2	,	-12	,	-5	,	 0	,	 -5	,	-9	,	-15	,	-10	,
+		0	,	 0	,	0	,	 0	,	 0	,	 0	,	 0	,	 0	,
+		-10	,	-15	,	-15	,	 0	,	 0	,	-15	,	-15	,	-10	,
+		30	,	 30	,	30	,	 30	,	 30	,	 30	,	 30	,	 30	,
+		0	,	 0	,	0	,	 0	,	 0	,	 0	,	 0	,	 0
+	};
+
 
 
 	// This is to make the psqt give the same values for black pieces. For example square a1 for white corresponds to square h8 for black.
@@ -213,6 +225,22 @@ namespace PSQT {
 		bishopMobility,
 		rookMobility,
 		queenMobility
+	};
+
+
+	// For the time being, these values are taken from https://www.chessprogramming.org/King_Safety until proper tuning is implemented.
+	// Therefore, endgame and middlegame scores are also the same at the moment.
+	const Score safety_table[100] = {
+		S(0, 0),		S(1, 1),		S(1, 1),		S(2, 2),		S(2, 2),		S(3, 3),		S(4, 4),		S(4, 4),		S(5, 5),		S(6, 6),
+		S(9, 9),		S(12, 12),		S(15, 15),		S(18, 18),		S(21, 21),		S(24, 24),		S(27, 27),		S(30, 30),		S(33, 33),		S(36, 36),
+		S(40, 40),		S(50, 50),		S(60, 60),		S(75, 75),		S(90, 90),		S(100, 100),	S(110, 110),	S(120, 120),	S(130, 130),	S(140, 140),
+		S(150, 150),	S(160, 160),	S(170, 170),	S(180, 180),	S(190, 190),	S(200, 200),	S(210, 210),	S(220, 220),	S(230, 230),	S(240, 240),
+		S(250, 250),	S(260, 260),	S(270, 270),	S(280, 280),	S(290, 290),	S(300, 300),	S(310, 310),	S(320, 320),	S(330, 330),	S(340, 340),
+		S(350, 350),	S(360, 360),	S(370, 370),	S(380, 380),	S(390, 390),	S(400, 400),	S(410, 410),	S(420, 420),	S(430, 430),	S(440, 440),
+		S(450, 450),	S(460, 460),	S(470, 470),	S(480, 480),	S(490, 490),	S(500, 500),	S(510, 510),	S(520, 520),	S(530, 530),	S(540, 540),
+		S(550, 550),	S(560, 560),	S(570, 570),	S(580, 580),	S(590, 590),	S(600, 600),	S(610, 610),	S(620, 620),	S(630, 630),	S(640, 640),
+		S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),
+		S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650)
 	};
 
 #undef S
