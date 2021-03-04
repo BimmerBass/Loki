@@ -466,6 +466,7 @@ namespace Eval {
 		// Pawn structure evaluation
 		pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
 		
+		// Evaluate mobility (~56 elo)
 		mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
 		mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
 		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
