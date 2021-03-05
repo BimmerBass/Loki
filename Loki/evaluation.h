@@ -115,11 +115,15 @@ Piece evaluation constants
 */
 constexpr int outpost[2] = { 16, 10 };
 constexpr int reachable_outpost[2] = { 7, 5 };
+
+constexpr int knight_on_kingring[2] = { 5, 2 };
 constexpr int defended_knight[2] = { 5, 3 };
 
+constexpr int bishop_on_kingring[2] = { 15, 18 };
 constexpr int bishop_on_queen[2] = { 12, 18 };
 constexpr int blocked_bishop_coefficient_penalty[2] = { 3, 2 };
 
+constexpr int rook_on_kingring[2] = { 10, 20 };
 constexpr int rook_on_queen[2] = { 6, 9 };
 constexpr int doubled_rooks[2] = { 40, 20 };
 constexpr int rook_open_file[2] = { 20, 14 };
@@ -127,6 +131,7 @@ constexpr int rook_semi_open_file[2] = { 9, 11 };
 constexpr int rook_behind_passer = 90;
 
 
+constexpr int queen_on_kingring[2] = { 3, 9 };
 constexpr int queen_development_penalty = 5; // Only used in the middlegame.
 
 

@@ -311,7 +311,8 @@ namespace Eval {
 			constexpr int first_rank = (side == WHITE) ? RANK_1 : RANK_8;
 			
 			Bitboard occupied = pos->all_pieces[WHITE] | pos->all_pieces[BLACK];
-			
+			Bitboard enemy_kingRing = king_ring((side == WHITE) ? pos->king_squares[BLACK] : pos->king_squares[WHITE]);
+
 			int mg = 0;
 			int eg = 0;
 
@@ -371,6 +372,12 @@ namespace Eval {
 						int blocking_pawns_count = countBits(attacks & pos->pieceBBS[PAWN][side]);
 						mg -= blocked_bishop_coefficient_penalty[MG] * blocking_pawns_count;
 						eg -= blocked_bishop_coefficient_penalty[EG] * blocking_pawns_count;
+
+						// Bonus for attacking the king ring
+						if ((attacks & enemy_kingRing) != 0) {
+							mg += bishop_on_kingring[MG];
+							eg += bishop_on_kingring[EG];
+						}
 					}
 				
 				
@@ -387,6 +394,12 @@ namespace Eval {
 							mg += defended_knight[MG];
 							eg += defended_knight[EG];
 						}
+
+						// Bonus for attacking the enemy king ring
+						if ((attacks & enemy_kingRing) != 0) {
+							mg += knight_on_kingring[MG];
+							eg += knight_on_kingring[EG];
+						}
 					}
 					continue;
 				}
@@ -401,7 +414,12 @@ namespace Eval {
 						mg += rook_on_queen[MG];
 						eg += rook_on_queen[EG];
 					}
-				
+					
+					// Give bonus for attacking the king ring
+					if ((attacks & enemy_kingRing) != 0) {
+						mg += rook_on_kingring[MG];
+						eg += rook_on_kingring[EG];
+					}
 				
 					// Give bonus for being on an open file.
 					if (((pos->pieceBBS[PAWN][BLACK] | pos->pieceBBS[PAWN][WHITE]) & BBS::FileMasks8[f]) == 0) {
@@ -437,6 +455,12 @@ namespace Eval {
 					// Give a penalty for early queen development. This is done by multiplying a factor with the amount of minor pieces on the first rank.
 					if (r != first_rank) {
 						mg -= queen_development_penalty * countBits((pos->pieceBBS[BISHOP][side] | pos->pieceBBS[KNIGHT][side]) & BBS::RankMasks8[first_rank]);
+					}
+
+					// Give small bonus for attacking the enemy king ring
+					if ((attacks & enemy_kingRing) != 0) {
+						mg += queen_on_kingring[MG];
+						eg += queen_on_kingring[EG];
 					}
 				
 					continue;
@@ -562,7 +586,7 @@ namespace Eval {
 		// Simple king safety evaluation (~47 elo)
 		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
-		// Piece evaluations --> loses elo (~50) at the moment
+		// Piece evaluations --> loses elo (~23) at the moment
 		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
 		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
 		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
