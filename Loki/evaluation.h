@@ -86,7 +86,8 @@ Constants --- NOTE: If a constant doesn't end with "_penalty" it is a bonus unle
 
 */
 constexpr int tempo = 18;
-
+const int max_material[2] = { Eval::queenValMg + 2 * Eval::rookValMg + 2 * Eval::bishopValMg + 2 * Eval::knightValMg,
+							Eval::queenValEg + 2 * Eval::rookValEg + 2 * Eval::bishopValEg + 2 * Eval::knightValEg };
 
 
 
@@ -127,5 +128,15 @@ constexpr int rook_behind_passer = 90;
 
 
 constexpr int queen_development_penalty = 5; // Only used in the middlegame.
+
+
+/*
+
+King evaluation constants
+
+*/
+constexpr int king_open_file_penalty = 50;
+constexpr int king_semi_open_file_penalty = 25;
+
 
 #endif

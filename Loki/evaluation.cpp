@@ -93,6 +93,23 @@ namespace Eval {
 		
 		*/
 
+
+		template<SIDE side, GamePhase p>
+		int non_pawn_material(GameState_t* pos) {
+			assert(side == WHITE || side == BLACK);
+			assert(p == MG || p == EG);
+
+			if (p == MG) {
+				return knightValMg * countBits(pos->pieceBBS[KNIGHT][side]) + bishopValMg * countBits(pos->pieceBBS[BISHOP][side]) + rookValMg * countBits(pos->pieceBBS[ROOK][side])
+					+ queenValMg * countBits(pos->pieceBBS[QUEEN][side]);
+			}
+			else {
+				return knightValEg * countBits(pos->pieceBBS[KNIGHT][side]) + bishopValEg * countBits(pos->pieceBBS[BISHOP][side]) + rookValEg * countBits(pos->pieceBBS[ROOK][side])
+					+ queenValEg * countBits(pos->pieceBBS[QUEEN][side]);
+			}
+		}
+
+
 		template<SIDE side>
 		void king_safety(GameState_t* pos, Evaluation& eval){
 			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
@@ -105,36 +122,78 @@ namespace Eval {
 
 			int attack_units = 0; // Used to index safety table.
 			int king_square = pos->king_squares[side];
+			int king_file = king_square % 8;
 			Bitboard kingRing = king_ring(king_square);
 
-			// Penalize the side depending on the distance to the pawns on the king's flank.
+			// Penalize the side depending on the distance to the pawns on the king's flank. This doesn't apply for the center
 			Bitboard king_pawns = pos->pieceBBS[PAWN][side] & king_flanks[king_square % 8];
+			Bitboard enemy_king_pawns = pos->pieceBBS[PAWN][Them] & king_flanks[king_file];
 			int sq;
-			while (king_pawns) {
-				sq = PopBit(&king_pawns);
-				mg += PSQT::castledPawnAdvancementMg[(side == WHITE) ? sq : PSQT::Mirror64[sq]];
 
-				// In the endgame we want the king in the center, but more specifically close to the pawns, so here we'll also give a smaller penalty for pawn distance on the king flank
-				eg -= 2 * PSQT::ManhattanDistance[king_square][sq];
+			// Penalize missing pawns on the files of the flank
+			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
+				if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0) {
+					mg -= 40;
+					eg -= 15;
+				}
+
+				// Penalize an open/semi-open file in the endgame
+				if (((pos->pieceBBS[PAWN][WHITE] | pos->pieceBBS[PAWN][BLACK]) & BBS::FileMasks8[f]) == 0) { // No pawns --> open
+					mg -= king_open_file_penalty;
+				}
+				else if ((pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Only pawns of this side --> semi-open
+					mg -= king_semi_open_file_penalty;
+				}
+			}
+			
+			if (king_file != FILE_E && king_file != FILE_D) {
+				while (king_pawns) {
+					//sq = (side == WHITE) ? PopBit(&king_pawns) : PSQT::Mirror64[PopBit(&king_pawns)];
+					sq = PopBit(&king_pawns);
+
+					mg -= (side == WHITE) ? PSQT::castledPawnAdvancementMg[sq] : PSQT::castledPawnAdvancementMg[PSQT::Mirror64[sq]];
+			
+					// Penalize distance to pawns on the king flank in the endgame
+					eg -= 2 * PSQT::ManhattanDistance[king_square][sq];
+				}
+
+				while (enemy_king_pawns) {
+					sq = PopBit(&enemy_king_pawns);
+
+					mg -= (side == WHITE) ? PSQT::pawnStormMg[sq] : PSQT::pawnStormMg[PSQT::Mirror64[sq]];
+				}
+
 			}
 
-			// If the opponent king is on another flank, give bonus proportional to the distance to all pawns on our flank.
-			// This is a simple way of avoiding pawn storms 
+			// We'll scale the king's pawn structure based on the opponents material. This will encourage the engine to trade pieces if the king's pawn
+			// structure is damaged, and not trade when the opponent's is worse.
+			double scalar_mg = double((side == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos)) / double(max_material[MG]);
+			double scalar_eg = double((side == WHITE) ? non_pawn_material<BLACK, EG>(pos) : non_pawn_material<WHITE, EG>(pos)) / double(max_material[EG]);
+
+			mg = std::round(mg * scalar_mg);
+			eg = std::round(eg * scalar_eg);
 
 			// Now we'll gather information on attack units.
 			// We give each attack by a minor two attack units, rook attacks get 3 and queens get 5.
-			attack_units += 2 * (countBits((kingRing & eval.attacks[KNIGHT][Them]) | (kingRing & eval.attacks[BISHOP][Them])));
-			attack_units += 3 * (countBits(kingRing & eval.attacks[ROOK][Them]));
-			attack_units += 5 * (countBits(kingRing & eval.attacks[QUEEN][Them]));
+			int knight_bishop_attackCnt = countBits((kingRing & eval.attacks[KNIGHT][Them]) | (kingRing & eval.attacks[BISHOP][Them]));
+			int rook_attackCnt = countBits(kingRing & eval.attacks[ROOK][Them]);
+			int queen_attackCnt = countBits(kingRing & eval.attacks[QUEEN][Them]);
 
-			attack_units += 2 * (3 - std::min(3, countBits(pos->pieceBBS[PAWN][side] & king_flanks[king_square % 8])));
+			attack_units += 2 * knight_bishop_attackCnt;
+			attack_units += 3 * rook_attackCnt;
+			attack_units += 5 * queen_attackCnt;
+
+			attack_units += (3 - std::min(3, countBits(pos->pieceBBS[PAWN][side] & king_flanks[king_square % 8])));
 
 			if (attack_units > 99) { // Prevent overflow when accessing safety table.
 				attack_units = 99;
 			}
 
-			mg -= PSQT::safety_table[attack_units].mg();
-			eg -= PSQT::safety_table[attack_units].eg();
+			// Only use safety table when opponent has a queen and more than one attacker
+			if ((knight_bishop_attackCnt + rook_attackCnt + queen_attackCnt) > 1 && pos->pieceBBS[QUEEN][Them] != 0) {
+				mg -= PSQT::safety_table[attack_units].mg();
+				eg -= PSQT::safety_table[attack_units].eg();
+			}
 
 			eval.mg += (side == WHITE) ? mg : -mg;
 			eval.eg += (side == WHITE) ? eg : -eg;
@@ -500,7 +559,7 @@ namespace Eval {
 		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
 		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
 
-		// Simple king safety evaluation (~11 elo --> too little?!)
+		// Simple king safety evaluation (~47 elo)
 		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
 		// Piece evaluations --> loses elo (~50) at the moment

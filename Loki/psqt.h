@@ -48,7 +48,6 @@ namespace PSQT {
 	Other square tables
 	*/
 	extern const int passedPawnTable[64];
-	extern const int castledPawnAdvancementMg[64];
 
 	extern const int Mirror64[64];
 
@@ -58,10 +57,12 @@ namespace PSQT {
 
 
 	/*
-	King safety table.
+	King-safety specific tables
 	*/
 	extern const Score safety_table[100];
 
+	extern const int castledPawnAdvancementMg[64];
+	extern const int pawnStormMg[64];
 
 	void initManhattanDistance();
 
