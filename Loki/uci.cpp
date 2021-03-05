@@ -20,20 +20,6 @@ void UCI::UCI_loop() {
 		tt->resize(uint64_t(TT_DEFAULT_SIZE));
 	}
 
-
-	// Give the GUI information about the engine
-	std::cout << "id name " << EngineInfo[NAME] << " " << EngineInfo[VERSION] << std::endl;
-	std::cout << "id author " << EngineInfo[AUTHOR] << std::endl;
-
-	// Option for changing transposition table size
-	std::cout << "option name Hash type spin default " << TT_DEFAULT_SIZE << " min " << TT_MIN_SIZE << " max " << TT_MAX_SIZE << std::endl;
-
-	// Option to change number of threads
-	std::cout << "option name Threads type spin default " << THREADS_DEFAULT_NUM << " min " << THREADS_MIN_NUM << " max " << THREADS_MAX_NUM << std::endl;
-
-	// After all "id" and "option" commands has been sent, let's tell the GUI that were ready.
-	std::cout << "uciok" << std::endl;
-
 	
 	char line[INPUTBUFFER] = { 0 };
 	int mb = TT_DEFAULT_SIZE;
@@ -50,7 +36,7 @@ void UCI::UCI_loop() {
 			continue;
 		}
 
-		if (!strncmp(line, "uci", 3)) {
+		if (!strncmp(line, "uci", 3)) { // Give the GUI information about the engine
 			std::cout << "id name " << EngineInfo[NAME] << " " << EngineInfo[VERSION] << std::endl;
 			std::cout << "id author " << EngineInfo[AUTHOR] << std::endl;
 

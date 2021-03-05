@@ -586,7 +586,7 @@ namespace Eval {
 		// Simple king safety evaluation (~47 elo)
 		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
-		// Piece evaluations --> loses elo (~23) at the moment
+		// Piece evaluations --> loses elo (~-23) at the moment
 		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
 		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
 		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
