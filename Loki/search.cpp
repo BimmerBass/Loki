@@ -737,7 +737,6 @@ namespace Search {
 		
 			if (ss->pos->non_pawn_material()) {
 				if (score + margin <= alpha) {
-					// Even though we're in a fail-hard negamax framework, we'll return the score here since razoring is supposed to act as an early quiescence search.
 					return alpha;
 				}
 			}
@@ -915,6 +914,7 @@ namespace Search {
 
 		}
 
+		// Step 14. Checkmate/Stalemate detection.
 		if (legal <= 0) {
 			if (ss->pos->in_check()) {
 				return -INF + ss->pos->ply;
@@ -1028,6 +1028,10 @@ namespace Search {
 			score = -quiescence(ss, -beta, -alpha);
 
 			ss->pos->undo_move();
+
+			if (ss->info->stopped) {
+				return 0;
+			}
 
 			if (score >= beta) {
 				if (legal == 1) {
