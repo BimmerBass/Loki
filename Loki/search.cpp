@@ -668,14 +668,19 @@ namespace Search {
 		
 			int R = nullmove_reduction(depth, ss->static_eval[ss->pos->ply] - beta);
 		
-		
+			int old_evaluation = ss->static_eval[ss->pos->ply];
 			int old_enpassant = ss->pos->make_nullmove();
-		
+			
+			// We want to use another eval here than the one already calculated since the former is inaccurate when the side to move gets switched
+			ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+
 			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
 			
 			// Clear the pv
 			line.clear();
 		
+			// Insert the real evaluation again in case we don't get a cutoff
+			ss->static_eval[ss->pos->ply] = old_evaluation;
 			ss->pos->undo_nullmove(old_enpassant);
 		
 			if (score >= beta && abs(score) < MATE) {
