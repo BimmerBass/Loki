@@ -99,7 +99,7 @@ namespace Eval {
 			assert(side == WHITE || side == BLACK);
 			assert(p == MG || p == EG);
 
-			if (p == MG) {
+			if constexpr (p == MG) {
 				return knightValMg * countBits(pos->pieceBBS[KNIGHT][side]) + bishopValMg * countBits(pos->pieceBBS[BISHOP][side]) + rookValMg * countBits(pos->pieceBBS[ROOK][side])
 					+ queenValMg * countBits(pos->pieceBBS[QUEEN][side]);
 			}
@@ -170,8 +170,8 @@ namespace Eval {
 			double scalar_mg = double((side == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos)) / double(max_material[MG]);
 			double scalar_eg = double((side == WHITE) ? non_pawn_material<BLACK, EG>(pos) : non_pawn_material<WHITE, EG>(pos)) / double(max_material[EG]);
 
-			mg = std::round(mg * scalar_mg);
-			eg = std::round(eg * scalar_eg);
+			mg = (int)std::round(mg * scalar_mg);
+			eg = (int)std::round(eg * scalar_eg);
 
 			// Now we'll gather information on attack units.
 			// We give each attack by a minor two attack units, rook attacks get 3 and queens get 5.
@@ -694,8 +694,6 @@ namespace Eval {
 	Bitboard king_flanks[8] = { 0 };
 
 	void initKingFlanks() {
-		Bitboard flank;
-
 		for (int f = FILE_A; f <= FILE_H; f++) {
 			if (f < FILE_D) {
 				king_flanks[f] = (BBS::FileMasks8[FILE_A] | BBS::FileMasks8[FILE_B] | BBS::FileMasks8[FILE_C]);

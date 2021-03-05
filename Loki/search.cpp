@@ -73,19 +73,9 @@ int nullmove_reduction(int depth, int lead) {
 }
 
 
-int late_move_reduction(int d, int c, bool pv, bool i) {
+int late_move_reduction() {
 	int R = 1;
 	return R;
-	//if (d < 2) {
-	//	return 1;
-	//}
-	//
-	//int R = Reductions[d][c];
-	//
-	//// Increase reduction if we're improving
-	//R += (i) ? 1 : 0;
-	//
-	//return R;
 }
 
 
@@ -1200,7 +1190,7 @@ void Search::INIT() {
 		for (int lead = 0; lead < 2000; lead++) {
 			// This is set so as to not reduce by more than six plies under any circumstance
 			//NM_Reductions[d][lead] = ((d > 6) ? 3 : 2) + std::max(0, std::min(3, (int)std::round(1.5 * std::log(std::pow(lead / 100, 2)))));
-			NM_Reductions[d][lead] = std::round(1.5 + 0.25 * double(d) + std::min(3.0, double(lead) / (2.0 * (double)Eval::pawnValMg)));
+			NM_Reductions[d][lead] = (int)std::round(1.5 + 0.25 * double(d) + std::min(3.0, double(lead) / (2.0 * (double)Eval::pawnValMg)));
 		}
 	}
 }
