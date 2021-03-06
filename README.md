@@ -13,6 +13,11 @@ was the nordic god, Loki. After elementary school - where we learned about the n
 - The creator of [chess_programming](https://github.com/maksimKorzh/chess_programming) from whom I've taken the magic bitboards implementation.
 - [Cute Chess](https://cutechess.com/) the tool used for testing changes and additions.
 
+## Elo history
+| Version   | Elo   | TC   |
+|-----------|-------|------|
+| 1.0.2    | 1766  | 2'+1"|
+
 ## Implementation
 Loki uses bitboards as its main board representation
 #### Move generation
