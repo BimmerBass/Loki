@@ -68,7 +68,7 @@ extern int NM_Reductions[MAXDEPTH][2000];
 extern int nullmove_reduction(int depth, int lead);
 
 extern int Reductions[MAXDEPTH][MAXPOSITIONMOVES];
-extern int late_move_reduction();
+extern int late_move_reduction(int d, int c);
 extern int late_move_pruning(int depth, bool improving);
 
 extern int futility_margin(int depth, bool improving);

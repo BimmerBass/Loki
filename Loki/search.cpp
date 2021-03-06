@@ -73,8 +73,9 @@ int nullmove_reduction(int depth, int lead) {
 }
 
 
-int late_move_reduction() {
-	int R = 1;
+int late_move_reduction(int d, int c) {
+	//int R = 1;
+	int R = Reductions[std::min(d, MAXDEPTH - 1)][std::min(c, MAXPOSITIONMOVES - 1)];
 	return R;
 }
 
@@ -570,9 +571,9 @@ namespace Search {
 
 		int score = -INF;
 		int best_score = -INF;
-
-		bool raised_alpha = false;
 		int best_move = NOMOVE;
+
+		int old_alpha = alpha;
 
 		int reduction = 0; // Only used in moves_loop
 
@@ -793,7 +794,7 @@ namespace Search {
 			bool capture = (ss->pos->piece_list[Them][TOSQ(move)] != NO_TYPE) ? true : false;
 			//bool is_promotion = (SPECIAL(move) == PROMOTION) ? true : false;
 			//int piece_captured = ss->pos->piece_list[Them][TOSQ(move)];
-			//int piece_moved = ss->pos->piece_list[ss->pos->side_to_move][FROMSQ(move)];
+			int piece_moved = ss->pos->piece_list[ss->pos->side_to_move][FROMSQ(move)];
 
 			reduction = 0;
 			int extensions = 0;
@@ -818,7 +819,7 @@ namespace Search {
 			legal++;
 
 			bool gives_check = ss->pos->in_check();			
-
+			bool is_tactical = capture || gives_check || in_check || SPECIAL(move) == PROMOTION || SPECIAL(move) == ENPASSANT;
 
 
 			// Step 13. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
@@ -827,48 +828,48 @@ namespace Search {
 				ss->pos->undo_move();
 				continue;
 			}
+
+			// Step 14. Principal variation search
 			
-			new_depth = depth + extensions - 1;
+			new_depth = depth - 1 + extensions;
 
-
-			// Increment moves tried. This is used to get a PV even when failing low, and move ordering statistics
-			moves_searched++;
-
-			ss->moves_path[ss->pos->ply] = move;
-
-			
-			
-		
-			re_search:
-
-			// Step 14. Principal Variation Search.
-			if (!raised_alpha) {
+			if (moves_searched == 0) { // Always search the first move at full depth with an open window
 				score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 			}
+
 			else {
-				score = -alphabeta(ss, new_depth, -alpha - 1, -alpha, true, &line);
-			
-				if (score > alpha && score < beta) {
-					
-					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+
+				// Step 14A. Late move reductions
+				if (moves_searched >= lmr_limit && depth >= 3 && !is_pv && !is_tactical) {
+
+					reduction = std::min(depth - 1, std::max(late_move_reduction(depth, moves_searched), 1));
+
+					score = -alphabeta(ss, new_depth - reduction, -(alpha + 1), -alpha, true, &line);
+				}
+
+				else {
+					score = alpha + 1; // To make sure that score > alpha when not reducing
+				}
+
+
+				if (score > alpha) {
+					// Perform a null window, full depth search.
+					score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
+
+					// Perform a full window, full depth search in case we raise alpha.
+					if (score > alpha && score < beta) {
+						score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+					}
+
 				}
 			}
-			
-
-			// If we raise alpha on a reduced search, re-search the move at full depth.
-			if (reduction > 0 && score > alpha && score < beta) {
-				reduction = 0;
-				new_depth = depth + extensions - 1;
-			
-				re_searches++;
-			
-				goto re_search;
-			}
-
 
 			ss->pos->undo_move();
 
 			if (ss->info->stopped) { return 0; }
+
+			// Increment moves searched
+			moves_searched++;
 
 			if (score >= beta) {
 				if (moves_searched == 1) {
@@ -876,7 +877,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				// Step 14A. If a beta cutoff was achieved, update the quit move ordering heuristics 
+				// Step 15A. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
 					ss->update_move_heuristics(move, depth);
 				}
@@ -895,17 +896,15 @@ namespace Search {
 				if (score > alpha) {
 					alpha = score;
 
-					raised_alpha = true;
+					//raised_alpha = true;
 
 					// Change PV
 					ChangePV(best_move, pvLine, &line);
 				}
 			}
-
-
 		}
 
-		// Step 15. Checkmate/Stalemate detection.
+		// Step 16. Checkmate/Stalemate detection.
 		if (legal <= 0) {
 			if (ss->pos->in_check()) {
 				return -INF + ss->pos->ply;
@@ -916,7 +915,7 @@ namespace Search {
 		}
 
 		
-		if (raised_alpha) {
+		if (alpha > old_alpha) {
 			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
 
 		}
@@ -1179,7 +1178,8 @@ void Search::INIT() {
 
 		for (int c = 1; c < MAXPOSITIONMOVES; c++) {
 			//Reductions[d][c] = (int)std::round(0.75 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
-			Reductions[d][c] = (int)std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
+			//Reductions[d][c] = (int)std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
+			Reductions[d][c] = (int)std::round(0.75 + (std::log(d) * std::log(c)) / 2.0);
 		}
 
 	}
