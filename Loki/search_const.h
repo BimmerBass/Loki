@@ -41,7 +41,7 @@ constexpr int hash_move_sort = 100000000;
 /*
 Aspiration windows
 */
-constexpr int aspiration_window = 50;
+constexpr int aspiration_window = 25;
 constexpr int aspiration_depth = 5;
 
 
