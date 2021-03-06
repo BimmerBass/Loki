@@ -657,7 +657,7 @@ namespace Search {
 			ss->pos->safe_nullmove()) {
 		
 			int R = nullmove_reduction(depth, ss->static_eval[ss->pos->ply] - beta);
-		
+
 			int old_evaluation = ss->static_eval[ss->pos->ply];
 			int old_enpassant = ss->pos->make_nullmove();
 			
