@@ -551,32 +551,7 @@ namespace Search {
 			return 0;
 		}
 
-
-		// Step 1. Transposition table probing (~30 elo - too little?). This is done before quiescence since it is quite fast, and if we can get a cutoff before
-		// going into quiescence, we'll of course use that. Probing before quiescence search contributed with ~17 elo.
-		bool ttHit = false;
-		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
-		
-		int ttScore = (ttHit) ? value_from_tt(entry->data.score, ss->pos->ply) : -INF;
-		unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
-		int ttDepth = (ttHit) ? entry->data.depth : 0;
-		ttFlag tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
-
-		// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
-		if (ttHit 
-			&& beta - alpha == 1
-			&& ttDepth >= depth) {
-		
-			if (tt_flag == ttFlag::BETA && ttScore >= beta) {
-				return beta;
-			}
-		
-			if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
-				return alpha;
-			}
-		}
-
-		// Dive into quiescence search (~382 elo)
+		// Step 1. Dive into quiescence search (~382 elo)
 		if (depth <= 0) {
 			ss->info->nodes--; // Since quiescence also adds a node, we need to subtract one here, since alphabeta isn't really the function searching this node.
 			return quiescence(ss, alpha, beta);
@@ -634,7 +609,36 @@ namespace Search {
 		}
 
 
-		// Step 5. Static evaluation.
+
+		// Step 5. Transposition table probing (~30 elo - too little?). This is done before quiescence since it is quite fast, and if we can get a cutoff before
+		// going into quiescence, we'll of course use that. Probing before quiescence search contributed with ~17 elo.
+		bool ttHit = false;
+		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+
+		int ttScore = (ttHit) ? value_from_tt(entry->data.score, ss->pos->ply) : -INF;
+		unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
+		int ttDepth = (ttHit) ? entry->data.depth : 0;
+		ttFlag tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
+
+		// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
+		if (ttHit
+			&& beta - alpha == 1
+			&& ttDepth >= depth) {
+
+			if (tt_flag == ttFlag::BETA && ttScore >= beta) {
+				return beta;
+			}
+
+			if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
+				return alpha;
+			}
+		}
+
+
+
+
+
+		// Step 6. Static evaluation.
 		if (in_check) {
 			// If we're in check, we'll go directly to the moves since we don't want this branch pruned away.
 			ss->static_eval[ss->pos->ply] = VALUE_NONE;
@@ -650,7 +654,7 @@ namespace Search {
 		assert(!in_check);
 
 
-		// Step 6. Null move pruning (~51 elo). FIXME: Improve safe_nullmove and nullmove_reduction
+		// Step 7. Null move pruning (~51 elo). FIXME: Improve safe_nullmove and nullmove_reduction
 		if (can_null && !in_check && !is_pv
 			&& depth > 2 && 
 			ss->static_eval[ss->pos->ply] >= beta &&
@@ -694,7 +698,7 @@ namespace Search {
 
 
 
-		// Step 7. Enhanced futility pruning (~63 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
+		// Step 8. Enhanced futility pruning (~63 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
 		//		and skip tactically boring moves from the search
 		if (depth < 7 && !in_check && !is_pv
 			&& abs(alpha) < MATE && abs(beta) < MATE
@@ -704,7 +708,7 @@ namespace Search {
 		}
 
 
-		// Step 8. Reverse futility pruning (~11 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
+		// Step 9. Reverse futility pruning (~11 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
 		if (depth < 7 && !in_check && !is_pv
 			&& abs(alpha) < MATE && abs(beta) < MATE) {
 		
@@ -716,7 +720,7 @@ namespace Search {
 		}
 
 
-		// Step 9. Razoring (~17 elo)
+		// Step 10. Razoring (~17 elo)
 		if (use_razoring && depth <= razoring_depth && !is_pv &&
 			ss->static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
 			&& !in_check && abs(beta) < MATE && abs(alpha) < MATE) {
@@ -747,7 +751,7 @@ namespace Search {
 		ss->generate_moves(&moves);
 
 
-		// Step 10. Internal Iterative Deepening (IID) (~21 elo): If the transposition table didn't return a move, we'll search the position to a shallower
+		// Step 11. Internal Iterative Deepening (IID) (~21 elo): If the transposition table didn't return a move, we'll search the position to a shallower
 		//		depth in the hopes of finding the PV.
 		// This will only be done if we are in a PV-node and at a high depth. At low depths, the search is very fast anyways.
 		// We also won't do IID when in check because these usually only have a few moves, which would make the best one pretty fast to find.
@@ -798,7 +802,7 @@ namespace Search {
 			int extensions = 0;
 
 
-			// Step 11. Various extensions.
+			// Step 12. Various extensions.
 
 			if (SPECIAL(move) == CASTLING) { // Castle extensions.
 				extensions++;
@@ -820,7 +824,7 @@ namespace Search {
 
 
 
-			// Step 12. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
+			// Step 13. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
 			//			We just need to make sure that at least one legal move has been searched since we'd risk getting false mate scores else.
 			if (futility_pruning && !capture && !gives_check && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && legal > 0) {
 				ss->pos->undo_move();
@@ -840,7 +844,7 @@ namespace Search {
 		
 			re_search:
 
-			// Step 13. Principal Variation Search.
+			// Step 14. Principal Variation Search.
 			if (!raised_alpha) {
 				score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 			}
@@ -875,7 +879,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				// Step 13A. If a beta cutoff was achieved, update the quit move ordering heuristics 
+				// Step 14A. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
 					ss->update_move_heuristics(move, depth);
 				}
@@ -904,7 +908,7 @@ namespace Search {
 
 		}
 
-		// Step 14. Checkmate/Stalemate detection.
+		// Step 15. Checkmate/Stalemate detection.
 		if (legal <= 0) {
 			if (ss->pos->in_check()) {
 				return -INF + ss->pos->ply;
