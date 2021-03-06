@@ -536,11 +536,15 @@ namespace Search {
 		SIDE Us = ss->pos->side_to_move;
 		SIDE Them = (Us == WHITE) ? BLACK : WHITE;
 
-		ss->info->nodes++;
-
 		// If we return due to pruning, none of the moves in pvLine should be used by parent.
 		pvLine->length = 0;
 
+		// Step 1. Dive into quiescence search (~382 elo)
+		if (depth <= 0) {
+			return quiescence(ss, alpha, beta);
+		}
+		
+		ss->info->nodes++;
 
 		// Check to see if we've been told to abort the search.
 		if ((ss->info->nodes & 2047) == 0) {
@@ -550,13 +554,6 @@ namespace Search {
 		if (ss->info->stopped) {
 			return 0;
 		}
-
-		// Step 1. Dive into quiescence search (~382 elo)
-		if (depth <= 0) {
-			ss->info->nodes--; // Since quiescence also adds a node, we need to subtract one here, since alphabeta isn't really the function searching this node.
-			return quiescence(ss, alpha, beta);
-		}
-
 
 		// Step 2. Repetition checking. If this position has been reached before, it can be drawn
 		if (ss->pos->is_repetition() && ss->pos->ply > 0) {
