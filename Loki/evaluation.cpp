@@ -483,7 +483,7 @@ namespace Eval {
 		*/
 
 		template<SIDE side, int pce>
-		void mobility(GameState_t* pos, Evaluation& Eval) {
+		void mobility(GameState_t* pos, Evaluation& eval) {
 			int mg = 0;
 			int eg = 0;
 
@@ -506,7 +506,10 @@ namespace Eval {
 					piece_attacks = BBS::knight_attacks[sq];
 					attacks |= piece_attacks;
 					piece_attacks &= ~friends;
-					
+
+					// We only give safe mobility bonus, ie. not squares controlled by enemy pawns
+					piece_attacks &= ~eval.attacks[PAWN][(pos->side_to_move == WHITE) ? BLACK : WHITE];
+
 					int attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 9);
 					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
@@ -553,11 +556,11 @@ namespace Eval {
 			}
 
 			// Populate attacks bitmask for the piece and side in Eval.
-			Eval.attacks[pce][side] = attacks;
+			eval.attacks[pce][side] = attacks;
 
 			// Make the scores side-relative.
-			Eval.mg += (side == WHITE) ? mg : -mg;
-			Eval.eg += (side == WHITE) ? eg : -eg;
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
 		}
 	}
 
