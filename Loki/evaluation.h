@@ -90,6 +90,14 @@ const int max_material[2] = { Eval::queenValMg + 2 * Eval::rookValMg + 2 * Eval:
 							Eval::queenValEg + 2 * Eval::rookValEg + 2 * Eval::bishopValEg + 2 * Eval::knightValEg };
 
 
+/*
+
+Imbalance constants --- These values are taken directly from Larry Kaufman's article: "Evaluation of material imbalances"
+
+*/
+constexpr int bishop_pair[2] = { Eval::pawnValMg / 2, Eval::pawnValEg / 2 };
+constexpr int knight_pawn_penalty[2] = { Eval::pawnValMg / 16, Eval::pawnValEg / 16 };
+constexpr int rook_pawn_bonus[2] = { Eval::pawnValMg / 8, Eval::pawnValEg / 8 };
 
 /*
 

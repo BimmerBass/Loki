@@ -562,6 +562,46 @@ namespace Eval {
 			eval.mg += (side == WHITE) ? mg : -mg;
 			eval.eg += (side == WHITE) ? eg : -eg;
 		}
+
+
+		/*
+		
+		Material imbalances
+
+		*/
+
+
+		template<SIDE side>
+		void imbalance(GameState_t* pos, Evaluation& eval) {
+			int mg = 0;
+			int eg = 0;
+
+			// Bishop pair bonus. FIXME: Should we also have the square-colors of the bishops as a requirement?
+			if (countBits(pos->pieceBBS[BISHOP][side]) >= 2) {
+				mg += bishop_pair[MG];
+				eg += bishop_pair[EG];
+			}
+
+			int pawns_removed = 8 - countBits(pos->pieceBBS[PAWN][side]);
+
+			// Give rooks bonuses as pawns disappear.
+			int rook_count = countBits(pos->pieceBBS[ROOK][side]);
+
+			mg += rook_count * pawns_removed * rook_pawn_bonus[MG];
+			eg += rook_count * pawns_removed * rook_pawn_bonus[EG];
+
+
+			// Give the knights penalties as pawns dissapear.
+			int knight_count = countBits(pos->pieceBBS[KNIGHT][side]);
+
+			mg -= knight_count * pawns_removed * knight_pawn_penalty[MG];
+			eg -= knight_count * pawns_removed * knight_pawn_penalty[EG];
+
+			
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
+		}
+
 	}
 
 
@@ -576,6 +616,9 @@ namespace Eval {
 
 		// Create an evaluation object holding the middlegame and endgamescore separately.
 		Evaluation eval(mg_evaluate(pos), eg_evaluate(pos));
+
+		// Calculate the material imbalance of the position. Looses 25 elo atm.
+		//imbalance<WHITE>(pos, eval); imbalance<BLACK>(pos, eval);
 
 		// Pawn structure evaluation
 		pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
