@@ -28,6 +28,9 @@ void SearchThread_t::setKillers(int ply, int move) {
 }
 
 
+									/* N,  B,   R,   Q */
+constexpr int promotion_values[4] = { 300, 350, 500, 900 };
+
 void SearchThread_t::score_moves(MoveList* ml) {
 	SIDE Them = (pos->side_to_move == WHITE) ? BLACK : WHITE;
 	
@@ -52,18 +55,33 @@ void SearchThread_t::score_moves(MoveList* ml) {
 			else {
 				(*ml)[i]->score = history[pos->side_to_move][FROMSQ((*ml)[i]->move)][TOSQ((*ml)[i]->move)];
 			}
-
 		}
 
 		// It is a tactical move. We'll score this the highest
 		else {
-			(*ml)[i]->score = capture_bonus;
+			(*ml)[i]->score = 10000000; // Make sure tactical moves are searched first.
 
 			// Captures get scored with MVV/LVA.
 			if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {
 				(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
 			}
-		
+			
+			// Promotions will also be scored highly.
+			if (SPECIAL((*ml)[i]->move) == PROMOTION) {
+				// If the promotion piece is a queen or we're capturing a piece, we'll score this just below the hash move
+				if (PROMTO((*ml)[i]->move) + 1 == QUEEN) {
+					(*ml)[i]->score = hash_move_sort - 100;
+				}
+				else { // Will be scored as loosing a pawn and gaining the promotion piece.
+					(*ml)[i]->score += MvvLva[PAWN][PROMTO((*ml)[i]->move) + 1];
+				}
+			}
+
+			// En-passants will be scored simply as PxP
+			if (SPECIAL((*ml)[i]->move) == ENPASSANT) {
+				(*ml)[i]->score += MvvLva[PAWN][PAWN];
+			}
+
 		}
 
 	}

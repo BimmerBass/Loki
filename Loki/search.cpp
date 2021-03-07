@@ -358,32 +358,6 @@ namespace Search {
 			goto asp_loop;
 		}
 
-		/*/*
-		Disclaimer: The idea of widening the bounds and window sizes, especially changing beta in a fail low is taken from Stockfish.
-				The values has been tweaked but I am not the creator of the method.
-		
-
-		if (score <= alpha) {
-			beta = (alpha + beta) / 2; // We move beta to the average of the bounds since we could possibly move alpha by a large margin and end up searching
-										// a huge window. 
-			alpha = std::max(-INF, score - delta);
-
-			// Increase the window size.
-			delta += (int)std::round(0.25 * double(aspiration_window));
-
-			goto asp_loop;
-		}
-
-		if (score >= beta) {
-			// Only increase the bound that failed.
-			beta = std::min(INF, score + delta);
-
-			// Increase the window size.
-			delta += (int)std::round(0.25 * double(aspiration_window));
-			
-			goto asp_loop;
-		}
-		*/
 		return score;
 	}
 
@@ -461,19 +435,19 @@ namespace Search {
 			// Set the previous move such that we can use the countermove heuristic.
 			ss->moves_path[ss->pos->ply] = move;
 
+			
 			// Step 4. Principal Variation search. We search all moves with the full window until one raises alpha. Afterwards we'll search with a null window
-			//		and only widen it if the null window search raises alpha, which is assumed unlikely.
-			if (!raised_alpha) {
+			// If this is the first legal move
+			if (legal == 1) {
 				score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
 			}
 			else {
-				score = -alphabeta(ss, new_depth - 1, -alpha - 1, -alpha, true, &line);
+				score = -alphabeta(ss, new_depth - 1, -(alpha + 1), -alpha, true, &line);
 
 				if (score > alpha && score < beta) {
 					score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
 				}
 			}
-
 
 			ss->pos->undo_move();
 
@@ -840,28 +814,33 @@ namespace Search {
 			else {
 
 				// Step 14A. Late move reductions
-				if (moves_searched >= lmr_limit && depth >= 3 && !is_pv && !is_tactical) {
+				score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
 
-					reduction = std::min(depth - 1, std::max(late_move_reduction(depth, moves_searched), 1));
-
-					score = -alphabeta(ss, new_depth - reduction, -(alpha + 1), -alpha, true, &line);
+				if (score > alpha && score < beta) {
+					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 				}
-
-				else {
-					score = alpha + 1; // To make sure that score > alpha when not reducing
-				}
-
-
-				if (score > alpha) {
-					// Perform a null window, full depth search.
-					score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
-
-					// Perform a full window, full depth search in case we raise alpha.
-					if (score > alpha && score < beta) {
-						score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
-					}
-
-				}
+				//if (moves_searched >= lmr_limit && depth >= 3 && !is_pv && !is_tactical) {
+				//
+				//	reduction = std::min(depth - 1, std::max(late_move_reduction(depth, moves_searched), 1));
+				//
+				//	score = -alphabeta(ss, new_depth - reduction, -(alpha + 1), -alpha, true, &line);
+				//}
+				//
+				//else {
+				//	score = alpha + 1; // To make sure that score > alpha when not reducing
+				//}
+				//
+				//
+				//if (score > alpha) {
+				//	// Perform a null window, full depth search.
+				//	score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
+				//
+				//	// Perform a full window, full depth search in case we raise alpha.
+				//	if (score > alpha && score < beta) {
+				//		score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+				//	}
+				//
+				//}
 			}
 
 			ss->pos->undo_move();
@@ -877,7 +856,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				// Step 15A. If a beta cutoff was achieved, update the quit move ordering heuristics 
+				// Step 14B. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
 					ss->update_move_heuristics(move, depth);
 				}
@@ -895,8 +874,6 @@ namespace Search {
 
 				if (score > alpha) {
 					alpha = score;
-
-					//raised_alpha = true;
 
 					// Change PV
 					ChangePV(best_move, pvLine, &line);
@@ -1170,6 +1147,12 @@ void Search::INIT() {
 	for (int victim = KING; victim >= PAWN; victim--) {
 		for (int attacker = KING; attacker >= PAWN; attacker--) {
 			MvvLva[attacker][victim] = victim_scores[victim] + (6 - attacker);
+			//if (victim >= attacker) { // Equal or winning capture
+			//	MvvLva[attacker][victim] = first_killer + victim_scores[victim] + (6 - attacker);
+			//}
+			//else { // Loosing capture. Sort this just before the countermoves
+			//	MvvLva[attacker][victim] = countermove_bonus + victim_scores[victim] + (6 - attacker);
+			//}
 		}
 	}
 

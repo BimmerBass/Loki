@@ -20,13 +20,9 @@ Counter moves
 */
 constexpr int countermove_bonus = 70000;
 
-
 /*
 Captures
 */
-// We need to make the capture scores much higher than the killers and history heuristics such that they don't get sorted as bad captures.
-constexpr int capture_bonus = 1000000;
-
 // Indexed by MvvLva[attacker][victim]
 extern int MvvLva[6][6];
 

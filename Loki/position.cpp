@@ -303,7 +303,7 @@ Function to see if the king is in check.
 
 */
 
-bool GameState_t::square_attacked(int square, SIDE side) {
+bool GameState_t::square_attacked(int square, SIDE side) const {
 
 	// We'll start by seeing if the king is in check by sliders because they are the fastest to look up.
 	Bitboard attacks = 0;
@@ -352,7 +352,7 @@ bool GameState_t::square_attacked(int square, SIDE side) {
 }
 
 // Returns true if the side to move is in check
-bool GameState_t::in_check() {
+bool GameState_t::in_check() const {
 	return (side_to_move == WHITE) ? square_attacked(king_squares[WHITE], BLACK) : square_attacked(king_squares[BLACK], WHITE);
 }
 
@@ -1042,65 +1042,4 @@ int GameState_t::best_capture_possible() {
 	}
 
 	return (pieceVals[biggest_victim] - pieceVals[smallest_attacker]);
-}
-
-
-
-
-
-
-
-/*
-
-SEE implementation
-
-*/
-
-
-bool GameState_t::is_pinned(int sq, SIDE s) {
-	Bitboard kingRays = Magics::attacks_bb<QUEEN>(king_squares[s], all_pieces[WHITE] | all_pieces[BLACK]);
-	SIDE Them = (s == WHITE) ? BLACK : WHITE;
-
-	if (((uint64_t(1) << sq) & kingRays) == 0) {
-		return false;
-	}
-
-	Bitboard attacks = 0;
-
-	// Same file
-	if (sq % 8 == king_squares[s] % 8) {
-		attacks = Magics::attacks_bb<ROOK>(sq, all_pieces[WHITE] | all_pieces[BLACK]) & BBS::FileMasks8[sq % 8];
-
-		if ((attacks & (pieceBBS[ROOK][Them] | pieceBBS[QUEEN][Them])) != 0) {
-			return true;
-		}
-	}
-	// Same rank
-	else if (sq / 8 == king_squares[s] / 8) {
-		attacks = Magics::attacks_bb<ROOK>(sq, all_pieces[WHITE] | all_pieces[BLACK]) & BBS::RankMasks8[sq / 8];
-
-		if ((attacks & (pieceBBS[ROOK][Them] | pieceBBS[QUEEN][Them])) != 0) {
-			return true;
-		}
-	}
-
-	// Same diagonal
-	else if (((sq - king_squares[s]) & 7) == (sq >> 3) - (king_squares[s] >> 3)) {
-		attacks = Magics::attacks_bb<BISHOP>(sq, all_pieces[WHITE] | all_pieces[BLACK]) & BBS::diagonalMasks[7 + (sq / 8) - (sq % 8)];
-
-		if ((attacks & (pieceBBS[BISHOP][Them] | pieceBBS[QUEEN][Them])) != 0) {
-			return true;
-		}
-	}
-
-	// Same anti-diagonal
-	else if (((sq / 8) - (king_squares[s] / 8)) + ((sq % 8) - (king_squares[s] % 8)) == 0) {
-		attacks = Magics::attacks_bb<BISHOP>(sq, all_pieces[WHITE] | all_pieces[BLACK]) & BBS::antidiagonalMasks[(sq / 8) + (sq % 8)];
-
-		if ((attacks & (pieceBBS[BISHOP][Them] | pieceBBS[QUEEN][Them])) != 0) {
-			return true;
-		}
-	}
-
-	return false;
 }

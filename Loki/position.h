@@ -69,12 +69,11 @@ public:
 	// Returns the value of the best possible capture on the board.
 	int best_capture_possible();
 
-
 	// For seeing if a square is attacked by one of the sides.
-	bool square_attacked(int square, SIDE side);
+	bool square_attacked(int square, SIDE side) const;
 
 	// Returns true if the side to move is in check
-	bool in_check();
+	bool in_check() const;
 
 	// Returns true if there are no pieces for the side to move. Used for null move pruning
 	bool safe_nullmove();
