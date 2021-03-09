@@ -778,8 +778,7 @@ Determines if it is safe to do null moves. True if the side to move has any slid
 
 */
 
-bool GameState_t::safe_nullmove() {
-	//return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0) ? true : false;
+bool GameState_t::safe_nullmove() const {
 	return ((pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0) ? true : false;
 }
 
@@ -790,7 +789,7 @@ Used for delta pruning. Determines if we are in a late endgame
 
 */
 
-bool GameState_t::is_endgame() {
+bool GameState_t::is_endgame() const {
 	return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) == 0) ? true : false;
 }
 
@@ -801,7 +800,7 @@ Used for razoring
 
 */
 
-bool GameState_t::non_pawn_material() {
+bool GameState_t::non_pawn_material() const {
 	SIDE Them = (side_to_move == WHITE) ? BLACK : WHITE;
 	return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0 ? true : false)
 		&& ((pieceBBS[KNIGHT][Them] | pieceBBS[BISHOP][Them] | pieceBBS[ROOK][Them] | pieceBBS[QUEEN][Them]) != 0 ? true : false);
@@ -874,7 +873,7 @@ GameState_t::GameState_t(const GameState_t& pos) {
 
 
 
-bool GameState_t::is_repetition() {
+bool GameState_t::is_repetition() const {
 
 	for (int p = 0; p < history_ply; p++) {
 		// The exact same position has been reached before, so it is a repetition.
@@ -959,7 +958,7 @@ void GameState_t::mirror_board() {
 
 
 const int pieceVals[6] = { 100, 320, 350, 560,1000 };
-int GameState_t::best_capture_possible() {
+int GameState_t::best_capture_possible() const {
 
 	int smallest_attacker = KING;
 	int biggest_victim = PAWN;

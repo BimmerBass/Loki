@@ -67,7 +67,7 @@ public:
 	void undo_nullmove(int oldEnPas);
 
 	// Returns the value of the best possible capture on the board.
-	int best_capture_possible();
+	int best_capture_possible() const;
 
 	// For seeing if a square is attacked by one of the sides.
 	bool square_attacked(int square, SIDE side) const;
@@ -79,25 +79,24 @@ public:
 	template<SIDE S>
 	Bitboard pinned_pieces() const;
 
-	// Returns true if there are no pieces for the side to move. Used for null move pruning
-	bool safe_nullmove();
+	// Returns true if there are no sliding pieces for the side to move. Used for null move pruning
+	bool safe_nullmove() const;
 
 
 	// Returns true if we're in the late endgame
-	bool is_endgame();
+	bool is_endgame() const;
 
 	// Returns true if both sides have pieces on the board.
-	bool non_pawn_material();
+	bool non_pawn_material() const;
 
 	// Returns true if the position has been had before.
-	bool is_repetition();
+	bool is_repetition() const;
 	
 
 	/*
 	SEE functions - the SEE algorithm itself will be implemented later
 	*/
-	// Returns true if piece, pce on square, sq is pinned to the king
-	bool is_pinned(int sq, SIDE s);
+	bool see_ge(int sq, int threshold = 0) const;
 
 
 	/*
@@ -141,10 +140,11 @@ private:
 
 
 
+
 /*
 
-Pinned pieces --> Gets all pieces of color S pinned to the king
-
+Pinned pieces --> Gets all pieces of color S pinned to the king.
+NOTE: This function is in the header due to the template.
 */
 
 
