@@ -1031,6 +1031,46 @@ Bitboard GameState_t::attackers_to(int sq, Bitboard occupied) const {
 }
 
 
+
+
+/*
+
+Returns the smallest attacker piece type
+
+*/
+
+template <int pce>
+int min_attacker(const Bitboard* pieceBBS, int to_sq, Bitboard stmAttackers, Bitboard& occupied, Bitboard& attackers) {
+	assert(pce >= PAWN && pce <= KING);
+
+	Bitboard b = occupied & pieceBBS[pce];
+
+	if (!b) {
+		return min_attacker<int(pce + 1)>(pieceBBS, to_sq, stmAttackers, occupied, attackers);
+	}
+
+	occupied ^= bitScanForward(b);
+
+	if constexpr (pce == PAWN || pce == BISHOP || pce == QUEEN) {
+		attackers |= Magics::attacks_bb<BISHOP>(to_sq, occupied) & (pieceBBS[BISHOP] | pieceBBS[QUEEN]);
+	}
+
+	if constexpr (pce == ROOK || pce == QUEEN) {
+		attackers |= Magics::attacks_bb<ROOK>(to_sq, occupied) & (pieceBBS[ROOK] | pieceBBS[QUEEN]);
+	}
+
+	attackers &= occupied;
+
+	return pce;
+}
+
+template<>
+int min_attacker<KING>(const Bitboard*, int, Bitboard, Bitboard&, Bitboard&) {
+	return KING; // King is the highest piece-type, so return.
+}
+
+
+
 /*
 
 Static Exchange Evaluation Greater Than or Equal (SEE_GE) is a good way of analyzing if captures loose or gain material before playing them.
@@ -1041,6 +1081,10 @@ NOTE: This implementation is heavily inspired by the one Stockfish uses.
 
 constexpr int piece_values[6] = { 100, 300, 320, 500, 900, 20000 };
 bool GameState_t::see_ge(int move, int threshold) const {
+	const Bitboard byTypeBB[2][6] = {
+		{pieceBBS[PAWN][BLACK], pieceBBS[KNIGHT][BLACK], pieceBBS[BISHOP][BLACK], pieceBBS[ROOK][BLACK], pieceBBS[QUEEN][BLACK], pieceBBS[KING][BLACK]},
+		{pieceBBS[PAWN][WHITE], pieceBBS[KNIGHT][WHITE], pieceBBS[BISHOP][WHITE], pieceBBS[ROOK][WHITE], pieceBBS[QUEEN][WHITE], pieceBBS[KING][WHITE]}
+	};
 
 	// We won't do SEE on moves like en-passant or capture promotions.
 	if (SPECIAL(move) != NOT_SPECIAL) {
@@ -1082,9 +1126,7 @@ bool GameState_t::see_ge(int move, int threshold) const {
 			break;
 		}
 
-		/*
-		FIXME: GET NEXT VICTIM HERE -- SEE WONT WORK WITHOUT IT
-		*/
+		nextVictim = min_attacker<PAWN>(byTypeBB[stm], to_sq, stm_attackers, occupied, attackers);
 
 		// Switch the side to move
 		stm = (stm == WHITE) ? BLACK : WHITE;
