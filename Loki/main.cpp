@@ -11,6 +11,5 @@ int main() {
 
 	UCI::UCI_loop();
 
-
 	return 0;
 }

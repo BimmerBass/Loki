@@ -395,6 +395,18 @@ bool GameState_t::lists_match() {
 }
 
 
+
+/*
+
+Returns the piecetype on square 'sq' of side 'side'
+
+*/
+
+int GameState_t::piece_on(int sq, SIDE side) const {
+	return piece_list[side][sq];
+}
+
+
 /*
 
 Function for making a move.
@@ -984,3 +996,114 @@ int GameState_t::best_capture_possible() const {
 
 
 
+
+/*
+
+Returns a bitboard with all attackers to the given square
+
+*/
+
+Bitboard GameState_t::attackers_to(int sq, Bitboard occupied) const {
+
+	Bitboard attackers = 0;
+	Bitboard sqBrd = uint64_t(1) << sq;
+
+	// Pawn attackers
+	attackers |= ((shift<NORTHWEST>(sqBrd) | shift<NORTHEAST>(sqBrd)) & pieceBBS[PAWN][BLACK]);
+	attackers |= ((shift<SOUTHWEST>(sqBrd) | shift<SOUTHEAST>(sqBrd)) & pieceBBS[PAWN][WHITE]);
+
+	// Knights
+	attackers |= ((BBS::knight_attacks[sq]) & (pieceBBS[KNIGHT][WHITE] | pieceBBS[KNIGHT][BLACK]));
+
+	// Bishops
+	attackers |= ((Magics::attacks_bb<BISHOP>(sq, occupied)) & (pieceBBS[BISHOP][WHITE] | pieceBBS[BISHOP][BLACK]));
+
+	// Rooks
+	attackers |= ((Magics::attacks_bb<ROOK>(sq, occupied)) & (pieceBBS[ROOK][WHITE] | pieceBBS[ROOK][BLACK]));
+
+	// Queens
+	attackers |= ((Magics::attacks_bb<QUEEN>(sq, occupied)) & (pieceBBS[QUEEN][WHITE] | pieceBBS[QUEEN][BLACK]));
+
+	// Kings
+	attackers |= ((BBS::king_attacks[sq]) & (pieceBBS[KING][WHITE] | pieceBBS[KING][BLACK]));
+
+	return attackers;
+}
+
+
+/*
+
+Static Exchange Evaluation Greater Than or Equal (SEE_GE) is a good way of analyzing if captures loose or gain material before playing them.
+
+NOTE: This implementation is heavily inspired by the one Stockfish uses.
+
+*/
+
+constexpr int piece_values[6] = { 100, 300, 320, 500, 900, 20000 };
+bool GameState_t::see_ge(int move, int threshold) const {
+
+	// We won't do SEE on moves like en-passant or capture promotions.
+	if (SPECIAL(move) != NOT_SPECIAL) {
+		return 0 >= threshold;
+	}
+
+
+	// Declare variables
+	Bitboard stm_attackers = 0;
+	int from_sq = FROMSQ(move), to_sq = TOSQ(move);
+	int nextVictim = piece_on(from_sq, side_to_move); // The next piece to be captured in this sequence is the one that 'move' moves.
+	SIDE Us = side_to_move;
+	SIDE stm = (Us == WHITE) ? BLACK : WHITE;
+	int balance = piece_values[piece_on(to_sq, stm)] - threshold;
+
+	if (balance < 0) {
+		return false;
+	}
+
+
+	// Assume that the opponent can capture our piece for free
+	balance -= piece_values[nextVictim];
+
+	// If our balance is greater than 0 even if the opponent can capture our piece for free, the capture is good (example: PxQ).
+	if (balance >= 0) {
+		return true;
+	}
+
+	// Now we need to find all attackers to the destination square. We need to remove the piece moved since there can possibly be an x-ray attacker behind it.
+	Bitboard occupied = (all_pieces[BLACK] | all_pieces[WHITE]) ^ (uint64_t(1) << from_sq) ^ (uint64_t(1) << to_sq);
+	occupied ^= (pinned_pieces<WHITE>() | pinned_pieces<BLACK>()); // We'll ignore all pieces that are pinned. FIXME: Let pinned pieces attack when they're not pinned any longer.
+	Bitboard attackers = attackers_to(to_sq, occupied) & occupied;
+
+	while (true) {
+		stm_attackers = attackers & all_pieces[stm];
+
+		// If there are no more attackers, we'll break the loop.
+		if (!stm_attackers) {
+			break;
+		}
+
+		/*
+		FIXME: GET NEXT VICTIM HERE -- SEE WONT WORK WITHOUT IT
+		*/
+
+		// Switch the side to move
+		stm = (stm == WHITE) ? BLACK : WHITE;
+
+
+
+		assert(balance < 0);
+
+		balance = -balance - 1 - piece_values[nextVictim];
+
+		if (balance >= 0) {
+
+			if (nextVictim == KING && (attackers & all_pieces[stm]) != 0) {
+				stm = (stm == WHITE) ? BLACK : WHITE;
+			}
+			break;
+		}
+		assert(nextVictim != KING);
+	}
+
+	return (Us != stm);
+}

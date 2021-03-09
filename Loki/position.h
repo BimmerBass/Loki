@@ -32,6 +32,7 @@ public:
 
 	// Indexed by piece_list[color][sq] to get a piecetype at that square.
 	int piece_list[2][64] = { {0} };
+	int piece_on(int sq, SIDE side) const;
 
 	SIDE side_to_move = WHITE;
 
@@ -96,7 +97,10 @@ public:
 	/*
 	SEE functions - the SEE algorithm itself will be implemented later
 	*/
-	bool see_ge(int sq, int threshold = 0) const;
+	// Returns a bitboard with all attackers to a given square (from both sides)
+	Bitboard attackers_to(int sq, Bitboard occupied) const;
+
+	bool see_ge(int move, int threshold = 0) const;
 
 
 	/*
