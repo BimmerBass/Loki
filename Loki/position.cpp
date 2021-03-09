@@ -358,67 +358,6 @@ bool GameState_t::in_check() const {
 
 
 
-/*
-Finds the smallest attacker of a given square. If no attackers, it returns NO_TYPE
-*/
-int GameState_t::least_valuable_attacker(int square, SIDE side) {
-	Bitboard attacks = 0;
-
-	Bitboard occ = (all_pieces[WHITE] | all_pieces[BLACK]);
-
-	// Pawn attacks
-	if (side == WHITE) {
-		attacks = (((uint64_t(1) << square) & ~BBS::FileMasks8[FILE_A]) >> 9) | (((uint64_t(1) << square) & ~BBS::FileMasks8[FILE_H]) >> 7);
-	}
-	else {
-		attacks = (((uint64_t(1) << square) & ~BBS::FileMasks8[FILE_A]) << 7) | (((uint64_t(1) << square) & ~BBS::FileMasks8[FILE_H]) << 9);
-	}
-
-	if ((attacks & pieceBBS[PAWN][side]) != 0) {
-		return PAWN;
-	}
-
-	// Knight attacks.
-	attacks = BBS::knight_attacks[square];
-
-	if ((attacks & pieceBBS[KNIGHT][side]) != 0) {
-		return KNIGHT;
-	}
-
-	// Bishop attacks
-	attacks = Magics::attacks_bb<BISHOP>(square, occ);
-
-	if ((attacks & pieceBBS[BISHOP][side]) != 0) {
-		return BISHOP;
-	}
-
-	// Rook attacks
-	attacks = Magics::attacks_bb<ROOK>(square, occ);
-
-	if ((attacks & pieceBBS[ROOK][side])) {
-		return ROOK;
-	}
-
-	// Queen attacks
-	attacks = Magics::attacks_bb<BISHOP>(square, occ) | Magics::attacks_bb<ROOK>(square, occ);
-
-	if ((attacks & pieceBBS[QUEEN][side])) {
-		return QUEEN;
-	}
-
-	// King attacks
-	attacks = BBS::king_attacks[square];
-
-	if ((attacks & pieceBBS[KING][side])) {
-		return KING;
-	}
-
-	// If there are no attackers.
-	return NO_TYPE;
-}
-
-
-
 
 // Helper function that returns false if piece_list and pieceBBS dont match
 bool GameState_t::lists_match() {
@@ -1043,3 +982,6 @@ int GameState_t::best_capture_possible() {
 
 	return (pieceVals[biggest_victim] - pieceVals[smallest_attacker]);
 }
+
+
+

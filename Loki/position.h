@@ -75,6 +75,10 @@ public:
 	// Returns true if the side to move is in check
 	bool in_check() const;
 
+	// Returns a bitboard with all the pieces pinned to the king of side S
+	template<SIDE S>
+	Bitboard pinned_pieces() const;
+
 	// Returns true if there are no pieces for the side to move. Used for null move pruning
 	bool safe_nullmove();
 
@@ -132,14 +136,68 @@ public:
 private:
 	// Array for all SavedInfo_t after each move. Declared on heap because it might take too much stack when having multiple GameState_t for multithreading.
 	SavedInfo_t history[MAXGAMEMOVES] = {  };
-	int history_ply = 0; // Amount of SaveInfo_t in history.
-
-	// Used in static exchange evaluation
-	int least_valuable_attacker(int square, SIDE side);
-
-	
+	int history_ply = 0; // Amount of SaveInfo_t in history.	
 };
 
+
+
+/*
+
+Pinned pieces --> Gets all pieces of color S pinned to the king
+
+*/
+
+
+template<SIDE S>
+Bitboard GameState_t::pinned_pieces() const {
+	constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+	int king_square = king_squares[S];
+
+	Bitboard pinned = 0;
+
+	// We need to generate the queen attacks (as if the board was cleared for all pieces) from the king square. We do this with our magic bitboards
+	Bitboard king_rays = Magics::attacks_bb<QUEEN>(king_square, 0);
+	Bitboard king_attacks = Magics::attacks_bb<QUEEN>(king_square, all_pieces[WHITE] | all_pieces[BLACK]);
+
+	// Firstly, we'll check for bishops or queens on the diagonals
+	Bitboard queen_bishop_attackers = (pieceBBS[BISHOP][Them] | pieceBBS[QUEEN][Them]) &
+		(king_rays & (BBS::diagonalMasks[7 + (king_square / 8) - (king_square % 8)] | BBS::antidiagonalMasks[(king_square / 8) + (king_square % 8)]));
+
+	int sq = NO_SQ;
+	Bitboard attacks = 0;
+	Bitboard blockers = 0;
+	while (queen_bishop_attackers) {
+		sq = PopBit(&queen_bishop_attackers); // Get the position of the attacking piece
+		attacks = Magics::attacks_bb<BISHOP>(sq, all_pieces[WHITE] | all_pieces[BLACK]);
+
+		blockers = (attacks & king_attacks) & (BBS::diagonalMasks[7 + (king_square / 8) - (king_square % 8)] | BBS::antidiagonalMasks[(king_square / 8) + (king_square % 8)]);
+
+		if (blockers) {
+			assert(countBits(blockers) == 1);
+
+			pinned |= (uint64_t(1) << bitScanForward(blockers));
+		}
+	}
+
+	// Now we'll get the attacks on files/ranks from rooks and queens
+	Bitboard queen_rook_attackers = (pieceBBS[ROOK][Them] | pieceBBS[QUEEN][Them]) &
+		(king_rays & (BBS::FileMasks8[king_square % 8] | BBS::RankMasks8[king_square / 8]));
+
+	while (queen_rook_attackers) {
+		sq = PopBit(&queen_rook_attackers);
+		attacks = Magics::attacks_bb<ROOK>(sq, all_pieces[WHITE] | all_pieces[BLACK]);
+
+		blockers = (attacks & king_attacks) & (BBS::FileMasks8[king_square % 8] | BBS::RankMasks8[king_square / 8]);
+
+		if (blockers) {
+			assert(countBits(blockers) == 1);
+
+			pinned |= (uint64_t(1) << bitScanForward(blockers));
+		}
+	}
+
+	return pinned;
+}
 
 
 

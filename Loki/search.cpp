@@ -815,13 +815,19 @@ namespace Search {
 
 				// Step 14A. Late move reductions
 				score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
-
+				
 				if (score > alpha && score < beta) {
 					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 				}
-				//if (moves_searched >= lmr_limit && depth >= 3 && !is_pv && !is_tactical) {
+				//if (moves_searched > 1 + ((is_pv) ? 3 : 0) && depth >= 3 && !is_tactical) {
 				//
 				//	reduction = std::min(depth - 1, std::max(late_move_reduction(depth, moves_searched), 1));
+				//
+				//	reduction += !is_pv + !improving;
+				//
+				//	reduction -= (move == ss->killers[ss->pos->ply][0] || move == ss->killers[ss->pos->ply][1]);
+				//
+				//	reduction = std::min(depth - 1, std::max(reduction, 1));
 				//
 				//	score = -alphabeta(ss, new_depth - reduction, -(alpha + 1), -alpha, true, &line);
 				//}
@@ -881,7 +887,7 @@ namespace Search {
 			}
 		}
 
-		// Step 16. Checkmate/Stalemate detection.
+		// Step 15. Checkmate/Stalemate detection.
 		if (legal <= 0) {
 			if (ss->pos->in_check()) {
 				return -INF + ss->pos->ply;
@@ -1146,13 +1152,9 @@ void Search::INIT() {
 
 	for (int victim = KING; victim >= PAWN; victim--) {
 		for (int attacker = KING; attacker >= PAWN; attacker--) {
+
 			MvvLva[attacker][victim] = victim_scores[victim] + (6 - attacker);
-			//if (victim >= attacker) { // Equal or winning capture
-			//	MvvLva[attacker][victim] = first_killer + victim_scores[victim] + (6 - attacker);
-			//}
-			//else { // Loosing capture. Sort this just before the countermoves
-			//	MvvLva[attacker][victim] = countermove_bonus + victim_scores[victim] + (6 - attacker);
-			//}
+
 		}
 	}
 

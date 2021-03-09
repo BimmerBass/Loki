@@ -1,5 +1,7 @@
 #include "uci.h"
 
+
+
 int main() {
 	BBS::INIT();
 	Magics::INIT();
@@ -8,6 +10,7 @@ int main() {
 	PSQT::INIT();
 
 	UCI::UCI_loop();
+
 
 	return 0;
 }
