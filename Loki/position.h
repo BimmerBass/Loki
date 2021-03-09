@@ -174,7 +174,9 @@ Bitboard GameState_t::pinned_pieces() const {
 		sq = PopBit(&queen_bishop_attackers); // Get the position of the attacking piece
 		attacks = Magics::attacks_bb<BISHOP>(sq, all_pieces[WHITE] | all_pieces[BLACK]);
 
-		blockers = (attacks & king_attacks) & (BBS::diagonalMasks[7 + (king_square / 8) - (king_square % 8)] | BBS::antidiagonalMasks[(king_square / 8) + (king_square % 8)]);
+		blockers = (attacks & king_attacks);
+		blockers &= (BBS::diagonalMasks[7 + (king_square / 8) - (king_square % 8)] | BBS::antidiagonalMasks[(king_square / 8) + (king_square % 8)]);
+		blockers &= all_pieces[S];
 
 		if (blockers) {
 			assert(countBits(blockers) == 1);
@@ -192,6 +194,7 @@ Bitboard GameState_t::pinned_pieces() const {
 		attacks = Magics::attacks_bb<ROOK>(sq, all_pieces[WHITE] | all_pieces[BLACK]);
 
 		blockers = (attacks & king_attacks) & (BBS::FileMasks8[king_square % 8] | BBS::RankMasks8[king_square / 8]);
+		blockers &= all_pieces[S];
 
 		if (blockers) {
 			assert(countBits(blockers) == 1);
