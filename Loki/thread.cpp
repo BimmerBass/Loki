@@ -63,7 +63,15 @@ void SearchThread_t::score_moves(MoveList* ml) {
 
 			// Captures get scored with MVV/LVA.
 			if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {
-				(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
+				//(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
+				int s = pos->see((*ml)[i]->move);
+				if (s >= 0) {
+					(*ml)[i]->score += s;
+				}
+				else {
+					(*ml)[i]->score *= -1;
+					(*ml)[i]->score += s;
+				}
 			}
 			
 			// Promotions will also be scored highly.
