@@ -164,6 +164,7 @@
     <ClCompile Include="position.cpp" />
     <ClCompile Include="psqt.cpp" />
     <ClCompile Include="search.cpp" />
+    <ClCompile Include="see.cpp" />
     <ClCompile Include="thread.cpp" />
     <ClCompile Include="transposition.cpp" />
     <ClCompile Include="uci.cpp" />
