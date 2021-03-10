@@ -99,8 +99,9 @@ public:
 	*/
 	// Returns a bitboard with all attackers to a given square (from both sides)
 	Bitboard attackers_to(int sq, Bitboard occupied) const;
+	Bitboard attackSlider(Bitboard occupied, int to_sq, SIDE side) const;
 
-	bool see_ge(int move, int threshold = 0) const;
+	int see(unsigned int move) const;
 
 
 	/*

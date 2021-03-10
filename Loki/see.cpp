@@ -118,3 +118,85 @@ template<>
 int min_attacker<KING>(const Bitboard[6][2], SIDE, int, Bitboard, Bitboard&, Bitboard&) {
 	return KING; // King is the highest piece-type, so return.
 }
+
+
+
+/*
+
+Helper function to determine slider attackers to to_sq.
+
+*/
+Bitboard GameState_t::attackSlider(Bitboard occupied, int to_sq, SIDE side) const {
+	Bitboard b = 0;
+
+	b |= (Magics::attacks_bb<BISHOP>(to_sq, occupied) & (pieceBBS[BISHOP][side] | pieceBBS[QUEEN][side]));
+	b |= (Magics::attacks_bb<ROOK>(to_sq, occupied) & (pieceBBS[ROOK][side] | pieceBBS[QUEEN][side]));
+
+	return (b & occupied);
+}
+
+
+/*
+
+Static Exchange Evaluation function. Computes the likely material gain/loss as a result of a capture.
+
+*/
+
+
+int GameState_t::see(unsigned int move) const {
+
+	int gain[32], d = 0, aPiece = NO_TYPE, sidePick = WHITE, to_sq = TOSQ(move), from_sq = FROMSQ(move);
+	Bitboard mayXray = 0, fromSet = 0, occupied = 0, attackers = 0;
+
+	assert(piece_on(from_sq, side_to_move) >= PAWN && piece_on(from_sq, side_to_move) <= KING);
+	assert(piece_on(to_sq, (side_to_move == WHITE) ? BLACK : WHITE) >= PAWN && piece_on(to_sq, (side_to_move == WHITE) ? BLACK : WHITE) < KING);
+
+	// If move is a special move
+	if (SPECIAL(move) == ENPASSANT) {
+		return 100;
+	}
+
+
+	sidePick = (side_to_move == WHITE) ? BLACK : WHITE; // Start with the opponent response.
+	aPiece = piece_on(from_sq, side_to_move); // The first attacked piece after the move is the piece moved.
+	fromSet = uint64_t(1) << from_sq;
+	occupied = all_pieces[WHITE] | all_pieces[BLACK]; // Set occupancy bitboard
+	attackers = attackers_to(to_sq, occupied);	// Find all attackers to the destination square.
+
+	gain[d] = see_pieces[piece_on(to_sq, (side_to_move == WHITE) ? BLACK : WHITE)]; // The initial gain is the piece captured.
+
+	mayXray = occupied ^ (pieceBBS[KNIGHT][WHITE] | pieceBBS[KNIGHT][BLACK] | pieceBBS[KING][WHITE] | pieceBBS[KING][BLACK]);
+
+	do {
+		d++;
+		gain[d] = see_pieces[aPiece] - gain[d - 1];
+
+		// Remove the capturer from the attack set and occupied set.
+		attackers ^= fromSet;
+		occupied ^= fromSet;
+
+		// If the piece moved can open up for another attacker, we'll have to add this.
+		if (fromSet && mayXray) {
+			attackers |= attackSlider(occupied, to_sq, WHITE);
+			attackers |= attackSlider(occupied, to_sq, BLACK);
+		}
+
+		// Now we'll need to find the other side's least valuable attacker to the square.
+		for (aPiece = PAWN; aPiece <= KING; aPiece++) {
+			fromSet = pieceBBS[aPiece][sidePick] & attackers;
+
+			if (fromSet) {
+				fromSet = uint64_t(1) << bitScanForward(fromSet);
+				sidePick = (sidePick == WHITE) ? BLACK : WHITE;
+				break;
+			}
+		}
+
+	} while (fromSet);
+
+	while (d--) {
+		gain[d - 1] = -std::max(-gain[d - 1], gain[d]);
+	}
+
+	return gain[0];
+}
