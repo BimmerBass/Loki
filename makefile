@@ -39,7 +39,12 @@ FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cp
 
 SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
-OUTFILE=Loki.exe
+OUTFILE=Loki
+
+# Add .exe exstension for windows builds.
+ifeq ($(OS), Windows_NT)
+OUTFILE = Loki.exe
+endif
 
 all:
 	g++ ${SOURCES} -o $(OUTFILE) ${CXXFLAGS}
