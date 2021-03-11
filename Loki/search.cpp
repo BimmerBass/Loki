@@ -768,7 +768,9 @@ namespace Search {
 			bool capture = (ss->pos->piece_list[Them][TOSQ(move)] != NO_TYPE) ? true : false;
 			//bool is_promotion = (SPECIAL(move) == PROMOTION) ? true : false;
 			//int piece_captured = ss->pos->piece_list[Them][TOSQ(move)];
-			int piece_moved = ss->pos->piece_list[ss->pos->side_to_move][FROMSQ(move)];
+			//int piece_moved = ss->pos->piece_list[ss->pos->side_to_move][FROMSQ(move)];
+			int piece_captured = ss->pos->piece_on(TOSQ(move), Them);
+			int piece_moved = ss->pos->piece_on(FROMSQ(move), ss->pos->side_to_move);
 
 			reduction = 0;
 			int extensions = 0;
@@ -798,7 +800,10 @@ namespace Search {
 
 			// Step 13. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
 			//			We just need to make sure that at least one legal move has been searched since we'd risk getting false mate scores else.
-			if (futility_pruning && !capture && !gives_check && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && legal > 0) {
+			if (futility_pruning && 
+				(!capture || (depth <= 1 && moves[m]->score < 0)) // If we are int a frontier node (d <= 1) and the capture doesn't win material, then don't search it.
+				&& !gives_check 
+				&& SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && legal > 0) {
 				ss->pos->undo_move();
 				continue;
 			}
