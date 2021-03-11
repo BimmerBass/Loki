@@ -15,7 +15,7 @@ perft_transposition_table = no # Only used to make perft faster when testing mov
 
 
 ### Add compiler sepcific flags
-CXXFLAGS = -std=c++17 -lstdc++
+CXXFLAGS = -std=c++17 -lstdc++ -march=native
 
 ### Add options
 ifeq ($(optimize), yes)
@@ -30,6 +30,7 @@ endif
 ifeq ($(perft_transposition_table), yes)
 CXXFLAGS += -DPERFT_TT
 endif
+
 
 
 SRC_PATH=Loki
