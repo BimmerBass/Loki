@@ -10,11 +10,12 @@ void UCI::UCI_loop() {
 	setvbuf(stdin, NULL, _IOLBF, sizeof(NULL));
 	
 	// Initialize board, searchinfo and make sure the tt size is correct.
-	//GameState_t* pos = new GameState_t();
-	//SearchInfo_t* info = new SearchInfo_t();
 	GameState_t* pos = new GameState_t();
 	SearchInfo_t* info = new SearchInfo_t();
 
+
+	// Parse the starting fen. This is not required by UCI but we want to avoid crashing if given a "go" before a position has been given.
+	pos->parseFen(START_FEN);
 
 	if (tt->size() != TT_DEFAULT_SIZE) {
 		tt->resize(uint64_t(TT_DEFAULT_SIZE));
