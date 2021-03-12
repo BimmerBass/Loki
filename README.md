@@ -23,7 +23,7 @@ Loki uses bitboards as its main board representation
 #### Move generation
 - Magic Bitboards, as implemented by maksimKorzh, for generation of sliding piece attacks.
 - Pseudo-legal move generator with legality check in the make move function.
-- Overall **Perft @ depth = 5 speed of 450ms** from starting position, without bulk-counting.
+- Overall **Perft @ depth = 5 speed of 290ms** from starting position, without bulk-counting.
 
 #### Evaluation
 The evaluation is very simple at the moment, and a good elo increase is expected when I get around to improving it.
@@ -32,7 +32,9 @@ The evaluation is very simple at the moment, and a good elo increase is expected
 - Pawn structure and passed pawns.
 - Tapered eval to interpolate between game phases.
 - Piece mobility evaluation.
-- Specialized piece evaluation. This has been implemented, but showed a small elo decrease, but in the near future, it will be tested in conjunction with mobility in the hopes that they compliment each other.
+    - Safe mobility for knights
+- King safety evaluation.
+- Specialized piece evaluation. This has been implemented, but lost elo, so it is disabled at the moment. I will experiment with it in the future.
 
 #### Search
 - Lazy SMP supporting up to 8 threads.
@@ -44,6 +46,7 @@ The evaluation is very simple at the moment, and a good elo increase is expected
     - History heuristic.
     - Countermove heuristic.
     - Mvv/Lva for capture sorting.
+    - Static Exchange evaluation for move ordering.
     - Mate distance pruning.
     - Adaptive Null move pruning with reduction dependant on static_eval - beta which will reduce more aggresively when we're expected to be much above beta, and less when we're not.
     - Enhanced futility pruning.
@@ -56,11 +59,13 @@ The evaluation is very simple at the moment, and a good elo increase is expected
 - Quiescence search to resolve captures
     - Delta pruning.
     - Futility pruning for individual moves.
+    - SEE pruning of bad captures.
+
 With all the above mentioned move ordering techniques, Loki achieves a cutoff on the first move around 85%-90% of the time.
 ##### Note: **Late move reductions and late move pruning are disabled at the moment. This is because the evaluation function needs to be more accurate in order for them to work optimally.**
 
 ## Building Loki
-Loki has been tested to build without errors on both MSVC and GCC (with some warnings by both). If Loki should be compiled to a non-native popcount version one will have to either:
+Loki has been tested to build without errors on both MSVC and GCC (with some warnings by the former). If Loki should be compiled to a non-native popcount version one will have to either:
 1. If compiling on MSVC, the global preprocessor variable USE_POPCNT should be removed in the project properties.
 2. If compiling on GCC, the variable use_popcount in makefile should be set to "no".
 
@@ -71,7 +76,6 @@ It is also possible to change the amount of optimizations with both compilers by
 - Make compilation with GCC more efficient and add native methods for countBits, bitScanForward and bitScanReverse for different systems and architectures.
 - Make LMR and LMP more aggresive.
 - Try the following additions:
-    - Static exhange evaluation.
     - Singular extensions.
     - AEL-pruning.
     - Enhanced forward pruning.
@@ -80,8 +84,7 @@ It is also possible to change the amount of optimizations with both compilers by
     - Fail-High reductions.
     - Null move reductions.
     - Null move threat extensions.
-    - King safety in evaluation.
-    - Mobility + pieces in evaluation.
+- Make the evaluation term for pieces work.
 - If Loki ever reaches an elo on CCRL of ~2300 I will implement an optimization algorithm called [AdamSPSA](https://arxiv.org/pdf/1910.03591.pdf) 
 (see page 4 for parameter updates), in order to tune the evaluation function and search parameters.
 - I am very amazed of Stockfish's NNUE evaluation, and if I ever get Loki to play descent chess on CCRL, I will look into creating a new evaluation with some sort of Machine Learning.
