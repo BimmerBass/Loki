@@ -23,7 +23,7 @@ Loki uses bitboards as its main board representation
 #### Move generation
 - Magic Bitboards, as implemented by maksimKorzh, for generation of sliding piece attacks.
 - Pseudo-legal move generator with legality check in the make move function.
-- Overall **Perft @ depth = 5 speed of 450ms** from starting position, without bulk-counting.
+- Overall **Perft @ depth = 5 speed of 290ms** from starting position, without bulk-counting.
 
 #### Evaluation
 The evaluation is very simple at the moment, and a good elo increase is expected when I get around to improving it.
