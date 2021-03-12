@@ -60,6 +60,7 @@ The evaluation is very simple at the moment, and a good elo increase is expected
     - Delta pruning.
     - Futility pruning for individual moves.
     - SEE pruning of bad captures.
+
 With all the above mentioned move ordering techniques, Loki achieves a cutoff on the first move around 85%-90% of the time.
 ##### Note: **Late move reductions and late move pruning are disabled at the moment. This is because the evaluation function needs to be more accurate in order for them to work optimally.**
 
