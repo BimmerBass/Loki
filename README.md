@@ -17,6 +17,7 @@ was the nordic god, Loki. After elementary school - where we learned about the n
 | Version   | Elo   | TC   |
 |-----------|-------|------|
 | 1.0.2    | 1766  | 2'+1"|
+| 1.2.0     | 1817  | 2'+1''|
 
 ## Implementation
 Loki uses bitboards as its main board representation
