@@ -111,6 +111,7 @@ public:
 
 	void mirror_board();
 
+	bool is_ok();
 
 	/*
 	UI

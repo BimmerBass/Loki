@@ -965,3 +965,48 @@ void GameState_t::mirror_board() {
 
 	assert(lists_match());
 }
+
+
+
+/*
+
+Debugging function to check whether the position is legal or has errors
+
+*/
+
+bool GameState_t::is_ok() {
+
+
+	if ((side_to_move != WHITE && side_to_move != BLACK) ||
+		piece_list[WHITE][king_squares[WHITE]] != KING || bitScanForward(pieceBBS[KING][WHITE]) != king_squares[WHITE] ||
+		piece_list[BLACK][king_squares[BLACK]] != KING || bitScanForward(pieceBBS[KING][BLACK]) != king_squares[BLACK] ||
+		(enPasSq != NO_SQ && ((side_to_move == WHITE) ? enPasSq / 8 != RANK_6 : enPasSq / 8 != RANK_3))) {
+
+		return false;
+	}
+
+	// If the move_list and pieceBBS are not aligned, there has been an error.
+	if (!lists_match()) {
+		return false;
+	}
+
+	// Se if the incrementally updated zobrist key matches the real one for the position.
+	uint64_t old_poskey = posKey;
+	generate_poskey();
+
+	if (posKey != old_poskey) {
+		return false;
+	}
+
+	// Make sure there are only one king on the board for each side.
+	if (countBits(pieceBBS[KING][WHITE]) != 1 || countBits(pieceBBS[KING][BLACK]) != 1) {
+		return false;
+	}
+
+	// There can never be more than eight pawns
+	if (countBits(pieceBBS[PAWN][WHITE]) > 8 || countBits(pieceBBS[PAWN][BLACK]) > 8) {
+		return false;
+	}
+
+	return true;
+}

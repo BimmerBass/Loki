@@ -363,6 +363,7 @@ namespace Search {
 	// Root alpha beta
 	int search_root(SearchThread_t* ss, int depth, int alpha, int beta, SearchPv* pvLine) {
 		assert(depth > 0);
+		assert(ss->pos->is_ok());
 
 		ss->info->nodes++;
 
@@ -507,6 +508,7 @@ namespace Search {
 
 	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null, SearchPv* pvLine) {
 		assert(beta > alpha);
+		assert(ss->pos->is_ok());
 
 		SIDE Us = ss->pos->side_to_move;
 		SIDE Them = (Us == WHITE) ? BLACK : WHITE;
@@ -924,6 +926,7 @@ namespace Search {
 
 	int quiescence(SearchThread_t* ss, int alpha, int beta) {
 		assert(beta > alpha);
+		assert(ss->pos->is_ok());
 
 		ss->info->nodes++;
 
