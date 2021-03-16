@@ -111,6 +111,7 @@ public:
 
 	void mirror_board();
 
+	// Will return false if the king-positions doesn't match up or other weird things is happening with the board. Used for debugging
 	bool is_ok();
 
 	/*

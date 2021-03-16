@@ -363,9 +363,6 @@ namespace Search {
 	// Root alpha beta
 	int search_root(SearchThread_t* ss, int depth, int alpha, int beta, SearchPv* pvLine) {
 		assert(depth > 0);
-#ifdef NDEBUG // We'll only do the expensive pos->is_ok test in debug
-		assert(ss->pos->is_ok());
-#endif
 
 		ss->info->nodes++;
 
@@ -510,9 +507,7 @@ namespace Search {
 
 	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null, SearchPv* pvLine) {
 		assert(beta > alpha);
-#ifdef NDEBUG // We'll only do the expensive pos->is_ok test in debug
-		assert(ss->pos->is_ok());
-#endif
+
 		SIDE Us = ss->pos->side_to_move;
 		SIDE Them = (Us == WHITE) ? BLACK : WHITE;
 
@@ -929,10 +924,7 @@ namespace Search {
 
 	int quiescence(SearchThread_t* ss, int alpha, int beta) {
 		assert(beta > alpha);
-#ifdef NDEBUG // We'll only do the expensive pos->is_ok test in debug
-		assert(ss->pos->is_ok());
-#endif
-
+		
 		ss->info->nodes++;
 
 		if ((ss->info->nodes & 2047) == 0) {
