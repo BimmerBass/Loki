@@ -12,6 +12,7 @@ Bit = 64
 optimize = yes
 use_popcount = yes
 perft_transposition_table = no # Only used to make perft faster when testing movegen. Is switched off by default due to size concerns
+debug = no
 
 
 ### Add compiler sepcific flags
@@ -29,6 +30,9 @@ CXXFLAGS += -DIS_64BIT
 endif
 ifeq ($(perft_transposition_table), yes)
 CXXFLAGS += -DPERFT_TT
+endif
+ifeq ($(debug), no)
+CXXFLAGS += -DNDEBUG
 endif
 
 
