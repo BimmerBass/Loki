@@ -9,8 +9,11 @@ class SearchInfo_t {
 public:
 	long long starttime = 0;
 	long long stoptime = 0;
+	
 	int depth = MAXDEPTH;
+	int seldepth = 0;
 	int depthset = MAXDEPTH;
+	
 	bool timeset = false;
 	int movestogo = 0;
 	bool infinite = false;

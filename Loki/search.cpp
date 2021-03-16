@@ -180,8 +180,8 @@ namespace Search {
 
 		// Iterative deepening
 		for (int currDepth = 1; currDepth <= ss->info->depth; currDepth++) {
-			//ss->clear_move_heuristics();
 			pvLine.clear();
+			ss->info->seldepth = 0; // Clear seldepth
 
 			// Search the position. Use the previous score to center the aspiration windows.
 			score = aspiration_search(ss, currDepth, score, &pvLine);
@@ -225,6 +225,7 @@ namespace Search {
 				}
 
 				std::cout << " depth " << currDepth
+					<< " seldepth " << ss->info->seldepth
 					<< " nodes " << nodes
 					<< " nps " << nps
 					<< " time " << getTimeMs() - ss->info->starttime;
@@ -278,6 +279,9 @@ namespace Search {
 
 		ss->info->stopped = false;
 		ss->info->nodes = 0;
+
+		ss->info->seldepth = 0;
+
 		ss->info->fh = 0;
 		ss->info->fhf = 0;
 
@@ -407,6 +411,10 @@ namespace Search {
 			}
 		}
 
+		if (ss->pos->ply >= ss->info->seldepth) {
+			ss->info->seldepth = ss->pos->ply;
+		}
+
 
 		// Now we'll loop through the move list.
 		for (int m = 0; m < moves.size(); m++) {
@@ -510,7 +518,11 @@ namespace Search {
 		if (depth <= 0) {
 			return quiescence(ss, alpha, beta);
 		}
-		
+
+		// Update nodes and potentially seldepth
+		if (ss->pos->ply >= ss->info->seldepth) {
+			ss->info->seldepth = ss->pos->ply;
+		}
 		ss->info->nodes++;
 
 		// Check to see if we've been told to abort the search.
