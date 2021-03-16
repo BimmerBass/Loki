@@ -759,6 +759,9 @@ int GameState_t::make_nullmove() {
 		int enPas = enPasSq;
 		enPasSq = NO_SQ;
 
+		// XOR out the en-passant square
+		posKey ^= BBS::Zobrist::empty_keys[enPas];
+
 		return enPas;
 	}
 	return NO_SQ;
@@ -774,6 +777,11 @@ Undoing a null-move
 void GameState_t::undo_nullmove(int oldEnPas) {
 	// Step 1. Re-insert the old en-passant square
 	enPasSq = oldEnPas;
+
+	// Step 2. If there were an en-passant square before, this should be XOR'ed in again
+	if (enPasSq != NO_SQ) {
+		posKey ^= BBS::Zobrist::empty_keys[enPasSq];
+	}
 
 	// Step 2. Toggle side in hashkey
 	posKey ^= BBS::Zobrist::side_key;
