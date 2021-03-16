@@ -184,8 +184,8 @@ namespace Search {
 			pvLine.clear();
 
 			// Search the position. Use the previous score to center the aspiration windows.
-			//score = aspiration_search(ss, currDepth, score, &pvLine);
-			score = search_root(ss, currDepth, -INF, INF, &pvLine);
+			score = aspiration_search(ss, currDepth, score, &pvLine);
+			//score = search_root(ss, currDepth, -INF, INF, &pvLine);
 
 			// If we've been asked to stop, break out of the loop. We don't want the new PV from the lates alphabeta call because the tree hasn't been fully
 			// searched, so we'll take the next best, aka last iteration's result.
@@ -313,7 +313,7 @@ namespace Search {
 	====================================================================================
 	*/
 
-	// Calls search_root with aspiration windows - (~3 elo for 0.25 widening factor)
+	// Calls search_root with aspiration windows (~22 elo)
 	int aspiration_search(SearchThread_t* ss, int depth, int estimate, SearchPv* line) {
 		int score = -INF;
 		
@@ -324,7 +324,7 @@ namespace Search {
 		int delta_beta = aspiration_window;
 
 		// Only use narrow windows at high depths and if there are no mate scores
-		if (depth >= aspiration_depth && abs(estimate) < MATE) {
+		if (depth >= aspiration_depth && abs(estimate) < (MATE / 2)) {
 			alpha = std::max(alpha, estimate - delta_alpha);
 			beta = std::min(beta, estimate + delta_beta);
 		}
@@ -334,29 +334,21 @@ namespace Search {
 
 		if (ss->info->stopped) { return 0; }
 
-		// If we've found a score indicating a mate, we'll re-search with full windows
-		if (abs(score) >= (MATE / 2)) {
+
+
+		// If the real score is below alpha, open this window fully
+		if (score <= alpha) {
 			alpha = -INF;
+
+			goto asp_loop;
+		}
+
+		if (score >= beta) {
 			beta = INF;
 
 			goto asp_loop;
 		}
 
-		if (score <= alpha) { // The real value is below our current lower bound
-			alpha = std::max(score - delta_alpha, -INF);
-
-			delta_alpha += (int)std::round(0.25 * double(delta_alpha)); // Increase delta_alpha exponentially
-
-			goto asp_loop;
-		}
-
-		if (score >= beta) { // The real value is above our current upper bound
-			beta = std::min(score + delta_beta, INF);
-
-			delta_beta += (int)std::round(0.25 * double(delta_beta)); // Increase delta_beta exponentially
-		
-			goto asp_loop;
-		}
 
 		return score;
 	}

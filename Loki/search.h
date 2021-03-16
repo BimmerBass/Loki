@@ -15,7 +15,6 @@
 
 struct SearchPv {
 	int length = 0;
-	//int pv[MAXDEPTH] = { 0 };
 	std::array<int, MAXDEPTH + 1> pv = { 0 };
 
 	void clear() {
@@ -68,7 +67,7 @@ extern int NM_Reductions[MAXDEPTH][2000];
 extern int nullmove_reduction(int depth, int lead);
 
 extern int Reductions[MAXDEPTH][MAXPOSITIONMOVES];
-extern int late_move_reduction(int d, int c);
+extern int late_move_reduction(int d, int c, bool i);
 extern int late_move_pruning(int depth, bool improving);
 
 extern int futility_margin(int depth, bool improving);
