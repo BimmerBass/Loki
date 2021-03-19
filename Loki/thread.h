@@ -52,7 +52,7 @@ struct SearchThread_t {
 	// Indexed by history[color][fromsq][tosq]
 	//int history[2][64][64] = { {{0}} };
 	
-	//unsigned int killers[MAXDEPTH][2] = { {0} };
+	unsigned int killers[MAXDEPTH][2] = { {0} };
 
 	//int static_eval[MAXDEPTH] = { 0 };
 

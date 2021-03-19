@@ -23,8 +23,8 @@ void SearchThread_t::generate_moves(MoveList* moves, bool qsearch) {
 
 
 void SearchThread_t::setKillers(int ply, int move) {
-	//killers[ply][1] = killers[ply][0];
-	//killers[ply][0] = move;
+	killers[ply][1] = killers[ply][0];
+	killers[ply][0] = move;
 }
 
 
@@ -32,67 +32,67 @@ void SearchThread_t::setKillers(int ply, int move) {
 constexpr int promotion_values[4] = { 300, 350, 500, 900 };
 
 void SearchThread_t::score_moves(MoveList* ml) {
-	//SIDE Them = (pos->side_to_move == WHITE) ? BLACK : WHITE;
-	//
-	//for (int i = 0; i < ml->size(); i++) {
-	//	// If it is a quiet move, i.e. not a capture, promotion or en-passant, we'll score it with killers and history heuristic
-	//	if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] == NO_TYPE && SPECIAL((*ml)[i]->move) != PROMOTION && SPECIAL((*ml)[i]->move) != ENPASSANT) {
-	//
-	//		// Killers
-	//		if ((*ml)[i]->move == killers[pos->ply][0]) {
-	//			(*ml)[i]->score = first_killer;
-	//		}
-	//		else if ((*ml)[i]->move == killers[pos->ply][1]) {
-	//			(*ml)[i]->score = second_killer;
-	//		}
-	//
-	//		// Countermoves
-	//		else if (pos->ply > 0 && (*ml)[i]->move == counterMoves[FROMSQ(moves_path[pos->ply - 1])][TOSQ(moves_path[pos->ply - 1])]) {
-	//			(*ml)[i]->score = countermove_bonus;
-	//		}
-	//
-	//		// History
-	//		else {
-	//			(*ml)[i]->score = history[pos->side_to_move][FROMSQ((*ml)[i]->move)][TOSQ((*ml)[i]->move)];
-	//		}
-	//	}
-	//
-	//	// It is a tactical move. We'll score this the highest
-	//	else {
-	//		(*ml)[i]->score = 10000000; // Make sure tactical moves are searched first.
-	//
-	//		// Captures get scored with MVV/LVA.
-	//		if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {
-	//			//(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
-	//			int s = pos->see((*ml)[i]->move);
-	//			if (s >= 0) {
-	//				(*ml)[i]->score += s;
-	//			}
-	//			else {
-	//				(*ml)[i]->score *= -1;
-	//				(*ml)[i]->score += s;
-	//			}
-	//		}
-	//		
-	//		// Promotions will also be scored highly.
-	//		if (SPECIAL((*ml)[i]->move) == PROMOTION) {
-	//			// If the promotion piece is a queen or we're capturing a piece, we'll score this just below the hash move
-	//			if (PROMTO((*ml)[i]->move) + 1 == QUEEN) {
-	//				(*ml)[i]->score = hash_move_sort - 100;
-	//			}
-	//			else { // Will be scored as loosing a pawn and gaining the promotion piece.
-	//				(*ml)[i]->score += MvvLva[PAWN][PROMTO((*ml)[i]->move) + 1];
-	//			}
-	//		}
-	//
-	//		// En-passants will be scored simply as PxP
-	//		if (SPECIAL((*ml)[i]->move) == ENPASSANT) {
-	//			(*ml)[i]->score += MvvLva[PAWN][PAWN];
-	//		}
-	//
-	//	}
-	//
-	//}
+	SIDE Them = (pos->side_to_move == WHITE) ? BLACK : WHITE;
+	
+	for (int i = 0; i < ml->size(); i++) {
+		// If it is a quiet move, i.e. not a capture, promotion or en-passant, we'll score it with killers and history heuristic
+		if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] == NO_TYPE && SPECIAL((*ml)[i]->move) != PROMOTION && SPECIAL((*ml)[i]->move) != ENPASSANT) {
+	
+			// Killers
+			if ((*ml)[i]->move == killers[pos->ply][0]) {
+				(*ml)[i]->score = first_killer;
+			}
+			else if ((*ml)[i]->move == killers[pos->ply][1]) {
+				(*ml)[i]->score = second_killer;
+			}
+	
+			// Countermoves
+			//else if (pos->ply > 0 && (*ml)[i]->move == counterMoves[FROMSQ(moves_path[pos->ply - 1])][TOSQ(moves_path[pos->ply - 1])]) {
+			//	(*ml)[i]->score = countermove_bonus;
+			//}
+	
+			// History
+			//else {
+			//	(*ml)[i]->score = history[pos->side_to_move][FROMSQ((*ml)[i]->move)][TOSQ((*ml)[i]->move)];
+			//}
+		}
+	
+		// It is a tactical move. We'll score this the highest
+		//else {
+		//	(*ml)[i]->score = 10000000; // Make sure tactical moves are searched first.
+		//
+		//	// Captures get scored with MVV/LVA.
+		//	if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {
+		//		//(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
+		//		int s = pos->see((*ml)[i]->move);
+		//		if (s >= 0) {
+		//			(*ml)[i]->score += s;
+		//		}
+		//		else {
+		//			(*ml)[i]->score *= -1;
+		//			(*ml)[i]->score += s;
+		//		}
+		//	}
+		//	
+		//	// Promotions will also be scored highly.
+		//	if (SPECIAL((*ml)[i]->move) == PROMOTION) {
+		//		// If the promotion piece is a queen or we're capturing a piece, we'll score this just below the hash move
+		//		if (PROMTO((*ml)[i]->move) + 1 == QUEEN) {
+		//			(*ml)[i]->score = hash_move_sort - 100;
+		//		}
+		//		else { // Will be scored as loosing a pawn and gaining the promotion piece.
+		//			(*ml)[i]->score += MvvLva[PAWN][PROMTO((*ml)[i]->move) + 1];
+		//		}
+		//	}
+		//
+		//	// En-passants will be scored simply as PxP
+		//	if (SPECIAL((*ml)[i]->move) == ENPASSANT) {
+		//		(*ml)[i]->score += MvvLva[PAWN][PAWN];
+		//	}
+		//
+		//}
+	
+	}
 }
 
 
@@ -122,7 +122,7 @@ void SearchThread_t::pickNextMove(int index, MoveList* ml) {
 
 void SearchThread_t::update_move_heuristics(int move, int depth) {
 	// Set the new killer moves
-	//setKillers(pos->ply, move);
+	setKillers(pos->ply, move);
 
 	// Update the countermove heuristic
 	//if (pos->ply > 0) { // Prevent overflow
@@ -152,23 +152,23 @@ void SearchThread_t::update_move_heuristics(int move, int depth) {
 
 void SearchThread_t::clear_move_heuristics() {
 
-	for (int i = 0; i < 64; i++) {
-
-		for (int j = 0; j < 64; j++) {
-			//counterMoves[i][j] = 0;
-			//
-			//history[0][i][j] = 0;
-			//history[1][i][j] = 0;
-		}
-
-	}
+	//for (int i = 0; i < 64; i++) {
+	//
+	//	for (int j = 0; j < 64; j++) {
+	//		counterMoves[i][j] = 0;
+	//
+	//		history[0][i][j] = 0;
+	//		history[1][i][j] = 0;
+	//	}
+	//
+	//}
 
 	for (int d = 0; d < MAXDEPTH; d++) {
 		//moves_path[d] = 0;
 		//static_eval[d] = 0;
-		//
-		//killers[d][0] = 0;
-		//killers[d][1] = 0;
+
+		killers[d][0] = 0;
+		killers[d][1] = 0;
 	}
 }
 

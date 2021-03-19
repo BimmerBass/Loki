@@ -296,13 +296,13 @@ namespace Search {
 		//	}
 		//}
 		//
-		//for (int d = 0; d < MAXDEPTH; d++) {
-		//	ss->killers[d][0] = NOMOVE;
-		//	ss->killers[d][1] = NOMOVE;
+		for (int d = 0; d < MAXDEPTH; d++) {
+			ss->killers[d][0] = NOMOVE;
+			ss->killers[d][1] = NOMOVE;
 		//
 		//	ss->static_eval[d] = 0;
 		//	ss->moves_path[d] = 0;
-		//}
+		}
 
 	}
 
@@ -872,11 +872,11 @@ namespace Search {
 				ss->info->fh++;
 
 				// Step 14B. If a beta cutoff was achieved, update the quit move ordering heuristics 
-				//if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
-				//	ss->update_move_heuristics(move, depth);
-				//}
-				//
-				//
+				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
+					ss->update_move_heuristics(move, depth);
+				}
+				
+				
 				//tt->store_entry(ss->pos, move, score, depth, ttFlag::BETA);
 
 				return beta;
