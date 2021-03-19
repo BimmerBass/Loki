@@ -621,16 +621,16 @@ namespace Eval {
 		//imbalance<WHITE>(pos, eval); imbalance<BLACK>(pos, eval);
 
 		// Pawn structure evaluation
-		pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
+		//pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
 		
 		// Evaluate mobility (~56 elo)
-		mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
-		mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
-		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
-		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
-
+		//mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
+		//mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
+		//mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
+		//mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
+		
 		// Simple king safety evaluation (~47 elo)
-		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
+		//king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
 		// Piece evaluations --> loses elo (~-23) at the moment
 		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);

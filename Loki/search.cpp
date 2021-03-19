@@ -184,8 +184,7 @@ namespace Search {
 			ss->info->seldepth = 0; // Clear seldepth
 
 			// Search the position. Use the previous score to center the aspiration windows.
-			score = aspiration_search(ss, currDepth, score, &pvLine);
-			//score = search_root(ss, currDepth, -INF, INF, &pvLine);
+			score = search_root(ss, currDepth, -INF, INF, &pvLine);
 
 			// If we've been asked to stop, break out of the loop. We don't want the new PV from the lates alphabeta call because the tree hasn't been fully
 			// searched, so we'll take the next best, aka last iteration's result.
@@ -288,22 +287,22 @@ namespace Search {
 		reductions = 0;
 		re_searches = 0;
 
-		for (int i = 0; i < 64; i++) {
-			for (int j = 0; j < 64; j++) {
-				ss->history[0][i][j] = 0;
-				ss->history[1][i][j] = 0;
-
-				ss->counterMoves[i][j] = 0;
-			}
-		}
-
-		for (int d = 0; d < MAXDEPTH; d++) {
-			ss->killers[d][0] = NOMOVE;
-			ss->killers[d][1] = NOMOVE;
-
-			ss->static_eval[d] = 0;
-			ss->moves_path[d] = 0;
-		}
+		//for (int i = 0; i < 64; i++) {
+		//	for (int j = 0; j < 64; j++) {
+		//		ss->history[0][i][j] = 0;
+		//		ss->history[1][i][j] = 0;
+		//
+		//		ss->counterMoves[i][j] = 0;
+		//	}
+		//}
+		//
+		//for (int d = 0; d < MAXDEPTH; d++) {
+		//	ss->killers[d][0] = NOMOVE;
+		//	ss->killers[d][1] = NOMOVE;
+		//
+		//	ss->static_eval[d] = 0;
+		//	ss->moves_path[d] = 0;
+		//}
 
 	}
 
@@ -382,34 +381,34 @@ namespace Search {
 
 
 		// Step 1. In-check extensions.
-		bool in_check = ss->pos->in_check();
-		if (in_check) {
-			new_depth++;
-		}
+		//bool in_check = ss->pos->in_check();
+		//if (in_check) {
+		//	new_depth++;
+		//}
 
 		
 		// Step 2. Static evaluation.
-		if (in_check) {
-			ss->static_eval[ss->pos->ply] = VALUE_NONE;
-		}
-		ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		//if (in_check) {
+		//	ss->static_eval[ss->pos->ply] = VALUE_NONE;
+		//}
+		//ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
 
 
 		// Step 3. Probe transposition table --> If there is a move from previous iterations, we'll assume the best move from that as the best move now, and
 		//	order that first.
-		bool ttHit = false;
-		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
-		unsigned int pvMove = (ttHit) ? entry->data.move : NOMOVE;
-		
-		if (ttHit) {
-			// Loop through the move list and find the pvMove
-			for (int m = 0; m < moves.size(); m++) {
-				if (moves[m]->move == pvMove) {
-					moves[m]->score = hash_move_sort;
-					break;
-				}
-			}
-		}
+		//bool ttHit = false;
+		//TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		//unsigned int pvMove = (ttHit) ? entry->data.move : NOMOVE;
+		//
+		//if (ttHit) {
+		//	// Loop through the move list and find the pvMove
+		//	for (int m = 0; m < moves.size(); m++) {
+		//		if (moves[m]->move == pvMove) {
+		//			moves[m]->score = hash_move_sort;
+		//			break;
+		//		}
+		//	}
+		//}
 
 		if (ss->pos->ply >= ss->info->seldepth) {
 			ss->info->seldepth = ss->pos->ply;
@@ -433,7 +432,7 @@ namespace Search {
 
 			
 			// Set the previous move such that we can use the countermove heuristic.
-			ss->moves_path[ss->pos->ply] = move;
+			//ss->moves_path[ss->pos->ply] = move;
 
 			
 			// Step 4. Principal Variation search. We search all moves with the full window until one raises alpha. Afterwards we'll search with a null window
@@ -460,7 +459,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				tt->store_entry(ss->pos, move, score, depth, ttFlag::BETA);
+				//tt->store_entry(ss->pos, move, score, depth, ttFlag::BETA);
 
 
 				return beta;
@@ -493,10 +492,10 @@ namespace Search {
 		if (raised_alpha) {
 			assert(best_move == pvLine->pv[0]);
 		
-			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
+			//tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
 		}
 		else {
-			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
+			//tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
 		}
 	
 		return alpha;
@@ -516,7 +515,8 @@ namespace Search {
 
 		// Step 1. Dive into quiescence search (~382 elo)
 		if (depth <= 0) {
-			return quiescence(ss, alpha, beta);
+			//return quiescence(ss, alpha, beta);
+			return Eval::evaluate(ss->pos);
 		}
 
 		// Update nodes and potentially seldepth
@@ -577,148 +577,148 @@ namespace Search {
 
 
 		// Step 4. Mate distance pruning (~22 elo). If there has already been found a forced mate, don't search irrelevant nodes.
-		alpha = std::max(-INF + ss->pos->ply, alpha);
-		beta = std::min(INF - ss->pos->ply + 1, beta);
-		
-		if (alpha >= beta) {
-			return alpha;
-		}
+		//alpha = std::max(-INF + ss->pos->ply, alpha);
+		//beta = std::min(INF - ss->pos->ply + 1, beta);
+		//
+		//if (alpha >= beta) {
+		//	return alpha;
+		//}
 
 
 
 		// Step 5. Transposition table probing (~30 elo - too little?). This is done before quiescence since it is quite fast, and if we can get a cutoff before
 		// going into quiescence, we'll of course use that. Probing before quiescence search contributed with ~17 elo.
-		bool ttHit = false;
-		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
-
-		int ttScore = (ttHit) ? value_from_tt(entry->data.score, ss->pos->ply) : -INF;
-		unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
-		int ttDepth = (ttHit) ? entry->data.depth : 0;
-		ttFlag tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
-
-		// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
-		if (ttHit
-			&& beta - alpha == 1
-			&& ttDepth >= depth) {
-
-			if (tt_flag == ttFlag::BETA && ttScore >= beta) {
-				return beta;
-			}
-
-			if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
-				return alpha;
-			}
-		}
+		//bool ttHit = false;
+		//TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		//
+		//int ttScore = (ttHit) ? value_from_tt(entry->data.score, ss->pos->ply) : -INF;
+		//unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
+		//int ttDepth = (ttHit) ? entry->data.depth : 0;
+		//ttFlag tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
+		//
+		//// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
+		//if (ttHit
+		//	&& beta - alpha == 1
+		//	&& ttDepth >= depth) {
+		//
+		//	if (tt_flag == ttFlag::BETA && ttScore >= beta) {
+		//		return beta;
+		//	}
+		//
+		//	if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
+		//		return alpha;
+		//	}
+		//}
 
 
 
 
 
 		// Step 6. Static evaluation.
-		if (in_check) {
-			// If we're in check, we'll go directly to the moves since we don't want this branch pruned away.
-			ss->static_eval[ss->pos->ply] = VALUE_NONE;
-			improving = false;
-		
-			goto moves_loop;
-		}
-		
-		ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
-		improving = (ss->pos->ply >= 2) ? (ss->static_eval[ss->pos->ply] >= ss->static_eval[ss->pos->ply - 2] || ss->static_eval[ss->pos->ply - 2] == VALUE_NONE) :
-			false;
-		
-		assert(!in_check);
+		//if (in_check) {
+		//	// If we're in check, we'll go directly to the moves since we don't want this branch pruned away.
+		//	ss->static_eval[ss->pos->ply] = VALUE_NONE;
+		//	improving = false;
+		//
+		//	goto moves_loop;
+		//}
+		//
+		//ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		//improving = (ss->pos->ply >= 2) ? (ss->static_eval[ss->pos->ply] >= ss->static_eval[ss->pos->ply - 2] || ss->static_eval[ss->pos->ply - 2] == VALUE_NONE) :
+		//	false;
+		//
+		//assert(!in_check);
 
 
 		// Step 7. Null move pruning (~51 elo). FIXME: Improve safe_nullmove and nullmove_reduction
-		if (can_null && !in_check && !is_pv
-			&& depth > 2 && 
-			ss->static_eval[ss->pos->ply] >= beta &&
-			ss->pos->safe_nullmove()) {
-		
-			int R = nullmove_reduction(depth, ss->static_eval[ss->pos->ply] - beta);
-
-			int old_evaluation = ss->static_eval[ss->pos->ply];
-			int old_enpassant = ss->pos->make_nullmove();
-			
-			// We want to use another eval here than the one already calculated since the former is inaccurate when the side to move gets switched
-			ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
-
-			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
-			
-			// Clear the pv
-			line.clear();
-		
-			// Insert the real evaluation again in case we don't get a cutoff
-			ss->static_eval[ss->pos->ply] = old_evaluation;
-			ss->pos->undo_nullmove(old_enpassant);
-		
-			if (score >= beta && abs(score) < MATE) {
-				// Verified null move pruning hasn't been tested properly yet, so it is left out until there is time for tests with longer tc's
-				// Step 6A. Verified Null Move Pruning. For high depths, we will want to do a verification search with a null window centered around beta to be sure
-				//if (depth >= 8) {
-				//	// This time, the score is not inside a "make/undo" move, so we shouldn't make it negative or switch the bounds
-				//	score = alphabeta(ss, depth - R - 1, beta - 1, beta, false, &line);
-				//
-				//	if (score >= beta && abs(score < MATE)) { // If we're still above beta, it is safe to say, that our null move is good enough
-				//		return beta;
-				//	}
-				//}
-				//
-				//else {
-				//	return beta;
-				//}
-				return beta;
-			}
-		}
-
-
-
-		// Step 8. Enhanced futility pruning (~63 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
-		//		and skip tactically boring moves from the search
-		if (depth < 7 && !in_check && !is_pv
-			&& abs(alpha) < MATE && abs(beta) < MATE
-			&& ss->static_eval[ss->pos->ply] + futility_margin(depth, improving) <= alpha) {
-		
-			futility_pruning = true;
-		}
-
-
-		// Step 9. Reverse futility pruning (~11 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
-		if (depth < 7 && !in_check && !is_pv
-			&& abs(alpha) < MATE && abs(beta) < MATE) {
-		
-			int margin = 175 * depth - ((improving) ? 75 : 0);
-		
-			if (ss->static_eval[ss->pos->ply] - margin >= beta) {
-				return beta;
-			}
-		}
-
-
-		// Step 10. Razoring (~17 elo)
-		if (use_razoring && depth <= razoring_depth && !is_pv &&
-			ss->static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
-			&& !in_check && abs(beta) < MATE && abs(alpha) < MATE) {
-		
-			int margin = razoring_margin(depth, improving);
-			int razoring_window = alpha - margin;
-			score = quiescence(ss, razoring_window, razoring_window + 1); // Do a null window quiescence to prove we can't raise alpha over  alpha - margin
-		
-			if (ss->pos->non_pawn_material()) {
-				if (score + margin <= alpha) {
-					return alpha;
-				}
-			}
-			else {
-				if (depth <= 1 && score + margin <= alpha) {
-					return alpha;
-				}
-				else if (score + margin <= alpha) { // If there are no pieces on the board and we're not at depth = 1, just reduce by one.
-					depth -= 1;
-				}
-			}
-		}
+		//if (can_null && !in_check && !is_pv
+		//	&& depth > 2 && 
+		//	ss->static_eval[ss->pos->ply] >= beta &&
+		//	ss->pos->safe_nullmove()) {
+		//
+		//	int R = nullmove_reduction(depth, ss->static_eval[ss->pos->ply] - beta);
+		//
+		//	int old_evaluation = ss->static_eval[ss->pos->ply];
+		//	int old_enpassant = ss->pos->make_nullmove();
+		//	
+		//	// We want to use another eval here than the one already calculated since the former is inaccurate when the side to move gets switched
+		//	ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		//
+		//	score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
+		//	
+		//	// Clear the pv
+		//	line.clear();
+		//
+		//	// Insert the real evaluation again in case we don't get a cutoff
+		//	ss->static_eval[ss->pos->ply] = old_evaluation;
+		//	ss->pos->undo_nullmove(old_enpassant);
+		//
+		//	if (score >= beta && abs(score) < MATE) {
+		//		// Verified null move pruning hasn't been tested properly yet, so it is left out until there is time for tests with longer tc's
+		//		// Step 6A. Verified Null Move Pruning. For high depths, we will want to do a verification search with a null window centered around beta to be sure
+		//		//if (depth >= 8) {
+		//		//	// This time, the score is not inside a "make/undo" move, so we shouldn't make it negative or switch the bounds
+		//		//	score = alphabeta(ss, depth - R - 1, beta - 1, beta, false, &line);
+		//		//
+		//		//	if (score >= beta && abs(score < MATE)) { // If we're still above beta, it is safe to say, that our null move is good enough
+		//		//		return beta;
+		//		//	}
+		//		//}
+		//		//
+		//		//else {
+		//		//	return beta;
+		//		//}
+		//		return beta;
+		//	}
+		//}
+		//
+		//
+		//
+		//// Step 8. Enhanced futility pruning (~63 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
+		////		and skip tactically boring moves from the search
+		//if (depth < 7 && !in_check && !is_pv
+		//	&& abs(alpha) < MATE && abs(beta) < MATE
+		//	&& ss->static_eval[ss->pos->ply] + futility_margin(depth, improving) <= alpha) {
+		//
+		//	futility_pruning = true;
+		//}
+		//
+		//
+		//// Step 9. Reverse futility pruning (~11 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
+		//if (depth < 7 && !in_check && !is_pv
+		//	&& abs(alpha) < MATE && abs(beta) < MATE) {
+		//
+		//	int margin = 175 * depth - ((improving) ? 75 : 0);
+		//
+		//	if (ss->static_eval[ss->pos->ply] - margin >= beta) {
+		//		return beta;
+		//	}
+		//}
+		//
+		//
+		//// Step 10. Razoring (~17 elo)
+		//if (use_razoring && depth <= razoring_depth && !is_pv &&
+		//	ss->static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
+		//	&& !in_check && abs(beta) < MATE && abs(alpha) < MATE) {
+		//
+		//	int margin = razoring_margin(depth, improving);
+		//	int razoring_window = alpha - margin;
+		//	score = quiescence(ss, razoring_window, razoring_window + 1); // Do a null window quiescence to prove we can't raise alpha over  alpha - margin
+		//
+		//	if (ss->pos->non_pawn_material()) {
+		//		if (score + margin <= alpha) {
+		//			return alpha;
+		//		}
+		//	}
+		//	else {
+		//		if (depth <= 1 && score + margin <= alpha) {
+		//			return alpha;
+		//		}
+		//		else if (score + margin <= alpha) { // If there are no pieces on the board and we're not at depth = 1, just reduce by one.
+		//			depth -= 1;
+		//		}
+		//	}
+		//}
 
 
 		moves_loop:
@@ -731,33 +731,33 @@ namespace Search {
 		//		depth in the hopes of finding the PV.
 		// This will only be done if we are in a PV-node and at a high depth. At low depths, the search is very fast anyways.
 		// We also won't do IID when in check because these usually only have a few moves, which would make the best one pretty fast to find.
-		if (!ttHit && is_pv && !in_check && depth > iid_depth) {
-			assert(iid_depth >= iid_reduction);
-			assert(ttMove == NOMOVE);
-		
-			// We'll reduce the depth.
-			new_depth = depth - iid_reduction;
-		
-			score = alphabeta(ss, new_depth, alpha, beta, true, &line);
-		
-			// Now we'll set the ttHit and ttMove if we found a good move.
-			if (line.pv[0] != NOMOVE) {
-				ttHit = true;
-				ttMove = line.pv[0];
-			}
-		
-			line.clear();
-		}
-
-		// If the transposition table returned a move, this is probably the best, so we'll score it highest.
-		if (ttHit && ttMove != NOMOVE) {
-			for (int i = 0; i < moves.size(); i++) {
-				if (moves[i]->move == ttMove) {
-					moves[i]->score = hash_move_sort;
-				}
-				break;
-			}
-		}
+		//if (!ttHit && is_pv && !in_check && depth > iid_depth) {
+		//	assert(iid_depth >= iid_reduction);
+		//	assert(ttMove == NOMOVE);
+		//
+		//	// We'll reduce the depth.
+		//	new_depth = depth - iid_reduction;
+		//
+		//	score = alphabeta(ss, new_depth, alpha, beta, true, &line);
+		//
+		//	// Now we'll set the ttHit and ttMove if we found a good move.
+		//	if (line.pv[0] != NOMOVE) {
+		//		ttHit = true;
+		//		ttMove = line.pv[0];
+		//	}
+		//
+		//	line.clear();
+		//}
+		//
+		//// If the transposition table returned a move, this is probably the best, so we'll score it highest.
+		//if (ttHit && ttMove != NOMOVE) {
+		//	for (int i = 0; i < moves.size(); i++) {
+		//		if (moves[i]->move == ttMove) {
+		//			moves[i]->score = hash_move_sort;
+		//		}
+		//		break;
+		//	}
+		//}
 
 		int move = NOMOVE;
 		int legal = 0;
@@ -782,13 +782,13 @@ namespace Search {
 
 			// Step 12. Various extensions.
 
-			if (SPECIAL(move) == CASTLING) { // Castle extensions.
-				extensions++;
-			}
-			
-			if (in_check) { // In check extensions
-				extensions++;
-			}
+			//if (SPECIAL(move) == CASTLING) { // Castle extensions.
+			//	extensions++;
+			//}
+			//
+			//if (in_check) { // In check extensions
+			//	extensions++;
+			//}
 
 
 			if (!ss->pos->make_move(moves[m])) {
@@ -804,13 +804,13 @@ namespace Search {
 
 			// Step 13. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
 			//			We just need to make sure that at least one legal move has been searched since we'd risk getting false mate scores else.
-			if (futility_pruning && 
-				(!capture || (depth <= 1 && moves[m]->score < 0)) // If we are int a frontier node (d <= 1) and the capture doesn't win material, then don't search it.
-				&& !gives_check 
-				&& SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && legal > 0) {
-				ss->pos->undo_move();
-				continue;
-			}
+			//if (futility_pruning && 
+			//	(!capture || (depth <= 1 && moves[m]->score < 0)) // If we are int a frontier node (d <= 1) and the capture doesn't win material, then don't search it.
+			//	&& !gives_check 
+			//	&& SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && legal > 0) {
+			//	ss->pos->undo_move();
+			//	continue;
+			//}
 
 			// Step 14. Principal variation search
 			
@@ -872,12 +872,12 @@ namespace Search {
 				ss->info->fh++;
 
 				// Step 14B. If a beta cutoff was achieved, update the quit move ordering heuristics 
-				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
-					ss->update_move_heuristics(move, depth);
-				}
-
-
-				tt->store_entry(ss->pos, move, score, depth, ttFlag::BETA);
+				//if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
+				//	ss->update_move_heuristics(move, depth);
+				//}
+				//
+				//
+				//tt->store_entry(ss->pos, move, score, depth, ttFlag::BETA);
 
 				return beta;
 			}
@@ -908,11 +908,11 @@ namespace Search {
 
 		
 		if (alpha > old_alpha) {
-			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
+			//tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
 
 		}
 		else{
-			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
+			//tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
 		}
 
 
@@ -968,9 +968,9 @@ namespace Search {
 
 
 		// Step 2. Delta pruning (~10 elo). If our position is so bad that not even the best capture possible would be enough to raise alpha, we'll assume that it is an all-node.
-		if (stand_pat + std::max(delta_margin, ss->pos->best_capture_possible()) <= alpha && !in_check) {
-			return alpha;
-		}
+		//if (stand_pat + std::max(delta_margin, ss->pos->best_capture_possible()) <= alpha && !in_check) {
+		//	return alpha;
+		//}
 
 
 		// Step 3. Generation of moves
@@ -993,17 +993,17 @@ namespace Search {
 			int piece_captured = ss->pos->piece_list[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][TOSQ(move)];
 
 			// Step 4. SEE pruning. If the move is a capture and SEE(move) < 0 (we know this if move->score < 0), just prune it.
-			if (piece_captured != NO_TYPE && ml[m]->score < 0) {
-				continue;
-			}
-
-			// Step 5. Futility pruning (~30 elo). If the value of the piece captured, plus some margin (~200cp) is still not enough to raise alpha, we won't bother searching it.
-			// We'll just have to make sure, that there has been tested at least one legal move, so we don't miss a checkmate
-			if (SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && piece_captured != NO_TYPE &&
-				stand_pat + delta_piece_value[piece_captured] + delta_margin <= alpha
-				&& !ss->pos->is_endgame() && (!in_check || legal > 0)) {
-				continue;
-			}
+			//if (piece_captured != NO_TYPE && ml[m]->score < 0) {
+			//	continue;
+			//}
+			//
+			//// Step 5. Futility pruning (~30 elo). If the value of the piece captured, plus some margin (~200cp) is still not enough to raise alpha, we won't bother searching it.
+			//// We'll just have to make sure, that there has been tested at least one legal move, so we don't miss a checkmate
+			//if (SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && piece_captured != NO_TYPE &&
+			//	stand_pat + delta_piece_value[piece_captured] + delta_margin <= alpha
+			//	&& !ss->pos->is_endgame() && (!in_check || legal > 0)) {
+			//	continue;
+			//}
 
 
 			if (!ss->pos->make_move(ml[m])) {
