@@ -515,8 +515,8 @@ namespace Search {
 
 		// Step 1. Dive into quiescence search (~382 elo)
 		if (depth <= 0) {
-			//return quiescence(ss, alpha, beta);
-			return Eval::evaluate(ss->pos);
+			return quiescence(ss, alpha, beta);
+			//return Eval::evaluate(ss->pos);
 		}
 
 		// Update nodes and potentially seldepth
