@@ -50,7 +50,7 @@ struct SearchThread_t {
 	//unsigned int counterMoves[64][64] = { {0} };
 
 	// Indexed by history[color][fromsq][tosq]
-	//int history[2][64][64] = { {{0}} };
+	int history[2][64][64] = { {{0}} };
 	
 	unsigned int killers[MAXDEPTH][2] = { {0} };
 

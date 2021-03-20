@@ -52,9 +52,9 @@ void SearchThread_t::score_moves(MoveList* ml) {
 			//}
 	
 			// History
-			//else {
-			//	(*ml)[i]->score = history[pos->side_to_move][FROMSQ((*ml)[i]->move)][TOSQ((*ml)[i]->move)];
-			//}
+			else {
+				(*ml)[i]->score = history[pos->side_to_move][FROMSQ((*ml)[i]->move)][TOSQ((*ml)[i]->move)];
+			}
 		}
 	
 		// It is a tactical move. We'll score this the highest
@@ -128,40 +128,37 @@ void SearchThread_t::update_move_heuristics(int move, int depth) {
 	//if (pos->ply > 0) { // Prevent overflow
 	//	counterMoves[FROMSQ(moves_path[pos->ply - 1])][TOSQ(moves_path[pos->ply - 1])] = move;
 	//}
-	//
-	//// The below history update is taken from http://www.talkchess.com/forum3/viewtopic.php?f=7&t=76540, but won't be implemented until i fully understand how it works.
-	////int bonus = std::min(depth * depth, max_delta);
-	////history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] += multiplier * bonus - history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] * (abs(bonus) / divisor);
-	//
-	//history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] += std::min(depth * depth, 400);
-	//
-	//// Handle history table overflows
-	//if (history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] >= countermove_bonus) {
-	//
-	//	for (int i = 0; i < 64; i++) {
-	//
-	//		for (int j = 0; j < 64; j++) {
-	//
-	//			history[0][i][j] /= 2;
-	//			history[1][i][j] /= 2;
-	//		}
-	//	}
-	//}
+
+
+	history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] += std::min(depth * depth, 400);
+	
+	// Handle history table overflows
+	if (history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] >= countermove_bonus) {
+	
+		for (int i = 0; i < 64; i++) {
+	
+			for (int j = 0; j < 64; j++) {
+	
+				history[0][i][j] /= 2;
+				history[1][i][j] /= 2;
+			}
+		}
+	}
 }
 
 
 void SearchThread_t::clear_move_heuristics() {
 
-	//for (int i = 0; i < 64; i++) {
-	//
-	//	for (int j = 0; j < 64; j++) {
-	//		counterMoves[i][j] = 0;
-	//
-	//		history[0][i][j] = 0;
-	//		history[1][i][j] = 0;
-	//	}
-	//
-	//}
+	for (int i = 0; i < 64; i++) {
+	
+		for (int j = 0; j < 64; j++) {
+			//counterMoves[i][j] = 0;
+	
+			history[0][i][j] = 0;
+			history[1][i][j] = 0;
+		}
+	
+	}
 
 	for (int d = 0; d < MAXDEPTH; d++) {
 		//moves_path[d] = 0;

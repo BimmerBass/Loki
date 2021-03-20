@@ -289,8 +289,8 @@ namespace Search {
 
 		for (int i = 0; i < 64; i++) {
 			for (int j = 0; j < 64; j++) {
-				//ss->history[0][i][j] = 0;
-				//ss->history[1][i][j] = 0;
+				ss->history[0][i][j] = 0;
+				ss->history[1][i][j] = 0;
 		
 				//ss->counterMoves[i][j] = 0;
 			}
