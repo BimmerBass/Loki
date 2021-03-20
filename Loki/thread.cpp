@@ -59,7 +59,7 @@ void SearchThread_t::score_moves(MoveList* ml) {
 	
 		// It is a tactical move. We'll score this the highest
 		else {
-			(*ml)[i]->score = 10000000; // Make sure tactical moves are searched first.
+			(*ml)[i]->score = 1000000; // Make sure tactical moves are searched first.
 		
 			// Captures get scored with MVV/LVA. (~75 elo)
 			if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {

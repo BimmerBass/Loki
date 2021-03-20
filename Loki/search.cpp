@@ -598,15 +598,19 @@ namespace Search {
 		
 		// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
 		if (ttHit
-			&& beta - alpha == 1
+			&& !is_pv
 			&& ttDepth >= depth) {
 		
 			if (tt_flag == ttFlag::BETA && ttScore >= beta) {
 				return beta;
 			}
 		
-			if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
+			else if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
 				return alpha;
+			}
+
+			else if (tt_flag == ttFlag::EXACT) {
+				return ttScore;
 			}
 		}
 
