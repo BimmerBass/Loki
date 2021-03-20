@@ -61,7 +61,7 @@ void SearchThread_t::score_moves(MoveList* ml) {
 		else {
 			(*ml)[i]->score = 10000000; // Make sure tactical moves are searched first.
 		
-			// Captures get scored with MVV/LVA.
+			// Captures get scored with MVV/LVA. (~75 elo)
 			if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {
 				(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
 			}
