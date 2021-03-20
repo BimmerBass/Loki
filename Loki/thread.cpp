@@ -51,7 +51,7 @@ void SearchThread_t::score_moves(MoveList* ml) {
 			//	(*ml)[i]->score = countermove_bonus;
 			//}
 	
-			// History
+			// History (~243 elo)
 			else {
 				(*ml)[i]->score = history[pos->side_to_move][FROMSQ((*ml)[i]->move)][TOSQ((*ml)[i]->move)];
 			}
@@ -98,7 +98,7 @@ void SearchThread_t::score_moves(MoveList* ml) {
 
 void SearchThread_t::pickNextMove(int index, MoveList* ml) {
 	int best_index = index;
-	int best_score = 0;
+	int best_score = -hash_move_sort;
 
 	for (int m = index; m < ml->size(); m++) {
 
@@ -120,9 +120,9 @@ void SearchThread_t::pickNextMove(int index, MoveList* ml) {
 
 
 
-void SearchThread_t::update_move_heuristics(int move, int depth) {
+void SearchThread_t::update_move_heuristics(int best_move, int depth, MoveList* ml) {
 	// Set the new killer moves
-	setKillers(pos->ply, move);
+	setKillers(pos->ply, best_move);
 
 	// Update the countermove heuristic
 	//if (pos->ply > 0) { // Prevent overflow
@@ -130,10 +130,27 @@ void SearchThread_t::update_move_heuristics(int move, int depth) {
 	//}
 
 
-	history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] += std::min(depth * depth, 400);
+	/*
+	Update history
+	*/
+	int history_bonus = std::min(depth * depth, 400);
+
+	history[pos->side_to_move][FROMSQ(best_move)][TOSQ(best_move)] += history_bonus;
+
 	
+	// Decrease history value for all other quiet moves, since they didn't fail high
+	unsigned int move = NOMOVE;
+	for (int mn = 0; mn < ml->size(); mn++) {
+		move = (*ml)[mn]->move;
+		if (pos->piece_list[(pos->side_to_move == WHITE) ? BLACK : WHITE][TOSQ(move)] == NO_TYPE && SPECIAL(move) != PROMOTION
+			&& SPECIAL(move) != ENPASSANT) { // No piece is captured, not a promotion and not an en-passant
+
+			history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] = std::max(-countermove_bonus, history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] - history_bonus);
+		}
+	}
+
 	// Handle history table overflows
-	if (history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] >= countermove_bonus) {
+	if (history[pos->side_to_move][FROMSQ(best_move)][TOSQ(best_move)] >= countermove_bonus) {
 	
 		for (int i = 0; i < 64; i++) {
 	

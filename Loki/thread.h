@@ -60,7 +60,7 @@ struct SearchThread_t {
 
 	void generate_moves(MoveList* moves, bool qsearch = false);
 
-	void update_move_heuristics(int move, int depth);
+	void update_move_heuristics(int best_move, int depth, MoveList* ml);
 	void clear_move_heuristics();
 	~SearchThread_t() {
 		delete pos;

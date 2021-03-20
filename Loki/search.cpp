@@ -873,7 +873,7 @@ namespace Search {
 
 				// Step 14B. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
-					ss->update_move_heuristics(move, depth);
+					ss->update_move_heuristics(move, depth, &moves);
 				}
 				
 				
