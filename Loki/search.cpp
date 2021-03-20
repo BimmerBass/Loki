@@ -459,7 +459,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				//tt->store_entry(ss->pos, move, score, depth, ttFlag::BETA);
+				tt->store_entry(ss->pos, move, beta, depth, ttFlag::BETA);
 
 
 				return beta;
@@ -492,10 +492,10 @@ namespace Search {
 		if (raised_alpha) {
 			assert(best_move == pvLine->pv[0]);
 		
-			//tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
+			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
 		}
 		else {
-			//tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
+			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
 		}
 	
 		return alpha;
@@ -588,27 +588,27 @@ namespace Search {
 
 		// Step 5. Transposition table probing (~30 elo - too little?). This is done before quiescence since it is quite fast, and if we can get a cutoff before
 		// going into quiescence, we'll of course use that. Probing before quiescence search contributed with ~17 elo.
-		//bool ttHit = false;
-		//TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
-		//
-		//int ttScore = (ttHit) ? value_from_tt(entry->data.score, ss->pos->ply) : -INF;
-		//unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
-		//int ttDepth = (ttHit) ? entry->data.depth : 0;
-		//ttFlag tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
-		//
-		//// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
-		//if (ttHit
-		//	&& beta - alpha == 1
-		//	&& ttDepth >= depth) {
-		//
-		//	if (tt_flag == ttFlag::BETA && ttScore >= beta) {
-		//		return beta;
-		//	}
-		//
-		//	if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
-		//		return alpha;
-		//	}
-		//}
+		bool ttHit = false;
+		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		
+		int ttScore = (ttHit) ? value_from_tt(entry->data.score, ss->pos->ply) : -INF;
+		unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
+		int ttDepth = (ttHit) ? entry->data.depth : 0;
+		ttFlag tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
+		
+		// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
+		if (ttHit
+			&& beta - alpha == 1
+			&& ttDepth >= depth) {
+		
+			if (tt_flag == ttFlag::BETA && ttScore >= beta) {
+				return beta;
+			}
+		
+			if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
+				return alpha;
+			}
+		}
 
 
 
@@ -749,15 +749,15 @@ namespace Search {
 		//	line.clear();
 		//}
 		//
-		//// If the transposition table returned a move, this is probably the best, so we'll score it highest.
-		//if (ttHit && ttMove != NOMOVE) {
-		//	for (int i = 0; i < moves.size(); i++) {
-		//		if (moves[i]->move == ttMove) {
-		//			moves[i]->score = hash_move_sort;
-		//		}
-		//		break;
-		//	}
-		//}
+		// If the transposition table returned a move, this is probably the best, so we'll score it highest.
+		if (ttHit && ttMove != NOMOVE) {
+			for (int i = 0; i < moves.size(); i++) {
+				if (moves[i]->move == ttMove) {
+					moves[i]->score = hash_move_sort;
+				}
+				break;
+			}
+		}
 
 		int move = NOMOVE;
 		int legal = 0;
@@ -828,34 +828,6 @@ namespace Search {
 				if (score > alpha && score < beta) {
 					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 				}
-				//if (moves_searched > 1 + ((is_pv) ? 3 : 0) && depth >= 3 && !is_tactical) {
-				//
-				//	reduction = std::min(depth - 1, std::max(late_move_reduction(depth, moves_searched), 1));
-				//
-				//	reduction += !is_pv + !improving;
-				//
-				//	reduction -= (move == ss->killers[ss->pos->ply][0] || move == ss->killers[ss->pos->ply][1]);
-				//
-				//	reduction = std::min(depth - 1, std::max(reduction, 1));
-				//
-				//	score = -alphabeta(ss, new_depth - reduction, -(alpha + 1), -alpha, true, &line);
-				//}
-				//
-				//else {
-				//	score = alpha + 1; // To make sure that score > alpha when not reducing
-				//}
-				//
-				//
-				//if (score > alpha) {
-				//	// Perform a null window, full depth search.
-				//	score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
-				//
-				//	// Perform a full window, full depth search in case we raise alpha.
-				//	if (score > alpha && score < beta) {
-				//		score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
-				//	}
-				//
-				//}
 			}
 
 			ss->pos->undo_move();
@@ -877,7 +849,7 @@ namespace Search {
 				}
 				
 				
-				//tt->store_entry(ss->pos, move, score, depth, ttFlag::BETA);
+				tt->store_entry(ss->pos, move, beta, depth, ttFlag::BETA);
 
 				return beta;
 			}
@@ -908,11 +880,11 @@ namespace Search {
 
 		
 		if (alpha > old_alpha) {
-			//tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
+			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
 
 		}
 		else{
-			//tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
+			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
 		}
 
 
