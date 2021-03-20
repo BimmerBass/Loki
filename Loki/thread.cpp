@@ -38,7 +38,7 @@ void SearchThread_t::score_moves(MoveList* ml) {
 		// If it is a quiet move, i.e. not a capture, promotion or en-passant, we'll score it with killers and history heuristic
 		if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] == NO_TYPE && SPECIAL((*ml)[i]->move) != PROMOTION && SPECIAL((*ml)[i]->move) != ENPASSANT) {
 	
-			// Killers (~106 elo)
+			// Killers (~79 elo)
 			if ((*ml)[i]->move == killers[pos->ply][0]) {
 				(*ml)[i]->score = first_killer;
 			}

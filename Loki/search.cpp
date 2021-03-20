@@ -287,15 +287,15 @@ namespace Search {
 		reductions = 0;
 		re_searches = 0;
 
-		//for (int i = 0; i < 64; i++) {
-		//	for (int j = 0; j < 64; j++) {
-		//		ss->history[0][i][j] = 0;
-		//		ss->history[1][i][j] = 0;
-		//
-		//		ss->counterMoves[i][j] = 0;
-		//	}
-		//}
-		//
+		for (int i = 0; i < 64; i++) {
+			for (int j = 0; j < 64; j++) {
+				//ss->history[0][i][j] = 0;
+				//ss->history[1][i][j] = 0;
+		
+				//ss->counterMoves[i][j] = 0;
+			}
+		}
+		
 		for (int d = 0; d < MAXDEPTH; d++) {
 			ss->killers[d][0] = NOMOVE;
 			ss->killers[d][1] = NOMOVE;
