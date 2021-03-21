@@ -23,8 +23,8 @@ void SearchThread_t::generate_moves(MoveList* moves, bool qsearch) {
 
 
 void SearchThread_t::setKillers(int ply, int move) {
-	killers[ply][1] = killers[ply][0];
-	killers[ply][0] = move;
+	stats.killers[ply][1] = stats.killers[ply][0];
+	stats.killers[ply][0] = move;
 }
 
 
@@ -39,10 +39,10 @@ void SearchThread_t::score_moves(MoveList* ml) {
 		if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] == NO_TYPE && SPECIAL((*ml)[i]->move) != PROMOTION && SPECIAL((*ml)[i]->move) != ENPASSANT) {
 	
 			// Killers (~79 elo)
-			if ((*ml)[i]->move == killers[pos->ply][0]) {
+			if ((*ml)[i]->move == stats.killers[pos->ply][0]) {
 				(*ml)[i]->score = first_killer;
 			}
-			else if ((*ml)[i]->move == killers[pos->ply][1]) {
+			else if ((*ml)[i]->move == stats.killers[pos->ply][1]) {
 				(*ml)[i]->score = second_killer;
 			}
 	
@@ -53,7 +53,7 @@ void SearchThread_t::score_moves(MoveList* ml) {
 	
 			// History (~243 elo)
 			else {
-				(*ml)[i]->score = history[pos->side_to_move][FROMSQ((*ml)[i]->move)][TOSQ((*ml)[i]->move)];
+				(*ml)[i]->score = stats.history[pos->side_to_move][FROMSQ((*ml)[i]->move)][TOSQ((*ml)[i]->move)];
 			}
 		}
 	
@@ -127,7 +127,7 @@ void SearchThread_t::update_move_heuristics(int best_move, int depth, MoveList* 
 	*/
 	int history_bonus = std::min(depth * depth, 400);
 
-	history[pos->side_to_move][FROMSQ(best_move)][TOSQ(best_move)] += history_bonus;
+	stats.history[pos->side_to_move][FROMSQ(best_move)][TOSQ(best_move)] += history_bonus;
 
 	
 	// Decrease history value for all other quiet moves, since they didn't fail high
@@ -137,19 +137,19 @@ void SearchThread_t::update_move_heuristics(int best_move, int depth, MoveList* 
 		if (pos->piece_list[(pos->side_to_move == WHITE) ? BLACK : WHITE][TOSQ(move)] == NO_TYPE && SPECIAL(move) != PROMOTION
 			&& SPECIAL(move) != ENPASSANT) { // No piece is captured, not a promotion and not an en-passant
 
-			history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] = std::max(-countermove_bonus, history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] - history_bonus);
+			stats.history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] = std::max(-countermove_bonus, stats.history[pos->side_to_move][FROMSQ(move)][TOSQ(move)] - history_bonus);
 		}
 	}
 
 	// Handle history table overflows
-	if (history[pos->side_to_move][FROMSQ(best_move)][TOSQ(best_move)] >= countermove_bonus) {
+	if (stats.history[pos->side_to_move][FROMSQ(best_move)][TOSQ(best_move)] >= countermove_bonus) {
 	
 		for (int i = 0; i < 64; i++) {
 	
 			for (int j = 0; j < 64; j++) {
 	
-				history[0][i][j] /= 2;
-				history[1][i][j] /= 2;
+				stats.history[0][i][j] /= 2;
+				stats.history[1][i][j] /= 2;
 			}
 		}
 	}
@@ -161,20 +161,20 @@ void SearchThread_t::clear_move_heuristics() {
 	for (int i = 0; i < 64; i++) {
 	
 		for (int j = 0; j < 64; j++) {
-			//counterMoves[i][j] = 0;
+			stats.counterMoves[i][j] = 0;
 	
-			history[0][i][j] = 0;
-			history[1][i][j] = 0;
+			stats.history[0][i][j] = 0;
+			stats.history[1][i][j] = 0;
 		}
 	
 	}
 
 	for (int d = 0; d < MAXDEPTH; d++) {
-		//moves_path[d] = 0;
-		//static_eval[d] = 0;
+		stats.moves_path[d] = 0;
+		stats.static_eval[d] = 0;
 
-		killers[d][0] = 0;
-		killers[d][1] = 0;
+		stats.killers[d][0] = 0;
+		stats.killers[d][1] = 0;
 	}
 }
 

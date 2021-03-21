@@ -292,19 +292,19 @@ namespace Search {
 
 		for (int i = 0; i < 64; i++) {
 			for (int j = 0; j < 64; j++) {
-				ss->history[0][i][j] = 0;
-				ss->history[1][i][j] = 0;
+				ss->stats.history[0][i][j] = 0;
+				ss->stats.history[1][i][j] = 0;
 		
 				//ss->counterMoves[i][j] = 0;
 			}
 		}
 		
 		for (int d = 0; d < MAXDEPTH; d++) {
-			ss->killers[d][0] = NOMOVE;
-			ss->killers[d][1] = NOMOVE;
-		//
-		//	ss->static_eval[d] = 0;
-		//	ss->moves_path[d] = 0;
+			ss->stats.killers[d][0] = NOMOVE;
+			ss->stats.killers[d][1] = NOMOVE;
+		
+			ss->stats.static_eval[d] = 0;
+			//ss->moves_path[d] = 0;
 		}
 
 	}
@@ -384,17 +384,17 @@ namespace Search {
 
 
 		// Step 1. In-check extensions.
-		//bool in_check = ss->pos->in_check();
+		bool in_check = ss->pos->in_check();
 		//if (in_check) {
 		//	new_depth++;
 		//}
 
 		
 		// Step 2. Static evaluation.
-		//if (in_check) {
-		//	ss->static_eval[ss->pos->ply] = VALUE_NONE;
-		//}
-		//ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		if (in_check) {
+			ss->stats.static_eval[ss->pos->ply] = VALUE_NONE;
+		}
+		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
 
 
 		// Step 3. Probe transposition table --> If there is a move from previous iterations, we'll assume the best move from that as the best move now, and
@@ -622,65 +622,71 @@ namespace Search {
 
 
 		// Step 6. Static evaluation.
-		//if (in_check) {
-		//	// If we're in check, we'll go directly to the moves since we don't want this branch pruned away.
-		//	ss->static_eval[ss->pos->ply] = VALUE_NONE;
-		//	improving = false;
-		//
-		//	goto moves_loop;
-		//}
-		//
-		//ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
-		//improving = (ss->pos->ply >= 2) ? (ss->static_eval[ss->pos->ply] >= ss->static_eval[ss->pos->ply - 2] || ss->static_eval[ss->pos->ply - 2] == VALUE_NONE) :
-		//	false;
-		//
-		//assert(!in_check);
+		if (in_check) {
+			// If we're in check, we'll go directly to the moves since we don't want this branch pruned away.
+			ss->stats.static_eval[ss->pos->ply] = VALUE_NONE;
+			improving = false;
+		
+			goto moves_loop;
+		}
+		
+		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		improving = (ss->pos->ply >= 2) ?
+			(ss->stats.static_eval[ss->pos->ply] >= ss->stats.static_eval[ss->pos->ply - 2] || ss->stats.static_eval[ss->pos->ply - 2] == VALUE_NONE) :
+			false;
 
 
-		// Step 7. Null move pruning (~51 elo). FIXME: Improve safe_nullmove and nullmove_reduction
-		//if (can_null && !in_check && !is_pv
-		//	&& depth > 2 && 
-		//	ss->static_eval[ss->pos->ply] >= beta &&
-		//	ss->pos->safe_nullmove()) {
-		//
-		//	int R = nullmove_reduction(depth, ss->static_eval[ss->pos->ply] - beta);
-		//
-		//	int old_evaluation = ss->static_eval[ss->pos->ply];
-		//	int old_enpassant = ss->pos->make_nullmove();
-		//	
-		//	// We want to use another eval here than the one already calculated since the former is inaccurate when the side to move gets switched
-		//	ss->static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
-		//
-		//	score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
-		//	
-		//	// Clear the pv
-		//	line.clear();
-		//
-		//	// Insert the real evaluation again in case we don't get a cutoff
-		//	ss->static_eval[ss->pos->ply] = old_evaluation;
-		//	ss->pos->undo_nullmove(old_enpassant);
-		//
-		//	if (score >= beta && abs(score) < MATE) {
-		//		// Verified null move pruning hasn't been tested properly yet, so it is left out until there is time for tests with longer tc's
-		//		// Step 6A. Verified Null Move Pruning. For high depths, we will want to do a verification search with a null window centered around beta to be sure
-		//		//if (depth >= 8) {
-		//		//	// This time, the score is not inside a "make/undo" move, so we shouldn't make it negative or switch the bounds
-		//		//	score = alphabeta(ss, depth - R - 1, beta - 1, beta, false, &line);
-		//		//
-		//		//	if (score >= beta && abs(score < MATE)) { // If we're still above beta, it is safe to say, that our null move is good enough
-		//		//		return beta;
-		//		//	}
-		//		//}
-		//		//
-		//		//else {
-		//		//	return beta;
-		//		//}
-		//		return beta;
-		//	}
-		//}
-		//
-		//
-		//
+
+		// Step 7. Null move pruning (~51 elo). FIXME: Improve safe_nullmove and nullmove_reduction, and set moves_path to MOVE_NULL so no unintentional pruning happens.
+		if (can_null && !in_check && !is_pv
+			&& depth > 2 && 
+			ss->stats.static_eval[ss->pos->ply] >= beta &&
+			ss->pos->safe_nullmove()) {
+		
+			//int R = nullmove_reduction(depth, ss->static_eval[ss->pos->ply] - beta);
+		
+			int R = 2;
+
+			if (depth > 6) {
+				R = 3;
+			}
+
+			int old_evaluation = ss->stats.static_eval[ss->pos->ply];
+			int old_enpassant = ss->pos->make_nullmove();
+			
+			// We want to use another eval here than the one already calculated since the former is inaccurate when the side to move gets switched
+			ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		
+			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
+			
+			// Clear the pv
+			line.clear();
+		
+			// Insert the real evaluation again in case we don't get a cutoff
+			ss->stats.static_eval[ss->pos->ply] = old_evaluation;
+			ss->pos->undo_nullmove(old_enpassant);
+		
+			if (score >= beta && abs(score) < MATE) {
+				// Verified null move pruning hasn't been tested properly yet, so it is left out until there is time for tests with longer tc's
+				// Step 6A. Verified Null Move Pruning. For high depths, we will want to do a verification search with a null window centered around beta to be sure
+				//if (depth >= 8) {
+				//	// This time, the score is not inside a "make/undo" move, so we shouldn't make it negative or switch the bounds
+				//	score = alphabeta(ss, depth - R - 1, beta - 1, beta, false, &line);
+				//
+				//	if (score >= beta && abs(score < MATE)) { // If we're still above beta, it is safe to say, that our null move is good enough
+				//		return beta;
+				//	}
+				//}
+				//
+				//else {
+				//	return beta;
+				//}
+				return beta;
+			}
+		}
+		
+		
+		
 		//// Step 8. Enhanced futility pruning (~63 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
 		////		and skip tactically boring moves from the search
 		//if (depth < 7 && !in_check && !is_pv

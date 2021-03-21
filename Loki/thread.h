@@ -34,6 +34,31 @@ public:
 };
 
 
+/*
+
+The MoveStats_t struct holds all move ordering and pruning statistics.
+
+*/
+
+struct MoveStats_t {
+	// Holds the moves played to get to a position in search. Used for countermoves.
+	unsigned int moves_path[MAXDEPTH + 1] = { 0 };
+
+	// Countermoves
+	unsigned int counterMoves[64][64] = { {0} };
+
+	// History heuristic
+	int history[2][64][64] = { {{0}} };
+
+	// Killer moves
+	unsigned int killers[MAXDEPTH + 1][2] = { {0} };
+
+	// Static evaluations
+	int static_eval[MAXDEPTH + 1] = { 0 };
+
+};
+
+
 // SearchThread_t is a structure that holds all information local to a thread. This includes static evaluations, move ordering etc..
 struct SearchThread_t {
 	GameState_t* pos = new GameState_t;
@@ -44,19 +69,10 @@ struct SearchThread_t {
 
 	void setKillers(int ply, int move);
 	void pickNextMove(int index, MoveList* ml);
-
-
-	//int moves_path[MAXDEPTH] = { 0 };
-	//unsigned int counterMoves[64][64] = { {0} };
-
-	// Indexed by history[color][fromsq][tosq]
-	int history[2][64][64] = { {{0}} };
+		
 	
-	unsigned int killers[MAXDEPTH][2] = { {0} };
-
-	//int static_eval[MAXDEPTH] = { 0 };
-
-
+	// All move ordering and pruning statistics is held in stats
+	MoveStats_t stats;
 
 	void generate_moves(MoveList* moves, bool qsearch = false);
 
