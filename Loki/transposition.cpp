@@ -51,9 +51,10 @@ void TranspositionTable::clear_table() {
 
 TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
 	TT_Entry* slot = &entries[key % numEntries];
-	uint64_t* data = (uint64_t*) &slot->data;
+	//uint64_t* data = (uint64_t*) &slot->data;
 
-	if (slot->key == (key ^ *data)) {
+	//if (slot->key == (key ^ *data)) {
+	if (slot->key == key) {
 		hit = true;
 		return slot;
 	}
@@ -66,7 +67,7 @@ TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
 // For now we are just using a replace all strategy
 void TranspositionTable::store_entry(const GameState_t* pos, int move, int score, unsigned int depth, ttFlag flag) {
 	TT_Entry* slot = &entries[pos->posKey % numEntries];
-	uint64_t* data = (uint64_t*) &slot->data;
+	//uint64_t* data = (uint64_t*) &slot->data;
 
 	assert(flag >= ttFlag::ALPHA && flag <= ttFlag::EXACT);
 
@@ -75,7 +76,8 @@ void TranspositionTable::store_entry(const GameState_t* pos, int move, int score
 	It keeps a lot of the depth-first strategy, but doesn't save irrelevant and unneccesary entries.
 	*/
 	if (depth >= slot->data.depth || depth == slot->data.depth - 1) {
-		slot->key = pos->posKey ^ *data;
+		//slot->key = pos->posKey ^ *data;
+		slot->key = pos->posKey;
 		slot->data.move = move;
 		slot->data.score = value_to_tt(score, pos->ply);
 		slot->data.depth = depth;

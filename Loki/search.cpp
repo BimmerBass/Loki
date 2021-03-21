@@ -396,19 +396,19 @@ namespace Search {
 
 		// Step 3. Probe transposition table --> If there is a move from previous iterations, we'll assume the best move from that as the best move now, and
 		//	order that first.
-		//bool ttHit = false;
-		//TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
-		//unsigned int pvMove = (ttHit) ? entry->data.move : NOMOVE;
-		//
-		//if (ttHit) {
-		//	// Loop through the move list and find the pvMove
-		//	for (int m = 0; m < moves.size(); m++) {
-		//		if (moves[m]->move == pvMove) {
-		//			moves[m]->score = hash_move_sort;
-		//			break;
-		//		}
-		//	}
-		//}
+		bool ttHit = false;
+		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		unsigned int pvMove = (ttHit) ? entry->data.move : NOMOVE;
+		
+		if (ttHit) {
+			// Loop through the move list and find the pvMove
+			for (int m = 0; m < moves.size(); m++) {
+				if (moves[m]->move == pvMove) {
+					moves[m]->score = hash_move_sort;
+					break;
+				}
+			}
+		}
 
 		if (ss->pos->ply >= ss->info->seldepth) {
 			ss->info->seldepth = ss->pos->ply;
