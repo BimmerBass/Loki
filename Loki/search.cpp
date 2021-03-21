@@ -649,8 +649,13 @@ namespace Search {
 
 			if (depth > 6) {
 				R = 3;
-			}
 
+				// If side to move has two or more pieces, we can extend R since zugzwang chances are _very_ slim.
+				//if (countBits(ss->pos->all_pieces[ss->pos->side_to_move] ^ ss->pos->pieceBBS[PAWN][ss->pos->side_to_move] ^ ss->pos->pieceBBS[KING][ss->pos->side_to_move]) >= 2) {
+				//	R++;
+				//}
+			}
+			
 			int old_evaluation = ss->stats.static_eval[ss->pos->ply];
 			int old_enpassant = ss->pos->make_nullmove();
 			
