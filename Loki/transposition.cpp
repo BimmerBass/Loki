@@ -45,6 +45,8 @@ void TranspositionTable::clear_table() {
 		table[i].EntryOne.clear();
 		table[i].EntryTwo.clear();
 	}
+
+	generation = 0;
 }
 
 
@@ -79,14 +81,17 @@ void TranspositionTable::store_entry(const GameState_t* pos, uint16_t move, int1
 	TT_Slot* slot = &table[pos->posKey & (num_slots - 1)];
 
 	// Firstly, check if the depth-preferred entry in the slot can be occupied.
-	if (depth >= slot->EntryOne.depth || depth == slot->EntryOne.depth - 1) {
-		slot->EntryOne.set(pos, move, score, depth, flag);
+	// We'll also replace if it is an entry from an older search.
+	if (depth >= slot->EntryOne.depth || depth == slot->EntryOne.depth - 1 || generation > slot->EntryOne.age) {
+
+		// If generation has reached its limit (127), we'll subtract a random number from that so we'll be able to replace later on.
+		slot->EntryOne.set(pos, move, score, depth, flag, (generation >= 127) ? generation - (pos->posKey & 1) : generation);
 		return; // Don't populate the always-replace entry if this is ok.
 	}
 
 	// If we couldn't populate the depth-preferred entry, we'll insert the data in the always-replace.
 	else {
-		slot->EntryTwo.set(pos, move, score, depth, flag);
+		slot->EntryTwo.set(pos, move, score, depth, flag, generation);
 		return;
 	}
 

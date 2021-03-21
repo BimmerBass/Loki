@@ -44,16 +44,16 @@ struct TT_Entry {
 	uint16_t move = NOMOVE;
 	int16_t score = 0;
 	
-	uint16_t depth : 8, flag : 2, unused : 6;
+	uint16_t depth : 7, flag : 2, age : 7;
 	
 	// Clear the entry
 	void clear() {
-		key = 0; move = NOMOVE; score = 0; depth = 0; flag = NO_FLAG; unused = 0;
+		key = 0; move = NOMOVE; score = 0; depth = 0; flag = NO_FLAG; age = 0;
 	}
 
 	// Store data to the entry
-	void set(const GameState_t* pos, uint16_t _move, int16_t _score, uint16_t _depth, uint16_t _flag) {
-		key = (pos->posKey >> 48); move = _move; score = value_to_tt(_score, pos->ply); depth = _depth; flag = _flag;
+	void set(const GameState_t* pos, uint16_t _move, int16_t _score, uint16_t _depth, uint16_t _flag, uint16_t _age) {
+		key = (pos->posKey >> 48); move = _move; score = value_to_tt(_score, pos->ply); depth = _depth; flag = _flag; age = _age;
 	}
 	
 };
@@ -77,12 +77,29 @@ public:
 
 	size_t size();
 	void clear_table();
-private:
+
+	void setAge(int a) {
+		generation = std::min(a, 127);
+	}
+	void increment_age() {
+		generation = std::min(generation + 1, 127); // We use 7 bits to store age information in the entries, and we shouldn't store anymore since they'd overflow.
+
+		if (generation >= 127) {
+			generation /= 2; // We need to increment the generation in games that are more than 127 moves.
+		}
+	}
+	uint16_t getAge() {
+		return generation;
+	}
+
+	private:
 
 	TT_Slot* table = nullptr;
 
 	size_t num_slots = 0;
 	size_t numEntries = 0;
+
+	uint16_t generation = 0;
 };
 
 

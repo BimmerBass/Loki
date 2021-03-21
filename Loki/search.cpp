@@ -115,6 +115,9 @@ namespace Search {
 			num_threads = 1;
 		}
 
+		// Increment transposition table age
+		tt->increment_age();
+
 		isStop = false;
 		threads_running.clear();
 
