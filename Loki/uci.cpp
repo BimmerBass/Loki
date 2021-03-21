@@ -355,10 +355,10 @@ void UCI::printHashEntry(GameState_t* pos) {
 		pos->displayBoardState();
 
 		std::cout << "TT entry info:" << std::endl;
-		std::cout << "Move:		" << printMove(entry->data.move) << std::endl;
-		std::cout << "Score:	" << entry->data.score << std::endl;
-		std::cout << "Depth:	" << entry->data.depth << std::endl;
-		std::cout << "Flag:		" << (entry->data.flag == ttFlag::EXACT ? "EXACT" : ((entry->data.flag == ttFlag::BETA) ? "BETA" : "ALPHA")) << std::endl;
+		std::cout << "Move:		" << printMove(entry->move) << std::endl;
+		std::cout << "Score:	" << entry->score << std::endl;
+		std::cout << "Depth:	" << entry->depth << std::endl;
+		std::cout << "Flag:		" << (entry->flag == ttFlag::EXACT ? "EXACT" : ((entry->flag == ttFlag::BETA) ? "BETA" : "ALPHA")) << std::endl;
 	}
 	else {
 		std::cout << "Position is not stored in transposition table" << std::endl;

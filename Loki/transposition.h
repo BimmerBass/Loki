@@ -40,10 +40,27 @@ struct EntryData {
 
 
 struct TT_Entry {
-	//volatile uint64_t key = 0; // The key is the posKey XORed with the data
+	uint16_t key = 0;
+	uint16_t move = NOMOVE;
+	int16_t score = 0;
+	
+	uint16_t depth : 8, flag : 2, unused : 6;
+	
+	// Clear the entry
+	void clear() {
+		key = 0; move = NOMOVE; score = 0; depth = 0; flag = NO_FLAG; unused = 0;
+	}
 
-	volatile uint16_t key = 0;
-	volatile EntryData data;
+	// Store data to the entry
+	void set(const GameState_t* pos, uint16_t _move, int16_t _score, uint16_t _depth, uint16_t _flag) {
+		key = (pos->posKey >> 48); move = _move; score = value_to_tt(_score, pos->ply); depth = _depth; flag = _flag;
+	}
+	
+};
+
+struct TT_Slot {
+	TT_Entry EntryOne;
+	TT_Entry EntryTwo;
 };
 
 class TranspositionTable {
@@ -56,15 +73,16 @@ public:
 
 	TT_Entry* probe_tt(const uint64_t key, bool& hit);
 
-	void store_entry(const GameState_t* pos, uint16_t move, int score, unsigned int depth, unsigned int flag);
+	void store_entry(const GameState_t* pos, uint16_t move, int16_t score, uint16_t depth,  uint16_t flag);
 
 	size_t size();
 	void clear_table();
 private:
 
-	TT_Entry* entries = nullptr;
+	TT_Slot* table = nullptr;
 
-	uint64_t numEntries = 0;
+	size_t num_slots = 0;
+	size_t numEntries = 0;
 };
 
 

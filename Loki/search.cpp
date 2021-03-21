@@ -398,7 +398,7 @@ namespace Search {
 		//	order that first.
 		bool ttHit = false;
 		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
-		unsigned int pvMove = (ttHit) ? entry->data.move : NOMOVE;
+		unsigned int pvMove = (ttHit) ? entry->move : NOMOVE;
 		
 		if (ttHit) {
 			// Loop through the move list and find the pvMove
@@ -591,10 +591,10 @@ namespace Search {
 		bool ttHit = false;
 		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
 		
-		int ttScore = (ttHit) ? value_from_tt(entry->data.score, ss->pos->ply) : -INF;
-		unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
-		int ttDepth = (ttHit) ? entry->data.depth : 0;
-		int tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
+		int ttScore = (ttHit) ? value_from_tt(entry->score, ss->pos->ply) : -INF;
+		unsigned int ttMove = (ttHit) ? entry->move : NOMOVE;
+		int ttDepth = (ttHit) ? entry->depth : 0;
+		int tt_flag = (ttHit) ? entry->flag : ttFlag::NO_FLAG;
 		
 		// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
 		if (ttHit
