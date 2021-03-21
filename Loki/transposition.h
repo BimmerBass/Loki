@@ -19,29 +19,30 @@ inline uint64_t shrink_to_fit(uint64_t maxSize) {
 
 
 // Makes a mate score relative to the position instead of the root.
-inline int value_to_tt(int score, int ply) {
+inline int16_t value_to_tt(int score, int ply) {
 	return (score > MATE) ? score + ply : ((score < -MATE) ? score - ply : score);
 }
 
 // Makes a mate score relative to probing root instead of the stored position
-inline int value_from_tt(int score, int ply) {
+inline int16_t value_from_tt(int score, int ply) {
 	return (score > MATE) ? score - ply : ((score < -MATE) ? score + ply : score);
 }
 
-enum class ttFlag :int { ALPHA = 0, BETA = 1, EXACT = 2, NO_FLAG = 3 };
+enum ttFlag :int { ALPHA = 0, BETA = 1, EXACT = 2, NO_FLAG = 3 };
 
 
 struct EntryData {
-	volatile unsigned int move = NOMOVE;
-	volatile int score = -INF;
-	volatile unsigned int depth = 0;
-	volatile ttFlag flag = ttFlag::NO_FLAG;
+	volatile uint16_t move;
+	volatile int16_t score;
+	//volatile uint16_t unused;
+	volatile uint16_t depth : 7, age : 7, flag : 2;
 };
 
 
 struct TT_Entry {
-	volatile uint64_t key = 0; // The key is the posKey XORed with the data
+	//volatile uint64_t key = 0; // The key is the posKey XORed with the data
 
+	volatile uint16_t key = 0;
 	volatile EntryData data;
 };
 
@@ -55,7 +56,7 @@ public:
 
 	TT_Entry* probe_tt(const uint64_t key, bool& hit);
 
-	void store_entry(const GameState_t* pos, int move, int score, unsigned int depth, ttFlag flag);
+	void store_entry(const GameState_t* pos, uint16_t move, int score, unsigned int depth, unsigned int flag);
 
 	size_t size();
 	void clear_table();

@@ -594,22 +594,22 @@ namespace Search {
 		int ttScore = (ttHit) ? value_from_tt(entry->data.score, ss->pos->ply) : -INF;
 		unsigned int ttMove = (ttHit) ? entry->data.move : NOMOVE;
 		int ttDepth = (ttHit) ? entry->data.depth : 0;
-		ttFlag tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
+		int tt_flag = (ttHit) ? entry->data.flag : ttFlag::NO_FLAG;
 		
 		// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
 		if (ttHit
 			&& !is_pv
 			&& ttDepth >= depth) {
 		
-			if (tt_flag == ttFlag::BETA && ttScore >= beta) {
+			if (tt_flag == BETA && ttScore >= beta) {
 				return beta;
 			}
 		
-			else if (tt_flag == ttFlag::ALPHA && ttScore <= alpha) {
+			else if (tt_flag == ALPHA && ttScore <= alpha) {
 				return alpha;
 			}
 
-			else if (tt_flag == ttFlag::EXACT) {
+			else if (tt_flag == EXACT) {
 				return ttScore;
 			}
 		}
