@@ -637,7 +637,7 @@ namespace Search {
 
 
 
-		// Step 7. Null move pruning (~51 elo). FIXME: Improve safe_nullmove and nullmove_reduction, and set moves_path to MOVE_NULL so no unintentional pruning happens.
+		// Step 7. Null move pruning (~90 elo). FIXME: Improve safe_nullmove and nullmove_reduction, and set moves_path to MOVE_NULL so no unintentional pruning happens.
 		if (can_null && !in_check && !is_pv
 			&& depth > 2 && 
 			ss->stats.static_eval[ss->pos->ply] >= beta &&
