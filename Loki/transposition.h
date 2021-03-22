@@ -6,7 +6,7 @@
 
 
 // Returns the nearest power of two lower than or equal to the number maxSize
-inline uint64_t shrink_to_fit(uint64_t maxSize) {
+inline uint64_t nearest_power_two(uint64_t maxSize) {
 	uint64_t x = 1;
 	
 	while (x <= maxSize) {

@@ -5,7 +5,7 @@ TranspositionTable *tt = new TranspositionTable(TT_DEFAULT_SIZE);
 
 TranspositionTable::TranspositionTable(uint64_t size) {
 	uint64_t upperSize = MB(size) / sizeof(TT_Entry);
-	numEntries = shrink_to_fit(upperSize); // numEntries should be a power of two.
+	numEntries = nearest_power_two(upperSize); // numEntries should be a power of two.
 	num_slots = numEntries / 2;
 	
 	table = new TT_Slot[num_slots];
@@ -28,7 +28,7 @@ void TranspositionTable::resize(uint64_t size) {
 	delete[] table;
 
 	uint64_t upperSize = MB(size) / sizeof(TT_Entry);
-	numEntries = shrink_to_fit(upperSize);
+	numEntries = nearest_power_two(upperSize);
 	num_slots = numEntries / 2;
 
 	table = new TT_Slot[num_slots];
@@ -65,14 +65,6 @@ TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
 
 	hit = false;
 	return nullptr;
-
-	//if (slot->key == (key >> 48)) {
-	//	hit = true;
-	//	return slot;
-	//}
-	//
-	//hit = false;
-	//return nullptr;
 }
 
 
@@ -84,7 +76,7 @@ void TranspositionTable::store_entry(const GameState_t* pos, uint16_t move, int1
 	// We'll also replace if it is an entry from an older search.
 	if (depth >= slot->EntryOne.depth || depth == slot->EntryOne.depth - 1 || generation > slot->EntryOne.age) {
 
-		// If generation has reached its limit (127), we'll subtract a random number from that so we'll be able to replace later on.
+		// If generation has reached its limit (127), we'll subtract a random number from that so we'll be able to still replace later on.
 		slot->EntryOne.set(pos, move, score, depth, flag, (generation >= 127) ? generation - (pos->posKey & 1) : generation);
 		return; // Don't populate the always-replace entry if this is ok.
 	}
