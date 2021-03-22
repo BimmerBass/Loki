@@ -772,8 +772,8 @@ namespace Search {
 			for (int i = 0; i < moves.size(); i++) {
 				if (moves[i]->move == ttMove) {
 					moves[i]->score = hash_move_sort;
+					break;
 				}
-				break;
 			}
 		}
 
