@@ -786,6 +786,7 @@ namespace Search {
 
 			move = moves[m]->move;
 
+			
 			// Most of the below will first be used when adding proper LMR and LMP, and thus they're commented out.
 			bool capture = (ss->pos->piece_list[Them][TOSQ(move)] != NO_TYPE) ? true : false;
 			//bool is_promotion = (SPECIAL(move) == PROMOTION) ? true : false;
