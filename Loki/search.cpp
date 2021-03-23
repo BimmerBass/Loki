@@ -709,18 +709,18 @@ namespace Search {
 		}
 		
 		
-		//// Step 9. Reverse futility pruning (~11 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
-		//if (depth < 7 && !in_check && !is_pv
-		//	&& abs(alpha) < MATE && abs(beta) < MATE) {
-		//
-		//	int margin = 175 * depth - ((improving) ? 75 : 0);
-		//
-		//	if (ss->static_eval[ss->pos->ply] - margin >= beta) {
-		//		return beta;
-		//	}
-		//}
-		//
-		//
+		// Step 9. Reverse futility pruning (~30 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
+		if (depth < 7 && !in_check && !is_pv
+			&& abs(alpha) < MATE && abs(beta) < MATE) {
+		
+			int margin = 175 * depth - ((improving) ? 75 : 0);
+			
+			if (ss->stats.static_eval[ss->pos->ply] - margin >= beta) {
+				return beta;
+			}
+		}
+		
+		
 		//// Step 10. Razoring (~17 elo)
 		//if (use_razoring && depth <= razoring_depth && !is_pv &&
 		//	ss->static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
