@@ -641,7 +641,7 @@ namespace Search {
 
 
 
-		// Step 7. Null move pruning (~90 elo). FIXME: Improve safe_nullmove and nullmove_reduction, and set moves_path to MOVE_NULL so no unintentional pruning happens.
+		// Step 7. Null move pruning (~136 elo). FIXME: Improve safe_nullmove and nullmove_reduction, and set moves_path to MOVE_NULL so no unintentional pruning happens.
 		if (can_null && !in_check && !is_pv
 			&& depth > 2 && 
 			ss->stats.static_eval[ss->pos->ply] >= beta &&
@@ -650,10 +650,10 @@ namespace Search {
 			//int R = nullmove_reduction(depth, ss->static_eval[ss->pos->ply] - beta);
 		
 			int R = 2;
-
+		
 			if (depth > 6) {
 				R = 3;
-
+		
 				// If side to move has two or more pieces, we can extend R since zugzwang chances are _very_ slim.
 				//if (countBits(ss->pos->all_pieces[ss->pos->side_to_move] ^ ss->pos->pieceBBS[PAWN][ss->pos->side_to_move] ^ ss->pos->pieceBBS[KING][ss->pos->side_to_move]) >= 2) {
 				//	R++;
@@ -665,7 +665,7 @@ namespace Search {
 			
 			// We want to use another eval here than the one already calculated since the former is inaccurate when the side to move gets switched
 			ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
-
+		
 			// When we do a nullmove, we can't rely on the countermove heuristic, so we'll have to set the move to indicate NMP usage
 			ss->stats.moves_path[ss->pos->ply] = MOVE_NULL;
 		
