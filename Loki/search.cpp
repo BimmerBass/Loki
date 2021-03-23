@@ -699,7 +699,7 @@ namespace Search {
 		
 		
 		
-		// Step 8. Enhanced futility pruning (~63 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
+		// Step 8. Enhanced futility pruning (~105 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
 		//		and skip tactically boring moves from the search
 		if (depth < 7 && !in_check && !is_pv
 			&& abs(alpha) < MATE && abs(beta) < MATE
