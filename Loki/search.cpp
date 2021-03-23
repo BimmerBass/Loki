@@ -721,25 +721,22 @@ namespace Search {
 		}
 		
 		
-		//// Step 10. Razoring (~17 elo)
+		// Step 10. Razoring (~17 elo)
 		//if (use_razoring && depth <= razoring_depth && !is_pv &&
-		//	ss->static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
+		//	ss->stats.static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
 		//	&& !in_check && abs(beta) < MATE && abs(alpha) < MATE) {
 		//
 		//	int margin = razoring_margin(depth, improving);
 		//	int razoring_window = alpha - margin;
 		//	score = quiescence(ss, razoring_window, razoring_window + 1); // Do a null window quiescence to prove we can't raise alpha over  alpha - margin
-		//
-		//	if (ss->pos->non_pawn_material()) {
+		//	
+		//	if (ss->pos->non_pawn_material() || depth <= 1) {
 		//		if (score + margin <= alpha) {
 		//			return alpha;
 		//		}
 		//	}
 		//	else {
-		//		if (depth <= 1 && score + margin <= alpha) {
-		//			return alpha;
-		//		}
-		//		else if (score + margin <= alpha) { // If there are no pieces on the board and we're not at depth = 1, just reduce by one.
+		//		if (score + margin <= alpha) { // If there are no pieces on the board and we're not at depth = 1, just reduce by one.
 		//			depth -= 1;
 		//		}
 		//	}

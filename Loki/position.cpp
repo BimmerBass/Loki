@@ -827,9 +827,8 @@ Used for razoring
 */
 
 bool GameState_t::non_pawn_material() const {
-	SIDE Them = (side_to_move == WHITE) ? BLACK : WHITE;
-	return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0 ? true : false)
-		&& ((pieceBBS[KNIGHT][Them] | pieceBBS[BISHOP][Them] | pieceBBS[ROOK][Them] | pieceBBS[QUEEN][Them]) != 0 ? true : false);
+	return ((pieceBBS[KNIGHT][WHITE] | pieceBBS[BISHOP][WHITE] | pieceBBS[ROOK][WHITE] | pieceBBS[QUEEN][WHITE]) != 0 ? true : false)
+		&& ((pieceBBS[KNIGHT][BLACK] | pieceBBS[BISHOP][BLACK] | pieceBBS[ROOK][BLACK] | pieceBBS[QUEEN][BLACK]) != 0 ? true : false);
 }
 
 
