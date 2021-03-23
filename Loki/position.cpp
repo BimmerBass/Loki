@@ -754,7 +754,10 @@ int GameState_t::make_nullmove() {
 	// Step 2. Toggle side to move in the hashkey
 	posKey ^= BBS::Zobrist::side_key;
 
-	// Step 3. If there is an en-passant square, return the index and remove it.
+	// Step 3. Increment ply
+	ply += 1;
+
+	// Step 4. If there is an en-passant square, return the index and remove it.
 	if (enPasSq != NO_SQ) {
 		int enPas = enPasSq;
 		enPasSq = NO_SQ;
@@ -786,7 +789,10 @@ void GameState_t::undo_nullmove(int oldEnPas) {
 	// Step 2. Toggle side in hashkey
 	posKey ^= BBS::Zobrist::side_key;
 
-	// Step 3. Change side to move.
+	// Step 3. Decrement ply
+	ply -= 1;
+
+	// Step 4. Change side to move.
 	side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;
 }
 

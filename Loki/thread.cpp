@@ -46,8 +46,8 @@ void SearchThread_t::score_moves(MoveList* ml) {
 				(*ml)[i]->score = second_killer;
 			}
 	
-			// Countermoves
-			//else if (pos->ply > 0 && (*ml)[i]->move == counterMoves[FROMSQ(moves_path[pos->ply - 1])][TOSQ(moves_path[pos->ply - 1])]) {
+			// Countermoves (~ -10 elo ???)
+			//else if (pos->ply > 0 && (*ml)[i]->move == stats.counterMoves[FROMSQ(stats.moves_path[pos->ply - 1])][TOSQ(stats.moves_path[pos->ply - 1])]) {
 			//	(*ml)[i]->score = countermove_bonus;
 			//}
 	
@@ -113,18 +113,18 @@ void SearchThread_t::pickNextMove(int index, MoveList* ml) {
 
 
 void SearchThread_t::update_move_heuristics(int best_move, int depth, MoveList* ml) {
-	// Set the new killer moves
+	
+	// Step 1. Set the new killer moves
 	setKillers(pos->ply, best_move);
 
-	// Update the countermove heuristic
-	//if (pos->ply > 0) { // Prevent overflow
-	//	counterMoves[FROMSQ(moves_path[pos->ply - 1])][TOSQ(moves_path[pos->ply - 1])] = move;
+
+	// Step 2. Update countermove heuristic
+	//if (pos->ply > 0 && stats.moves_path[pos->ply - 1] != MOVE_NULL) { // We need to be at least one ply deep, otherwise we'd index negative array values.
+	//	stats.counterMoves[FROMSQ(stats.moves_path[pos->ply - 1])][TOSQ(stats.moves_path[pos->ply - 1])] = best_move;
 	//}
 
 
-	/*
-	Update history
-	*/
+	// Step 3. Update history
 	int history_bonus = std::min(depth * depth, 400);
 
 	stats.history[pos->side_to_move][FROMSQ(best_move)][TOSQ(best_move)] += history_bonus;
@@ -153,6 +153,7 @@ void SearchThread_t::update_move_heuristics(int best_move, int depth, MoveList* 
 			}
 		}
 	}
+
 }
 
 

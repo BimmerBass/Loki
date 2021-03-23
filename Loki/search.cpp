@@ -44,15 +44,15 @@ void ChangePV(int move, SearchPv* parent, SearchPv* child) {
 
 	// Here we copy the PV that the child node found into the parent while keeping the parent's first move as "move"
 	//std::copy(std::begin(child->pv), std::begin(child->pv) + child->length, std::begin(parent->pv) + 1);
-	//std::copy(child->pv.begin(), child->pv.begin() + child->length, parent->pv.begin() + 1);
+	std::copy(child->pv.begin(), child->pv.begin() + child->length, parent->pv.begin() + 1);
 
-	if (child->length >= MAXDEPTH) {
-		child->length = MAXDEPTH - 1;
-	}
-
-	for (int i = 0; i < child->length; i++) {
-		parent->pv[i + 1] = child->pv[i];
-	}
+	//if (child->length >= MAXDEPTH) {
+	//	child->length = MAXDEPTH - 1;
+	//}
+	//
+	//for (int i = 0; i < child->length; i++) {
+	//	parent->pv[i + 1] = child->pv[i];
+	//}
 }
 
 
@@ -294,8 +294,8 @@ namespace Search {
 			for (int j = 0; j < 64; j++) {
 				ss->stats.history[0][i][j] = 0;
 				ss->stats.history[1][i][j] = 0;
-		
-				//ss->counterMoves[i][j] = 0;
+				
+				ss->stats.counterMoves[i][j] = 0;
 			}
 		}
 		
@@ -435,7 +435,7 @@ namespace Search {
 
 			
 			// Set the previous move such that we can use the countermove heuristic.
-			//ss->moves_path[ss->pos->ply] = move;
+			ss->stats.moves_path[ss->pos->ply] = move;
 
 			
 			// Step 4. Principal Variation search. We search all moves with the full window until one raises alpha. Afterwards we'll search with a null window
@@ -516,16 +516,20 @@ namespace Search {
 		// If we return due to pruning, none of the moves in pvLine should be used by parent.
 		pvLine->length = 0;
 
+
+		// Update seldepth in case we've reached the highest ply so far
+		if (ss->pos->ply >= ss->info->seldepth) {
+			ss->info->seldepth = ss->pos->ply;
+		}
+
+
 		// Step 1. Dive into quiescence search (~382 elo)
 		if (depth <= 0) {
 			return quiescence(ss, alpha, beta);
 			//return Eval::evaluate(ss->pos);
 		}
 
-		// Update nodes and potentially seldepth
-		if (ss->pos->ply >= ss->info->seldepth) {
-			ss->info->seldepth = ss->pos->ply;
-		}
+		// Update nodes
 		ss->info->nodes++;
 
 		// Check to see if we've been told to abort the search.
@@ -661,13 +665,16 @@ namespace Search {
 			
 			// We want to use another eval here than the one already calculated since the former is inaccurate when the side to move gets switched
 			ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+
+			// When we do a nullmove, we can't rely on the countermove heuristic, so we'll have to set the move to indicate NMP usage
+			ss->stats.moves_path[ss->pos->ply] = MOVE_NULL;
 		
 			score = -alphabeta(ss, depth - R - 1, -beta, 1 - beta, false, &line);
 			
 			// Clear the pv
 			line.clear();
 		
-			// Insert the real evaluation again in case we don't get a cutoff
+			// Insert the real evaluation again in case we don't get a cutoff.
 			ss->stats.static_eval[ss->pos->ply] = old_evaluation;
 			ss->pos->undo_nullmove(old_enpassant);
 		
@@ -692,16 +699,16 @@ namespace Search {
 		
 		
 		
-		//// Step 8. Enhanced futility pruning (~63 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
-		////		and skip tactically boring moves from the search
-		//if (depth < 7 && !in_check && !is_pv
-		//	&& abs(alpha) < MATE && abs(beta) < MATE
-		//	&& ss->static_eval[ss->pos->ply] + futility_margin(depth, improving) <= alpha) {
-		//
-		//	futility_pruning = true;
-		//}
-		//
-		//
+		// Step 8. Enhanced futility pruning (~63 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
+		//		and skip tactically boring moves from the search
+		if (depth < 7 && !in_check && !is_pv
+			&& abs(alpha) < MATE && abs(beta) < MATE
+			&& ss->stats.static_eval[ss->pos->ply] + futility_margin(depth, improving) <= alpha) {
+		
+			futility_pruning = true;
+		}
+		
+		
 		//// Step 9. Reverse futility pruning (~11 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
 		//if (depth < 7 && !in_check && !is_pv
 		//	&& abs(alpha) < MATE && abs(beta) < MATE) {
@@ -817,19 +824,21 @@ namespace Search {
 			// Increment legal when we've made a move. This is used so as to not prune potential checkmates or stalemates.
 			legal++;
 
-			bool gives_check = ss->pos->in_check();			
+			bool gives_check = ss->pos->in_check(); // FIXME: Add function to determine if a move gives check before making it.
 			bool is_tactical = capture || gives_check || in_check || SPECIAL(move) == PROMOTION || SPECIAL(move) == ENPASSANT;
+
+			// Set the move we're searching for use in the countermove heuristic.
+			ss->stats.moves_path[ss->pos->ply] = move;
 
 
 			// Step 13. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
 			//			We just need to make sure that at least one legal move has been searched since we'd risk getting false mate scores else.
-			//if (futility_pruning && 
-			//	(!capture || (depth <= 1 && moves[m]->score < 0)) // If we are int a frontier node (d <= 1) and the capture doesn't win material, then don't search it.
-			//	&& !gives_check 
-			//	&& SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && legal > 0) {
-			//	ss->pos->undo_move();
-			//	continue;
-			//}
+			if (futility_pruning && 
+				(!is_tactical || (depth <= 1 && moves[m]->score < 0)) // If we're at a pre-frontier node, we'll also prune moves that are deemed to be bad.
+				&& legal > 0) {
+				ss->pos->undo_move();
+				continue;
+			}
 
 			// Step 14. Principal variation search
 			
@@ -925,7 +934,6 @@ namespace Search {
 		if (ss->info->stopped) {
 			return 0;
 		}
-
 
 		if (ss->pos->is_repetition()) {
 			return 0;
