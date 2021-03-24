@@ -721,7 +721,7 @@ namespace Search {
 		}
 		
 		
-		// Step 10. Razoring (~17 elo)
+		// Step 10. Razoring (~36 elo)
 		if (use_razoring && depth <= razoring_depth && !is_pv &&
 			ss->stats.static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
 			&& !in_check && abs(beta) < MATE && abs(alpha) < MATE && ss->pos->non_pawn_material()) {
