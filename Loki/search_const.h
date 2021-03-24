@@ -52,7 +52,7 @@ constexpr int lmr_pieceVals[5] = { 100, 300, 300, 500, 900 };
 Razoring
 */
 constexpr bool use_razoring = true;
-constexpr int razoring_depth = 3;
+constexpr int razoring_depth = 2;
 
 
 /*

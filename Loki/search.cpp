@@ -722,25 +722,24 @@ namespace Search {
 		
 		
 		// Step 10. Razoring (~17 elo)
-		//if (use_razoring && depth <= razoring_depth && !is_pv &&
-		//	ss->stats.static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
-		//	&& !in_check && abs(beta) < MATE && abs(alpha) < MATE) {
-		//
-		//	int margin = razoring_margin(depth, improving);
-		//	int razoring_window = alpha - margin;
-		//	score = quiescence(ss, razoring_window, razoring_window + 1); // Do a null window quiescence to prove we can't raise alpha over  alpha - margin
-		//	
-		//	if (ss->pos->non_pawn_material() || depth <= 1) {
-		//		if (score + margin <= alpha) {
-		//			return alpha;
-		//		}
-		//	}
-		//	else {
-		//		if (score + margin <= alpha) { // If there are no pieces on the board and we're not at depth = 1, just reduce by one.
-		//			depth -= 1;
-		//		}
-		//	}
-		//}
+		if (use_razoring && depth <= razoring_depth && !is_pv &&
+			ss->stats.static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
+			&& !in_check && abs(beta) < MATE && abs(alpha) < MATE && ss->pos->non_pawn_material()) {
+
+			if (depth == 1) {
+				return quiescence(ss, alpha, beta);
+			}
+		
+			int razor_window = alpha - razoring_margin(depth, improving);
+		
+			score = quiescence(ss, razor_window, razor_window + 1);
+		
+			// If we couldn't raise the score over alpha - margin, this node is very likely to be an ALL-node
+			if (score <= razor_window) {
+		
+				return alpha;
+			}
+		}
 
 
 		moves_loop:
