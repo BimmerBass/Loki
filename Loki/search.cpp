@@ -385,9 +385,9 @@ namespace Search {
 
 		// Step 1. In-check extensions.
 		bool in_check = ss->pos->in_check();
-		//if (in_check) {
-		//	new_depth++;
-		//}
+		if (in_check) {
+			new_depth++;
+		}
 
 		
 		// Step 2. Static evaluation.
@@ -807,10 +807,10 @@ namespace Search {
 			//if (SPECIAL(move) == CASTLING) { // Castle extensions.
 			//	extensions++;
 			//}
-			//
-			//if (in_check) { // In check extensions
-			//	extensions++;
-			//}
+			
+			if (in_check) { // In check extensions
+				extensions++;
+			}
 
 
 			if (!ss->pos->make_move(moves[m])) {
@@ -991,12 +991,12 @@ namespace Search {
 			//if (piece_captured != NO_TYPE && ml[m]->score < 0) {
 			//	continue;
 			//}
-			//
-			//// Step 5. Futility pruning (~30 elo). If the value of the piece captured, plus some margin (~200cp) is still not enough to raise alpha, we won't bother searching it.
-			//// We'll just have to make sure, that there has been tested at least one legal move, so we don't miss a checkmate
+			
+			// Step 5. Futility pruning (~30 elo). If the value of the piece captured, plus some margin (~200cp) is still not enough to raise alpha, we won't bother searching it.
+			// We'll just have to make sure, that there has been tested at least one legal move, so we don't miss a checkmate
 			//if (SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && piece_captured != NO_TYPE &&
 			//	stand_pat + delta_piece_value[piece_captured] + delta_margin <= alpha
-			//	&& !ss->pos->is_endgame() && (!in_check || legal > 0)) {
+			//	&& !ss->pos->is_endgame()) {
 			//	continue;
 			//}
 
