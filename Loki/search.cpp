@@ -808,7 +808,7 @@ namespace Search {
 			//	extensions++;
 			//}
 			
-			if (in_check) { // In check extensions
+			if (in_check) { // In check extensions (~22 elo)
 				extensions++;
 			}
 
