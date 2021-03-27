@@ -207,75 +207,76 @@ namespace Eval {
 		*/
 		template<SIDE side>
 		void pawns(GameState_t* pos, Evaluation& eval) {
-			int mg = 0;
-			int eg = 0;
-
+			//int mg = 0;
+			//int eg = 0;
+			//
 			// Declare some side-relative constants
 			constexpr Bitboard* passedBitmask = (side == WHITE) ? BM::passed_pawn_masks[WHITE] : BM::passed_pawn_masks[BLACK];
-
+			
 			constexpr int relative_ranks[8] = { (side == WHITE) ? RANK_1 : RANK_8, (side == WHITE) ? RANK_2 : RANK_7,
 				(side == WHITE) ? RANK_3 : RANK_6, (side == WHITE) ? RANK_4 : RANK_5, (side == WHITE) ? RANK_5 : RANK_4,
 				(side == WHITE) ? RANK_6 : RANK_3, (side == WHITE) ? RANK_7 : RANK_2, (side == WHITE) ? RANK_8 : RANK_1 };
-
+			
 			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
-
+			
 			constexpr DIRECTION downLeft = (side == WHITE) ? SOUTHWEST : NORTHWEST;
 			constexpr DIRECTION downRight = (side == WHITE) ? SOUTHEAST : NORTHEAST;
 			constexpr DIRECTION upLeft = (side == WHITE) ? NORTHWEST : SOUTHWEST;
 			constexpr DIRECTION upRight = (side == WHITE) ? NORTHEAST : SOUTHEAST;
-
-			Bitboard pawnBoard = (side == WHITE) ? pos->pieceBBS[PAWN][WHITE] : pos->pieceBBS[PAWN][BLACK];
-			int sq = NO_SQ;
-			int relative_sq = NO_SQ; // For black it is PSQT::Mirror64[sq] but for white it is just == sq
-
-
-			// Before evaluating all pawns, we will score the amount of doubled pawns by file.
-			int doubled_count = 0;
-			for (int f = FILE_A; f <= FILE_H; f++) {
-				doubled_count += (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? 1 : 0;
-			}
 			
-			mg -= doubled_count * doubled_penalty[MG];
-			eg -= doubled_count * doubled_penalty[EG];
 
-			// Now evaluate each individual pawn
-			while (pawnBoard) {
-				sq = PopBit(&pawnBoard);
-				relative_sq = (side == WHITE) ? sq : PSQT::Mirror64[sq];
-
-				//int r = relative_ranks[sq / 8];
-				int f = sq % 8;
-
-				// Passed pawn bonus
-				if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
-					mg += PSQT::passedPawnTable[relative_sq];
-					eg += PSQT::passedPawnTable[relative_sq];
-
-					// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
-					eval.passed_pawns[side] |= (uint64_t(1) << sq);
-				}
-
-				// Isolated penalty and/or doubled
-				bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? true : false;
-				bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
-
-				if (doubled && isolated) {
-					mg -= doubled_isolated_penalty[MG];
-					eg -= doubled_isolated_penalty[EG];
-				}
-				else if (isolated) {
-					mg -= isolated_penalty[MG];
-					eg -= isolated_penalty[EG];
-				}
-			}
+			//Bitboard pawnBoard = (side == WHITE) ? pos->pieceBBS[PAWN][WHITE] : pos->pieceBBS[PAWN][BLACK];
+			//int sq = NO_SQ;
+			//int relative_sq = NO_SQ; // For black it is PSQT::Mirror64[sq] but for white it is just == sq
+			//
+			//
+			//// Before evaluating all pawns, we will score the amount of doubled pawns by file.
+			//int doubled_count = 0;
+			//for (int f = FILE_A; f <= FILE_H; f++) {
+			//	doubled_count += (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? 1 : 0;
+			//}
+			//
+			//mg -= doubled_count * doubled_penalty[MG];
+			//eg -= doubled_count * doubled_penalty[EG];
+			//
+			//// Now evaluate each individual pawn
+			//while (pawnBoard) {
+			//	sq = PopBit(&pawnBoard);
+			//	relative_sq = (side == WHITE) ? sq : PSQT::Mirror64[sq];
+			//
+			//	//int r = relative_ranks[sq / 8];
+			//	int f = sq % 8;
+			//
+			//	// Passed pawn bonus
+			//	if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
+			//		mg += PSQT::passedPawnTable[relative_sq];
+			//		eg += PSQT::passedPawnTable[relative_sq];
+			//
+			//		// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
+			//		eval.passed_pawns[side] |= (uint64_t(1) << sq);
+			//	}
+			//
+			//	// Isolated penalty and/or doubled
+			//	bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? true : false;
+			//	bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
+			//
+			//	if (doubled && isolated) {
+			//		mg -= doubled_isolated_penalty[MG];
+			//		eg -= doubled_isolated_penalty[EG];
+			//	}
+			//	else if (isolated) {
+			//		mg -= isolated_penalty[MG];
+			//		eg -= isolated_penalty[EG];
+			//	}
+			//}
 
 			// Populate the attacks bitboard with pawn attacks. This will be used in the evaluation of pieces.
 			eval.attacks[PAWN][side] = (shift<upRight>(pos->pieceBBS[PAWN][side]) | shift<upLeft>(pos->pieceBBS[PAWN][side]));
 
 
 			// Make the scores stored side-relative
-			eval.mg += (side == WHITE) ? mg : -mg;
-			eval.eg += (side == WHITE) ? eg : -eg;
+			//eval.mg += (side == WHITE) ? mg : -mg;
+			//eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
@@ -602,6 +603,50 @@ namespace Eval {
 			eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
+
+
+
+		/*
+		
+		Space evaluation. We use a so-called space table that is indexed by "space-points" given by the function below.
+		
+		*/
+		template<SIDE side>
+		void space(GameState_t* pos, Evaluation& eval) {
+			int points = 0;
+
+			int mg = 0;
+			int eg = 0;
+
+			// The main space area is rank 3, 4, 5 and 6, and file c, d, e, f
+			// File b and g are given half-points.
+			constexpr Bitboard war_zone = (BBS::FileMasks8[FILE_C] | BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E] | BBS::FileMasks8[FILE_F])
+				& (BBS::RankMasks8[RANK_3] | BBS::RankMasks8[RANK_4] | BBS::RankMasks8[RANK_5] | BBS::RankMasks8[RANK_6]);
+			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
+
+			// A space point is given for squares not attacked by enemy pawns and either 1) defended by our own, or 2) behind our own.
+			// Therefore we need to define the rearspan of our pawns.
+			Bitboard rearSpanBrd = 0;
+
+			Bitboard pawnBrd = pos->pieceBBS[PAWN][side];
+			int sq = 0;
+			while (pawnBrd) {
+				sq = PopBit(&pawnBrd);
+
+				rearSpanBrd |= BM::rear_span_masks[side][sq];
+			}
+
+			Bitboard space_zone = war_zone & ~eval.attacks[PAWN][Them]; // Don't consider squares attacked by enemy.
+			
+			points += countBits(eval.attacks[PAWN][side]);
+			points += 2 * countBits(rearSpanBrd & space_zone);
+
+			mg += 2 * points;
+			eg += points;
+
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
+		}
 	}
 
 
@@ -621,8 +666,11 @@ namespace Eval {
 		//imbalance<WHITE>(pos, eval); imbalance<BLACK>(pos, eval);
 
 		// Pawn structure evaluation
-		//pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
+		pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
 		
+		// Space evaluation
+		space<WHITE>(pos, eval); space<BLACK>(pos, eval);
+
 		// Evaluate mobility (~56 elo)
 		//mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
 		//mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);

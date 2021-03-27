@@ -85,6 +85,7 @@ void BBS::Zobrist::init_zobrist() {
 Bitboard BBS::EvalBitMasks::passed_pawn_masks[2][64] = { {0} };
 Bitboard BBS::EvalBitMasks::isolated_bitmasks[8] = { 0 };
 Bitboard BBS::EvalBitMasks::outpost_masks[2][64] = { {0} };
+Bitboard BBS::EvalBitMasks::rear_span_masks[2][64] = { {0} };
 
 void BBS::EvalBitMasks::initBitMasks() {
 	Bitboard bitmask = 0;
@@ -149,6 +150,18 @@ void BBS::EvalBitMasks::initBitMasks() {
 		outpost_masks[WHITE][sq] = (passed_pawn_masks[WHITE][sq] & isolated_bitmasks[sq % 8]);
 		outpost_masks[BLACK][sq] = (passed_pawn_masks[BLACK][sq] & isolated_bitmasks[sq % 8]);
 
+	}
+
+
+	/*
+	
+	Rearspan bitmasks. The squares behind pawns.
+	
+	*/
+
+	for (int sq = 0; sq < 64; sq++) {
+		rear_span_masks[WHITE][sq] = (passed_pawn_masks[BLACK][sq] & BBS::FileMasks8[sq % 8]);
+		rear_span_masks[BLACK][sq] = (passed_pawn_masks[WHITE][sq] & BBS::FileMasks8[sq % 8]);
 	}
 }
 

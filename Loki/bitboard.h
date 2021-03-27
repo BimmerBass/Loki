@@ -111,6 +111,8 @@ namespace BBS {
 
 		extern Bitboard outpost_masks[2][64];
 
+		extern Bitboard rear_span_masks[2][64];
+
 		void initBitMasks();
 	}
 
