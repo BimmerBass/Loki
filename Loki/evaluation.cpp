@@ -210,58 +210,58 @@ namespace Eval {
 			constexpr DIRECTION upRight = (side == WHITE) ? NORTHEAST : SOUTHEAST;
 			
 
-			Bitboard pawnBoard = (side == WHITE) ? pos->pieceBBS[PAWN][WHITE] : pos->pieceBBS[PAWN][BLACK];
-			int sq = NO_SQ;
-			int relative_sq = NO_SQ; // For black it is PSQT::Mirror64[sq] but for white it is just == sq
-			
-			
-			// Before evaluating all pawns, we will score the amount of doubled pawns by file.
-			int doubled_count = 0;
-			for (int f = FILE_A; f <= FILE_H; f++) {
-				doubled_count += (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? 1 : 0;
-			}
-			
-			mg -= doubled_count * doubled_penalty[MG];
-			eg -= doubled_count * doubled_penalty[EG];
-			
-			// Now evaluate each individual pawn
-			while (pawnBoard) {
-				sq = PopBit(&pawnBoard);
-				relative_sq = (side == WHITE) ? sq : PSQT::Mirror64[sq];
-			
-				//int r = relative_ranks[sq / 8];
-				int f = sq % 8;
-			
-				// Passed pawn bonus
-				if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
-					mg += PSQT::passedPawnTable[relative_sq].mg();
-					eg += PSQT::passedPawnTable[relative_sq].eg();
-			
-					// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
-					eval.passed_pawns[side] |= (uint64_t(1) << sq);
-				}
-			
-				// Isolated penalty and/or doubled
-				bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? true : false;
-				bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
-			
-				if (doubled && isolated) {
-					mg -= doubled_isolated_penalty[MG];
-					eg -= doubled_isolated_penalty[EG];
-				}
-				else if (isolated) {
-					mg -= isolated_penalty[MG];
-					eg -= isolated_penalty[EG];
-				}
-			}
+			//Bitboard pawnBoard = (side == WHITE) ? pos->pieceBBS[PAWN][WHITE] : pos->pieceBBS[PAWN][BLACK];
+			//int sq = NO_SQ;
+			//int relative_sq = NO_SQ; // For black it is PSQT::Mirror64[sq] but for white it is just == sq
+			//
+			//
+			//// Before evaluating all pawns, we will score the amount of doubled pawns by file.
+			//int doubled_count = 0;
+			//for (int f = FILE_A; f <= FILE_H; f++) {
+			//	doubled_count += (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? 1 : 0;
+			//}
+			//
+			//mg -= doubled_count * doubled_penalty[MG];
+			//eg -= doubled_count * doubled_penalty[EG];
+			//
+			//// Now evaluate each individual pawn
+			//while (pawnBoard) {
+			//	sq = PopBit(&pawnBoard);
+			//	relative_sq = (side == WHITE) ? sq : PSQT::Mirror64[sq];
+			//
+			//	//int r = relative_ranks[sq / 8];
+			//	int f = sq % 8;
+			//
+			//	// Passed pawn bonus
+			//	if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
+			//		mg += PSQT::passedPawnTable[relative_sq].mg();
+			//		eg += PSQT::passedPawnTable[relative_sq].eg();
+			//
+			//		// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
+			//		eval.passed_pawns[side] |= (uint64_t(1) << sq);
+			//	}
+			//
+			//	// Isolated penalty and/or doubled
+			//	bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? true : false;
+			//	bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
+			//
+			//	if (doubled && isolated) {
+			//		mg -= doubled_isolated_penalty[MG];
+			//		eg -= doubled_isolated_penalty[EG];
+			//	}
+			//	else if (isolated) {
+			//		mg -= isolated_penalty[MG];
+			//		eg -= isolated_penalty[EG];
+			//	}
+			//}
 
 			// Populate the attacks bitboard with pawn attacks. This will be used in the evaluation of pieces.
 			eval.attacks[PAWN][side] = (shift<upRight>(pos->pieceBBS[PAWN][side]) | shift<upLeft>(pos->pieceBBS[PAWN][side]));
 
 
 			// Make the scores stored side-relative
-			eval.mg += (side == WHITE) ? mg : -mg;
-			eval.eg += (side == WHITE) ? eg : -eg;
+			//eval.mg += (side == WHITE) ? mg : -mg;
+			//eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
