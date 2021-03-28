@@ -159,21 +159,6 @@ namespace PSQT {
 		-22	,	-30	,	-12	,	11	,	-13	,	-16	,	-23	,	-24
 	};
 
-
-
-	// This table has all the bonuses for passed pawns. It is made this way to hopefully give the evaluation some more accuracy instead of just scoring
-	//	passers by rank.
-	const int passedPawnTable[64] = {
-		0	,	0	,	0	,	0	,	0	,	0	,	0	,	0	,
-		20	,	20	,	20	,	20	,	20	,	20	,	20	,	20	,
-		40	,	40	,	40	,	40	,	40	,	40	,	40	,	40	,
-		80	,	80	,	80	,	80	,	80	,	80	,	80	,	80	,
-		130	,	130	,	130	,	130	,	130	,	130	,	130	,	130	,
-		190	,	190	,	190	,	190	,	190	,	190	,	190	,	190	,
-		220	,	220	,	220	,	220	,	220	,	220	,	220	,	220	,
-		0	,	0	,	0	,	0	,	0	,	0	,	0	,	0
-	};
-
 	// This table contains the penalties for advanced pawns in front of the king.
 	const int castledPawnAdvancementMg[64] = {
 		0	,	 0	,	0	,	 0	,	 0	,	 0	,	 0	,	 0	,
@@ -255,6 +240,21 @@ namespace PSQT {
 		S(550, 550),	S(560, 560),	S(570, 570),	S(580, 580),	S(590, 590),	S(600, 600),	S(610, 610),	S(620, 620),	S(630, 630),	S(640, 640),
 		S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),
 		S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650),	S(650, 650)
+	};
+
+
+
+	// This table has all the bonuses for passed pawns. It is made this way to hopefully give the evaluation some more accuracy instead of just scoring
+	//	passers by rank.
+	const Score passedPawnTable[64] = {
+		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,
+		S(5, 10)	,	S(5, 10)	,	S(5, 10)	,	S(5, 10)	,	S(5, 10)	,	S(5, 10)	,	S(5, 10)	,	S(5, 10)	,
+		S(10, 20)	,	S(10, 20)	,	S(10, 20)	,	S(10, 20)	,	S(10, 20)	,	S(10, 20)	,	S(10, 20)	,	S(10, 20)	,
+		S(20, 40)	,	S(20, 40)	,	S(20, 40)	,	S(20, 40)	,	S(20, 40)	,	S(20, 40)	,	S(20, 40)	,	S(20, 40)	,
+		S(30, 60)	,	S(30, 60)	,	S(30, 60)	,	S(30, 60)	,	S(30, 60)	,	S(30, 60)	,	S(30, 60)	,	S(30, 60)	,
+		S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,
+		S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,
+		S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0)
 	};
 
 #undef S

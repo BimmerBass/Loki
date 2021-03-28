@@ -120,9 +120,9 @@ Pawn evaluation constants
 constexpr int candidate_passer = 0;
 constexpr int connected[2] = { 10, 7 }; // Bonus for being directly defended by another pawn
 
-constexpr int isolated_penalty[2] = { 20 , 35 };
-constexpr int doubled_isolated_penalty[2] = { 30,45 };
-constexpr int doubled_penalty[2] = { 10, 15 };
+constexpr int isolated_penalty[2] = { 10 , 17 };
+constexpr int doubled_isolated_penalty[2] = { 15 , 23 };
+constexpr int doubled_penalty[2] = { 5, 10 };
 
 // Not implemented yet.
 constexpr int backwards_penalty = 0;

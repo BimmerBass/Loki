@@ -47,7 +47,7 @@ namespace PSQT {
 	/*
 	Other square tables
 	*/
-	extern const int passedPawnTable[64];
+	extern const Score passedPawnTable[64];
 
 	extern const int Mirror64[64];
 
