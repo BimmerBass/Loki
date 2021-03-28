@@ -470,8 +470,8 @@ namespace Eval {
 
 		template<SIDE side, int pce>
 		void mobility(GameState_t* pos, Evaluation& eval) {
-			//int mg = 0;
-			//int eg = 0;
+			int mg = 0;
+			int eg = 0;
 
 			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
 			constexpr DIRECTION Down = (side == WHITE) ? SOUTH : NORTH;
@@ -511,19 +511,18 @@ namespace Eval {
 						eval.king_zone_attack_units[Them] += 2;
 					}
 
-					//piece_attacks &= good_squares; // Only score mobility to good squares.
-					//
-					//attack_cnt = countBits(piece_attacks);
-					//assert(attack_cnt < 9);
-					//
-					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+					piece_attacks &= good_squares; // Only score mobility to good squares.
+					
+					attack_cnt = countBits(piece_attacks);
+					assert(attack_cnt < 9);
+					
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
 				}
 
 				else if constexpr (pce == BISHOP) {
 					piece_attacks = Magics::attacks_bb<BISHOP>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
 					attacks |= piece_attacks;
-					//piece_attacks &= ~friends;
 
 					if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
 						eval.king_zone_attackers[Them]++; // Increment attackers
@@ -533,19 +532,18 @@ namespace Eval {
 						eval.king_zone_attack_units[Them] += 2;
 					}
 
-					//piece_attacks &= good_squares;
-					//
-					//attack_cnt = countBits(piece_attacks);
-					//assert(attack_cnt < 15);
-					//
-					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+					piece_attacks &= good_squares; // Only score mobility to good squares.
+
+					attack_cnt = countBits(piece_attacks);
+					assert(attack_cnt < 15);
+
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
 				}
 
 				else if constexpr (pce == ROOK) {
 					piece_attacks = Magics::attacks_bb<ROOK>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
 					attacks |= piece_attacks;
-					//piece_attacks &= ~friends;
 
 					if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
 						eval.king_zone_attackers[Them]++; // Increment attackers
@@ -555,19 +553,17 @@ namespace Eval {
 						eval.king_zone_attack_units[Them] += 3;
 					}
 					
-					//piece_attacks &= good_squares;
-					//
-					//attack_cnt = countBits(piece_attacks);
-					//assert(attack_cnt < 15);
-					//
-					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+					piece_attacks &= good_squares; // Only score mobility to good squares.
+
+					attack_cnt = countBits(piece_attacks);
+
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
 				}
 
 				else if constexpr (pce == QUEEN) {
 					piece_attacks = Magics::attacks_bb<QUEEN>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
 					attacks |= piece_attacks;
-					//piece_attacks &= ~friends;
 
 
 					if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
@@ -578,13 +574,13 @@ namespace Eval {
 						eval.king_zone_attack_units[Them] += 5;
 					}
 
-					//piece_attacks &= good_squares;
-					//
-					//attack_cnt = countBits(piece_attacks);
-					//assert(attack_cnt < 29);
-					//
-					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+					piece_attacks &= good_squares; // Only score mobility to good squares.
+
+					attack_cnt = countBits(piece_attacks);
+					assert(attack_cnt < 29);
+
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg() / 2;
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg() / 2;
 				}
 
 				else { // Just in case we went into the loop without a proper piece-type.
@@ -597,8 +593,8 @@ namespace Eval {
 			eval.attacks[pce][side] = attacks;
 
 			// Make the scores side-relative.
-			//eval.mg += (side == WHITE) ? mg : -mg;
-			//eval.eg += (side == WHITE) ? eg : -eg;
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
@@ -709,10 +705,10 @@ namespace Eval {
 		space<WHITE>(pos, eval); space<BLACK>(pos, eval);
 
 		// Evaluate mobility (~)
-		//mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
-		//mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
-		//mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
-		//mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
+		mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
+		mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
+		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
+		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
 		
 		// Simple king safety evaluation (~47 elo)
 		//king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
