@@ -1,11 +1,21 @@
 #ifndef EVALUATION_H
 #define EVALUATION_H
+
 #include "movegen.h"
 #include "psqt.h"
 
 #include "test_positions.h"
 
 enum GamePhase :int { MG = 0, EG = 1 };
+
+
+inline int frontmost_sq(SIDE s, Bitboard b) {
+	if (b == 0) {
+		return NO_SQ;
+	}
+
+	return (s == WHITE) ? bitScanReverse(b) : bitScanForward(b);
+}
 
 namespace Eval {
 
@@ -25,6 +35,9 @@ namespace Eval {
 
 		// Indexed by passed_pawns[side]
 		Bitboard passed_pawns[2] = { 0 };
+
+		int king_zone_attackers[2] = { 0 };
+		int king_zone_attack_units[2] = { 0 };
 	};
 
 	extern Bitboard king_flanks[8];

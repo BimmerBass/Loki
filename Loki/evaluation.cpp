@@ -120,80 +120,65 @@ namespace Eval {
 			int mg = 0;
 			int eg = 0;
 
-			int attack_units = 0; // Used to index safety table.
 			int king_square = pos->king_squares[side];
 			int king_file = king_square % 8;
 			Bitboard kingRing = king_ring(king_square);
 
-			// Penalize the side depending on the distance to the pawns on the king's flank. This doesn't apply for the center
-			Bitboard king_pawns = pos->pieceBBS[PAWN][side] & king_flanks[king_square % 8];
-			Bitboard enemy_king_pawns = pos->pieceBBS[PAWN][Them] & king_flanks[king_file];
-			int sq;
 
-			// Penalize missing pawns on the files of the flank
+			bool open_file[2] = { false, false };
+			int shelter_score = 0;
+
+			int ourSq = 0;
+			int theirSq = 0;
+
 			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
+				open_file[0] = false; open_file[1] = false;
+
+				// If there are no enemy pawns on the file, it is at least half-open
+				if ((pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) {
+					open_file[0] = true;
+				}
 				if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0) {
-					mg -= 40;
-					eg -= 15;
+					open_file[1] = true;
 				}
 
-				// Penalize an open/semi-open file in the endgame
-				if (((pos->pieceBBS[PAWN][WHITE] | pos->pieceBBS[PAWN][BLACK]) & BBS::FileMasks8[f]) == 0) { // No pawns --> open
-					mg -= king_open_file_penalty;
-				}
-				else if ((pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Only pawns of this side --> semi-open
-					mg -= king_semi_open_file_penalty;
-				}
-			}
-			
-			if (king_file != FILE_E && king_file != FILE_D) {
-				while (king_pawns) {
-					//sq = (side == WHITE) ? PopBit(&king_pawns) : PSQT::Mirror64[PopBit(&king_pawns)];
-					sq = PopBit(&king_pawns);
+				mg -= ((open_file[1]) ? king_open_file_penalty : ((open_file[0]) ? king_semi_open_file_penalty : 0));
 
-					mg -= (side == WHITE) ? PSQT::castledPawnAdvancementMg[sq] : PSQT::castledPawnAdvancementMg[PSQT::Mirror64[sq]];
-			
-					// Penalize distance to pawns on the king flank in the endgame
-					eg -= 2 * PSQT::ManhattanDistance[king_square][sq];
+				
+				shelter_score = 0;
+				ourSq = frontmost_sq(Them, pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]);
+				theirSq = frontmost_sq(Them, pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]);
+
+				if (ourSq != NO_SQ) {
+					shelter_score -= (side == WHITE) ? PSQT::castledPawnAdvancementMg[ourSq] : PSQT::castledPawnAdvancementMg[PSQT::Mirror64[ourSq]];
 				}
 
-				while (enemy_king_pawns) {
-					sq = PopBit(&enemy_king_pawns);
-
-					mg -= (side == WHITE) ? PSQT::pawnStormMg[sq] : PSQT::pawnStormMg[PSQT::Mirror64[sq]];
+				if (theirSq != NO_SQ) {
+					shelter_score -= (side == WHITE) ? PSQT::pawnStormMg[theirSq] : PSQT::pawnStormMg[PSQT::Mirror64[theirSq]];
 				}
 
+				// If the pawns are blocking each others's advancement, we'll scale down the shelter score
+				if (abs((ourSq / 8) - (theirSq / 8)) == 1) {
+					shelter_score /= 2;
+				}
+
+				mg += shelter_score;
 			}
 
 			// We'll scale the king's pawn structure based on the opponents material. This will encourage the engine to trade pieces if the king's pawn
 			// structure is damaged, and not trade when the opponent's is worse.
 			double scalar_mg = double((side == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos)) / double(max_material[MG]);
-			double scalar_eg = double((side == WHITE) ? non_pawn_material<BLACK, EG>(pos) : non_pawn_material<WHITE, EG>(pos)) / double(max_material[EG]);
 
-			mg = (int)std::round(mg * scalar_mg);
-			eg = (int)std::round(eg * scalar_eg);
+			mg = (int)std::round(double(mg) * scalar_mg);
 
-			// Now we'll gather information on attack units.
-			// We give each attack by a minor two attack units, rook attacks get 3 and queens get 5.
-			int knight_bishop_attackCnt = countBits((kingRing & eval.attacks[KNIGHT][Them]) | (kingRing & eval.attacks[BISHOP][Them]));
-			int rook_attackCnt = countBits(kingRing & eval.attacks[ROOK][Them]);
-			int queen_attackCnt = countBits(kingRing & eval.attacks[QUEEN][Them]);
-
-			attack_units += 2 * knight_bishop_attackCnt;
-			attack_units += 3 * rook_attackCnt;
-			attack_units += 5 * queen_attackCnt;
-
-			attack_units += (3 - std::min(3, countBits(pos->pieceBBS[PAWN][side] & king_flanks[king_square % 8])));
-
-			if (attack_units > 99) { // Prevent overflow when accessing safety table.
-				attack_units = 99;
+			
+			// Now we'll gather information on attack units. We know all attackers and attack units from the calculated mobility.
+			// We'll only use the safety table if there are more than one attacker and if the opponent has a queen.
+			if (eval.king_zone_attackers[side] >= 2 && pos->pieceBBS[QUEEN][Them] != 0) {
+				mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg();
+				eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg();
 			}
 
-			// Only use safety table when opponent has a queen and more than one attacker
-			if ((knight_bishop_attackCnt + rook_attackCnt + queen_attackCnt) > 1 && pos->pieceBBS[QUEEN][Them] != 0) {
-				mg -= PSQT::safety_table[attack_units].mg();
-				eg -= PSQT::safety_table[attack_units].eg();
-			}
 
 			eval.mg += (side == WHITE) ? mg : -mg;
 			eval.eg += (side == WHITE) ? eg : -eg;
@@ -488,6 +473,9 @@ namespace Eval {
 			int mg = 0;
 			int eg = 0;
 
+			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
+			Bitboard enemy_king_ring = king_ring(pos->king_squares[Them]);
+
 			Bitboard attacks = 0; // All attacks from all pieces of type pce used to populate the bitmasks in Eval
 			Bitboard piece_attacks = 0; // Individual piece attacks.
 
@@ -506,48 +494,77 @@ namespace Eval {
 				if constexpr (pce == KNIGHT) {
 					piece_attacks = BBS::knight_attacks[sq];
 					attacks |= piece_attacks;
-					piece_attacks &= ~friends;
+					//piece_attacks &= ~friends;
 
 					// We only give safe mobility bonus, ie. not squares controlled by enemy pawns
-					piece_attacks &= ~eval.attacks[PAWN][(pos->side_to_move == WHITE) ? BLACK : WHITE];
+					//piece_attacks &= ~eval.attacks[PAWN][(pos->side_to_move == WHITE) ? BLACK : WHITE];
 
 					int attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 9);
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+
+					if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
+						eval.king_zone_attackers[Them]++; // Increment attackers
+
+						// Add attack units to index the king attack table
+						eval.king_zone_attack_units[Them] += 2 * countBits(piece_attacks & enemy_king_ring);
+					}
+					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
 				}
 
 				else if constexpr (pce == BISHOP) {
 					piece_attacks = Magics::attacks_bb<BISHOP>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
 					attacks |= piece_attacks;
-					piece_attacks &= ~friends;
+					//piece_attacks &= ~friends;
 
 					int attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 15);
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+
+					if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
+						eval.king_zone_attackers[Them]++; // Increment attackers
+
+						// Add attack units to index the king attack table
+						eval.king_zone_attack_units[Them] += 2 * countBits(piece_attacks & enemy_king_ring);
+					}
+
+					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
 				}
 
 				else if constexpr (pce == ROOK) {
 					piece_attacks = Magics::attacks_bb<ROOK>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
 					attacks |= piece_attacks;
-					piece_attacks &= ~friends;
+					//piece_attacks &= ~friends;
 
 					int attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 15);
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+
+					if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
+						eval.king_zone_attackers[Them]++; // Increment attackers
+
+						// Add attack units to index the king attack table
+						eval.king_zone_attack_units[Them] += 3 * countBits(piece_attacks & enemy_king_ring);
+					}
+					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
 				}
 
 				else if constexpr (pce == QUEEN) {
 					piece_attacks = Magics::attacks_bb<QUEEN>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
 					attacks |= piece_attacks;
-					piece_attacks &= ~friends;
+					//piece_attacks &= ~friends;
 
 					int attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 29);
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+
+					if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
+						eval.king_zone_attackers[Them]++; // Increment attackers
+
+						// Add attack units to index the king attack table
+						eval.king_zone_attack_units[Them] += 5 * countBits(piece_attacks & enemy_king_ring);
+					}
+					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
+					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
 				}
 
 				else { // Just in case we went into the loop without a proper piece-type.
@@ -671,7 +688,7 @@ namespace Eval {
 		// Space evaluation
 		space<WHITE>(pos, eval); space<BLACK>(pos, eval);
 
-		// Evaluate mobility (~56 elo)
+		// Evaluate mobility (~)
 		//mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
 		//mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
 		//mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
