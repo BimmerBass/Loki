@@ -19,6 +19,7 @@ namespace Eval {
 
 	namespace {
 
+		
 		/*
 		
 		Material evaluations
@@ -110,6 +111,73 @@ namespace Eval {
 		}
 
 
+
+		/*
+		
+		Function for evaluating the pawns around the king.
+		
+		*/
+
+		template<SIDE side>
+		void king_pawns(GameState_t* pos, Evaluation& eval) {
+			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
+
+			int mg = 0;
+			int eg = 0;
+			
+			int kingSq = pos->king_squares[side];
+			int king_file = kingSq % 8;
+
+			Bitboard our_pawns = king_flanks[king_file] & pos->pieceBBS[PAWN][side];
+			Bitboard their_pawns = king_flanks[king_file] & pos->pieceBBS[PAWN][Them];
+
+			if (our_pawns == 0) { // We have no pawns on the king's flank
+				mg -= pawnless_flank[MG]; // Bad safety
+				eg -= pawnless_flank[EG]; // King needs to follow the pawns up the board
+			}
+			
+			int sq = NO_SQ;
+			while (our_pawns) {
+				sq = PopBit(&our_pawns);
+			
+				mg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg();
+				eg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg();
+			}
+			
+			
+			while (their_pawns) {
+				sq = PopBit(&their_pawns);
+			
+				mg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].mg();
+				eg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].eg();
+			}
+
+
+			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
+			
+				if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0 && (pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Open file
+					mg -= king_open_file_penalty;
+				}
+				else if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0 || (pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Semi-open file
+					mg -= king_semi_open_file_penalty;
+				}
+			
+			}
+
+			// Scale down the middlegame score depending on the opponent's material.
+			mg *= (side == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos);
+			mg /= max_material[MG];
+
+			// Only store the pawn score in the middlegame if we're not in the central two files.
+			if (king_file != FILE_E && king_file != FILE_D) {
+				eval.mg += (side == WHITE) ? mg : -mg;
+			}
+
+			eval.eg += (side == WHITE) ? eg : -eg;
+		}
+
+
+
 		template<SIDE side>
 		void king_safety(GameState_t* pos, Evaluation& eval){
 			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
@@ -125,60 +193,15 @@ namespace Eval {
 			Bitboard kingRing = king_ring(king_square);
 
 
-			//bool open_file[2] = { false, false };
-			//int shelter_score = 0;
-			//
-			//int ourSq = 0;
-			//int theirSq = 0;
-			//
-			//for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
-			//	open_file[0] = false; open_file[1] = false;
-			//
-			//	// If there are no enemy pawns on the file, it is at least half-open
-			//	if ((pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) {
-			//		open_file[0] = true;
-			//	}
-			//	if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0) {
-			//		open_file[1] = true;
-			//	}
-			//
-			//	mg -= ((open_file[1]) ? king_open_file_penalty : ((open_file[0]) ? king_semi_open_file_penalty : 0));
-			//
-			//	
-			//	shelter_score = 0;
-			//	ourSq = frontmost_sq(Them, pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]);
-			//	theirSq = frontmost_sq(Them, pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]);
-			//
-			//	if (ourSq != NO_SQ) {
-			//		shelter_score -= (side == WHITE) ? PSQT::castledPawnAdvancementMg[ourSq] : PSQT::castledPawnAdvancementMg[PSQT::Mirror64[ourSq]];
-			//	}
-			//
-			//	if (theirSq != NO_SQ) {
-			//		shelter_score -= (side == WHITE) ? PSQT::pawnStormMg[theirSq] : PSQT::pawnStormMg[PSQT::Mirror64[theirSq]];
-			//	}
-			//
-			//	// If the pawns are blocking each others's advancement, we'll scale down the shelter score
-			//	if (abs((ourSq / 8) - (theirSq / 8)) == 1) {
-			//		shelter_score /= 2;
-			//	}
-			//
-			//	mg += shelter_score;
-			//}
-			//
-			//// We'll scale the king's pawn structure based on the opponents material. This will encourage the engine to trade pieces if the king's pawn
-			//// structure is damaged, and not trade when the opponent's is worse.
-			//double scalar_mg = double((side == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos)) / double(max_material[MG]);
-			//
-			//mg = (int)std::round(double(mg) * scalar_mg);
+			// Step 1. Evaluate the king's pawn shield and the enemy's pawn storm
+			king_pawns<side>(pos, eval);
 
-			
 			// Now we'll gather information on attack units. We know all attackers and attack units from the calculated mobility.
 			// We'll only use the safety table if there are more than one attacker and if the opponent has a queen.
 			if (eval.king_zone_attackers[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
 				mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg();
 				//eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg();
 			}
-
 
 			eval.mg += (side == WHITE) ? mg : -mg;
 			eval.eg += (side == WHITE) ? eg : -eg;
@@ -192,8 +215,8 @@ namespace Eval {
 		*/
 		template<SIDE side>
 		void pawns(GameState_t* pos, Evaluation& eval) {
-			int mg = 0;
-			int eg = 0;
+			//int mg = 0;
+			//int eg = 0;
 			
 			// Declare some side-relative constants
 			constexpr Bitboard* passedBitmask = (side == WHITE) ? BM::passed_pawn_masks[WHITE] : BM::passed_pawn_masks[BLACK];
@@ -210,12 +233,12 @@ namespace Eval {
 			constexpr DIRECTION upRight = (side == WHITE) ? NORTHEAST : SOUTHEAST;
 			
 
-			//Bitboard pawnBoard = (side == WHITE) ? pos->pieceBBS[PAWN][WHITE] : pos->pieceBBS[PAWN][BLACK];
-			//int sq = NO_SQ;
-			//int relative_sq = NO_SQ; // For black it is PSQT::Mirror64[sq] but for white it is just == sq
-			//
-			//
-			//// Before evaluating all pawns, we will score the amount of doubled pawns by file.
+			Bitboard pawnBoard = (side == WHITE) ? pos->pieceBBS[PAWN][WHITE] : pos->pieceBBS[PAWN][BLACK];
+			int sq = NO_SQ;
+			int relative_sq = NO_SQ; // For black it is PSQT::Mirror64[sq] but for white it is just == sq
+			
+			
+			// Before evaluating all pawns, we will score the amount of doubled pawns by file.
 			//int doubled_count = 0;
 			//for (int f = FILE_A; f <= FILE_H; f++) {
 			//	doubled_count += (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? 1 : 0;
@@ -223,37 +246,37 @@ namespace Eval {
 			//
 			//mg -= doubled_count * doubled_penalty[MG];
 			//eg -= doubled_count * doubled_penalty[EG];
-			//
-			//// Now evaluate each individual pawn
-			//while (pawnBoard) {
-			//	sq = PopBit(&pawnBoard);
-			//	relative_sq = (side == WHITE) ? sq : PSQT::Mirror64[sq];
-			//
-			//	//int r = relative_ranks[sq / 8];
-			//	int f = sq % 8;
-			//
-			//	// Passed pawn bonus
-			//	if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
-			//		mg += PSQT::passedPawnTable[relative_sq].mg();
-			//		eg += PSQT::passedPawnTable[relative_sq].eg();
-			//
-			//		// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
-			//		eval.passed_pawns[side] |= (uint64_t(1) << sq);
-			//	}
-			//
-			//	// Isolated penalty and/or doubled
-			//	bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? true : false;
-			//	bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
-			//
-			//	if (doubled && isolated) {
-			//		mg -= doubled_isolated_penalty[MG];
-			//		eg -= doubled_isolated_penalty[EG];
-			//	}
-			//	else if (isolated) {
-			//		mg -= isolated_penalty[MG];
-			//		eg -= isolated_penalty[EG];
-			//	}
-			//}
+			
+			// Now evaluate each individual pawn
+			while (pawnBoard) {
+				sq = PopBit(&pawnBoard);
+				relative_sq = (side == WHITE) ? sq : PSQT::Mirror64[sq];
+			
+				//int r = relative_ranks[sq / 8];
+				//int f = sq % 8;
+			
+				// Passed pawn bonus
+				if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
+					//mg += PSQT::passedPawnTable[relative_sq].mg();
+					//eg += PSQT::passedPawnTable[relative_sq].eg();
+			
+					// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
+					eval.passed_pawns[side] |= (uint64_t(1) << sq);
+				}
+			
+				// Isolated penalty and/or doubled
+				//bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? true : false;
+				//bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
+				//
+				//if (doubled && isolated) {
+				//	mg -= doubled_isolated_penalty[MG];
+				//	eg -= doubled_isolated_penalty[EG];
+				//}
+				//else if (isolated) {
+				//	mg -= isolated_penalty[MG];
+				//	eg -= isolated_penalty[EG];
+				//}
+			}
 
 			// Populate the attacks bitboard with pawn attacks. This will be used in the evaluation of pieces.
 			eval.attacks[PAWN][side] = (shift<upRight>(pos->pieceBBS[PAWN][side]) | shift<upLeft>(pos->pieceBBS[PAWN][side]));
@@ -271,8 +294,8 @@ namespace Eval {
 		template<SIDE side>
 		Bitboard outposts(Bitboard pawnAttacks, Bitboard opponent_pawns) {
 			
-			constexpr Bitboard their_side = (side == WHITE) ? (BBS::RankMasks8[RANK_5] | BBS::RankMasks8[RANK_6] | BBS::RankMasks8[RANK_7] | BBS::RankMasks8[RANK_8]) :
-				(BBS::RankMasks8[RANK_4] | BBS::RankMasks8[RANK_3] | BBS::RankMasks8[RANK_2] | BBS::RankMasks8[RANK_1]);
+			constexpr Bitboard their_side = (side == WHITE) ? (BBS::RankMasks8[RANK_6] | BBS::RankMasks8[RANK_7]) :
+				(BBS::RankMasks8[RANK_3] | BBS::RankMasks8[RANK_2]);
 
 			Bitboard relevant_pawnAttacks = pawnAttacks & their_side;
 			Bitboard outpost_bb = 0;
@@ -302,23 +325,22 @@ namespace Eval {
 			int mg = 0;
 			int eg = 0;
 
-			Bitboard pceBoard = pos->pieceBBS[pce][side];
 			int sq = NO_SQ;
 
 			// the outposts bitmask is only populated if we're evaluating bishops or knights.
 			Bitboard outpost_mask = 0;
-			if (pce == BISHOP || pce == KNIGHT) {
+			if constexpr (pce == BISHOP || pce == KNIGHT) {
 				outpost_mask = outposts<side>(eval.attacks[PAWN][side], pos->pieceBBS[PAWN][Them]);
 			
 				// Give bonuses for occupying the calculated outposts
-				int num_outposts = countBits(pceBoard & outpost_mask);
+				int num_outposts = countBits(pos->pieceBBS[pce][side] & outpost_mask);
 				mg += outpost[MG] * num_outposts;
 				eg += outpost[EG] * num_outposts;
 			}
 
 
 			// If the pieces being evaluated are rooks, we'll give bonuses for being doubled. They dont get bonuses for being doubled on the same rank.
-			if (pce == ROOK) {
+			if constexpr (pce == ROOK) {
 				for (int f = FILE_A; f <= FILE_H; f++) {
 
 					if (countBits(pos->pieceBBS[ROOK][side] & BBS::FileMasks8[f]) > 1) {
@@ -328,6 +350,7 @@ namespace Eval {
 				}
 			}
 
+			Bitboard pceBoard = pos->pieceBBS[pce][side];
 
 			while (pceBoard) {
 
@@ -335,10 +358,9 @@ namespace Eval {
 				int r = sq / 8;
 				int f = sq % 8;
 
-				if (pce == KNIGHT || pce == BISHOP) {
+				if constexpr (pce == KNIGHT || pce == BISHOP) {
 					// Save the squares that the piece attacks.
 					Bitboard attacks = ((pce == KNIGHT) ? BBS::knight_attacks[sq] : Magics::attacks_bb<BISHOP>(sq, occupied));
-					eval.attacks[pce][side] |= attacks;
 				
 					// Bonus for being able to reach an outpost on the next move.
 					int num_reachable_outposts = countBits(attacks & outpost_mask);
@@ -346,7 +368,7 @@ namespace Eval {
 					eg += reachable_outpost[EG] * num_reachable_outposts;
 				
 					// Bishop specific eval.
-					if (pce == BISHOP) {
+					if constexpr (pce == BISHOP) {
 				
 						// Bonus for being on the same diagonal or anti-diagonal as the enemy queen.
 						if (((BBS::diagonalMasks[7 + r - f] | BBS::antidiagonalMasks[r + f]) & pos->pieceBBS[QUEEN][Them]) != 0) {
@@ -390,10 +412,9 @@ namespace Eval {
 					continue;
 				}
 
-				if (pce == ROOK) {
+				if constexpr (pce == ROOK) {
 					// Get the squares that the rook attacks.
 					Bitboard attacks = Magics::attacks_bb<ROOK>(sq, occupied);
-					eval.attacks[ROOK][side] |= attacks;
 				
 					// Give bonus for being aligned with the queen.
 					if (((BBS::RankMasks8[r] | BBS::FileMasks8[f]) & pos->pieceBBS[QUEEN][Them]) != 0) {
@@ -414,7 +435,7 @@ namespace Eval {
 					}
 					
 					// If we're not on an open file, see if we're on a semi-open one and score accordingly.
-					else if (((pos->pieceBBS[PAWN][Them]) & BBS::FileMasks8[f]) == 0) {
+					else if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0) {
 						mg += rook_semi_open_file[MG];
 						eg += rook_semi_open_file[EG];
 					}
@@ -433,10 +454,9 @@ namespace Eval {
 				}
 
 
-				if (pce == QUEEN) {
+				if constexpr (pce == QUEEN) {
 					// Get the squares that the queen attacks
 					Bitboard attacks = Magics::attacks_bb<QUEEN>(sq, occupied);
-					eval.attacks[QUEEN][side] |= attacks;
 				
 					// Give a penalty for early queen development. This is done by multiplying a factor with the amount of minor pieces on the first rank.
 					if (r != first_rank) {
@@ -447,6 +467,19 @@ namespace Eval {
 					if ((attacks & enemy_kingRing) != 0) {
 						mg += queen_on_kingring[MG];
 						eg += queen_on_kingring[EG];
+					}
+
+					// Give penalty for an attacked queen
+					if (((eval.attacks[PAWN][Them] | 
+						eval.attacks[KNIGHT][Them] | 
+						eval.attacks[BISHOP][Them] | 
+						eval.attacks[ROOK][Them] | 
+						eval.attacks[QUEEN][Them])
+						& (uint64_t(1) << sq)) != 0) {
+
+						mg -= threatened_queen[MG];
+						eg -= threatened_queen[EG];
+
 					}
 				
 					continue;
@@ -481,7 +514,6 @@ namespace Eval {
 			Bitboard attacks = 0; // All attacks from all pieces of type pce used to populate the bitmasks in Eval
 			Bitboard piece_attacks = 0; // Individual piece attacks.
 
-			Bitboard friends = pos->all_pieces[side];
 			Bitboard pceBoard = pos->pieceBBS[pce][side];
 			int sq = 0;
 
@@ -871,7 +903,7 @@ void Eval::Debug::eval_balance() {
 
 
 		if (w_ev == b_ev) {
-			std::cout << "Position " << (p + 1) << "	--->	" << "PASSED" << std::endl;
+			std::cout << "Position " << (p + 1) << "	--->	" << "PASSED:" << " " << w_ev << " == " << b_ev << std::endl;
 			passed++;
 		}
 		else {

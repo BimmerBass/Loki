@@ -173,19 +173,6 @@ namespace PSQT {
 
 
 
-	// This table contains the penalties for storming pawns on the king flank
-	const int pawnStormMg[64] = {
-		0	,	0	,	0	,	0	,	0	,	0	,	0	,	0	,
-		20	,	20	,	20	,	20	,	20	,	20	,	20	,	20	,
-		18	,	18	,	18	,	18	,	18	,	18	,	18	,	18	,
-		15	,	15	,	15	,	15	,	15	,	15	,	15	,	15	,
-		9	,	9	,	9	,	9	,	9	,	9	,	9	,	9	,
-		3	,	3	,	3	,	3	,	3	,	3	,	3	,	3	,
-		0	,	0	,	0	,	0	,	0	,	0	,	0	,	0	,
-		0	,	0	,	0	,	0	,	0	,	0	,	0	,	0
-	};
-
-
 
 	// This is to make the psqt give the same values for black pieces. For example square a1 for white corresponds to square h8 for black.
 	const int Mirror64[64] = {
@@ -260,6 +247,31 @@ namespace PSQT {
 		S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,	S(40, 80)	,
 		S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,	S(50, 100)	,
 		S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0) 	,	S(0, 0)
+	};
+
+
+	const Score king_pawn_distance_penalty[8] = {
+		S(0, 0),
+		S(0, 0),
+		S(0, 0),
+		S(5, 5),
+		S(10, 10),
+		S(20, 20),
+		S(25, 30),
+		S(30, 45)
+	};
+
+
+	// This table contains the penalties for storming pawns on the king flank
+	const Score pawnStorm[64] = {
+		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,
+		S(15, 40)	,	S(15, 40)	,	S(15, 40)	,	S(15, 40)	,	S(15, 40)	,	S(15, 40)	,	S(15, 40)	,	S(15, 40)	,
+		S(13, 36)	,	S(13, 36)	,	S(13, 36)	,	S(13, 36)	,	S(13, 36)	,	S(13, 36)	,	S(13, 36)	,	S(13, 36)	,
+		S(12, 30)	,	S(12, 30)	,	S(12, 30)	,	S(12, 30)	,	S(12, 30)	,	S(12, 30)	,	S(12, 30)	,	S(12, 30)	,
+		S(9, 18)	,	S(9, 18)	,	S(9, 18)	,	S(9, 18)	,	S(9, 18)	,	S(9, 18)	,	S(9, 18)	,	S(9, 18)	,
+		S(3, 6)		,	S(3, 6)		,	S(3, 6)		,	S(3, 6)		,	S(3, 6)		,	S(3, 6)		,	S(3, 6)		,	S(3, 6)		,
+		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,
+		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)
 	};
 
 #undef S

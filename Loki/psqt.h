@@ -62,7 +62,9 @@ namespace PSQT {
 	extern const Score safety_table[100];
 
 	extern const int castledPawnAdvancementMg[64];
-	extern const int pawnStormMg[64];
+	extern const Score pawnStorm[64];
+
+	extern const Score king_pawn_distance_penalty[8];
 
 	void initManhattanDistance();
 

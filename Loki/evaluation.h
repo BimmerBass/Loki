@@ -154,6 +154,7 @@ constexpr int rook_behind_passer = 90;
 
 constexpr int queen_on_kingring[2] = { 3, 9 };
 constexpr int queen_development_penalty = 5; // Only used in the middlegame.
+constexpr int threatened_queen[2] = { 90, 90 };
 
 
 /*
@@ -161,8 +162,8 @@ constexpr int queen_development_penalty = 5; // Only used in the middlegame.
 King evaluation constants
 
 */
-constexpr int king_open_file_penalty = 50;
-constexpr int king_semi_open_file_penalty = 25;
-
+constexpr int king_open_file_penalty = 100;
+constexpr int king_semi_open_file_penalty = 50;
+constexpr int pawnless_flank[2] = { 150, 250 };
 
 #endif
