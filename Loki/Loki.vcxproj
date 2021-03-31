@@ -165,6 +165,7 @@
     <ClCompile Include="psqt.cpp" />
     <ClCompile Include="search.cpp" />
     <ClCompile Include="see.cpp" />
+    <ClCompile Include="texel.cpp" />
     <ClCompile Include="thread.cpp" />
     <ClCompile Include="transposition.cpp" />
     <ClCompile Include="uci.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="psqt.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="search_const.h" />
+    <ClInclude Include="texel.h" />
     <ClInclude Include="thread.h" />
     <ClInclude Include="transposition.h" />
     <ClInclude Include="uci.h" />

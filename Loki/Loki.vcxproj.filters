@@ -63,6 +63,9 @@
     <ClCompile Include="see.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="texel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitboard.h">
@@ -111,6 +114,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_positions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="texel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

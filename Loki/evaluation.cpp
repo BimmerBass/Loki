@@ -140,16 +140,16 @@ namespace Eval {
 			while (our_pawns) {
 				sq = PopBit(&our_pawns);
 			
-				mg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg();
-				eg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg();
+				mg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg;
+				eg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg;
 			}
 			
 			
 			while (their_pawns) {
 				sq = PopBit(&their_pawns);
 			
-				mg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].mg();
-				eg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].eg();
+				mg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].mg;
+				eg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
 			}
 
 
@@ -199,7 +199,7 @@ namespace Eval {
 			// Now we'll gather information on attack units. We know all attackers and attack units from the calculated mobility.
 			// We'll only use the safety table if there are more than one attacker and if the opponent has a queen.
 			if (eval.king_zone_attackers[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
-				mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg();
+				mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg;
 				//eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg();
 			}
 
@@ -548,8 +548,8 @@ namespace Eval {
 					attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 9);
 					
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
 				}
 
 				else if constexpr (pce == BISHOP) {
@@ -569,8 +569,8 @@ namespace Eval {
 					attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 15);
 
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
 				}
 
 				else if constexpr (pce == ROOK) {
@@ -589,8 +589,8 @@ namespace Eval {
 
 					attack_cnt = countBits(piece_attacks);
 
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg();
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg();
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
 				}
 
 				else if constexpr (pce == QUEEN) {
@@ -611,8 +611,8 @@ namespace Eval {
 					attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 29);
 
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg() / 2;
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg() / 2;
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg / 2;
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg / 2;
 				}
 
 				else { // Just in case we went into the loop without a proper piece-type.

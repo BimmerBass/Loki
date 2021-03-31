@@ -8,19 +8,19 @@ namespace PSQT {
 	class Score {
 	public:
 		Score(int m, int e) {
-			mgVal = m; egVal = e;
+			mg = m; eg = e;
+		
 		}
 
-		int mg() const {
-			return mgVal;
-		}
-		int eg() const {
-			return egVal;
+		Score (const Score &s){
+			mg = s.mg;
+			eg = s.eg;
 		}
 
-	private:
-		int mgVal = 0;
-		int egVal = 0;
+		Score() {};
+
+		int mg = 0;
+		int eg = 0;
 	};
 
 	/*
