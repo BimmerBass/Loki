@@ -75,9 +75,8 @@ namespace Texel {
 
 	void Tune(Parameters tuning_vars, std::string epd_file, int iterations = 100);
 
-	// Instead of Österlunds tuning, we use the sigmoid from Ethereal which is based on Eulers constant instead of 10.
 	inline double sigmoid(int eval, double k) {
-		return (1.0 / (1.0 + std::exp(-k * double(eval))));
+		return (1.0 / (1.0 + std::pow(10, - (k*double(eval)) / 400.0)));
 	}
 }
 

@@ -69,11 +69,12 @@ namespace Texel {
 			// Step 1. Parse the fen.
 			pos->parseFen((*EPDS)[i].fen);
 
-			// Step 2. Evaluate
+			// Step 2. Evaluate and make the result relative to white
 			value = Eval::evaluate(pos);
+			value *= (pos->side_to_move == WHITE) ? 1 : -1;
 
 			// Step 3. Square the difference between the game result and the eval, and add this to the sum.
-			*sum += ((*EPDS)[i].game_result - sigmoid(value, k));
+			*sum += std::pow(((*EPDS)[i].game_result - sigmoid(value, k)), 2.0);
 		}
 
 		delete pos;
@@ -149,32 +150,34 @@ namespace Texel {
 
 		std::cout << "Initial error: " << best_error << std::endl;
 
+		
 		for (int i = 0; i <= k_precision; i++) {
-
 			std::cout << "Iteration " << (i + 1) << ": " << std::endl;
-
+			
 			double unit = std::pow(10.0, -i);
 			double range = 10.0 * unit;
-
+			
 			double k_max = best_k + range;
+			
+			for (double k = std::max(best_k - range, 0.0); k <= k_max; k += unit) {
 
-			for (double k = std::max(0.0, best_k - range); k <= k_max; k += unit) {
 				double error = mean_squared_error(EPDS, k);
-
+			
 				std::cout << "Error of K = " << k << ": " << error << std::endl;
-
+			
 				if (error < best_error) {
 					best_error = error;
 					best_k = k;
 				}
-
+			
 			}
-
+			
 			std::cout << "[+] Best K at iteration " << (i + 1) << ": " << best_k << " with error E = " << best_error << std::endl;
 		}
 
 		std::cout << "Optimal K = " << best_k << std::endl;
 
+		
 		return best_k;
 	}
 
