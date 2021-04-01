@@ -26,17 +26,48 @@ namespace Eval {
 
 		*/
 
-		template<SIDE side, GamePhase phase>
-		int material(GameState_t* pos) {
-			int v = 0;
+		//template<SIDE side, GamePhase phase>
+		//int material(GameState_t* pos) {
+		//	int v = 0;
+		//
+		//	v += ((phase == MG) ? pawnValMg : pawnValEg) * countBits(pos->pieceBBS[PAWN][side]);
+		//	v += ((phase == MG) ? knightValMg : knightValEg) * countBits(pos->pieceBBS[KNIGHT][side]);
+		//	v += ((phase == MG) ? bishopValMg : bishopValEg) * countBits(pos->pieceBBS[BISHOP][side]);
+		//	v += ((phase == MG) ? rookValMg : rookValEg) * countBits(pos->pieceBBS[ROOK][side]);
+		//	v += ((phase == MG) ? queenValMg : queenValEg) * countBits(pos->pieceBBS[QUEEN][side]);
+		//	
+		//	return v;
+		//}
+		template<SIDE side>
+		void material(GameState_t* pos, Evaluation& eval) {
 
-			v += ((phase == MG) ? pawnValMg : pawnValEg) * countBits(pos->pieceBBS[PAWN][side]);
-			v += ((phase == MG) ? knightValMg : knightValEg) * countBits(pos->pieceBBS[KNIGHT][side]);
-			v += ((phase == MG) ? bishopValMg : bishopValEg) * countBits(pos->pieceBBS[BISHOP][side]);
-			v += ((phase == MG) ? rookValMg : rookValEg) * countBits(pos->pieceBBS[ROOK][side]);
-			v += ((phase == MG) ? queenValMg : queenValEg) * countBits(pos->pieceBBS[QUEEN][side]);
-			
-			return v;
+			int mg = 0;
+			int eg = 0;
+
+			// Step 1. Get the number of each material type
+			int pawnCnt = countBits(pos->pieceBBS[PAWN][side]);
+			int knightCnt = countBits(pos->pieceBBS[KNIGHT][side]);
+			int bishopCnt = countBits(pos->pieceBBS[BISHOP][side]);
+			int rookCnt = countBits(pos->pieceBBS[ROOK][side]);
+			int queenCnt = countBits(pos->pieceBBS[QUEEN][side]);
+
+			// Step 2. Add middlegame values
+			mg += pawnCnt * pawnValMg;
+			mg += knightCnt * knightValMg;
+			mg += bishopCnt * bishopValMg;
+			mg += rookCnt * rookValMg;
+			mg += queenCnt * queenValMg;
+
+			// Step 3. Add endgame values
+			eg += pawnCnt * pawnValEg;
+			eg += knightCnt * knightValEg;
+			eg += bishopCnt * bishopValEg;
+			eg += rookCnt * rookValEg;
+			eg += queenCnt * queenValEg;
+
+			// Step 4. Add the values to eval and make it side-dependent
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
@@ -67,25 +98,49 @@ namespace Eval {
 		}
 
 
-		template<SIDE side, GamePhase phase>
-		int psqt(GameState_t* pos) {
-			int v = 0;
+		template<SIDE side>
+		void psqt(GameState_t* pos, Evaluation& eval) {
+			int mg = 0;
+			int eg = 0;
 
-			Bitboard pceBrd = 0;
-			int sq = 0;
+			Bitboard pceBoard = 0;
+			int sq = NO_SQ;
 
 			for (int pce = PAWN; pce <= KING; pce++) {
-				pceBrd = pos->pieceBBS[pce][side];
+				pceBoard = pos->pieceBBS[pce][side];
 
-				while (pceBrd) {
-					sq = PopBit(&pceBrd);
+				while (pceBoard) {
+					sq = PopBit(&pceBoard);
 
-					v += addPsqtVal<side, phase>(pce, sq);
+					mg += addPsqtVal<side, MG>(pce, sq);
+					eg += addPsqtVal<side, EG>(pce, sq);
 				}
 			}
 
-			return v;
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
 		}
+
+
+		//template<SIDE side, GamePhase phase>
+		//int psqt(GameState_t* pos) {
+		//	int v = 0;
+		//
+		//	Bitboard pceBrd = 0;
+		//	int sq = 0;
+		//
+		//	for (int pce = PAWN; pce <= KING; pce++) {
+		//		pceBrd = pos->pieceBBS[pce][side];
+		//
+		//		while (pceBrd) {
+		//			sq = PopBit(&pceBrd);
+		//
+		//			v += addPsqtVal<side, phase>(pce, sq);
+		//		}
+		//	}
+		//
+		//	return v;
+		//}
 
 
 		/*
@@ -721,40 +776,49 @@ namespace Eval {
 	int evaluate(GameState_t* pos) {
 		int v = 0;
 
-		// Material draw check (~22 elo)
+		// Step 1. Material draw check (~22 elo)
 		if (material_draw(pos)) {
 			return 0;
 		}
 
-		// Create an evaluation object holding the middlegame and endgamescore separately.
-		Evaluation eval(mg_evaluate(pos), eg_evaluate(pos));
+		// Step 2. Create an evaluation object holding the middlegame and endgame score separately.
+		//Evaluation eval(mg_evaluate(pos), eg_evaluate(pos));
+		Evaluation eval(0, 0);
 
-		// Calculate the material imbalance of the position. Looses 25 elo atm.
+		// Step 3. Material evaluation
+		material<WHITE>(pos, eval); material<BLACK>(pos, eval);
+
+		// Step 4. Piece-square tables
+		psqt<WHITE>(pos, eval); psqt<BLACK>(pos, eval);
+
+		// Step 5. Calculate the material imbalance of the position. Looses 25 elo atm.
 		//imbalance<WHITE>(pos, eval); imbalance<BLACK>(pos, eval);
 
-		// Pawn structure evaluation
+		// Step 6. Pawn structure evaluation
 		pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
 		
-		// Space evaluation
+		// Step 7. Space evaluation
 		space<WHITE>(pos, eval); space<BLACK>(pos, eval);
 
-		// Evaluate mobility (~)
+		// Step 8. Evaluate mobility (~)
 		mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
 		mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
 		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
 		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
 		
-		// Simple king safety evaluation (~47 elo)
+		// Step 9. Simple king safety evaluation (~47 elo)
 		//king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
-		// Piece evaluations --> loses elo (~-23) at the moment
+		// Step 10. Piece evaluations --> loses elo (~-23) at the moment
 		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
 		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
 		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
 		//pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
 
+		// Step 11. Interpolate between the middlegame and endgame scores
 		v = eval.interpolate(pos);
 
+		// Step 12. Add a tempo for the side to move and make the score side-relative.
 		v += (pos->side_to_move == WHITE) ? tempo : -tempo;
 
 		v *= (pos->side_to_move == WHITE) ? 1 : -1;
@@ -764,23 +828,23 @@ namespace Eval {
 	}
 
 
-	int mg_evaluate(GameState_t* pos) {
-		int v = 0;
-
-		v += (material<WHITE, MG>(pos) - material<BLACK, MG>(pos));
-		v += (psqt<WHITE, MG>(pos) - psqt<BLACK, MG>(pos));
-
-		return v;
-	}
-
-	int eg_evaluate(GameState_t* pos) {
-		int v = 0;
-
-		v += (material<WHITE, EG>(pos) - material<BLACK, EG>(pos));
-		v += (psqt<WHITE, EG>(pos) - psqt<BLACK, EG>(pos));
-
-		return v;
-	}
+	//int mg_evaluate(GameState_t* pos) {
+	//	int v = 0;
+	//
+	//	v += (material<WHITE, MG>(pos) - material<BLACK, MG>(pos));
+	//	v += (psqt<WHITE, MG>(pos) - psqt<BLACK, MG>(pos));
+	//
+	//	return v;
+	//}
+	//
+	//int eg_evaluate(GameState_t* pos) {
+	//	int v = 0;
+	//
+	//	v += (material<WHITE, EG>(pos) - material<BLACK, EG>(pos));
+	//	v += (psqt<WHITE, EG>(pos) - psqt<BLACK, EG>(pos));
+	//
+	//	return v;
+	//}
 
 
 	int phase(GameState_t* pos) {
