@@ -4,8 +4,10 @@
 
 namespace Texel {
 
-
-	// Function responsible for extracting the FEN's and game results from an EPD file.
+	/*
+	Load an EPD file containing the FENs and the game results.
+	*/
+	
 	tuning_positions* load_epd(std::string path) {
 		tuning_positions* positions = new tuning_positions();
 
@@ -58,6 +60,10 @@ namespace Texel {
 		return positions;
 	}
 
+	/*
+		thread_batch is run by each individual thread. It computes the squared differences between a position's eval and the game result, for the particular partition
+		the main thread has alotted to it.
+	*/
 
 	void thread_batch(tuning_positions* EPDS, double k, double* sum) {
 
@@ -80,11 +86,17 @@ namespace Texel {
 		delete pos;
 	}
 
+	/*
+		This function runs eval::evaluate on all positions in the EPD provided and compares the sigmoid of these with the game restult. From this, it
+		computes the error as the sum of the squared differences, divided by the amount of positions.
+	*/
 
 	double mean_squared_error(tuning_positions* EPDS, double k) {
 
 		double sums[EVAL_THREADS] = { 0 };
 		tuning_positions batches[EVAL_THREADS];
+
+
 
 		// Step 1. Partition the positions between the threads
 		int partition_size = EPDS->size() / EVAL_THREADS;
@@ -131,14 +143,30 @@ namespace Texel {
 
 	}
 
+	/*
+		This function changes the parameters in the evaluation function and computes the new error based on the EPD-file provided and the value of k.
+	*/
+
+	double changed_error(Parameters p, std::vector<Score> new_values, tuning_positions* EPDS, double k) {
+
+		assert(p.size() == new_values.size());
+
+		// Step 1. Change the values in p with the ones in new_values
+		for (int i = 0; i < new_values.size(); i++) {
+			p[i].variable->mg = new_values[i].mg;
+			p[i].variable->eg = new_values[i].eg;
+		}
+
+		// Step 2. Compute the new error and return
+		return mean_squared_error(EPDS, k);
+	}
 
 
 
-
-
-
-
-
+	/*
+		This function is called at the start of the tuning run. It will find the value k such that the sigmoid function gets mapped to a win probability based on
+		the existing evaluation function. After that, k will not be changed further.
+	*/
 
 	double optimal_k(tuning_positions* EPDS) {
 		std::cout << "Finding optimal value of K." << std::endl;
@@ -181,5 +209,211 @@ namespace Texel {
 		return best_k;
 	}
 
+
+	/*
+		The main tuning function of the framework. This is responsible for handling the changing of the parameters and the updating of these.
+		In the end, it calls a function to write the results of the tuning session to a .csv file.
+	*/
+
+	void Tune(Parameters tuning_vars, std::string epd_file, int iterations) {
+
+
+		// Step 1. Load the EPD file and create a new vector of tuning data.
+		tuning_positions* EPDS = load_epd(epd_file);
+		TexelStats::TuningData data;
+
+
+		// Step 2. Set up the vector of parameter values, we call it theta here.
+		std::vector<Score> theta;
+
+		for (int p = 0; p < tuning_vars.size(); p++) {
+			theta.push_back(Score(tuning_vars[p].variable->mg, tuning_vars[p].variable->eg));
+		}
+
+
+
+		// Step 3. Compute the optimal value of k
+		double k = optimal_k(EPDS);
+
+
+
+		// Step 4. Calculate SPSA constants
+
+		double BIG_A = 0.1 * double(iterations);
+
+		double c = C_END * std::pow(double(iterations), gamma);
+		double a_end = R_END * std::pow(c, 2.0);
+		double a = a_end * std::pow(BIG_A + double(iterations), alpha);
+
+
+
+		// Step 5. Run the tuning with the given number of iterations
+		std::cout << "\n[*] Initialization complete. Starting AdamSPSA tuning session for " << iterations << " iterations." << std::endl;
+
+		std::vector<Score> theta_plus;
+		std::vector<Score> theta_minus;
+
+		std::vector<Score> delta; // Initialize perturbation vector.
+
+		double g_hat_mg = 0.0;
+		double g_hat_eg = 0.0;
+
+		double an = 0.0;
+		double cn = 0.0;
+
+		for (int n = 0; n < iterations; n++) {
+
+			// Step 5A. Compute the current error. This is only used for outputting the progress.
+			double error = changed_error(tuning_vars, theta, EPDS, k);
+
+			data.push_back(TexelStats::DataPoint(n + 1, error, Score(g_hat_mg, g_hat_eg), Score(abs(an * g_hat_mg), abs(an * g_hat_eg)), theta));
+
+			// Step 5B. Calculate iteration dependent constants
+			an = a / (std::pow(BIG_A + double(n) + 1.0, alpha));
+			cn = c / (std::pow(double(n) + 1, gamma));
+
+
+			std::cout << "[+] Iteration " << (n + 1) << ": an = " << an << ", cn = " << cn << std::endl;
+			std::cout << "[+] Initial error: " << error << std::endl;
+
+			// Clear theta_plus, theta_minus and delta.
+			theta_plus.clear();
+			theta_minus.clear();
+			delta.clear();
+
+
+			// Step 5C. Determine delta and thus theta_plus and theta_minus
+			for (int p = 0; p < tuning_vars.size(); p++) {
+				int d_mg = randemacher();
+				int d_eg = randemacher();
+
+				delta.push_back(Score(d_mg, d_eg)); // Add the scores to the delta vector.
+
+				// Step 5C.1. Compute theta_plus and theta_minus from these values
+				theta_plus.push_back(Score(std::round(theta[p].mg + double(d_mg) * cn), std::round(theta[p].eg + double(d_eg) * cn)));
+				theta_minus.push_back(Score(std::round(theta[p].mg - double(d_mg) * cn), std::round(theta[p].eg - double(d_eg) * cn)));
+			}
+
+			// Step 5D. Compute the error of theta_plus and theta_minus respectively.
+			double theta_plus_error = double(EPDS->size()) * changed_error(tuning_vars, theta_plus, EPDS, k);
+			double theta_minus_error = double(EPDS->size()) * changed_error(tuning_vars, theta_minus, EPDS, k);
+
+			std::cout << "Theta plus error: " << theta_plus_error << ", theta minus error: " << theta_minus_error << std::endl;
+
+
+
+			// Step 5E. Compute the gradient for each variable and adjust accordingly.
+			for (int p = 0; p < tuning_vars.size(); p++) {
+
+				g_hat_mg = (theta_plus_error - theta_minus_error) / (2.0 * cn * double(delta[p].mg));
+				g_hat_eg = (theta_plus_error - theta_minus_error) / (2.0 * cn * double(delta[p].eg));
+
+				// Now adjust the theta values based on the gradient.
+				theta[p].mg -= std::round(an * g_hat_mg);
+				theta[p].eg -= std::round(an * g_hat_eg);
+
+				// Lastly, we'll have to make sure that we don't go out of the designated bounds
+				theta[p].mg = std::max(tuning_vars[p].min_value.mg, std::min(tuning_vars[p].max_value.mg, theta[p].mg));
+				theta[p].eg = std::max(tuning_vars[p].min_value.eg, std::min(tuning_vars[p].max_value.eg, theta[p].eg));
+			}
+
+			// Step 5F. Display the current values.
+			std::cout << "Values after " << (n + 1) << " iterations: " << std::endl;
+			
+			for (int p = 0; p < tuning_vars.size(); p++) {
+				std::cout << "[" << (p + 1) << "]: mg = " << theta[p].mg << ",	eg = " << theta[p].eg << ",		(Original: [" << tuning_vars[p].original_value.mg 
+					<< ", " << tuning_vars[p].original_value.eg << "])" << std::endl;
+			}
+
+			std::cout << "\n\n";
+		}
+
+		delete EPDS;
+
+
+		// Step 6. Write the results to a .csv file.
+		TexelStats::write_csv(data);
+	}
+
+
+
+
+
+	/*
+		This method writes all tuning results (error, resulting values, gradients etc..) to a .csv file named "LokiTexel-<date and time>.csv"
+	*/
+	void TexelStats::write_csv(TexelStats::TuningData data) {
+
+		// Step 1. Create the filename
+		std::string date_time = getDateTime();
+		std::string filename = "LokiTexel-" + date_time + ".csv";
+
+
+		// Step 2. Create the file.
+		std::ofstream outFile(filename);
+
+
+		// Step 3. Write all the data.
+
+
+		// Step 3A. Write iterations.
+		outFile << "Iteration; ";
+
+		outFile << data[0].iteration;
+
+		for (int i = 1; i < data.size(); i++) {
+			outFile << ";" << data[i].iteration;
+		}
+		outFile << "\n";
+
+
+		// Step 3B. Write the gradient
+
+		// Step 3B.1. Write the middlegame gradient
+		outFile << "Gradient MG;";
+		outFile << data[0].gradient.mg;
+
+		for (int i = 1; i < data.size(); i++) {
+			outFile << ";" << data[i].gradient.mg;
+		}
+		outFile << "\n";
+
+		// Step 3B.1. Write the endgame gradient
+		outFile << "Gradient EG;";
+		outFile << data[0].gradient.eg;
+
+		for (int i = 1; i < data.size(); i++) {
+			outFile << ";" << data[i].gradient.eg;
+		}
+		outFile << "\n";
+
+
+
+		// Step 3C. Write the variable's values.
+
+		for (int v = 0; v < data[0].values.size(); v++) {
+
+			// Step 3C.1. Write middlegame data first.
+			outFile << "Variable " << (v + 1) << " MG;";
+			outFile << data[0].values[v].mg;
+
+			for (int i = 0; i < data.size(); i++) {
+				outFile << ";" << data[i].values[v].mg;
+			}
+			outFile << "\n";
+
+
+			// Step 3C.1. Write endgame data first.
+			outFile << "Variable " << (v + 1) << " EG;";
+			outFile << data[0].values[v].eg;
+
+			for (int i = 0; i < data.size(); i++) {
+				outFile << ";" << data[i].values[v].eg;
+			}
+			outFile << "\n";
+
+		}
+
+	}
 
 }

@@ -611,8 +611,10 @@ namespace Eval {
 					attack_cnt = countBits(piece_attacks);
 					assert(attack_cnt < 29);
 
-					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg / 2;
-					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg / 2;
+					//mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg / 2;
+					//eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg / 2;
+					mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
+					eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
 				}
 
 				else { // Just in case we went into the loop without a proper piece-type.

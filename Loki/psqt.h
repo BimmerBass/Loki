@@ -53,7 +53,7 @@ namespace PSQT {
 
 	extern int ManhattanDistance[64][64];
 	
-	extern const std::vector<std::vector<Score>> mobilityBonus;
+	extern std::vector<std::vector<Score>> mobilityBonus;
 
 
 	/*
