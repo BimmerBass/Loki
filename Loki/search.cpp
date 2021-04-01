@@ -101,7 +101,7 @@ bool is_passed(int fromSq, GameState_t* pos) {
 
 // The razoring margin should rise with depth, and on top of that, we do not want to prune too aggresively if our eval is improving
 int razoring_margin(int depth, bool i) {
-	return (2 * Eval::pawnValMg + (depth - 1) * (Eval::pawnValMg / 2)) + ((i == true) ? 100 : 0);
+	return (2 * Eval::pawn_value.mg + (depth - 1) * (Eval::pawn_value.mg / 2)) + ((i == true) ? 100 : 0);
 }
 
 
@@ -1134,7 +1134,7 @@ void uci_moveinfo(int move, int depth, int index) {
 
 
 int to_cp(int score) {
-	return score * (100 / Eval::pawnValMg);
+	return score * (100 / Eval::pawn_value.mg);
 }
 
 int to_mate(int score) {
@@ -1185,7 +1185,7 @@ void Search::INIT() {
 		for (int lead = 0; lead < 2000; lead++) {
 			// This is set so as to not reduce by more than six plies under any circumstance
 			//NM_Reductions[d][lead] = ((d > 6) ? 3 : 2) + std::max(0, std::min(3, (int)std::round(1.5 * std::log(std::pow(lead / 100, 2)))));
-			NM_Reductions[d][lead] = (int)std::round(1.5 + 0.25 * double(d) + std::min(3.0, double(lead) / (2.0 * (double)Eval::pawnValMg)));
+			NM_Reductions[d][lead] = (int)std::round(1.5 + 0.25 * double(d) + std::min(3.0, double(lead) / (2.0 * (double)Eval::pawn_value.mg)));
 		}
 	}
 }

@@ -12,9 +12,12 @@ int main() {
 
 	UCI::UCI_loop();
 
-	//Texel::tuning_positions* p = Texel::load_epd("C:\\Users\\abild\\Desktop\\quiet-labeled.epd");
-	//
-	//std::cout << "Number of positions: " << p->size() << std::endl;
+	//Texel::Parameters tuning_variables;
+
+
+	//tuning_variables.push_back(Texel::Parameter(&Eval::queen_value, Score(INF, INF), Score(0, 0)));
+
+	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 1000);
 
 	//Texel::Parameters tunings;
 	//

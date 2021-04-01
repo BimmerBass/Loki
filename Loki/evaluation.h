@@ -60,21 +60,17 @@ namespace Eval {
 		return (BBS::king_attacks[kingSq] | (uint64_t(1) << kingSq));
 	}
 
-	enum pieceValues : int {
-		pawnValMg = 100,
-		knightValMg = 320,
-		bishopValMg = 350,
-		rookValMg = 500,
-		queenValMg = 900,
-		kingValMg = 20000,
 
-		pawnValEg = 100,
-		knightValEg = 320,
-		bishopValEg = 350,
-		rookValEg = 500,
-		queenValEg = 900,
-		kingValEg = 20000
-	};
+	/*
+	
+	These are the piece values Loki uses.
+	
+	*/
+	const PSQT::Score pawn_value(98, 108);
+	const PSQT::Score knight_value(405, 393);
+	const PSQT::Score bishop_value(415, 381);
+	const PSQT::Score rook_value(526, 625);
+	const PSQT::Score queen_value(1120, 1306);
 
 	/*
 	
@@ -99,8 +95,8 @@ Constants --- NOTE: If a constant doesn't end with "_penalty" it is a bonus unle
 
 */
 constexpr int tempo = 18;
-const int max_material[2] = { Eval::queenValMg + 2 * Eval::rookValMg + 2 * Eval::bishopValMg + 2 * Eval::knightValMg,
-							Eval::queenValEg + 2 * Eval::rookValEg + 2 * Eval::bishopValEg + 2 * Eval::knightValEg };
+const int max_material[2] = { Eval::queen_value.mg + 2 * Eval::rook_value.mg + 2 * Eval::bishop_value.mg + 2 * Eval::knight_value.mg,
+							Eval::queen_value.eg + 2 * Eval::rook_value.eg + 2 * Eval::bishop_value.eg + 2 * Eval::knight_value.eg };
 
 
 /*
@@ -108,9 +104,9 @@ const int max_material[2] = { Eval::queenValMg + 2 * Eval::rookValMg + 2 * Eval:
 Imbalance constants --- These values are taken directly from Larry Kaufman's article: "Evaluation of material imbalances"
 
 */
-constexpr int bishop_pair[2] = { Eval::pawnValMg / 2, Eval::pawnValEg / 2 };
-constexpr int knight_pawn_penalty[2] = { Eval::pawnValMg / 16, Eval::pawnValEg / 16 };
-constexpr int rook_pawn_bonus[2] = { Eval::pawnValMg / 8, Eval::pawnValEg / 8 };
+const int bishop_pair[2] = { Eval::pawn_value.mg / 2, Eval::pawn_value.eg / 2 };
+const int knight_pawn_penalty[2] = { Eval::pawn_value.mg / 16, Eval::pawn_value.eg / 16 };
+const int rook_pawn_bonus[2] = { Eval::pawn_value.mg / 8, Eval::pawn_value.eg / 8 };
 
 /*
 

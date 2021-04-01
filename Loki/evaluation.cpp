@@ -52,18 +52,29 @@ namespace Eval {
 			int queenCnt = countBits(pos->pieceBBS[QUEEN][side]);
 
 			// Step 2. Add middlegame values
-			mg += pawnCnt * pawnValMg;
-			mg += knightCnt * knightValMg;
-			mg += bishopCnt * bishopValMg;
-			mg += rookCnt * rookValMg;
-			mg += queenCnt * queenValMg;
-
+			mg += pawnCnt * pawn_value.mg;
+			mg += knightCnt * knight_value.mg;
+			mg += bishopCnt * bishop_value.mg;
+			mg += rookCnt * rook_value.mg;
+			mg += queenCnt * queen_value.mg;
+			//mg += pawnCnt * pawnValMg;
+			//mg += knightCnt * knightValMg;
+			//mg += bishopCnt * bishopValMg;
+			//mg += rookCnt * rookValMg;
+			//mg += queenCnt * queenValMg;
+			//
 			// Step 3. Add endgame values
-			eg += pawnCnt * pawnValEg;
-			eg += knightCnt * knightValEg;
-			eg += bishopCnt * bishopValEg;
-			eg += rookCnt * rookValEg;
-			eg += queenCnt * queenValEg;
+			eg += pawnCnt * pawn_value.eg;
+			eg += knightCnt * knight_value.eg;
+			eg += bishopCnt * bishop_value.eg;
+			eg += rookCnt * rook_value.eg;
+			eg += queenCnt * queen_value.eg;
+
+			//eg += pawnCnt * pawnValEg;
+			//eg += knightCnt * knightValEg;
+			//eg += bishopCnt * bishopValEg;
+			//eg += rookCnt * rookValEg;
+			//eg += queenCnt * queenValEg;
 
 			// Step 4. Add the values to eval and make it side-dependent
 			eval.mg += (side == WHITE) ? mg : -mg;
@@ -156,12 +167,12 @@ namespace Eval {
 			assert(p == MG || p == EG);
 
 			if constexpr (p == MG) {
-				return knightValMg * countBits(pos->pieceBBS[KNIGHT][side]) + bishopValMg * countBits(pos->pieceBBS[BISHOP][side]) + rookValMg * countBits(pos->pieceBBS[ROOK][side])
-					+ queenValMg * countBits(pos->pieceBBS[QUEEN][side]);
+				return knight_value.mg * countBits(pos->pieceBBS[KNIGHT][side]) + bishop_value.mg * countBits(pos->pieceBBS[BISHOP][side]) + rook_value.mg * countBits(pos->pieceBBS[ROOK][side])
+					+ queen_value.mg * countBits(pos->pieceBBS[QUEEN][side]);
 			}
 			else {
-				return knightValEg * countBits(pos->pieceBBS[KNIGHT][side]) + bishopValEg * countBits(pos->pieceBBS[BISHOP][side]) + rookValEg * countBits(pos->pieceBBS[ROOK][side])
-					+ queenValEg * countBits(pos->pieceBBS[QUEEN][side]);
+				return knight_value.eg * countBits(pos->pieceBBS[KNIGHT][side]) + bishop_value.eg * countBits(pos->pieceBBS[BISHOP][side]) + rook_value.eg * countBits(pos->pieceBBS[ROOK][side])
+					+ queen_value.eg * countBits(pos->pieceBBS[QUEEN][side]);
 			}
 		}
 
