@@ -367,9 +367,18 @@ namespace Texel {
 		outFile << "\n";
 
 
-		// Step 3B. Write the gradient
+		// Step 3B. Write error values
+		outFile << "Error; ";
+		outFile << data[0].error;
 
-		// Step 3B.1. Write the middlegame gradient
+		for (int i = 1; i < data.size(); i++) {
+			outFile << ";" << data[i].error;
+		}
+		outFile << "\n";
+
+		// Step 3C. Write the gradient
+
+		// Step 3C.1. Write the middlegame gradient
 		outFile << "Gradient MG;";
 		outFile << data[0].gradient.mg;
 
@@ -378,7 +387,7 @@ namespace Texel {
 		}
 		outFile << "\n";
 
-		// Step 3B.1. Write the endgame gradient
+		// Step 3C.1. Write the endgame gradient
 		outFile << "Gradient EG;";
 		outFile << data[0].gradient.eg;
 
@@ -389,11 +398,11 @@ namespace Texel {
 
 
 
-		// Step 3C. Write the variable's values.
+		// Step 3D. Write the variable's values.
 
 		for (int v = 0; v < data[0].values.size(); v++) {
 
-			// Step 3C.1. Write middlegame data first.
+			// Step 3D.1. Write middlegame data first.
 			outFile << "Variable " << (v + 1) << " MG;";
 			outFile << data[0].values[v].mg;
 
@@ -403,11 +412,11 @@ namespace Texel {
 			outFile << "\n";
 
 
-			// Step 3C.1. Write endgame data first.
+			// Step 3D.1. Write endgame data first.
 			outFile << "Variable " << (v + 1) << " EG;";
 			outFile << data[0].values[v].eg;
 
-			for (int i = 0; i < data.size(); i++) {
+			for (int i = 1; i < data.size(); i++) {
 				outFile << ";" << data[i].values[v].eg;
 			}
 			outFile << "\n";
