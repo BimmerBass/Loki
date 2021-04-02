@@ -26,23 +26,19 @@ namespace PSQT {
 	/*
 	Piece square table
 	*/
-	extern const int PawnTableMg[64];
-	extern const int PawnTableEg[64];
 
-	extern const int KnightTableMg[64];
-	extern const int KnightTableEg[64];
+	extern const Score PawnTable[64];
 
-	extern const int BishopTableMg[64];
-	extern const int BishopTableEg[64];
+	extern const Score KnightTable[64];
 
-	extern const int RookTableMg[64];
-	extern const int RookTableEg[64];
+	extern const Score BishopTable[64];
 
-	extern const int QueenTableMg[64];
-	extern const int QueenTableEg[64];
+	extern const Score RookTable[64];
 
-	extern const int KingTableMg[64];
-	extern const int KingTableEg[64];
+	extern const Score QueenTable[64];
+
+	extern const Score KingTable[64];
+
 
 	/*
 	Other square tables
@@ -53,7 +49,7 @@ namespace PSQT {
 
 	extern int ManhattanDistance[64][64];
 	
-	extern std::vector<std::vector<Score>> mobilityBonus;
+	extern const std::vector<std::vector<Score>> mobilityBonus;
 
 
 	/*

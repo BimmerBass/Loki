@@ -19,9 +19,9 @@ namespace Eval {
 
 	namespace {
 
-		
+
 		/*
-		
+
 		Material evaluations
 
 		*/
@@ -83,15 +83,16 @@ namespace Eval {
 
 
 		/*
-		
+
 		Piece Square tables
 
 		*/
 
-		const int* middlegameTables[6] = { &PSQT::PawnTableMg[0], &PSQT::KnightTableMg[0], &PSQT::BishopTableMg[0],
-			&PSQT::RookTableMg[0], &PSQT::QueenTableMg[0], &PSQT::KingTableMg[0] };
-		const int* endgameTables[6] = { &PSQT::PawnTableEg[0], &PSQT::KnightTableEg[0], &PSQT::BishopTableEg[0],
-			&PSQT::RookTableEg[0], &PSQT::QueenTableEg[0], &PSQT::KingTableEg[0] };
+		const PSQT::Score* tables[6] = { &PSQT::PawnTable[0], &PSQT::KnightTable[0], &PSQT::BishopTable[0], &PSQT::RookTable[0], &PSQT::QueenTable[0], &PSQT::KingTable[0] };
+		//const int* middlegameTables[6] = { &PSQT::PawnTableMg[0], &PSQT::KnightTableMg[0], &PSQT::BishopTableMg[0],
+		//	&PSQT::RookTableMg[0], &PSQT::QueenTableMg[0], &PSQT::KingTableMg[0] };
+		//const int* endgameTables[6] = { &PSQT::PawnTableEg[0], &PSQT::KnightTableEg[0], &PSQT::BishopTableEg[0],
+		//	&PSQT::RookTableEg[0], &PSQT::QueenTableEg[0], &PSQT::KingTableEg[0] };
 
 		template<SIDE side, GamePhase p>
 		int addPsqtVal(int pce, int sq) {
@@ -103,7 +104,8 @@ namespace Eval {
 			assert(pce >= PAWN && pce < NO_TYPE);
 			assert(PSQT::Mirror64[PSQT::Mirror64[sq]] == sq);
 
-			v += (p == MG) ? middlegameTables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]] : endgameTables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]];
+			//v += (p == MG) ? middlegameTables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]] : endgameTables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]];
+			v += (p == MG) ? tables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]].mg : tables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
 
 			return v;
 		}
@@ -605,7 +607,6 @@ namespace Eval {
 						eval.king_zone_attackers[Them]++; // Increment attackers
 
 						// Add attack units to index the king attack table
-						//eval.king_zone_attack_units[Them] += 2 * countBits(piece_attacks & enemy_king_ring);
 						eval.king_zone_attack_units[Them] += 2;
 					}
 
@@ -626,7 +627,6 @@ namespace Eval {
 						eval.king_zone_attackers[Them]++; // Increment attackers
 
 						// Add attack units to index the king attack table
-						//eval.king_zone_attack_units[Them] += 2 * countBits(piece_attacks & enemy_king_ring);
 						eval.king_zone_attack_units[Them] += 2;
 					}
 
@@ -647,7 +647,6 @@ namespace Eval {
 						eval.king_zone_attackers[Them]++; // Increment attackers
 
 						// Add attack units to index the king attack table
-						//eval.king_zone_attack_units[Them] += 3 * countBits(piece_attacks & enemy_king_ring);
 						eval.king_zone_attack_units[Them] += 3;
 					}
 					
@@ -668,7 +667,6 @@ namespace Eval {
 						eval.king_zone_attackers[Them]++; // Increment attackers
 
 						// Add attack units to index the king attack table
-						//eval.king_zone_attack_units[Them] += 5 * countBits(piece_attacks & enemy_king_ring);
 						eval.king_zone_attack_units[Them] += 5;
 					}
 
@@ -837,25 +835,6 @@ namespace Eval {
 
 		return v;
 	}
-
-
-	//int mg_evaluate(GameState_t* pos) {
-	//	int v = 0;
-	//
-	//	v += (material<WHITE, MG>(pos) - material<BLACK, MG>(pos));
-	//	v += (psqt<WHITE, MG>(pos) - psqt<BLACK, MG>(pos));
-	//
-	//	return v;
-	//}
-	//
-	//int eg_evaluate(GameState_t* pos) {
-	//	int v = 0;
-	//
-	//	v += (material<WHITE, EG>(pos) - material<BLACK, EG>(pos));
-	//	v += (psqt<WHITE, EG>(pos) - psqt<BLACK, EG>(pos));
-	//
-	//	return v;
-	//}
 
 
 	int phase(GameState_t* pos) {

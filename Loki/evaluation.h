@@ -44,10 +44,6 @@ namespace Eval {
 
 	int evaluate(GameState_t* pos);
 
-
-	int mg_evaluate(GameState_t* pos);
-	int eg_evaluate(GameState_t* pos);
-
 	int phase(GameState_t* pos);
 
 	// Returns true if no checkmate can be forced by either side.

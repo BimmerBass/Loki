@@ -1,5 +1,5 @@
-//#include "uci.h"
-#include "texel.h"
+#include "uci.h"
+//#include "texel.h"
 
 
 int main() {
@@ -13,19 +13,13 @@ int main() {
 	UCI::UCI_loop();
 
 	//Texel::Parameters tuning_variables;
-
-
-	//tuning_variables.push_back(Texel::Parameter(&Eval::queen_value, Score(INF, INF), Score(0, 0)));
-
-	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 1000);
-
-	//Texel::Parameters tunings;
-	//
-	//for (int i = 0; i < PSQT::mobilityBonus[3].size(); i++){
-	//	tunings.push_back(Texel::Parameter(&PSQT::mobilityBonus[3][i]));
+	
+	//for (int sq = 0; sq < 64; sq++) {
+	//	tuning_variables.push_back(Texel::Parameter(&PSQT::KingTable[sq], Score(100, 100), Score(-100, -100)));
 	//}
 	//
-	//Texel::Tune(tunings, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 100);
+	//
+	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 1500);
 
 	return 0;
 }
