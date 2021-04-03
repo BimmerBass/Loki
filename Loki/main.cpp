@@ -14,11 +14,11 @@ int main() {
 
 	//Texel::Parameters tuning_variables;
 	//
-	//for (int i = 0; i < PSQT::mobilityBonus[3].size(); i++) {
-	//	tuning_variables.push_back(Texel::Parameter(&PSQT::mobilityBonus[3][i]));
+	//for (int sq = 0; sq < 64; sq++) {
+	//	tuning_variables.push_back(Texel::Parameter(&PSQT::passedPawnTable[sq], Score(200, 200), Score(0, 0)));
 	//}
 	//
-	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 2000);
+	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 1000);
 
 	return 0;
 }

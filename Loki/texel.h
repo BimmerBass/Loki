@@ -54,7 +54,7 @@ namespace Texel {
 	constexpr double alpha = 0.602;
 	constexpr double gamma = 0.101;
 
-	constexpr double R_END = 0.004; // 0.002
+	constexpr double R_END = 0.003; // 0.002
 	constexpr double C_END = 4.0;
 
 	// The two latter values are to be changed for the particular tuning session. A goal is to decide these automatically for each parameter.

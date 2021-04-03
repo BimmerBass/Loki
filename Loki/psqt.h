@@ -55,12 +55,16 @@ namespace PSQT {
 	/*
 	King-safety specific tables
 	*/
-	extern const Score safety_table[100];
+	extern Score safety_table[100];
 
 	extern const int castledPawnAdvancementMg[64];
 	extern const Score pawnStorm[64];
 
 	extern const Score king_pawn_distance_penalty[8];
+
+	extern const Score open_kingfile_penalty[8];
+
+	extern const Score semiopen_kingfile_penalty[8];
 
 	void initManhattanDistance();
 

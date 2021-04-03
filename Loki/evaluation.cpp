@@ -180,6 +180,40 @@ namespace Eval {
 
 
 
+
+		/*
+		
+		Helper function for king_pawns
+		
+		*/
+
+		template<SIDE side>
+		void damaged_shield(GameState_t* pos, Evaluation& eval) {
+			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
+
+			int king_file = pos->king_squares[side] % 8;
+
+			int mg = 0;
+			int eg = 0;
+
+			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
+
+				if ((BBS::FileMasks8[f] & (pos->pieceBBS[PAWN][BLACK] | pos->pieceBBS[PAWN][WHITE])) == 0) {
+					mg -= PSQT::open_kingfile_penalty[f].mg;
+					eg -= PSQT::open_kingfile_penalty[f].eg;
+				}
+
+				else if ((BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]) == 0) {
+					mg -= PSQT::semiopen_kingfile_penalty[f].mg;
+					eg -= PSQT::semiopen_kingfile_penalty[f].eg;
+				}
+			}
+
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
+		}
+
+
 		/*
 		
 		Function for evaluating the pawns around the king.
@@ -190,58 +224,61 @@ namespace Eval {
 		void king_pawns(GameState_t* pos, Evaluation& eval) {
 			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
 
-			int mg = 0;
-			int eg = 0;
-			
-			int kingSq = pos->king_squares[side];
-			int king_file = kingSq % 8;
+			//int mg = 0;
+			//int eg = 0;
+			//
+			//int kingSq = pos->king_squares[side];
+			//int king_file = kingSq % 8;
+			//
+			//Bitboard our_pawns = king_flanks[king_file] & pos->pieceBBS[PAWN][side];
+			//Bitboard their_pawns = king_flanks[king_file] & pos->pieceBBS[PAWN][Them];
+			//
+			//if (our_pawns == 0) { // We have no pawns on the king's flank
+			//	mg -= pawnless_flank[MG]; // Bad safety
+			//	eg -= pawnless_flank[EG]; // King needs to follow the pawns up the board
+			//}
+			//
+			//int sq = NO_SQ;
+			//while (our_pawns) {
+			//	sq = PopBit(&our_pawns);
+			//
+			//	mg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg;
+			//	eg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg;
+			//}
+			//
+			//
+			//while (their_pawns) {
+			//	sq = PopBit(&their_pawns);
+			//
+			//	mg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].mg;
+			//	eg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
+			//}
+			//
+			//
+			//for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
+			//
+			//	if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0 && (pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Open file
+			//		mg -= king_open_file_penalty;
+			//	}
+			//	else if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0 || (pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Semi-open file
+			//		mg -= king_semi_open_file_penalty;
+			//	}
+			//
+			//}
+			//
+			//// Scale down the middlegame score depending on the opponent's material.
+			//mg *= (side == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos);
+			//mg /= max_material[MG];
+			//
+			//// Only store the pawn score in the middlegame if we're not in the central two files.
+			//if (king_file != FILE_E && king_file != FILE_D) {
+			//	eval.mg += (side == WHITE) ? mg : -mg;
+			//}
 
-			Bitboard our_pawns = king_flanks[king_file] & pos->pieceBBS[PAWN][side];
-			Bitboard their_pawns = king_flanks[king_file] & pos->pieceBBS[PAWN][Them];
+			// Open and semi-open files near the king.
+			//damaged_shield<side>(pos, eval);
 
-			if (our_pawns == 0) { // We have no pawns on the king's flank
-				mg -= pawnless_flank[MG]; // Bad safety
-				eg -= pawnless_flank[EG]; // King needs to follow the pawns up the board
-			}
-			
-			int sq = NO_SQ;
-			while (our_pawns) {
-				sq = PopBit(&our_pawns);
-			
-				mg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg;
-				eg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg;
-			}
-			
-			
-			while (their_pawns) {
-				sq = PopBit(&their_pawns);
-			
-				mg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].mg;
-				eg -= PSQT::pawnStorm[(side == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
-			}
-
-
-			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
-			
-				if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0 && (pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Open file
-					mg -= king_open_file_penalty;
-				}
-				else if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0 || (pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Semi-open file
-					mg -= king_semi_open_file_penalty;
-				}
-			
-			}
-
-			// Scale down the middlegame score depending on the opponent's material.
-			mg *= (side == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos);
-			mg /= max_material[MG];
-
-			// Only store the pawn score in the middlegame if we're not in the central two files.
-			if (king_file != FILE_E && king_file != FILE_D) {
-				eval.mg += (side == WHITE) ? mg : -mg;
-			}
-
-			eval.eg += (side == WHITE) ? eg : -eg;
+			//eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
@@ -266,13 +303,13 @@ namespace Eval {
 
 			// Now we'll gather information on attack units. We know all attackers and attack units from the calculated mobility.
 			// We'll only use the safety table if there are more than one attacker and if the opponent has a queen.
-			if (eval.king_zone_attackers[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
-				mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg;
-				//eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg();
-			}
-
-			eval.mg += (side == WHITE) ? mg : -mg;
-			eval.eg += (side == WHITE) ? eg : -eg;
+			//if (eval.king_zone_attackers[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
+			//	mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg;
+			//	eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg;
+			//}
+			//
+			//eval.mg += (side == WHITE) ? mg : -mg;
+			//eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
@@ -283,8 +320,8 @@ namespace Eval {
 		*/
 		template<SIDE side>
 		void pawns(GameState_t* pos, Evaluation& eval) {
-			//int mg = 0;
-			//int eg = 0;
+			int mg = 0;
+			int eg = 0;
 			
 			// Declare some side-relative constants
 			constexpr Bitboard* passedBitmask = (side == WHITE) ? BM::passed_pawn_masks[WHITE] : BM::passed_pawn_masks[BLACK];
@@ -320,13 +357,13 @@ namespace Eval {
 				sq = PopBit(&pawnBoard);
 				relative_sq = (side == WHITE) ? sq : PSQT::Mirror64[sq];
 			
-				//int r = relative_ranks[sq / 8];
-				//int f = sq % 8;
+				int r = relative_ranks[sq / 8];
+				int f = sq % 8;
 			
 				// Passed pawn bonus
 				if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
-					//mg += PSQT::passedPawnTable[relative_sq].mg();
-					//eg += PSQT::passedPawnTable[relative_sq].eg();
+					mg += PSQT::passedPawnTable[relative_sq].mg;
+					eg += PSQT::passedPawnTable[relative_sq].eg;
 			
 					// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
 					eval.passed_pawns[side] |= (uint64_t(1) << sq);
@@ -351,8 +388,8 @@ namespace Eval {
 
 
 			// Make the scores stored side-relative
-			//eval.mg += (side == WHITE) ? mg : -mg;
-			//eval.eg += (side == WHITE) ? eg : -eg;
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
