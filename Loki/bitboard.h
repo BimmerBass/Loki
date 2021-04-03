@@ -113,6 +113,8 @@ namespace BBS {
 
 		extern Bitboard rear_span_masks[2][64];
 
+		extern Bitboard backwards_masks[2][64];
+
 		void initBitMasks();
 	}
 

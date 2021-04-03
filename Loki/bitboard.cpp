@@ -86,6 +86,7 @@ Bitboard BBS::EvalBitMasks::passed_pawn_masks[2][64] = { {0} };
 Bitboard BBS::EvalBitMasks::isolated_bitmasks[8] = { 0 };
 Bitboard BBS::EvalBitMasks::outpost_masks[2][64] = { {0} };
 Bitboard BBS::EvalBitMasks::rear_span_masks[2][64] = { {0} };
+Bitboard BBS::EvalBitMasks::backwards_masks[2][64] = { {0} };
 
 void BBS::EvalBitMasks::initBitMasks() {
 	Bitboard bitmask = 0;
@@ -163,6 +164,29 @@ void BBS::EvalBitMasks::initBitMasks() {
 		rear_span_masks[WHITE][sq] = (passed_pawn_masks[BLACK][sq] & BBS::FileMasks8[sq % 8]);
 		rear_span_masks[BLACK][sq] = (passed_pawn_masks[WHITE][sq] & BBS::FileMasks8[sq % 8]);
 	}
+
+
+	/*
+	
+	Backwards bitmasks. These are the squares on the current rank and all others behind it, on the adjacent files if a square.
+	
+	*/
+
+	for (int sq = 0; sq < 64; sq++) {
+
+		backwards_masks[WHITE][sq] = (passed_pawn_masks[BLACK][sq] & ~BBS::FileMasks8[sq % 8]);
+		backwards_masks[BLACK][sq] = (passed_pawn_masks[WHITE][sq] & ~BBS::FileMasks8[sq % 8]);
+
+		if (sq % 8 != FILE_H) {
+			backwards_masks[WHITE][sq] |= (uint64_t(1) << (sq + 1));
+			backwards_masks[BLACK][sq] |= (uint64_t(1) << (sq + 1));
+		}
+		if (sq % 8 != FILE_A) {
+			backwards_masks[WHITE][sq] |= (uint64_t(1) << (sq - 1));
+			backwards_masks[BLACK][sq] |= (uint64_t(1) << (sq - 1));
+		}
+	}
+
 }
 
 

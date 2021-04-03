@@ -376,17 +376,29 @@ namespace Eval {
 				bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
 				
 				if (doubled && isolated) {
-					//mg -= doubled_isolated_penalty[MG];
-					//eg -= doubled_isolated_penalty[EG];
 					mg -= doubled_isolated_penalty.mg;
 					eg -= doubled_isolated_penalty.eg;
 				}
 				else if (isolated) {
-					//mg -= isolated_penalty[MG];
-					//eg -= isolated_penalty[EG];
 					mg -= isolated_penalty.mg;
 					eg -= isolated_penalty.eg;
 				}
+
+
+				// A pawn is considered to be backwards if the following two criteria are met:
+				// 1. Friendly pawns on the two adjacent files are further advanced
+				// 2. An enemy pawn controls the advancement square.
+
+				//if ((BM::backwards_masks[side][sq] & pos->pieceBBS[PAWN][side]) == 0) {
+				//	int frontSq = (side == WHITE) ? sq + 8 : sq - 8;
+				//	
+				//	// If an enemy pawn is controlling the square in front of this one.
+				//	if (((shift<upLeft>(uint64_t(1) << frontSq) | shift<upRight>(uint64_t(1) << frontSq)) & pos->pieceBBS[PAWN][Them]) != 0) {
+				//		mg -= backwards_penalty.mg;
+				//		eg -= backwards_penalty.eg;
+				//	}
+				//
+				//}
 			}
 
 			// Populate the attacks bitboard with pawn attacks. This will be used in the evaluation of pieces.

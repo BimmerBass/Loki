@@ -119,10 +119,9 @@ constexpr int connected[2] = { 10, 7 }; // Bonus for being directly defended by 
 const PSQT::Score doubled_penalty(5, 22);
 const PSQT::Score doubled_isolated_penalty(16, 15);
 const PSQT::Score isolated_penalty(11, 6);
-
+const PSQT::Score backwards_penalty(10, 20);
 
 // Not implemented yet.
-constexpr int backwards_penalty = 0;
 constexpr int hanging_penalty = 0;
 
 
