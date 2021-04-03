@@ -1,7 +1,6 @@
 #include "evaluation.h"
 
 
-
 namespace Eval {
 
 
@@ -344,14 +343,17 @@ namespace Eval {
 			
 			
 			// Before evaluating all pawns, we will score the amount of doubled pawns by file.
-			//int doubled_count = 0;
-			//for (int f = FILE_A; f <= FILE_H; f++) {
-			//	doubled_count += (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? 1 : 0;
-			//}
-			//
+			int doubled_count = 0;
+			for (int f = FILE_A; f <= FILE_H; f++) {
+				doubled_count += (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? 1 : 0;
+			}
+			
 			//mg -= doubled_count * doubled_penalty[MG];
 			//eg -= doubled_count * doubled_penalty[EG];
-			
+			mg -= doubled_count * doubled_penalty.mg;
+			eg -= doubled_count * doubled_penalty.eg;
+
+
 			// Now evaluate each individual pawn
 			while (pawnBoard) {
 				sq = PopBit(&pawnBoard);
@@ -370,17 +372,21 @@ namespace Eval {
 				}
 			
 				// Isolated penalty and/or doubled
-				//bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? true : false;
-				//bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
-				//
-				//if (doubled && isolated) {
-				//	mg -= doubled_isolated_penalty[MG];
-				//	eg -= doubled_isolated_penalty[EG];
-				//}
-				//else if (isolated) {
-				//	mg -= isolated_penalty[MG];
-				//	eg -= isolated_penalty[EG];
-				//}
+				bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][side]) > 1) ? true : false;
+				bool isolated = ((BM::isolated_bitmasks[f] & pos->pieceBBS[PAWN][side]) == 0) ? true : false;
+				
+				if (doubled && isolated) {
+					//mg -= doubled_isolated_penalty[MG];
+					//eg -= doubled_isolated_penalty[EG];
+					mg -= doubled_isolated_penalty.mg;
+					eg -= doubled_isolated_penalty.eg;
+				}
+				else if (isolated) {
+					//mg -= isolated_penalty[MG];
+					//eg -= isolated_penalty[EG];
+					mg -= isolated_penalty.mg;
+					eg -= isolated_penalty.eg;
+				}
 			}
 
 			// Populate the attacks bitboard with pawn attacks. This will be used in the evaluation of pieces.

@@ -14,9 +14,10 @@ int main() {
 
 	//Texel::Parameters tuning_variables;
 	//
-	//for (int sq = 0; sq < 64; sq++) {
-	//	tuning_variables.push_back(Texel::Parameter(&PSQT::passedPawnTable[sq], Score(200, 200), Score(0, 0)));
-	//}
+	//tuning_variables.push_back(Texel::Parameter(&doubled_penalty, Score(INF, INF), Score(0, 0)));
+	//tuning_variables.push_back(Texel::Parameter(&doubled_isolated_penalty, Score(INF, INF), Score(0, 0)));
+	//tuning_variables.push_back(Texel::Parameter(&isolated_penalty, Score(INF, INF), Score(0, 0)));
+	//
 	//
 	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 1000);
 

@@ -112,9 +112,14 @@ Pawn evaluation constants
 constexpr int candidate_passer = 0;
 constexpr int connected[2] = { 10, 7 }; // Bonus for being directly defended by another pawn
 
-constexpr int isolated_penalty[2] = { 10 , 17 };
-constexpr int doubled_isolated_penalty[2] = { 15 , 23 };
-constexpr int doubled_penalty[2] = { 5, 10 };
+//constexpr int isolated_penalty[2] = { 10 , 17 };
+//constexpr int doubled_isolated_penalty[2] = { 15 , 23 };
+//constexpr int doubled_penalty[2] = { 5, 10 };
+
+const PSQT::Score doubled_penalty(5, 22);
+const PSQT::Score doubled_isolated_penalty(16, 15);
+const PSQT::Score isolated_penalty(11, 6);
+
 
 // Not implemented yet.
 constexpr int backwards_penalty = 0;
