@@ -13,13 +13,12 @@ int main() {
 	UCI::UCI_loop();
 
 	//Texel::Parameters tuning_variables;
-	
-	//for (int sq = 0; sq < 64; sq++) {
-	//	tuning_variables.push_back(Texel::Parameter(&PSQT::KingTable[sq], Score(100, 100), Score(-100, -100)));
+	//
+	//for (int i = 0; i < PSQT::mobilityBonus[3].size(); i++) {
+	//	tuning_variables.push_back(Texel::Parameter(&PSQT::mobilityBonus[3][i]));
 	//}
 	//
-	//
-	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 1500);
+	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 2000);
 
 	return 0;
 }
