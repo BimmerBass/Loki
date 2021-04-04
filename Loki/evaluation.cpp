@@ -840,9 +840,9 @@ namespace Eval {
 		int v = 0;
 
 		// Step 1. Material draw check (~22 elo)
-		if (material_draw(pos)) {
-			return 0;
-		}
+		//if (material_draw(pos)) {
+		//	return 0;
+		//}
 
 		// Step 2. Create an evaluation object holding the middlegame and endgame score separately.
 		//Evaluation eval(mg_evaluate(pos), eg_evaluate(pos));
