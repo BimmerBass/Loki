@@ -53,6 +53,12 @@ namespace PSQT {
 
 
 	/*
+	Space term
+	*/
+
+	extern const Score space_bonus[32];
+
+	/*
 	King-safety specific tables
 	*/
 	extern Score safety_table[100];

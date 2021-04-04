@@ -800,10 +800,9 @@ namespace Eval {
 			int points = 0;
 
 			int mg = 0;
-			int eg = 0;
+			//int eg = 0;
 
 			// The main space area is rank 3, 4, 5 and 6, and file c, d, e, f
-			// File b and g are given half-points.
 			constexpr Bitboard war_zone = (BBS::FileMasks8[FILE_C] | BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E] | BBS::FileMasks8[FILE_F])
 				& (BBS::RankMasks8[RANK_3] | BBS::RankMasks8[RANK_4] | BBS::RankMasks8[RANK_5] | BBS::RankMasks8[RANK_6]);
 			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
@@ -825,11 +824,13 @@ namespace Eval {
 			points += countBits(eval.attacks[PAWN][side]);
 			points += 2 * countBits(rearSpanBrd & space_zone);
 
-			mg += 2 * points;
-			eg += points;
+			//mg += 2 * points;
+			//eg += points;
+			mg += PSQT::space_bonus[std::min(31, points)].mg;
+			//eg += PSQT::space_bonus[std::min(31, points)].eg;
 
 			eval.mg += (side == WHITE) ? mg : -mg;
-			eval.eg += (side == WHITE) ? eg : -eg;
+			//eval.eg += (side == WHITE) ? eg : -eg;
 		}
 	}
 
