@@ -246,7 +246,7 @@ namespace Eval {
 			// We'll only use the safety table if there are more than one attacker and if the opponent has a queen.
 			if (eval.king_zone_attackers[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
 				mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg;
-				//eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg;
+				eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg / 2;
 			}
 			
 			eval.mg += (side == WHITE) ? mg : -mg;
