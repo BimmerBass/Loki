@@ -61,7 +61,7 @@ namespace PSQT {
 	/*
 	King-safety specific tables
 	*/
-	extern Score safety_table[100];
+	extern const Score safety_table[100];
 
 	extern const int castledPawnAdvancementMg[64];
 	extern const Score pawnStorm[64];

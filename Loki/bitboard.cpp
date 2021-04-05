@@ -87,6 +87,7 @@ Bitboard BBS::EvalBitMasks::isolated_bitmasks[8] = { 0 };
 Bitboard BBS::EvalBitMasks::outpost_masks[2][64] = { {0} };
 Bitboard BBS::EvalBitMasks::rear_span_masks[2][64] = { {0} };
 Bitboard BBS::EvalBitMasks::backwards_masks[2][64] = { {0} };
+Bitboard BBS::EvalBitMasks::outer_kingring[64] = { 0 };
 
 void BBS::EvalBitMasks::initBitMasks() {
 	Bitboard bitmask = 0;
@@ -185,6 +186,33 @@ void BBS::EvalBitMasks::initBitMasks() {
 			backwards_masks[WHITE][sq] |= (uint64_t(1) << (sq - 1));
 			backwards_masks[BLACK][sq] |= (uint64_t(1) << (sq - 1));
 		}
+	}
+
+
+	/*
+	
+	Outer king-rings. These are just the 16 squares on the outside of the ring, that the king would be able to move to on an empty board.
+	
+	*/
+	for (int sq = 0; sq < 64; sq++) {
+
+		Bitboard ring = 0;
+		int rnk = sq / 8;
+		int fl = sq % 8;
+
+		for (int r = std::max(0, rnk - 2); r <= std::min(7, rnk + 2); r++) {
+
+			for (int f = std::max(0, fl - 2); f <= std::min(7, fl + 2); f++) {
+
+				ring |= (BBS::FileMasks8[f] & BBS::RankMasks8[r]);
+
+			}
+		}
+
+		ring ^= BBS::king_attacks[sq];
+		ring ^= (uint64_t(1) << sq);
+
+		outer_kingring[sq] = ring;
 	}
 
 }

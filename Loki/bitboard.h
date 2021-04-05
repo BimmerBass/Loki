@@ -115,6 +115,8 @@ namespace BBS {
 
 		extern Bitboard backwards_masks[2][64];
 
+		extern Bitboard outer_kingring[64];
+
 		void initBitMasks();
 	}
 

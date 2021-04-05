@@ -56,6 +56,12 @@ namespace Eval {
 		return (BBS::king_attacks[kingSq] | (uint64_t(1) << kingSq));
 	}
 
+	inline Bitboard outer_kingRing(int kingSq) {
+		assert(kingSq >= A1 && kingSq <= H8);
+
+		return (BBS::EvalBitMasks::outer_kingring[kingSq]);
+	}
+
 
 	/*
 	

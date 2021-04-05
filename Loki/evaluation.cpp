@@ -244,13 +244,13 @@ namespace Eval {
 
 			// Now we'll gather information on attack units. We know all attackers and attack units from the calculated mobility.
 			// We'll only use the safety table if there are more than one attacker and if the opponent has a queen.
-			//if (eval.king_zone_attackers[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
-			//	mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg;
-			//	eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg;
-			//}
-			//
-			//eval.mg += (side == WHITE) ? mg : -mg;
-			//eval.eg += (side == WHITE) ? eg : -eg;
+			if (eval.king_zone_attackers[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
+				mg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].mg;
+				//eg -= PSQT::safety_table[std::min(99, eval.king_zone_attack_units[side])].eg;
+			}
+			
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
 		}
 
 
@@ -573,6 +573,7 @@ namespace Eval {
 			constexpr DIRECTION Down = (side == WHITE) ? SOUTH : NORTH;
 
 			Bitboard enemy_king_ring = king_ring(pos->king_squares[Them]);
+			Bitboard enemy_outer_king_ring = outer_kingRing(pos->king_squares[Them]);
 
 			Bitboard attacks = 0; // All attacks from all pieces of type pce used to populate the bitmasks in Eval
 			Bitboard piece_attacks = 0; // Individual piece attacks.
@@ -604,6 +605,12 @@ namespace Eval {
 						// Add attack units to index the king attack table
 						eval.king_zone_attack_units[Them] += 2;
 					}
+					else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
+						eval.king_zone_attackers[Them]++;
+
+						// Since we're not directly attacking the king, only add half the attack units
+						eval.king_zone_attack_units[Them] += 1;
+					}
 
 					piece_attacks &= good_squares; // Only score mobility to good squares.
 					
@@ -623,6 +630,12 @@ namespace Eval {
 
 						// Add attack units to index the king attack table
 						eval.king_zone_attack_units[Them] += 2;
+					}
+					else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
+						eval.king_zone_attackers[Them]++;
+
+						// Since we're not directly attacking the king, only add half the attack units
+						eval.king_zone_attack_units[Them] += 1;
 					}
 
 					piece_attacks &= good_squares; // Only score mobility to good squares.
@@ -644,6 +657,12 @@ namespace Eval {
 						// Add attack units to index the king attack table
 						eval.king_zone_attack_units[Them] += 3;
 					}
+					else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
+						eval.king_zone_attackers[Them]++;
+
+						// Since we're not directly attacking the king, only add half the attack units (approximated to two for rooks.)
+						eval.king_zone_attack_units[Them] += 2;
+					}
 					
 					piece_attacks &= good_squares; // Only score mobility to good squares.
 
@@ -663,6 +682,12 @@ namespace Eval {
 
 						// Add attack units to index the king attack table
 						eval.king_zone_attack_units[Them] += 5;
+					}
+					else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
+						eval.king_zone_attackers[Them]++;
+
+						// Since we're not directly attacking the king, only add half the attack units (approcimated to three for the queen)
+						eval.king_zone_attack_units[Them] += 3;
 					}
 
 					piece_attacks &= good_squares; // Only score mobility to good squares.
@@ -807,7 +832,7 @@ namespace Eval {
 		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
 		
 		// Step 9. Simple king safety evaluation (~47 elo)
-		//king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
+		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
 		// Step 10. Piece evaluations --> loses elo (~-23) at the moment
 		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
