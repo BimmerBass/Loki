@@ -15,12 +15,25 @@ int main() {
 	//Texel::Parameters tuning_variables;
 	//
 	//
-	//for (int i = 0; i < 32; i++) {
-	//	tuning_variables.push_back(Texel::Parameter(&PSQT::space_bonus[i]));
+	//tuning_variables.push_back(&pawnless_flank);
+	//
+	//for (int i = 0; i < 8; i++) {
+	//	tuning_variables.push_back(&PSQT::king_pawn_distance_penalty[i]);
 	//}
 	//
+	//for (int i = 0; i < 64; i++) {
+	//	tuning_variables.push_back(&PSQT::pawnStorm[i]);
+	//}
 	//
-	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 2000);
+	//for (int i = 0; i < 8; i++) {
+	//	tuning_variables.push_back(&PSQT::open_kingfile_penalty[i]);
+	//}
+	//
+	//for (int i = 0; i < 8; i++) {
+	//	tuning_variables.push_back(&PSQT::semiopen_kingfile_penalty[i]);
+	//}
+	//
+	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 3000);
 
 	return 0;
 }

@@ -157,6 +157,6 @@ King evaluation constants
 */
 constexpr int king_open_file_penalty = 100;
 constexpr int king_semi_open_file_penalty = 50;
-constexpr int pawnless_flank[2] = { 150, 250 };
+const PSQT::Score pawnless_flank(248, -78);
 
 #endif

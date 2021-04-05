@@ -68,6 +68,7 @@ namespace PSQT {
 
 	extern const Score king_pawn_distance_penalty[8];
 
+
 	extern const Score open_kingfile_penalty[8];
 
 	extern const Score semiopen_kingfile_penalty[8];
