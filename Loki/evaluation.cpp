@@ -1,17 +1,6 @@
 #include "evaluation.h"
 
 
-PSQT::Score outpost(16, 10);
-PSQT::Score reachable_outpost(7, 5);
-
-PSQT::Score knight_on_kingring(5, 2);
-PSQT::Score defended_knight(5, 3);
-
-PSQT::Score bishop_on_kingring(15, 18);
-PSQT::Score bishop_on_queen(12, 18);
-PSQT::Score bad_bishop_coeff(3, 2);
-
-
 namespace Eval {
 
 
@@ -408,8 +397,6 @@ namespace Eval {
 			
 				// Give bonuses for occupying the calculated outposts
 				int num_outposts = countBits(pos->pieceBBS[pce][side] & outpost_mask);
-				//mg += outpost[MG] * num_outposts;
-				//eg += outpost[EG] * num_outposts;
 				mg += outpost.mg * num_outposts;
 				eg += outpost.eg * num_outposts;
 			}
@@ -438,10 +425,8 @@ namespace Eval {
 					// Save the squares that the piece attacks.
 					Bitboard attacks = ((pce == KNIGHT) ? BBS::knight_attacks[sq] : Magics::attacks_bb<BISHOP>(sq, occupied));
 				
-					// Bonus for being able to reach an outpost on the next move.
-					int num_reachable_outposts = countBits(attacks & outpost_mask);
-					//mg += reachable_outpost[MG] * num_reachable_outposts;
-					//eg += reachable_outpost[EG] * num_reachable_outposts;
+					// Bonus for being able to reach an outpost on the next move. This requires that there aren't any pieces occupying the square yet.
+					int num_reachable_outposts = countBits(attacks & outpost_mask & ~pos->all_pieces[side]);
 					mg += reachable_outpost.mg * num_reachable_outposts;
 					eg += reachable_outpost.eg * num_reachable_outposts;
 
@@ -450,23 +435,17 @@ namespace Eval {
 				
 						// Bonus for being on the same diagonal or anti-diagonal as the enemy queen.
 						if (((BBS::diagonalMasks[7 + r - f] | BBS::antidiagonalMasks[r + f]) & pos->pieceBBS[QUEEN][Them]) != 0) {
-							//mg += bishop_on_queen[MG];
-							//eg += bishop_on_queen[EG];
 							mg += bishop_on_queen.mg;
 							eg += bishop_on_queen.eg;
 						}
 				
 						// Bad bishop. Penalty for being blocked by our own pawns.
 						int blocking_pawns_count = countBits(attacks & pos->pieceBBS[PAWN][side]);
-						//mg -= blocked_bishop_coefficient_penalty[MG] * blocking_pawns_count;
-						//eg -= blocked_bishop_coefficient_penalty[EG] * blocking_pawns_count;
 						mg -= bad_bishop_coeff.mg * blocking_pawns_count;
 						eg -= bad_bishop_coeff.eg * blocking_pawns_count;
 
 						// Bonus for attacking the king ring
 						if ((attacks & enemy_kingRing) != 0) {
-							//mg += bishop_on_kingring[MG];
-							//eg += bishop_on_kingring[EG];
 							mg += bishop_on_kingring.mg;
 							eg += bishop_on_kingring.eg;
 						}
@@ -483,16 +462,12 @@ namespace Eval {
 				
 						// Small bonus for being defended by a pawn.
 						if ((eval.attacks[PAWN][side] & (uint64_t(1) << sq)) != 0) {
-							//mg += defended_knight[MG];
-							//eg += defended_knight[EG];
 							mg += defended_knight.mg;
 							eg += defended_knight.eg;
 						}
 
 						// Bonus for attacking the enemy king ring
 						if ((attacks & enemy_kingRing) != 0) {
-							//mg += knight_on_kingring[MG];
-							//eg += knight_on_kingring[EG];
 							mg += knight_on_kingring.mg;
 							eg += knight_on_kingring.eg;
 						}
@@ -860,8 +835,8 @@ namespace Eval {
 		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
 		// Step 10. Piece evaluations --> loses elo (~-23) at the moment
-		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
-		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
+		pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
+		pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
 		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
 		//pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
 

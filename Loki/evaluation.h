@@ -143,15 +143,15 @@ Piece evaluation constants
 //constexpr int bishop_on_queen[2] = { 12, 18 };
 //constexpr int blocked_bishop_coefficient_penalty[2] = { 3, 2 };
 
-extern PSQT::Score outpost;
-extern PSQT::Score reachable_outpost;
+const PSQT::Score outpost(20, 18);
+const PSQT::Score reachable_outpost(17, -7);
 
-extern PSQT::Score knight_on_kingring;
-extern PSQT::Score defended_knight;
+const PSQT::Score knight_on_kingring(8, -13);
+const PSQT::Score defended_knight(0, 10);
 
-extern PSQT::Score bishop_on_kingring;
-extern PSQT::Score bishop_on_queen;
-extern PSQT::Score bad_bishop_coeff;
+const PSQT::Score bishop_on_kingring(11, 4);
+const PSQT::Score bishop_on_queen(32, 24);
+const PSQT::Score bad_bishop_coeff(0, 5);
 
 constexpr int rook_on_kingring[2] = { 10, 20 };
 constexpr int rook_on_queen[2] = { 6, 9 };

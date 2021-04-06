@@ -17,13 +17,8 @@ int main() {
 	//
 	//using namespace Texel;
 	//
-	//tuning_variables.push_back(Parameter(&outpost, Value(0.002, 0.002), Value(4.0, 4.0)));
-	//tuning_variables.push_back(Parameter(&reachable_outpost, Value(0.002, 0.002), Value(4.0, 4.0)));
-	//tuning_variables.push_back(Parameter(&defended_knight, Value(0.002, 0.002), Value(4.0, 4.0)));
-	//tuning_variables.push_back(Parameter(&knight_on_kingring, Value(0.002, 0.002), Value(4.0, 4.0)));
 	//
-	//
-	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 3000);
+	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 500);
 
 	return 0;
 }
