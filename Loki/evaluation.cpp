@@ -523,16 +523,20 @@ namespace Eval {
 				
 					// Give a penalty for early queen development. This is done by multiplying a factor with the amount of minor pieces on the first rank.
 					if (r != first_rank) {
-						mg -= queen_development_penalty * countBits((pos->pieceBBS[BISHOP][side] | pos->pieceBBS[KNIGHT][side]) & BBS::RankMasks8[first_rank]);
+						//mg -= queen_development_penalty * countBits((pos->pieceBBS[BISHOP][side] | pos->pieceBBS[KNIGHT][side]) & BBS::RankMasks8[first_rank]);
+						mg -= PSQT::queen_development_penalty[std::min(4, countBits((pos->pieceBBS[BISHOP][side] 
+							| pos->pieceBBS[KNIGHT][side]) & BBS::RankMasks8[first_rank]))].mg;
 					}
 
 					// Give small bonus for attacking the enemy king ring
 					if ((attacks & enemy_kingRing) != 0) {
-						mg += queen_on_kingring[MG];
-						eg += queen_on_kingring[EG];
+						//mg += queen_on_kingring[MG];
+						//eg += queen_on_kingring[EG];
+						mg += queen_on_kingring.mg;
+						eg += queen_on_kingring.eg;
 					}
 
-					// Give penalty for an attacked queen
+					// Give penalty for an attacked queen. We know the attacks from when we calculated mobility
 					if (((eval.attacks[PAWN][Them] | 
 						eval.attacks[KNIGHT][Them] | 
 						eval.attacks[BISHOP][Them] | 
@@ -540,8 +544,10 @@ namespace Eval {
 						eval.attacks[QUEEN][Them])
 						& (uint64_t(1) << sq)) != 0) {
 
-						mg -= threatened_queen[MG];
-						eg -= threatened_queen[EG];
+						//mg -= threatened_queen[MG];
+						//eg -= threatened_queen[EG];
+						mg -= threatened_queen.mg;
+						eg -= threatened_queen.eg;
 
 					}
 				
@@ -838,7 +844,7 @@ namespace Eval {
 		pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
 		pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
 		pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
-		//pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
+		pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
 
 		// Step 11. Interpolate between the middlegame and endgame scores
 		v = eval.interpolate(pos);

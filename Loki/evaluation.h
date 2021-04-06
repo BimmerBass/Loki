@@ -154,10 +154,8 @@ const Score rook_semi_open_file(11, 19);
 const Score rook_behind_passer(0, 10);
 
 
-constexpr int queen_on_kingring[2] = { 3, 9 };
-constexpr int queen_development_penalty = 5; // Only used in the middlegame.
-constexpr int threatened_queen[2] = { 90, 90 };
-
+const PSQT::Score queen_on_kingring(3, 19);
+const PSQT::Score threatened_queen(52, 70);
 
 /*
 

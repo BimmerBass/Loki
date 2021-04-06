@@ -41,15 +41,25 @@ namespace PSQT {
 
 
 	/*
-	Other square tables
+	Pawn-specific tables
 	*/
 	extern const Score passedPawnTable[64];
+
+	/*
+	Piece-specific tables
+
+	*/
+	extern const std::vector<std::vector<Score>> mobilityBonus;
+
+	extern const Score queen_development_penalty[5];
+
+	/*
+	Other square tables
+	*/
 
 	extern const int Mirror64[64];
 
 	extern int ManhattanDistance[64][64];
-	
-	extern const std::vector<std::vector<Score>> mobilityBonus;
 
 
 	/*
