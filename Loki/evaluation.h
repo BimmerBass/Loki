@@ -133,15 +133,25 @@ constexpr int hanging_penalty = 0;
 Piece evaluation constants
 
 */
-constexpr int outpost[2] = { 16, 10 };
-constexpr int reachable_outpost[2] = { 7, 5 };
+//constexpr int outpost[2] = { 16, 10 };
+//constexpr int reachable_outpost[2] = { 7, 5 };
+//
+//constexpr int knight_on_kingring[2] = { 5, 2 };
+//constexpr int defended_knight[2] = { 5, 3 };
+//
+//constexpr int bishop_on_kingring[2] = { 15, 18 };
+//constexpr int bishop_on_queen[2] = { 12, 18 };
+//constexpr int blocked_bishop_coefficient_penalty[2] = { 3, 2 };
 
-constexpr int knight_on_kingring[2] = { 5, 2 };
-constexpr int defended_knight[2] = { 5, 3 };
+extern PSQT::Score outpost;
+extern PSQT::Score reachable_outpost;
 
-constexpr int bishop_on_kingring[2] = { 15, 18 };
-constexpr int bishop_on_queen[2] = { 12, 18 };
-constexpr int blocked_bishop_coefficient_penalty[2] = { 3, 2 };
+extern PSQT::Score knight_on_kingring;
+extern PSQT::Score defended_knight;
+
+extern PSQT::Score bishop_on_kingring;
+extern PSQT::Score bishop_on_queen;
+extern PSQT::Score bad_bishop_coeff;
 
 constexpr int rook_on_kingring[2] = { 10, 20 };
 constexpr int rook_on_queen[2] = { 6, 9 };

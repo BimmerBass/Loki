@@ -241,9 +241,23 @@ namespace Texel {
 
 		double BIG_A = 0.1 * double(iterations);
 
-		double c = C_END * std::pow(double(iterations), gamma);
-		double a_end = R_END * std::pow(c, 2.0);
-		double a = a_end * std::pow(BIG_A + double(iterations), alpha);
+		for (int p = 0; p < tuning_vars.size(); p++) {
+
+			tuning_vars[p].c.mg = tuning_vars[p].C_END.mg * std::pow(double(iterations), gamma);
+			tuning_vars[p].c.eg = tuning_vars[p].C_END.eg * std::pow(double(iterations), gamma);
+
+
+
+			double a_end_mg = tuning_vars[p].R_END.mg * std::pow(tuning_vars[p].c.mg, 2.0);
+			double a_end_eg = tuning_vars[p].R_END.eg * std::pow(tuning_vars[p].c.eg, 2.0);
+
+			tuning_vars[p].a.mg = a_end_mg * std::pow(BIG_A + double(iterations), alpha);
+			tuning_vars[p].a.eg = a_end_eg * std::pow(BIG_A + double(iterations), alpha);
+		}
+
+		//double c = C_END * std::pow(double(iterations), gamma);
+		//double a_end = R_END * std::pow(c, 2.0);
+		//double a = a_end * std::pow(BIG_A + double(iterations), alpha);
 
 
 
@@ -258,22 +272,42 @@ namespace Texel {
 		double g_hat_mg = 0.0;
 		double g_hat_eg = 0.0;
 
-		double an = 0.0;
-		double cn = 0.0;
+		//double an = 0.0;
+		//double cn = 0.0;
+
+
+		/*
+		Zero-initialization of step-size and perturbation vectors
+		*/
+		std::vector<Value> an;
+		std::vector<Value> cn;
+
+		for (int p = 0; p < tuning_vars.size(); p++) {
+			an.push_back(Value(0.0, 0.0));
+			cn.push_back(Value(0.0, 0.0));
+		}
 
 		for (int n = 0; n < iterations; n++) {
 
 			// Step 5A. Compute the current error. This is only used for outputting the progress.
 			double error = changed_error(tuning_vars, theta, EPDS, k);
 
-			data.push_back(TexelStats::DataPoint(n + 1, error, Score(g_hat_mg, g_hat_eg), Score(abs(an * g_hat_mg), abs(an * g_hat_eg)), theta));
+			//data.push_back(TexelStats::DataPoint(n + 1, error, Score(g_hat_mg, g_hat_eg), Score(abs(an * g_hat_mg), abs(an * g_hat_eg)), theta));
+			data.push_back(TexelStats::DataPoint(n + 1, error, Score(g_hat_mg, g_hat_eg), Score(0, 0), theta));
 
 			// Step 5B. Calculate iteration dependent constants
-			an = a / (std::pow(BIG_A + double(n) + 1.0, alpha));
-			cn = c / (std::pow(double(n) + 1, gamma));
+			//an = a / (std::pow(BIG_A + double(n) + 1.0, alpha));
+			//cn = c / (std::pow(double(n) + 1, gamma));
+			for (int p = 0; p < tuning_vars.size(); p++) {
+				an[p].mg = tuning_vars[p].a.mg / (std::pow(BIG_A + double(n) + 1.0, alpha));
+				an[p].eg = tuning_vars[p].a.eg / (std::pow(BIG_A + double(n) + 1.0, alpha));
+
+				cn[p].mg = tuning_vars[p].c.mg / (std::pow(double(n) + 1.0, gamma));
+				cn[p].eg = tuning_vars[p].c.eg / (std::pow(double(n) + 1.0, gamma));
+			}
 
 
-			std::cout << "[+] Iteration " << (n + 1) << ": an = " << an << ", cn = " << cn << std::endl;
+			std::cout << "[+] Iteration " << (n + 1) << std::endl; //  << ": an = " << an << ", cn = " << cn << std::endl;
 			std::cout << "[+] Initial error: " << error << std::endl;
 
 			// Clear theta_plus, theta_minus and delta.
@@ -290,8 +324,10 @@ namespace Texel {
 				delta.push_back(Score(d_mg, d_eg)); // Add the scores to the delta vector.
 
 				// Step 5C.1. Compute theta_plus and theta_minus from these values
-				theta_plus.push_back(Score(std::round(theta[p].mg + double(d_mg) * cn), std::round(theta[p].eg + double(d_eg) * cn)));
-				theta_minus.push_back(Score(std::round(theta[p].mg - double(d_mg) * cn), std::round(theta[p].eg - double(d_eg) * cn)));
+				//theta_plus.push_back(Score(std::round(theta[p].mg + double(d_mg) * cn), std::round(theta[p].eg + double(d_eg) * cn)));
+				//theta_minus.push_back(Score(std::round(theta[p].mg - double(d_mg) * cn), std::round(theta[p].eg - double(d_eg) * cn)));
+				theta_plus.push_back(Score(std::round(theta[p].mg + double(d_mg) * cn[p].mg), std::round(theta[p].eg + double(d_eg) * cn[p].eg)));
+				theta_minus.push_back(Score(std::round(theta[p].mg - double(d_mg) * cn[p].mg), std::round(theta[p].eg - double(d_eg) * cn[p].eg)));
 			}
 
 			// Step 5D. Compute the error of theta_plus and theta_minus respectively.
@@ -305,12 +341,17 @@ namespace Texel {
 			// Step 5E. Compute the gradient for each variable and adjust accordingly.
 			for (int p = 0; p < tuning_vars.size(); p++) {
 
-				g_hat_mg = (theta_plus_error - theta_minus_error) / (2.0 * cn * double(delta[p].mg));
-				g_hat_eg = (theta_plus_error - theta_minus_error) / (2.0 * cn * double(delta[p].eg));
+				//g_hat_mg = (theta_plus_error - theta_minus_error) / (2.0 * cn * double(delta[p].mg));
+				//g_hat_eg = (theta_plus_error - theta_minus_error) / (2.0 * cn * double(delta[p].eg));
+				g_hat_mg = (theta_plus_error - theta_minus_error) / (2.0 * cn[p].mg * double(delta[p].mg));
+				g_hat_eg = (theta_plus_error - theta_minus_error) / (2.0 * cn[p].eg * double(delta[p].eg));
 
 				// Now adjust the theta values based on the gradient.
-				theta[p].mg -= std::round(an * g_hat_mg);
-				theta[p].eg -= std::round(an * g_hat_eg);
+				//theta[p].mg -= std::round(an * g_hat_mg);
+				//theta[p].eg -= std::round(an * g_hat_eg);
+
+				theta[p].mg -= std::round(an[p].mg * g_hat_mg);
+				theta[p].eg -= std::round(an[p].eg * g_hat_eg);
 
 				// Lastly, we'll have to make sure that we don't go out of the designated bounds
 				theta[p].mg = std::max(tuning_vars[p].min_value.mg, std::min(tuning_vars[p].max_value.mg, theta[p].mg));

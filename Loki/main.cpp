@@ -15,10 +15,13 @@ int main() {
 
 	//Texel::Parameters tuning_variables;
 	//
+	//using namespace Texel;
 	//
-	//for (int i = 0; i < 100; i++) {
-	//	tuning_variables.push_back(&PSQT::safety_table[i]);
-	//}
+	//tuning_variables.push_back(Parameter(&outpost, Value(0.002, 0.002), Value(4.0, 4.0)));
+	//tuning_variables.push_back(Parameter(&reachable_outpost, Value(0.002, 0.002), Value(4.0, 4.0)));
+	//tuning_variables.push_back(Parameter(&defended_knight, Value(0.002, 0.002), Value(4.0, 4.0)));
+	//tuning_variables.push_back(Parameter(&knight_on_kingring, Value(0.002, 0.002), Value(4.0, 4.0)));
+	//
 	//
 	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 3000);
 

@@ -54,23 +54,39 @@ namespace Texel {
 	constexpr double alpha = 0.602;
 	constexpr double gamma = 0.101;
 
-	constexpr double R_END = 0.003; // 0.002
-	constexpr double C_END = 4.0;
+	//constexpr double R_END = 0.003; // 0.002
+	//constexpr double C_END = 4.0;
 
 	// The two latter values are to be changed for the particular tuning session. A goal is to decide these automatically for each parameter.
+
+
+	/*
+	The Value struct just holds two doubles representing the middle-game and endgame values
+	*/
+	struct Value {
+		Value(double m, double e) { mg = m; eg = e; }
+		Value() { mg = 0.0; eg = 0.0; }
+		double mg;
+		double eg;
+	};
+
+
 
 	/*
 	This structure holds all the necessary data for the parameter, which is its original value, the address (to change it in eval) and its bounds if specified.
 	*/
 	struct Parameter {
 
-		Parameter (Score* var, Score max_val = Score(INF, INF), Score min_val = Score(-INF, -INF)) {
+		Parameter (Score* var, Value _rend = Value(0.002, 0.002), Value _cend = Value(4.0, 4.0), Score max_val = Score(INF, INF), Score min_val = Score(-INF, -INF)) {
 			variable = var; // Copy the pointer
 
 			max_value = max_val;
 			min_value = min_val;
 
 			original_value = *var;
+
+			C_END = _cend;
+			R_END = _rend;
 		}
 
 		Score* variable;
@@ -81,6 +97,11 @@ namespace Texel {
 
 
 		Score original_value;
+
+		Value C_END;
+		Value R_END;
+		Value c;
+		Value a;
 	};
 
 	typedef std::vector<Parameter> Parameters;
