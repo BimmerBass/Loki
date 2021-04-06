@@ -90,6 +90,8 @@ namespace Eval {
 }
 
 
+using namespace PSQT;
+
 /*
 
 Constants --- NOTE: If a constant doesn't end with "_penalty" it is a bonus unless otherwise specified. Also, constants declared as lists are accessed by constant[MG] for
@@ -119,10 +121,10 @@ constexpr int candidate_passer = 0;
 //constexpr int connected[2] = { 10, 7 }; // Bonus for being directly defended by another pawn
 //extern PSQT::Score connected;
 
-const PSQT::Score doubled_penalty(5, 22);
-const PSQT::Score doubled_isolated_penalty(16, 15);
-const PSQT::Score isolated_penalty(11, 6);
-const PSQT::Score backwards_penalty(7, 1);
+const Score doubled_penalty(5, 22);
+const Score doubled_isolated_penalty(16, 15);
+const Score isolated_penalty(11, 6);
+const Score backwards_penalty(7, 1);
 
 // Not implemented yet.
 constexpr int hanging_penalty = 0;
@@ -134,22 +136,22 @@ Piece evaluation constants
 
 */
 
-const PSQT::Score outpost(20, 18);
-const PSQT::Score reachable_outpost(17, -7);
+const Score outpost(20, 18);
+const Score reachable_outpost(17, -7);
 
-const PSQT::Score knight_on_kingring(8, -13);
-const PSQT::Score defended_knight(0, 10);
+const Score knight_on_kingring(8, -13);
+const Score defended_knight(0, 10);
 
-const PSQT::Score bishop_on_kingring(11, 4);
-const PSQT::Score bishop_on_queen(32, 24);
-const PSQT::Score bad_bishop_coeff(0, 5);
+const Score bishop_on_kingring(11, 4);
+const Score bishop_on_queen(32, 24);
+const Score bad_bishop_coeff(0, 5);
 
-constexpr int rook_on_kingring[2] = { 10, 20 };
-constexpr int rook_on_queen[2] = { 6, 9 };
-constexpr int doubled_rooks[2] = { 40, 20 };
-constexpr int rook_open_file[2] = { 20, 14 };
-constexpr int rook_semi_open_file[2] = { 9, 11 };
-constexpr int rook_behind_passer = 90;
+const Score doubled_rooks(31, 9);
+const Score rook_on_queen(6, 49);
+const Score rook_on_kingring(34, -20);
+const Score rook_open_file(43, -11);
+const Score rook_semi_open_file(11, 19);
+const Score rook_behind_passer(0, 10);
 
 
 constexpr int queen_on_kingring[2] = { 3, 9 };
@@ -164,6 +166,6 @@ King evaluation constants
 */
 constexpr int king_open_file_penalty = 100;
 constexpr int king_semi_open_file_penalty = 50;
-const PSQT::Score pawnless_flank(248, -78);
+const Score pawnless_flank(248, -78);
 
 #endif

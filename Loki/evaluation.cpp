@@ -1,15 +1,6 @@
 #include "evaluation.h"
 
 
-
-
-
-
-
-
-
-
-
 namespace Eval {
 
 
@@ -416,8 +407,8 @@ namespace Eval {
 				for (int f = FILE_A; f <= FILE_H; f++) {
 
 					if (countBits(pos->pieceBBS[ROOK][side] & BBS::FileMasks8[f]) > 1) {
-						mg += doubled_rooks[MG];
-						eg += doubled_rooks[EG];
+						mg += doubled_rooks.mg;
+						eg += doubled_rooks.eg;
 					}
 				}
 			}
@@ -490,36 +481,36 @@ namespace Eval {
 				
 					// Give bonus for being aligned with the queen.
 					if (((BBS::RankMasks8[r] | BBS::FileMasks8[f]) & pos->pieceBBS[QUEEN][Them]) != 0) {
-						mg += rook_on_queen[MG];
-						eg += rook_on_queen[EG];
+						mg += rook_on_queen.mg;
+						eg += rook_on_queen.eg;
 					}
 					
 					// Give bonus for attacking the king ring
 					if ((attacks & enemy_kingRing) != 0) {
-						mg += rook_on_kingring[MG];
-						eg += rook_on_kingring[EG];
+						mg += rook_on_kingring.mg;
+						eg += rook_on_kingring.eg;
 					}
 				
 					// Give bonus for being on an open file.
 					if (((pos->pieceBBS[PAWN][BLACK] | pos->pieceBBS[PAWN][WHITE]) & BBS::FileMasks8[f]) == 0) {
-						mg += rook_open_file[MG];
-						eg += rook_open_file[EG];
+						mg += rook_open_file.mg;
+						eg += rook_open_file.eg;
 					}
 					
 					// If we're not on an open file, see if we're on a semi-open one and score accordingly.
 					else if ((pos->pieceBBS[PAWN][side] & BBS::FileMasks8[f]) == 0) {
-						mg += rook_semi_open_file[MG];
-						eg += rook_semi_open_file[EG];
+						mg += rook_semi_open_file.mg;
+						eg += rook_semi_open_file.eg;
 					}
 				
 					// Give a large bonus for the Tarrasch rule: In the endgame, rooks are best placed behind passed pawns.
 					// If we're not directly defending it, but are instead on the same file, give half the bonus.
-					if ((attacks & eval.passed_pawns[side]) != 0) {
-						eg += rook_behind_passer;
+					if (((attacks & BBS::FileMasks8[f]) & eval.passed_pawns[side]) != 0) {
+						eg += rook_behind_passer.eg;
 					}
 				
 					else if ((BBS::FileMasks8[f] & eval.passed_pawns[side]) != 0) {
-						eg += (rook_behind_passer / 2);
+						eg += (rook_behind_passer.eg / 2);
 					}
 				
 					continue;
@@ -846,7 +837,7 @@ namespace Eval {
 		// Step 10. Piece evaluations --> loses elo (~-23) at the moment
 		pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
 		pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
-		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
+		pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
 		//pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
 
 		// Step 11. Interpolate between the middlegame and endgame scores
