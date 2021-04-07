@@ -529,27 +529,27 @@ namespace Eval {
 					}
 
 					// Give small bonus for attacking the enemy king ring
-					if ((attacks & enemy_kingRing) != 0) {
-						//mg += queen_on_kingring[MG];
-						//eg += queen_on_kingring[EG];
-						mg += queen_on_kingring.mg;
-						eg += queen_on_kingring.eg;
-					}
+					//if ((attacks & enemy_kingRing) != 0) {
+					//	//mg += queen_on_kingring[MG];
+					//	//eg += queen_on_kingring[EG];
+					//	mg += queen_on_kingring.mg;
+					//	eg += queen_on_kingring.eg;
+					//}
 
 					// Give penalty for an attacked queen. We know the attacks from when we calculated mobility
-					//if (((eval.attacks[PAWN][Them] | 
-					//	eval.attacks[KNIGHT][Them] | 
-					//	eval.attacks[BISHOP][Them] | 
-					//	eval.attacks[ROOK][Them] | 
-					//	eval.attacks[QUEEN][Them])
-					//	& (uint64_t(1) << sq)) != 0) {
-					//
-					//	//mg -= threatened_queen[MG];
-					//	//eg -= threatened_queen[EG];
-					//	mg -= threatened_queen.mg;
-					//	eg -= threatened_queen.eg;
-					//
-					//}
+					if (((eval.attacks[PAWN][Them] | 
+						eval.attacks[KNIGHT][Them] | 
+						eval.attacks[BISHOP][Them] | 
+						eval.attacks[ROOK][Them])// | 
+						//eval.attacks[QUEEN][Them])
+						& (uint64_t(1) << sq)) != 0) {
+					
+						//mg -= threatened_queen[MG];
+						//eg -= threatened_queen[EG];
+						mg -= threatened_queen.mg;
+						eg -= threatened_queen.eg;
+					
+					}
 				
 					continue;
 				}
