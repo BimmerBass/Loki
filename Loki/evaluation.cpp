@@ -357,8 +357,8 @@ namespace Eval {
 		template<SIDE side>
 		Bitboard outposts(Bitboard pawnAttacks, Bitboard opponent_pawns) {
 			
-			constexpr Bitboard their_side = (side == WHITE) ? (BBS::RankMasks8[RANK_6] | BBS::RankMasks8[RANK_7]) :
-				(BBS::RankMasks8[RANK_3] | BBS::RankMasks8[RANK_2]);
+			constexpr Bitboard their_side = (side == WHITE) ? (BBS::RankMasks8[RANK_4] | BBS::RankMasks8[RANK_5] | BBS::RankMasks8[RANK_6]) :
+				(BBS::RankMasks8[RANK_5] | BBS::RankMasks8[RANK_4] | BBS::RankMasks8[RANK_3]);
 
 			Bitboard relevant_pawnAttacks = pawnAttacks & their_side;
 			Bitboard outpost_bb = 0;
@@ -841,10 +841,10 @@ namespace Eval {
 		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
 		// Step 10. Piece evaluations --> loses elo (~-23) at the moment
-		pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
-		pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
-		pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
-		pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
+		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
+		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
+		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
+		//pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
 
 		// Step 11. Interpolate between the middlegame and endgame scores
 		v = eval.interpolate(pos);

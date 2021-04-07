@@ -254,6 +254,7 @@ namespace PSQT {
 	// Penalties for early queen development in the middlegame.
 	const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0), S(12, 0) };
 
+
 #undef S
 
 	namespace {

@@ -17,14 +17,10 @@ int main() {
 	//
 	//using namespace Texel;
 	//
-	//for (int i = 1; i < 5; i++) {
-	//	tuning_variables.push_back(Parameter(&PSQT::queen_development_penalty[i], Value(0.002, 0), Value(4.0, 0)));
-	//}
+	//tuning_variables.push_back(Parameter(&outpost, Value(0.002, 0.002), Value(6.0, 6.0)));
+	//tuning_variables.push_back(Parameter(&reachable_outpost, Value(0.002, 0.002), Value(6.0, 6.0)));
 	//
-	//tuning_variables.push_back(Parameter(&queen_on_kingring, Value(0.002, 0.002), Value(4.0, 4.0)));
-	//tuning_variables.push_back(Parameter(&threatened_queen, Value(0.0025, 0.0025), Value(4.0, 4.0)));
-	//
-	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 2000);
+	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 500);
 
 	return 0;
 }

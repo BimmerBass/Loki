@@ -136,8 +136,8 @@ Piece evaluation constants
 
 */
 
-const Score outpost(20, 18);
-const Score reachable_outpost(17, -7);
+const Score outpost(31, 13);
+const Score reachable_outpost(18, -2);
 
 const Score knight_on_kingring(8, -13);
 const Score defended_knight(0, 10);
