@@ -583,13 +583,13 @@ namespace Search {
 
 
 
-		// Step 4. Mate distance pruning (~22 elo). If there has already been found a forced mate, don't search irrelevant nodes.
-		//alpha = std::max(-INF + ss->pos->ply, alpha);
-		//beta = std::min(INF - ss->pos->ply + 1, beta);
-		//
-		//if (alpha >= beta) {
-		//	return alpha;
-		//}
+		// Step 4. Mate distance pruning (~0 elo). If there has already been found a forced mate, don't search irrelevant nodes.
+		alpha = std::max(-INF + ss->pos->ply, alpha);
+		beta = std::min(INF - ss->pos->ply + 1, beta);
+		
+		if (alpha >= beta) {
+			return alpha;
+		}
 
 
 
