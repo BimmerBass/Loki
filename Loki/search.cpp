@@ -995,10 +995,10 @@ namespace Search {
 			move = ml[m]->move;
 			int piece_captured = ss->pos->piece_list[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][TOSQ(move)];
 
-			// Step 4. SEE pruning. If the move is a capture and SEE(move) < 0 (we know this if move->score < 0), just prune it.
-			//if (piece_captured != NO_TYPE && ml[m]->score < 0) {
-			//	continue;
-			//}
+			// Step 4. SEE pruning (~56 elo). If the move is a capture and SEE(move) < 0 (we know this if move->score < 0 for captures), just prune it.
+			if (piece_captured != NO_TYPE && ml[m]->score < 0) {
+				continue;
+			}
 			
 			// Step 5. Futility pruning (~30 elo). If the value of the piece captured, plus some margin (~200cp) is still not enough to raise alpha, we won't bother searching it.
 			// We'll just have to make sure, that there has been tested at least one legal move, so we don't miss a checkmate
