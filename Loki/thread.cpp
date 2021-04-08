@@ -62,10 +62,31 @@ void SearchThread_t::score_moves(MoveList* ml) {
 			(*ml)[i]->score = 1000000; // Make sure tactical moves are searched first.
 		
 			// Captures get scored with MVV/LVA. (~75 elo)
-			if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {
-				(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
-			}
+			//if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {
+			//	(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
+			//}
 			
+			// MVV/LVA and SEE scoring of captures
+			if (pos->piece_list[Them][TOSQ((*ml)[i]->move)] != NO_TYPE) {
+
+				// Score with MVV/LVA if it is a LxH
+				if (pos->piece_on(TOSQ((*ml)[i]->move), Them) > pos->piece_on(FROMSQ((*ml)[i]->move), pos->side_to_move)) {
+					(*ml)[i]->score += MvvLva[pos->piece_list[pos->side_to_move][FROMSQ((*ml)[i]->move)]][pos->piece_list[Them][TOSQ((*ml)[i]->move)]];
+				}
+				// Score with SEE if the move seems bad.
+				else {
+					int score = pos->see((*ml)[i]->move);
+				
+					if (score >= 0) {
+						(*ml)[i]->score += score;
+					}
+					else {
+						(*ml)[i]->score *= -1;
+						(*ml)[i]->score += score;
+					}
+				}
+			}
+
 			// Promotion and en-passant scoring (~11 elo)
 			if (SPECIAL((*ml)[i]->move) == PROMOTION) {
 				// If the promotion piece is a queen or we're capturing a piece, we'll score this just below the hash move
