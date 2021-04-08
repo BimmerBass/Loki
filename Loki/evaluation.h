@@ -105,12 +105,13 @@ const int max_material[2] = { Eval::queen_value.mg + 2 * Eval::rook_value.mg + 2
 
 /*
 
-Imbalance constants --- These values are taken directly from Larry Kaufman's article: "Evaluation of material imbalances"
+Imbalance constants --- These values are used as suggested by GM Larry Kaufmans paper on material imbalances.
 
 */
-const int bishop_pair[2] = { Eval::pawn_value.mg / 2, Eval::pawn_value.eg / 2 };
-const int knight_pawn_penalty[2] = { Eval::pawn_value.mg / 16, Eval::pawn_value.eg / 16 };
-const int rook_pawn_bonus[2] = { Eval::pawn_value.mg / 8, Eval::pawn_value.eg / 8 };
+const Score bishop_pair(18, 55);
+const Score knight_pawn_penaly(1, 1);
+const Score rook_pawn_bonus(3, 1);
+
 
 /*
 

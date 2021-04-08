@@ -17,10 +17,12 @@ int main() {
 	//
 	//using namespace Texel;
 	//
-	//tuning_variables.push_back(Parameter(&outpost, Value(0.002, 0.002), Value(6.0, 6.0)));
-	//tuning_variables.push_back(Parameter(&reachable_outpost, Value(0.002, 0.002), Value(6.0, 6.0)));
+	//tuning_variables.push_back(Parameter(&bishop_pair, Value(0.0015, 0.0015), Value(3.0, 3.0)));
+	//tuning_variables.push_back(Parameter(&knight_pawn_penaly, Value(0.001, 0.001), Value(2.0, 2.0), Score(INF, INF), Score(1, 1)));
+	//tuning_variables.push_back(Parameter(&rook_pawn_bonus, Value(0.001, 0.001), Value(2.0, 2.0), Score(INF, INF), Score(1, 1)));
 	//
-	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 500);
+	//
+	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 1000);
 
 	return 0;
 }
