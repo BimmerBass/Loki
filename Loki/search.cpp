@@ -756,20 +756,28 @@ namespace Search {
 		//	assert(iid_depth >= iid_reduction);
 		//	assert(ttMove == NOMOVE);
 		//
-		//	// We'll reduce the depth.
+		//	// Step 11A. Do a reduced depth search.
 		//	new_depth = depth - iid_reduction;
-		//
+		//	
 		//	score = alphabeta(ss, new_depth, alpha, beta, true, &line);
 		//
 		//	// Now we'll set the ttHit and ttMove if we found a good move.
-		//	if (line.pv[0] != NOMOVE) {
-		//		ttHit = true;
-		//		ttMove = line.pv[0];
-		//	}
+		//	//if (line.pv[0] != NOMOVE) {
+		//	//	ttHit = true;
+		//	//	ttMove = line.pv[0];
+		//	//}
+		//
+		//	// Step 11B. Probe the transposition table to see if we have found a (probably) best move.
+		//	entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		//
+		//	int ttScore = (ttHit) ? value_from_tt(entry->score, ss->pos->ply) : -INF;
+		//	unsigned int ttMove = (ttHit) ? entry->move : NOMOVE;
+		//	int ttDepth = (ttHit) ? entry->depth : 0;
+		//	int tt_flag = (ttHit) ? entry->flag : ttFlag::NO_FLAG;
 		//
 		//	line.clear();
 		//}
-		//
+		
 		// If the transposition table returned a move, this is probably the best, so we'll score it highest.
 		if (ttHit && ttMove != NOMOVE) {
 			for (int i = 0; i < moves.size(); i++) {
