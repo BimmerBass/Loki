@@ -8,16 +8,14 @@ import subprocess
 
 # Class for holding a position and its perft results
 class PerftPosition:
-    fen = ""
-    depths = 0
-    nodeCounts = []
-
     def __init__(self, _fen = "", _depths = 0, _ncs = []):
-        fen = _fen
+        self.fen = _fen
+        self.depths = 0
+        self.nodeCounts = []
 
         for i in range(_depths):
-            depths += 1
-            nodeCounts.append(_ncs[i])
+            self.depths += 1
+            self.nodeCounts.append(_ncs[i])
         
 
 def main():
@@ -35,7 +33,7 @@ def main():
     args = parser.parse_args()
 
     # Step 2. Run the engine
-    prc = subprocess.Popen(arg.exe, 
+    prc = subprocess.Popen(args.exe, 
                     stderr=subprocess.STDOUT,
                     stdout=subprocess.PIPE,
                     stdin=subprocess.PIPE,
@@ -55,7 +53,7 @@ def main():
             nodesByDepth = []
 
             for i in elements[1:]:
-                nodesByDepth.append(int(elements[i][2:]))
+                nodesByDepth.append(int(i[2:]))
             
             # Step 3A.1. Append the FEN and depths
             Positions.append(PerftPosition(FEN, len(nodesByDepth), nodesByDepth))
@@ -66,31 +64,30 @@ def main():
     n = 0
 
     for i in Positions:
-        Fen = Positions[i].fen
+        Fen = i.fen
         n += 1
         print("[*] Now perft-testing position nr. " + str(n))
         
         # Step 4A. Send the position to the engine.
-        prc.stdin.write("position fen " + fen)
+        prc.stdin.write('position fen %s \n' % (Fen))
 
-        for d in range(Positions[i].depths):
+        for d in range(i.depths):
             if (d >= args.depth):
                 break
 
-            process.stdin.write('position fen %s\n' % (Fen))
-            process.stdin.write('perft depth %d\n' % (d + 1))
-            process.stdin.flush()
+            prc.stdin.write('perft depth %d \n' % (d + 1))
+            prc.stdin.flush()
 
-            found = int(process.stdout.readline().strip())
+            found = int(prc.stdout.readline().strip())
 
-            if found == Positions[i].nodeCounts[d]:
+            if found == i.nodeCounts[d]:
                 print("Depth " + str(d + 1) + ": PASSED")
             else:
                 print("Depth " + str(d + 1) + ": FAILED ----> count: " + str(found))
  
     # Step 5. Close Loki
-    process.stdin.write('quit')
-    process.stdin.flush()
+    prc.stdin.write('quit')
+    prc.stdin.flush()
 
 
 
