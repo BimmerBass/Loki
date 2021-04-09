@@ -89,8 +89,8 @@ namespace Perft {
 
 		std::cout << "\nPerft test complete after: " << (end - start) << " milliseconds." << std::endl;
 
-		std::cout << "\nNodes visited: " << leaf_count << std::endl;
 		std::cout << std::fixed << "Nodes/second: " << (double(leaf_count) / (double(end - start) / 1000.0)) << std::endl;
+		std::cout << "\nNodes visited: " << leaf_count << std::endl;
 
 	}
 
