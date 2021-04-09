@@ -6,8 +6,8 @@
 /*
 Internal iterative deepening (IID)
 */
-constexpr int iid_depth = 5;
-constexpr int iid_reduction = 3;
+constexpr int iid_depth = 6;
+constexpr int iid_reduction = 4;
 
 /*
 Killer moves

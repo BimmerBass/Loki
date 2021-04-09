@@ -544,7 +544,7 @@ namespace Search {
 		// Step 2. Initialization of variables.
 
 		bool root_node = (ss->pos->ply == 0);
-		bool is_pv = (beta - alpha == 1) ? false : true; // We are in a PV-node if we aren't in a null window.
+		volatile bool is_pv = (beta - alpha == 1) ? false : true; // We are in a PV-node if we aren't in a null window.
 
 		int score = -INF;
 		int best_score = -INF;
@@ -567,7 +567,7 @@ namespace Search {
 
 		
 		// Determine if we're in check or not.
-		bool in_check = ss->pos->in_check();
+		volatile bool in_check = ss->pos->in_check();
 
 
 		// Step 3. Draw checking and mate-distance pruning
@@ -747,18 +747,18 @@ namespace Search {
 		MoveList moves;
 		ss->generate_moves(&moves);
 
-
 		// Step 10. Internal Iterative Deepening (IID) (~21 elo): If the transposition table didn't return a move, we'll search the position to a shallower
 		//		depth in the hopes of finding the PV.
 		// This will only be done if we are in a PV-node and at a high depth. At low depths, the search is very fast anyways.
 		// We also won't do IID when in check because these usually only have a few moves, which would make the best one pretty fast to find.
-		//if (!ttHit && is_pv && !in_check && depth > iid_depth) {
+		//if (!ttHit && !in_check && depth >= iid_depth) {
 		//	assert(iid_depth >= iid_reduction);
 		//	assert(ttMove == NOMOVE);
 		//
 		//	// Step 11A. Do a reduced depth search.
-		//	new_depth = depth - iid_reduction;
-		//	
+		//	//new_depth = depth - iid_reduction;
+		//	new_depth = depth - (depth / 4) - 1;
+		//
 		//	score = alphabeta(ss, new_depth, alpha, beta, true, &line);
 		//
 		//	// Now we'll set the ttHit and ttMove if we found a good move.
