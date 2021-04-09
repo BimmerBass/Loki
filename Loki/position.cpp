@@ -899,6 +899,11 @@ bool GameState_t::is_repetition() const {
 }
 
 
+bool GameState_t::is_draw() const {
+	// FIXME: Don't return a draw score if the position is a checkmate.
+	return (is_repetition() || fiftyMove >= 100);
+}
+
 
 void GameState_t::mirror_board() {
 	int temp_pieces[2][64] = { {0} };

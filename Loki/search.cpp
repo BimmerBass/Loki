@@ -526,7 +526,6 @@ namespace Search {
 		// Step 1. Dive into quiescence search (~382 elo)
 		if (depth <= 0) {
 			return quiescence(ss, alpha, beta);
-			//return Eval::evaluate(ss->pos);
 		}
 
 		// Update nodes
@@ -541,18 +540,11 @@ namespace Search {
 			return 0;
 		}
 
-		// Step 2. Repetition checking. If this position has been reached before, it can be drawn
-		if (ss->pos->is_repetition() && ss->pos->ply > 0) {
-			return 0;
-		}
 
-		// Protect the data structures from overflow if the depth becomes too high
-		if (ss->pos->ply >= MAXDEPTH) {
-			return Eval::evaluate(ss->pos);
-		}
+		// Step 2. Initialization of variables.
 
-
-		// Step 3. Initialization of variables.
+		bool root_node = (ss->pos->ply == 0);
+		bool is_pv = (beta - alpha == 1) ? false : true; // We are in a PV-node if we aren't in a null window.
 
 		int score = -INF;
 		int best_score = -INF;
@@ -563,10 +555,6 @@ namespace Search {
 		int reduction = 0; // Only used in moves_loop
 
 		int new_depth;
-
-		// We are in a PV-node if we aren't in a null window.
-		// In a null window, beta = alpha + 1, which means that beta - alpha = 1, so if this isn't true, we're not in a null window.
-		bool is_pv = (beta - alpha == 1) ? false : true;
 
 		// Create a new PV
 		SearchPv line;
@@ -582,18 +570,30 @@ namespace Search {
 		bool in_check = ss->pos->in_check();
 
 
+		// Step 3. Draw checking and mate-distance pruning
+		if (!root_node) {
 
-		// Step 4. Mate distance pruning (~0 elo). If there has already been found a forced mate, don't search irrelevant nodes.
-		alpha = std::max(-INF + ss->pos->ply, alpha);
-		beta = std::min(INF - ss->pos->ply + 1, beta);
-		
-		if (alpha >= beta) {
-			return alpha;
+			// Step 3A. See if the position is drawn by the fifty-move rule or repetition of moves.
+			if (ss->pos->is_draw()) {
+				return 0;
+			}
+
+			// Step 3B. Protect the data structures from overflow if the depth becomes too high
+			if (ss->pos->ply >= MAXDEPTH) {
+				return Eval::evaluate(ss->pos);
+			}
+
+			// Step 3C. Mate distance pruning (~0 elo). If there has already been found a forced mate, don't search irrelevant nodes.
+			alpha = std::max(-INF + ss->pos->ply, alpha);
+			beta = std::min(INF - ss->pos->ply + 1, beta);
+
+			if (alpha >= beta) {
+				return alpha;
+			}
+
 		}
 
-
-
-		// Step 5. Transposition table probing (~30 elo - too little?). This is done before quiescence since it is quite fast, and if we can get a cutoff before
+		// Step 4. Transposition table probing (~30 elo - too little?). This is done before quiescence since it is quite fast, and if we can get a cutoff before
 		// going into quiescence, we'll of course use that. Probing before quiescence search contributed with ~17 elo.
 		bool ttHit = false;
 		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
@@ -625,7 +625,7 @@ namespace Search {
 
 
 
-		// Step 6. Static evaluation.
+		// Step 5. Static evaluation.
 		if (in_check) {
 			// If we're in check, we'll go directly to the moves since we don't want this branch pruned away.
 			ss->stats.static_eval[ss->pos->ply] = VALUE_NONE;
@@ -641,7 +641,7 @@ namespace Search {
 
 
 
-		// Step 7. Null move pruning (~136 elo). FIXME: Improve safe_nullmove and nullmove_reduction, and set moves_path to MOVE_NULL so no unintentional pruning happens.
+		// Step 6. Null move pruning (~136 elo). FIXME: Improve safe_nullmove and nullmove_reduction, and set moves_path to MOVE_NULL so no unintentional pruning happens.
 		if (can_null && !in_check && !is_pv
 			&& depth > 2 && 
 			ss->stats.static_eval[ss->pos->ply] >= beta &&
@@ -699,7 +699,7 @@ namespace Search {
 		
 		
 		
-		// Step 8. Enhanced futility pruning (~105 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
+		// Step 7. Enhanced futility pruning (~105 elo). If our position seems so bad that it can't possibly raise alpha, we can set a futility_pruning flag
 		//		and skip tactically boring moves from the search
 		if (depth < 7 && !in_check && !is_pv
 			&& abs(alpha) < MATE && abs(beta) < MATE
@@ -709,7 +709,7 @@ namespace Search {
 		}
 		
 		
-		// Step 9. Reverse futility pruning (~30 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
+		// Step 8. Reverse futility pruning (~30 elo). If our static evaluation beats beta by the futility margin, we can most likely just return beta.
 		if (depth < 7 && !in_check && !is_pv
 			&& abs(alpha) < MATE && abs(beta) < MATE) {
 		
@@ -721,7 +721,7 @@ namespace Search {
 		}
 		
 		
-		// Step 10. Razoring (~36 elo)
+		// Step 9. Razoring (~36 elo)
 		if (use_razoring && depth <= razoring_depth && !is_pv &&
 			ss->stats.static_eval[ss->pos->ply] + razoring_margin(depth, improving) <= alpha
 			&& !in_check && abs(beta) < MATE && abs(alpha) < MATE && ss->pos->non_pawn_material()) {
@@ -748,7 +748,7 @@ namespace Search {
 		ss->generate_moves(&moves);
 
 
-		// Step 11. Internal Iterative Deepening (IID) (~21 elo): If the transposition table didn't return a move, we'll search the position to a shallower
+		// Step 10. Internal Iterative Deepening (IID) (~21 elo): If the transposition table didn't return a move, we'll search the position to a shallower
 		//		depth in the hopes of finding the PV.
 		// This will only be done if we are in a PV-node and at a high depth. At low depths, the search is very fast anyways.
 		// We also won't do IID when in check because these usually only have a few moves, which would make the best one pretty fast to find.
@@ -810,7 +810,7 @@ namespace Search {
 			int extensions = 0;
 
 
-			// Step 12. Various extensions.
+			// Step 11. Various extensions.
 
 			//if (SPECIAL(move) == CASTLING) { // Castle extensions.
 			//	extensions++;
@@ -835,7 +835,7 @@ namespace Search {
 			ss->stats.moves_path[ss->pos->ply] = move;
 
 
-			// Step 13. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
+			// Step 12. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
 			//			We just need to make sure that at least one legal move has been searched since we'd risk getting false mate scores else.
 			if (futility_pruning && 
 				(!is_tactical || (depth <= 1 && moves[m]->score < 0)) // If we're at a pre-frontier node, we'll also prune moves that are deemed to be bad.
@@ -844,7 +844,7 @@ namespace Search {
 				continue;
 			}
 
-			// Step 14. Principal variation search
+			// Step 13. Principal variation search
 			
 			new_depth = depth - 1 + extensions;
 
@@ -853,8 +853,6 @@ namespace Search {
 			}
 
 			else {
-
-				// Step 14A. Late move reductions
 				score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
 				
 				if (score > alpha && score < beta) {
@@ -875,7 +873,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				// Step 14B. If a beta cutoff was achieved, update the quit move ordering heuristics 
+				// Step 13A. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
 					ss->update_move_heuristics(move, depth, &moves);
 				}
@@ -900,7 +898,7 @@ namespace Search {
 			}
 		}
 
-		// Step 15. Checkmate/Stalemate detection.
+		// Step 14. Checkmate/Stalemate detection.
 		if (legal <= 0) {
 			if (ss->pos->in_check()) {
 				return -INF + ss->pos->ply;
@@ -939,7 +937,8 @@ namespace Search {
 			return 0;
 		}
 
-		if (ss->pos->is_repetition()) {
+		// Step 1. Check for a draw, and return immediately
+		if (ss->pos->is_draw() && ss->pos->ply) {
 			return 0;
 		}
 
@@ -947,7 +946,7 @@ namespace Search {
 			return Eval::evaluate(ss->pos);
 		}
 
-		// Step 1. Static evaluation and possible cutoff if this beats beta.
+		// Step 2. Static evaluation and possible cutoff if this beats beta.
 		int stand_pat = Eval::evaluate(ss->pos);
 
 		assert(stand_pat > -MATE && stand_pat < MATE);
@@ -970,13 +969,13 @@ namespace Search {
 
 
 
-		// Step 2. Delta pruning (~10 elo). If our position is so bad that not even the best capture possible would be enough to raise alpha, we'll assume that it is an all-node.
+		// Step 3. Delta pruning (~10 elo). If our position is so bad that not even the best capture possible would be enough to raise alpha, we'll assume that it is an all-node.
 		//if (stand_pat + std::max(delta_margin, ss->pos->best_capture_possible()) <= alpha && !in_check) {
 		//	return alpha;
 		//}
 
 
-		// Step 3. Generation of moves
+		// Step 4. Generation of moves
 
 		MoveList ml;
 
@@ -995,12 +994,12 @@ namespace Search {
 			move = ml[m]->move;
 			int piece_captured = ss->pos->piece_list[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][TOSQ(move)];
 
-			// Step 4. SEE pruning (~56 elo). If the move is a capture and SEE(move) < 0 (we know this if move->score < 0 for captures), just prune it.
+			// Step 5. SEE pruning (~56 elo). If the move is a capture and SEE(move) < 0 (we know this if move->score < 0 for captures), just prune it.
 			if (piece_captured != NO_TYPE && ml[m]->score < 0) {
 				continue;
 			}
 			
-			// Step 5. Futility pruning (~30 elo). If the value of the piece captured, plus some margin (~200cp) is still not enough to raise alpha, we won't bother searching it.
+			// Step 6. Futility pruning (~30 elo). If the value of the piece captured, plus some margin (~200cp) is still not enough to raise alpha, we won't bother searching it.
 			// We'll just have to make sure, that there has been tested at least one legal move, so we don't miss a checkmate
 			//if (SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT && piece_captured != NO_TYPE &&
 			//	stand_pat + delta_piece_value[piece_captured] + delta_margin <= alpha
