@@ -899,6 +899,24 @@ bool GameState_t::is_repetition() const {
 }
 
 
+
+bool GameState_t::insufficient_material() const {
+
+	// KvK is an immediate draw
+	if ((all_pieces[WHITE] ^ pieceBBS[KING][WHITE]) == 0 && (all_pieces[BLACK] ^ pieceBBS[KING][BLACK]) == 0) {
+		return true;
+	}
+
+	// Lone king against a king and a minor is an immediate draw.
+
+
+	// KBvKB if the two bishops are of the same square-color
+
+	return false;
+}
+
+
+
 bool GameState_t::is_draw() const {
 	// FIXME: Don't return a draw score if the position is a checkmate.
 	return (is_repetition() || fiftyMove >= 100);

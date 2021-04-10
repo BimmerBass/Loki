@@ -142,6 +142,8 @@ private:
 	// Returns true if the position has been had before.
 	bool is_repetition() const;
 
+	// Returns true if the material situation on the board is such that none of the sides can possibly checkmate the other.
+	bool insufficient_material() const;
 
 	// Array for all SavedInfo_t after each move. Declared on heap because it might take too much stack when having multiple GameState_t for multithreading.
 	SavedInfo_t history[MAXGAMEMOVES] = {  };
