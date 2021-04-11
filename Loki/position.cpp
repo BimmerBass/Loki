@@ -907,10 +907,20 @@ bool GameState_t::insufficient_material() const {
 		return true;
 	}
 
-	// Lone king against a king and a minor is an immediate draw.
+	int num_pieces_total = countBits(all_pieces[WHITE] | all_pieces[BLACK]);
 
+	// Lone king against a king and a minor is an immediate draw. This is true if there are three pieces and either side has a bishop or a knight
+	if (num_pieces_total == 3 
+		&& countBits(pieceBBS[KNIGHT][WHITE] | pieceBBS[BISHOP][WHITE] | pieceBBS[KNIGHT][BLACK] | pieceBBS[BISHOP][BLACK]) > 0) {
+		return true;
+	}
 
 	// KBvKB if the two bishops are of the same square-color
+	if (num_pieces_total == 4 && countBits(pieceBBS[BISHOP][WHITE]) == 1 && countBits(pieceBBS[BISHOP][BLACK]) == 1 
+		&& (((pieceBBS[BISHOP][WHITE] | pieceBBS[BISHOP][BLACK]) | BBS::DARK_SQUARES) == BBS::DARK_SQUARES || 
+			(((pieceBBS[BISHOP][WHITE] | pieceBBS[BISHOP][BLACK]) | BBS::LIGHT_SQUARES) == BBS::LIGHT_SQUARES))) {
+		return true;
+	}
 
 	return false;
 }
@@ -919,7 +929,7 @@ bool GameState_t::insufficient_material() const {
 
 bool GameState_t::is_draw() const {
 	// FIXME: Don't return a draw score if the position is a checkmate.
-	return (is_repetition() || fiftyMove >= 100);
+	return (is_repetition() || fiftyMove >= 100);// || insufficient_material());
 }
 
 

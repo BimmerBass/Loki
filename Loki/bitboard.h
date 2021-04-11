@@ -16,6 +16,9 @@ namespace BBS {
 	const Bitboard EMPTY = std::stoull("0000000000000000000000000000000000000000000000000000000000000000", nullptr, 2);
 	const Bitboard UNIVERSE = std::stoull("1111111111111111111111111111111111111111111111111111111111111111", nullptr, 2);
 
+	constexpr Bitboard DARK_SQUARES = 12273903644374837845;
+	constexpr Bitboard LIGHT_SQUARES = ~DARK_SQUARES;
+
 	constexpr Bitboard RankMasks8[8] =/*from rank1 to rank8*/
 	{
 		255ULL, 
