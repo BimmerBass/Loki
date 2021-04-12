@@ -43,11 +43,11 @@ FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cp
 
 SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
-OUTFILE=Loki2
+OUTFILE=Loki3
 
 # Add .exe exstension for windows builds.
 ifeq ($(OS), Windows_NT)
-OUTFILE = Loki2.exe
+OUTFILE = Loki3.exe
 endif
 
 all:
