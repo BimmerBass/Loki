@@ -14,26 +14,44 @@ Function to determine the best possible capture on the board. For the side in qu
 
 int GameState_t::best_capture_possible() const {
 
-	int smallest_attacker = KING;
-	int biggest_victim = PAWN;
+	// Assume opponent has a pawn
+	int score = see_pieces[PAWN];
 
-	for (int pce = PAWN; pce <= QUEEN; pce++) {
-
+	// See if we can capture a piece with a higher value
+	for (int pce = QUEEN; pce > PAWN; pce++) {
 		if (pieceBBS[pce][(side_to_move == WHITE) ? BLACK : WHITE] != 0) {
-			biggest_victim = pce;
+			score = see_pieces[pce];
+			break;
 		}
-
 	}
 
-	for (int pce = QUEEN; pce >= PAWN; pce--) {
-
-		if (pieceBBS[pce][side_to_move] != 0) {
-			smallest_attacker = pce;
-		}
-
+	// Promotions
+	if ((pieceBBS[PAWN][side_to_move] & BBS::RankMasks8[(side_to_move == WHITE) ? RANK_7 : RANK_2]) != 0) { // If we have a pawn on the rank before promotion
+		score += see_pieces[QUEEN] - see_pieces[PAWN]; // We loose a queen and gain a pawn
 	}
 
-	return (see_pieces[biggest_victim] - see_pieces[smallest_attacker]);
+
+	return score;
+	//int smallest_attacker = KING;
+	//int biggest_victim = PAWN;
+	//
+	//for (int pce = PAWN; pce <= QUEEN; pce++) {
+	//
+	//	if (pieceBBS[pce][(side_to_move == WHITE) ? BLACK : WHITE] != 0) {
+	//		biggest_victim = pce;
+	//	}
+	//
+	//}
+	//
+	//for (int pce = QUEEN; pce >= PAWN; pce--) {
+	//
+	//	if (pieceBBS[pce][side_to_move] != 0) {
+	//		smallest_attacker = pce;
+	//	}
+	//
+	//}
+	//
+	//return (see_pieces[biggest_victim] - see_pieces[smallest_attacker]);
 }
 
 

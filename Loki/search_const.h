@@ -6,8 +6,8 @@
 /*
 Internal iterative deepening (IID)
 */
-constexpr int iid_depth = 5;
-constexpr int iid_reduction = 3;
+constexpr int iid_depth = 6;
+constexpr int iid_reduction = 4;
 
 /*
 Killer moves
@@ -52,7 +52,7 @@ constexpr int lmr_pieceVals[5] = { 100, 300, 300, 500, 900 };
 Razoring
 */
 constexpr bool use_razoring = true;
-constexpr int razoring_depth = 3;
+constexpr int razoring_depth = 2;
 
 
 /*

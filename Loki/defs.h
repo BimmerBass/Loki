@@ -14,6 +14,7 @@
 constexpr int MAXPOSITIONMOVES = 256;
 constexpr int MAXGAMEMOVES = 1024;
 constexpr int NOMOVE = 0;
+constexpr int MOVE_NULL = 0;
 
 
 const std::string START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

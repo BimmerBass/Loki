@@ -156,20 +156,14 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 
 	int sq = 0;
 
-	char* fen = new char[FEN_STR.length() + 1];
-	
-#if defined(_MSC_VER)
-	strcpy_s(fen, FEN_STR.length() + 1, FEN_STR.c_str());
-#else
-	strcpy(fen, FEN_STR.c_str());
-#endif
-
 	int count = 0;
+	int n = 0;
 
-	while (r >= RANK_1 && *fen) {
+
+	while (r >= RANK_1 && FEN_STR[n]) {
 		count = 1;
 
-		switch (*fen) {
+		switch (FEN_STR[n]) {
 		case 'P': piece = PAWN; color = WHITE; break;
 		case 'N': piece = KNIGHT; color = WHITE; break;
 		case 'B': piece = BISHOP; color = WHITE; break;
@@ -193,7 +187,7 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 		case '7':
 		case '8':
 			piece = NO_TYPE;
-			count = *fen - '0';
+			count = FEN_STR[n] - '0';
 			break;
 
 
@@ -201,7 +195,7 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 		case ' ':
 			r--;
 			f = FILE_A;
-			fen++;
+			n++;
 			continue;
 
 		default:
@@ -214,45 +208,39 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 			piece_list[color][index] = piece;
 			f++;
 		}
-		fen++;
+
+		n++;
 	}
 
-	assert(*fen == 'w' || *fen == 'b');
+	assert(FEN_STR[n] == 'w' || FEN_STR[n] == 'b');
 
-	side_to_move = (*fen == 'w') ? WHITE : BLACK;
-	fen += 2;
+	side_to_move = (FEN_STR[n] == 'w') ? WHITE : BLACK;
+	n += 2;
 
 	for (int i = 0; i < 4; i++) {
-		if (*fen == ' ') {
+		if (FEN_STR[n] == ' ') {
 			break;
 		}
-		else if (*fen == 'K') {
+		else if (FEN_STR[n] == 'K') {
 			castleRights |= (1 << WKCA);
 		}
-		else if (*fen == 'Q') {
+		else if (FEN_STR[n] == 'Q') {
 			castleRights |= (1 << WQCA);
 		}
-		else if (*fen == 'k') {
+		else if (FEN_STR[n] == 'k') {
 			castleRights |= (1 << BKCA);
 		}
-		else if (*fen == 'q') {
+		else if (FEN_STR[n] == 'q') {
 			castleRights |= (1 << BQCA);
 		}
 
-		/*switch (*fen) {
-		case 'K': position->castleRights |= (1 << WKCA);
-		case 'Q': position->castleRights |= (1 << WQCA);
-		case 'k': position->castleRights |= (1 << BKCA);
-		case 'q': position->castleRights |= (1 << BQCA);
-		}*/
-
-		fen++;
+		n++;
 	}
-	fen++;
+	n++;
 
-	if (*fen != '-') {
-		f = fen[0] - 'a';
-		r = fen[1] - '1';
+	if (FEN_STR[n] != '-' && FEN_STR.length() >= n + 1) {
+		f = FEN_STR[n + 0] - 'a';
+		r = FEN_STR[n + 1] - '1';
 
 		assert(f >= FILE_A && f <= FILE_H);
 		assert(r >= RANK_1 && r <= RANK_8);
@@ -754,7 +742,10 @@ int GameState_t::make_nullmove() {
 	// Step 2. Toggle side to move in the hashkey
 	posKey ^= BBS::Zobrist::side_key;
 
-	// Step 3. If there is an en-passant square, return the index and remove it.
+	// Step 3. Increment ply
+	ply += 1;
+
+	// Step 4. If there is an en-passant square, return the index and remove it.
 	if (enPasSq != NO_SQ) {
 		int enPas = enPasSq;
 		enPasSq = NO_SQ;
@@ -786,7 +777,10 @@ void GameState_t::undo_nullmove(int oldEnPas) {
 	// Step 2. Toggle side in hashkey
 	posKey ^= BBS::Zobrist::side_key;
 
-	// Step 3. Change side to move.
+	// Step 3. Decrement ply
+	ply -= 1;
+
+	// Step 4. Change side to move.
 	side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;
 }
 
@@ -821,9 +815,8 @@ Used for razoring
 */
 
 bool GameState_t::non_pawn_material() const {
-	SIDE Them = (side_to_move == WHITE) ? BLACK : WHITE;
-	return ((pieceBBS[KNIGHT][side_to_move] | pieceBBS[BISHOP][side_to_move] | pieceBBS[ROOK][side_to_move] | pieceBBS[QUEEN][side_to_move]) != 0 ? true : false)
-		&& ((pieceBBS[KNIGHT][Them] | pieceBBS[BISHOP][Them] | pieceBBS[ROOK][Them] | pieceBBS[QUEEN][Them]) != 0 ? true : false);
+	return ((pieceBBS[KNIGHT][WHITE] | pieceBBS[BISHOP][WHITE] | pieceBBS[ROOK][WHITE] | pieceBBS[QUEEN][WHITE]) != 0 ? true : false)
+		&& ((pieceBBS[KNIGHT][BLACK] | pieceBBS[BISHOP][BLACK] | pieceBBS[ROOK][BLACK] | pieceBBS[QUEEN][BLACK]) != 0 ? true : false);
 }
 
 
@@ -905,6 +898,39 @@ bool GameState_t::is_repetition() const {
 	return false;
 }
 
+
+
+bool GameState_t::insufficient_material() const {
+
+	// KvK is an immediate draw
+	if ((all_pieces[WHITE] ^ pieceBBS[KING][WHITE]) == 0 && (all_pieces[BLACK] ^ pieceBBS[KING][BLACK]) == 0) {
+		return true;
+	}
+
+	int num_pieces_total = countBits(all_pieces[WHITE] | all_pieces[BLACK]);
+
+	// Lone king against a king and a minor is an immediate draw. This is true if there are three pieces and either side has a bishop or a knight
+	if (num_pieces_total == 3 
+		&& countBits(pieceBBS[KNIGHT][WHITE] | pieceBBS[BISHOP][WHITE] | pieceBBS[KNIGHT][BLACK] | pieceBBS[BISHOP][BLACK]) > 0) {
+		return true;
+	}
+
+	// KBvKB if the two bishops are of the same square-color
+	if (num_pieces_total == 4 && countBits(pieceBBS[BISHOP][WHITE]) == 1 && countBits(pieceBBS[BISHOP][BLACK]) == 1 
+		&& (((pieceBBS[BISHOP][WHITE] | pieceBBS[BISHOP][BLACK]) | BBS::DARK_SQUARES) == BBS::DARK_SQUARES || 
+			(((pieceBBS[BISHOP][WHITE] | pieceBBS[BISHOP][BLACK]) | BBS::LIGHT_SQUARES) == BBS::LIGHT_SQUARES))) {
+		return true;
+	}
+
+	return false;
+}
+
+
+
+bool GameState_t::is_draw() const {
+	// FIXME: Don't return a draw score if the position is a checkmate.
+	return (is_repetition() || fiftyMove >= 100);// || insufficient_material());
+}
 
 
 void GameState_t::mirror_board() {

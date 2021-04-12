@@ -15,6 +15,7 @@ perft_transposition_table = no # Only used to make perft faster when testing mov
 debug = no
 
 
+
 ### Add compiler sepcific flags
 CXXFLAGS = -std=c++17 -lstdc++ -march=native
 
@@ -36,18 +37,17 @@ CXXFLAGS += -DNDEBUG
 endif
 
 
-
 SRC_PATH=Loki
 
-FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cpp movegen.cpp perft.cpp position.cpp psqt.cpp search.cpp see.cpp thread.cpp transposition.cpp uci.cpp
+FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cpp movegen.cpp perft.cpp position.cpp psqt.cpp search.cpp see.cpp thread.cpp transposition.cpp uci.cpp texel.cpp
 
 SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
-OUTFILE=Loki2
+OUTFILE=Loki3
 
 # Add .exe exstension for windows builds.
 ifeq ($(OS), Windows_NT)
-OUTFILE = Loki2.exe
+OUTFILE = Loki3.exe
 endif
 
 all:

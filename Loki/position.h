@@ -89,10 +89,9 @@ public:
 
 	// Returns true if both sides have pieces on the board.
 	bool non_pawn_material() const;
-
-	// Returns true if the position has been had before.
-	bool is_repetition() const;
 	
+	// Returns true if we are repeating moves or have reached the fifty-move rule limit.
+	bool is_draw() const;
 
 	/*
 	SEE functions - the SEE algorithm itself will be implemented later
@@ -140,6 +139,12 @@ public:
 	}
 
 private:
+	// Returns true if the position has been had before.
+	bool is_repetition() const;
+
+	// Returns true if the material situation on the board is such that none of the sides can possibly checkmate the other.
+	bool insufficient_material() const;
+
 	// Array for all SavedInfo_t after each move. Declared on heap because it might take too much stack when having multiple GameState_t for multithreading.
 	SavedInfo_t history[MAXGAMEMOVES] = {  };
 	int history_ply = 0; // Amount of SaveInfo_t in history.	

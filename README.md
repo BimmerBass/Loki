@@ -1,24 +1,15 @@
 # Loki
-Loki is a UCI-compliant chess engine written in C++. At the moment it has been estimated to have a strength of ~1773 elo, but this will hopefully be greatly increased.
+Loki is a UCI-compliant chess engine written in C++. At the moment it has been estimated to have a strength of 1820 (CCRL blitz) elo, but this will hopefully be greatly increased.
 
 ## Why the name?
 After a bit of googling I found someone who recommended that one uses a name that describes what the program does (duh..). Then, I thought that a chess engine is cold, calculating and cunning, so naturally the first name to come to mind
 was the nordic god, Loki. After elementary school - where we learned about the nordic gods - I've always thought he was a bit of a d*ck, and so is a chess engine.
 
-#### Special thanks to
-- The [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) which has been used extensively throughout the creation of Loki.
-- [BlueFeverSoft](https://github.com/bluefeversoft), the creator of the Vice chess engine. Some of the code in Loki have been inspired from Vice. This is especially true for the UCI-implementation, which has nearly been copied.
-- The Stockfish source code and community, which has been used where the wiki fell short.
-- The creator of [Laser](https://github.com/jeffreyan11/laser-chess-engine) whose implementation of Lazy SMP has served as the inspiration for the one in Loki.
-- The [Computer Chess Club](http://www.talkchess.com/forum3/viewforum.php?f=7) which has provided a lot of knowledge and tips.
-- The creator of [chess_programming](https://github.com/maksimKorzh/chess_programming) from whom I've taken the magic bitboards implementation.
-- [Cute Chess](https://cutechess.com/) the tool used for testing changes and additions.
-
 ## Elo history
 | Version   | Elo   | TC   |
 |-----------|-------|------|
 | 1.0.2    | 1766  | 2'+1"|
-| 1.2.0     | 1817  | 2'+1''|
+| 1.2.0     | 1820  | 2'+1''|
 
 ## Implementation
 Loki uses bitboards as its main board representation
@@ -28,43 +19,45 @@ Loki uses bitboards as its main board representation
 - Overall **Perft @ depth = 5 speed of 290ms** from starting position, without bulk-counting.
 
 #### Evaluation
-The evaluation is very simple at the moment, and a good elo increase is expected when I get around to improving it.
+The evaluation considers the following characteristics of a given position:
 - Material.
 - Piece-square tables.
+- Material imbalances.
 - Pawn structure and passed pawns.
-- Tapered eval to interpolate between game phases.
-- Piece mobility evaluation.
-    - Safe mobility for knights
+- Space term in the middlegame
+- Safe piece mobility evaluation.
 - King safety evaluation.
 - Specialized piece evaluation. This has been implemented, but lost elo, so it is disabled at the moment. I will experiment with it in the future.
 
+A tapered eval is used to interpolate between game phases. Additionally, the entire evaluation is tuned using an SPSA-texel optimization algorithm.
+
 #### Search
 - Lazy SMP supporting up to 8 threads.
-- Transposition table supporting sizes from 1MB to 1000MB.
+- Two-bucket transposition table supporting sizes from 1MB to 1000MB.
 - Iterative deepening.
 - Aspiration windows.
 - Fail-hard principal variation search.
     - Killer moves.
     - History heuristic.
-    - Countermove heuristic.
+    - ~~Countermove heuristic~~.
     - Mvv/Lva for capture sorting.
     - Static Exchange evaluation for move ordering.
     - Mate distance pruning.
-    - Adaptive Null move pruning with reduction dependant on static_eval - beta which will reduce more aggresively when we're expected to be much above beta, and less when we're not.
+    - Adaptive Null move pruning.
     - Enhanced futility pruning.
     - Reverse futility pruning.
     - Razoring.
-    - Internal iterative deepening if no hash move has been found.
-    - In check extensions and castling extensions.
-    - Late move pruning.
-    - Late move reductions.
+    - ~~Internal iterative deepening if no hash move has been found~~.
+    - In check extensions ~~and castling extensions~~.
+    - ~~Late move pruning~~.
+    - ~~Late move reductions~~.
 - Quiescence search to resolve captures
-    - Delta pruning.
-    - Futility pruning for individual moves.
+    - ~~Delta pruning~~.
+    - ~~Futility pruning for individual moves~~.
     - SEE pruning of bad captures.
 
 With all the above mentioned move ordering techniques, Loki achieves a cutoff on the first move around 85%-90% of the time.
-##### Note: **Late move reductions and late move pruning are disabled at the moment. This is because the evaluation function needs to be more accurate in order for them to work optimally.**
+##### Note: **Features with a striketrough (line through the text) are disabled at the moment due to missing elo gains. These will hopefully be successfully implemented in the future.**
 
 ## Building Loki
 Loki has been tested to build without errors on both MSVC and GCC (with some warnings by the former). If Loki should be compiled to a non-native popcount version one will have to either:
@@ -74,9 +67,6 @@ Loki has been tested to build without errors on both MSVC and GCC (with some war
 It is also possible to change the amount of optimizations with both compilers by (if MSVC) going to the project properties or (if GCC) setting optimize to "no" in the makefile.
 
 ##### TO-DO
-- Optimize existing pruning techniques.
-- Make compilation with GCC more efficient and add native methods for countBits, bitScanForward and bitScanReverse for different systems and architectures.
-- Make LMR and LMP more aggresive.
 - Try the following additions:
     - Singular extensions.
     - AEL-pruning.
@@ -87,6 +77,15 @@ It is also possible to change the amount of optimizations with both compilers by
     - Null move reductions.
     - Null move threat extensions.
 - Make the evaluation term for pieces work.
-- If Loki ever reaches an elo on CCRL of ~2300 I will implement an optimization algorithm called [AdamSPSA](https://arxiv.org/pdf/1910.03591.pdf) 
-(see page 4 for parameter updates), in order to tune the evaluation function and search parameters.
 - I am very amazed of Stockfish's NNUE evaluation, and if I ever get Loki to play descent chess on CCRL, I will look into creating a new evaluation with some sort of Machine Learning.
+
+#### Special thanks to
+- The [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) which has been used extensively throughout the creation of Loki.
+- [BlueFeverSoft](https://github.com/bluefeversoft), the creator of the Vice chess engine. Some of the code in Loki have been inspired from Vice. This is especially true for the UCI-implementation, which has nearly been copied.
+- The Stockfish source code and community, which has been used where the wiki fell short.
+- [spsa](https://github.com/zamar/spsa) the repository for tuning StockFish, which has been a big help in implementing Loki's SPSA tuner.
+- [Evaluation & Tuning in Chess Engines](https://github.com/AndyGrant/Ethereal/blob/master/Tuning.pdf), a paper written by Andrew Grant (creator of Ethereal), on tuning chess engines, which has contributed to my understanding of the usage of gradient descent algorithms in chess engines.
+- The creator of [Laser](https://github.com/jeffreyan11/laser-chess-engine) whose implementation of Lazy SMP has served as the inspiration for the one in Loki.
+- The [Computer Chess Club](http://www.talkchess.com/forum3/viewforum.php?f=7) which has provided a lot of knowledge and tips.
+- The creator of [chess_programming](https://github.com/maksimKorzh/chess_programming) from whom I've taken the magic bitboards implementation.
+- [Cute Chess](https://cutechess.com/) the tool used for testing changes and additions.

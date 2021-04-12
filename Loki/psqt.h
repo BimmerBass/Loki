@@ -8,53 +8,65 @@ namespace PSQT {
 	class Score {
 	public:
 		Score(int m, int e) {
-			mgVal = m; egVal = e;
+			mg = m; eg = e;
+		
 		}
 
-		int mg() const {
-			return mgVal;
-		}
-		int eg() const {
-			return egVal;
+		Score (const Score &s){
+			mg = s.mg;
+			eg = s.eg;
 		}
 
-	private:
-		int mgVal = 0;
-		int egVal = 0;
+		Score() {};
+
+		int mg = 0;
+		int eg = 0;
 	};
 
 	/*
 	Piece square table
 	*/
-	extern const int PawnTableMg[64];
-	extern const int PawnTableEg[64];
 
-	extern const int KnightTableMg[64];
-	extern const int KnightTableEg[64];
+	extern const Score PawnTable[64];
 
-	extern const int BishopTableMg[64];
-	extern const int BishopTableEg[64];
+	extern const Score KnightTable[64];
 
-	extern const int RookTableMg[64];
-	extern const int RookTableEg[64];
+	extern const Score BishopTable[64];
 
-	extern const int QueenTableMg[64];
-	extern const int QueenTableEg[64];
+	extern const Score RookTable[64];
 
-	extern const int KingTableMg[64];
-	extern const int KingTableEg[64];
+	extern const Score QueenTable[64];
+
+	extern const Score KingTable[64];
+
+
+	/*
+	Pawn-specific tables
+	*/
+	extern const Score passedPawnTable[64];
+
+	/*
+	Piece-specific tables
+
+	*/
+	extern const std::vector<std::vector<Score>> mobilityBonus;
+
+	extern const Score queen_development_penalty[5];
 
 	/*
 	Other square tables
 	*/
-	extern const int passedPawnTable[64];
 
 	extern const int Mirror64[64];
 
 	extern int ManhattanDistance[64][64];
-	
-	extern const std::vector<std::vector<Score>> mobilityBonus;
 
+
+	/*
+	Space term
+	*/
+
+	extern const Score space_bonus[32];
 
 	/*
 	King-safety specific tables
@@ -62,7 +74,14 @@ namespace PSQT {
 	extern const Score safety_table[100];
 
 	extern const int castledPawnAdvancementMg[64];
-	extern const int pawnStormMg[64];
+	extern const Score pawnStorm[64];
+
+	extern const Score king_pawn_distance_penalty[8];
+
+
+	extern const Score open_kingfile_penalty[8];
+
+	extern const Score semiopen_kingfile_penalty[8];
 
 	void initManhattanDistance();
 

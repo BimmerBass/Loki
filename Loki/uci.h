@@ -8,10 +8,10 @@
 // This is just a neat way of storing the info
 enum InfoParameters :int { NAME = 0, VERSION = 1, AUTHOR = 2 };
 
-// Current rating measured against TSCP (1725 elo) (1 min + 0 s, 40 move tc): 1773 elo
+// Current rating measured against V 2.0: 2388 (5s + 0.1s with 500 games)
 static std::map<InfoParameters, std::string> EngineInfo {
 	{NAME, "Loki"},
-	{ VERSION, "2.0.0" },
+	{ VERSION, "3.0.0" },
 	{ AUTHOR, "Niels Abildskov" }
 };
 

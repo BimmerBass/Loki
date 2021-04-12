@@ -5,9 +5,10 @@ TranspositionTable *tt = new TranspositionTable(TT_DEFAULT_SIZE);
 
 TranspositionTable::TranspositionTable(uint64_t size) {
 	uint64_t upperSize = MB(size) / sizeof(TT_Entry);
-	numEntries = shrink_to_fit(upperSize); // numEntries should be a power of two.
+	numEntries = nearest_power_two(upperSize); // numEntries should be a power of two.
+	num_slots = numEntries / 2;
 	
-	entries = new TT_Entry[numEntries];
+	table = new TT_Slot[num_slots];
 
 	clear_table();
 
@@ -15,7 +16,7 @@ TranspositionTable::TranspositionTable(uint64_t size) {
 }
 
 TranspositionTable::~TranspositionTable() {
-	delete[] entries;
+	delete[] table;
 }
 
 // We shift the size by twenty to go from bytes to megabytes
@@ -24,12 +25,13 @@ size_t TranspositionTable::size() {
 }
 
 void TranspositionTable::resize(uint64_t size) {
-	delete[] entries;
+	delete[] table;
 
 	uint64_t upperSize = MB(size) / sizeof(TT_Entry);
-	numEntries = shrink_to_fit(upperSize);
+	numEntries = nearest_power_two(upperSize);
+	num_slots = numEntries / 2;
 
-	entries = new TT_Entry[numEntries];
+	table = new TT_Slot[num_slots];
 
 	clear_table();
 
@@ -39,23 +41,26 @@ void TranspositionTable::resize(uint64_t size) {
 
 void TranspositionTable::clear_table() {
 
-	for (int i = 0; i < numEntries; i++) {
-		entries[i].key = 0;
-		entries[i].data.move = NOMOVE;
-		entries[i].data.score = 0;
-		entries[i].data.depth = 0;
-		entries[i].data.flag = ttFlag::NO_FLAG;
+	for (int i = 0; i < num_slots; i++) {
+		table[i].EntryOne.clear();
+		table[i].EntryTwo.clear();
 	}
+
+	generation = 0;
 }
 
 
 TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
-	TT_Entry* slot = &entries[key % numEntries];
-	uint64_t* data = (uint64_t*) &slot->data;
+	TT_Slot* slot = &table[key & (num_slots - 1)];
 
-	if (slot->key == (key ^ *data)) {
+	// Check both slots for the position.
+	if (slot->EntryOne.key == (key >> 48)) {
 		hit = true;
-		return slot;
+		return &slot->EntryOne;
+	}
+	else if (slot->EntryTwo.key == (key >> 48)) {
+		hit = true;
+		return &slot->EntryTwo;
 	}
 
 	hit = false;
@@ -64,21 +69,22 @@ TT_Entry* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
 
 
 // For now we are just using a replace all strategy
-void TranspositionTable::store_entry(const GameState_t* pos, int move, int score, unsigned int depth, ttFlag flag) {
-	TT_Entry* slot = &entries[pos->posKey % numEntries];
-	uint64_t* data = (uint64_t*) &slot->data;
+void TranspositionTable::store_entry(const GameState_t* pos, uint16_t move, int16_t score, uint16_t depth, uint16_t flag) {
+	TT_Slot* slot = &table[pos->posKey & (num_slots - 1)];
 
-	assert(flag >= ttFlag::ALPHA && flag <= ttFlag::EXACT);
+	// Firstly, check if the depth-preferred entry in the slot can be occupied.
+	// We'll also replace if it is an entry from an older search.
+	if (depth >= slot->EntryOne.depth || depth == slot->EntryOne.depth - 1 || generation > slot->EntryOne.age) {
 
-	/*
-	Here we use the so-called "under-cut" replacement scheme as suggested by H.G. Muller on the talkchess forum.
-	It keeps a lot of the depth-first strategy, but doesn't save irrelevant and unneccesary entries.
-	*/
-	if (depth >= slot->data.depth || depth == slot->data.depth - 1) {
-		slot->key = pos->posKey ^ *data;
-		slot->data.move = move;
-		slot->data.score = value_to_tt(score, pos->ply);
-		slot->data.depth = depth;
-		slot->data.flag = flag;
+		// If generation has reached its limit (127), we'll subtract a random number from that so we'll be able to still replace later on.
+		slot->EntryOne.set(pos, move, score, depth, flag, (generation >= 127) ? generation - (pos->posKey & 1) : generation);
+		return; // Don't populate the always-replace entry if this is ok.
 	}
+
+	// If we couldn't populate the depth-preferred entry, we'll insert the data in the always-replace.
+	else {
+		slot->EntryTwo.set(pos, move, score, depth, flag, generation);
+		return;
+	}
+
 }
