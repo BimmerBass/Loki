@@ -259,10 +259,10 @@ namespace Search {
 					reduction_failed = (reductions == 0) ? 0 : (double(re_searches) / double(reductions)) * 100.0;
 				}
 
-				std::cout << "Move Ordering: " << move_ordering << "%" << std::endl;
-				std::cout << "Branching factor: " << branching_factor << std::endl;
-				std::cout << "LMR re-search: " << reduction_failed << "%" << std::endl;
-				std::cout << "LMR reductions:" << reductions << std::endl;
+				//std::cout << "Move Ordering: " << move_ordering << "%" << std::endl;
+				//std::cout << "Branching factor: " << branching_factor << std::endl;
+				//std::cout << "LMR re-search: " << reduction_failed << "%" << std::endl;
+				//std::cout << "LMR reductions:" << reductions << std::endl;
 			}
 		} // Iterative deepening end
 
