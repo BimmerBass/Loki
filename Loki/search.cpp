@@ -853,11 +853,24 @@ namespace Search {
 			}
 
 			else {
-				score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
 				
-				if (score > alpha && score < beta) {
-					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
+					int R = 1;
+
+					score = -alphabeta(ss, depth - 1 - R, -(alpha + 1), -alpha, true, &line);
 				}
+				else {
+					score = alpha + 1;
+				}
+
+				if (score > alpha) {
+					score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
+
+					if (score > alpha && score < beta) {
+						score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+					}
+				}
+
 			}
 
 			ss->pos->undo_move();
