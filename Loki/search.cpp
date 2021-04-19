@@ -805,6 +805,8 @@ namespace Search {
 			//int piece_moved = ss->pos->piece_list[ss->pos->side_to_move][FROMSQ(move)];
 			int piece_captured = ss->pos->piece_on(TOSQ(move), Them);
 			int piece_moved = ss->pos->piece_on(FROMSQ(move), ss->pos->side_to_move);
+			int fromSq = FROMSQ(move);
+			int toSq = TOSQ(move);
 
 			reduction = 0;
 			int extensions = 0;
@@ -854,8 +856,15 @@ namespace Search {
 
 			else {
 				
+				// Step 13A. Late move reductions. If we haven't raised alpha yet, we're probably in an ALL-node,
+				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha.
 				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
 					int R = 1;
+
+					// Increase reduction for moves with history < 0 (~5 elo)
+					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
+						R += 1;
+					}
 
 					score = -alphabeta(ss, depth - 1 - R, -(alpha + 1), -alpha, true, &line);
 				}
