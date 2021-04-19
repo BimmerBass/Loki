@@ -831,7 +831,8 @@ namespace Search {
 			legal++;
 
 			bool gives_check = ss->pos->in_check(); // FIXME: Add function to determine if a move gives check before making it.
-			bool is_tactical = capture || gives_check || in_check || SPECIAL(move) == PROMOTION || SPECIAL(move) == ENPASSANT;
+			//bool is_tactical = capture || gives_check || in_check || SPECIAL(move) == PROMOTION || SPECIAL(move) == ENPASSANT;
+			bool is_tactical = gives_check || in_check || SPECIAL(move) == PROMOTION || SPECIAL(move) == ENPASSANT;
 
 			// Set the move we're searching for use in the countermove heuristic.
 			ss->stats.moves_path[ss->pos->ply] = move;
@@ -840,7 +841,7 @@ namespace Search {
 			// Step 12. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
 			//			We just need to make sure that at least one legal move has been searched since we'd risk getting false mate scores else.
 			if (futility_pruning && 
-				(!is_tactical || (depth <= 1 && moves[m]->score < 0)) // If we're at a pre-frontier node, we'll also prune moves that are deemed to be bad.
+				(!(is_tactical || capture) || (depth <= 1 && moves[m]->score < 0)) // If we're at a pre-frontier node, we'll also prune moves that are deemed to be bad.
 				&& legal > 0) {
 				ss->pos->undo_move();
 				continue;
@@ -871,7 +872,19 @@ namespace Search {
 						R -= 1;
 					}
 
-					score = -alphabeta(ss, depth - 1 - R, -(alpha + 1), -alpha, true, &line);
+					// Increase reduction for captures with SEE < 0. Decrease otherwise (~12 elo)
+					if (capture) {
+						if (moves[m]->score < 0) {
+							R += 1;
+						}
+						else {
+							R -= 2;
+						}
+					}
+
+					int d = std::max(1, std::min(depth - 1, depth - 1 - R));
+
+					score = -alphabeta(ss, d, -(alpha + 1), -alpha, true, &line);
 				}
 				else {
 					score = alpha + 1;
