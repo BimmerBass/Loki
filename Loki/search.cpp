@@ -882,6 +882,11 @@ namespace Search {
 						}
 					}
 
+					// If the TT probe returned an ALL-entry, increase the reduction. (~25 elo)
+					if (ttHit && entry->flag == ttFlag::ALPHA && ttScore <= alpha) {
+						R += 1;
+					}
+
 					int d = std::max(1, std::min(depth - 1, depth - 1 - R));
 
 					score = -alphabeta(ss, d, -(alpha + 1), -alpha, true, &line);
