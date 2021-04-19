@@ -866,6 +866,11 @@ namespace Search {
 						R += 1;
 					}
 
+					// Decrease reduction if the move is a killer (~4 elo)
+					if (move == ss->stats.killers[ss->pos->ply - 1][0] || move == ss->stats.killers[ss->pos->ply - 1][1]) {
+						R -= 1;
+					}
+
 					score = -alphabeta(ss, depth - 1 - R, -(alpha + 1), -alpha, true, &line);
 				}
 				else {
