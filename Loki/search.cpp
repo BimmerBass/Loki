@@ -892,6 +892,11 @@ namespace Search {
 						R -= 1;
 					}
 
+					// If the static evaluation is below alpha based on a futility margin, increase reduction (~23 elo)
+					if (ss->stats.static_eval[ss->pos->ply - 1] + futility_margin(depth, improving) <= alpha) {
+						R += futility_margin(depth, improving) / 220;
+					}
+
 					int d = std::max(1, std::min(depth - 1, depth - 1 - R));
 
 					score = -alphabeta(ss, d, -(alpha + 1), -alpha, true, &line);
