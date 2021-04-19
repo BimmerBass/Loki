@@ -887,6 +887,11 @@ namespace Search {
 						R += 1;
 					}
 
+					// Decrease reduction for moves with good history (~28 elo)
+					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] > std::min(200, (depth * depth) / 2)) {
+						R -= 1;
+					}
+
 					int d = std::max(1, std::min(depth - 1, depth - 1 - R));
 
 					score = -alphabeta(ss, d, -(alpha + 1), -alpha, true, &line);
