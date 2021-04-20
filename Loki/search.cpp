@@ -860,7 +860,8 @@ namespace Search {
 				// Step 13A. Late move reductions. If we haven't raised alpha yet, we're probably in an ALL-node,
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha.
 				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
-					int R = 1;
+					//int R = 1;
+					int R = late_move_reduction(depth, moves_searched);
 
 					// Increase reduction for moves with history < 0 (~5 elo)
 					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
@@ -1235,10 +1236,17 @@ void Search::INIT() {
 		for (int c = 1; c < MAXPOSITIONMOVES; c++) {
 			//Reductions[d][c] = (int)std::round(0.75 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
 			//Reductions[d][c] = (int)std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
-			Reductions[d][c] = (int)std::round(0.75 + (std::log(d) * std::log(c)) / 2.0);
-		}
+			//Reductions[d][c] = (int)std::round(0.75 + (std::log(d) * std::log(c)) / 2.75);
+			Reductions[d][c] = (int)std::round((std::log(d) * std::log(c)) / 2.75);
+			//Reductions[d][c] = (int)(std::log(2.0 * double(d) * std::log(2.0 * double(c)))) / 3.0;
+			//Reductions[d][c] = (int)std::round((std::log(double(d)) * std::log(double(c))) / 2.75);
 
+			if (Reductions[d][c] < 1) {
+				Reductions[d][c] = 1;
+			}
+		}
 	}
+
 
 
 	// Initialize null move R-value table
