@@ -857,11 +857,10 @@ namespace Search {
 
 			else {
 				
-				// Step 13A. Late move reductions. If we haven't raised alpha yet, we're probably in an ALL-node,
+				// Step 13A. Late move reductions (~89 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha.
 				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
-					//int R = 1;
-					int R = late_move_reduction(depth, moves_searched);
+					int R = 1; // For now, we use an initial reduction of one ply only.
 
 					// Increase reduction for moves with history < 0 (~5 elo)
 					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
