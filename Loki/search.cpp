@@ -79,12 +79,9 @@ int late_move_reduction(int d, int c) {
 	return R;
 }
 
-
-int late_move_pruning(int depth, bool improving) {
-	//return (int)std::round((4.0 * std::exp(0.37 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
-	return (int)std::round((5 * std::exp(0.2 * double(depth))) + improving);
-	//return std::round((4.0 * std::exp(0.51 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
-
+// Here we use the formula 0.5*d^2 + 1.5*d + 1
+int late_move_pruning(int d) {
+	return (int)std::round(0.5 * std::pow(double(d), 2) + 1.5 * double(d) + 1.0);
 }
 
 
@@ -843,6 +840,18 @@ namespace Search {
 			if (futility_pruning && 
 				(!(is_tactical || capture) || (depth <= 1 && moves[m]->score < 0)) // If we're at a pre-frontier node, we'll also prune moves that are deemed to be bad.
 				&& legal > 0) {
+				ss->pos->undo_move();
+				continue;
+			}
+
+			// Step 13. Late move pruning. If we are near the horizon and the highest ordered moves haven't caused a beta cutoff, we're probably not going to
+			//	get one, so we'll (depending on the depth) prune quiet moves.
+			if (moves_searched > late_move_pruning(depth)
+				&& !(is_tactical || capture)
+				&& ss->pos->non_pawn_material()
+				&& !is_pv
+				&& !root_node
+				&& extensions == 0) {
 				ss->pos->undo_move();
 				continue;
 			}
