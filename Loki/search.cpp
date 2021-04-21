@@ -844,7 +844,7 @@ namespace Search {
 				continue;
 			}
 
-			// Step 13. Late move pruning. If we are near the horizon and the highest ordered moves haven't caused a beta cutoff, we're probably not going to
+			// Step 13. Late move pruning (~19 elo). If we are near the horizon and the highest ordered moves haven't caused a beta cutoff, we're probably not going to
 			//	get one, so we'll (depending on the depth) prune quiet moves.
 			if (moves_searched > late_move_pruning(depth)
 				&& !(is_tactical || capture)
