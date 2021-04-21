@@ -846,15 +846,15 @@ namespace Search {
 
 			// Step 13. Late move pruning (~19 elo). If we are near the horizon and the highest ordered moves haven't caused a beta cutoff, we're probably not going to
 			//	get one, so we'll (depending on the depth) prune quiet moves
-			if (moves_searched > late_move_pruning(depth)
-				&& !(is_tactical || capture)
-				&& ss->pos->non_pawn_material()
-				&& !is_pv
-				&& !root_node
-				&& extensions == 0) {
-				ss->pos->undo_move();
-				continue;
-			}
+			//if (moves_searched > late_move_pruning(depth)
+			//	&& !(is_tactical || capture)
+			//	&& ss->pos->non_pawn_material()
+			//	&& !is_pv
+			//	&& !root_node
+			//	&& extensions == 0) {
+			//	ss->pos->undo_move();
+			//	continue;
+			//}
 
 			// Step 13. Principal variation search
 			
@@ -866,7 +866,7 @@ namespace Search {
 
 			else {
 				
-				// Step 13A. Late move reductions (~89 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
+				// Step 13A. Late move reductions (~92 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha.
 				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
 					int R = 1; // For now, we use an initial reduction of one ply only.
@@ -942,6 +942,8 @@ namespace Search {
 					ss->update_move_heuristics(move, depth, &moves);
 				}
 				
+				// Make sure that the PV doesn't get copied in the parent node
+				pvLine->length = 0;
 				
 				tt->store_entry(ss->pos, move, beta, depth, ttFlag::BETA);
 
@@ -976,9 +978,12 @@ namespace Search {
 		if (alpha > old_alpha) {
 			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
 
+			assert(pvLine->pv[0] == best_move);
 		}
 		else{
 			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
+
+			pvLine->length = 0;
 		}
 
 
