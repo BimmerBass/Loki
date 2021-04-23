@@ -4,6 +4,7 @@
 #include "perft.h"
 
 #include <map>
+#include <sstream>
 
 // This is just a neat way of storing the info
 enum InfoParameters :int { NAME = 0, VERSION = 1, AUTHOR = 2 };
@@ -17,12 +18,13 @@ static std::map<InfoParameters, std::string> EngineInfo {
 
 
 namespace UCI {
+	extern int num_threads; // Global such that it can be accessed by both loop() and parse_go();
 
-	void UCI_loop();
+	void loop();
 
-	void parse_position(char* posLine, GameState_t* pos);
+	void parse_position(std::string setup, GameState_t* pos);
 
-	void parse_go(char* goLine, GameState_t* pos, SearchInfo_t* info);
+	void parse_go(std::string params, GameState_t* pos, SearchInfo_t* info);
 
 	void goPerft(std::string l, GameState_t* pos);
 

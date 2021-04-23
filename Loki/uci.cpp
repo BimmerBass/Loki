@@ -1,350 +1,190 @@
 #include "uci.h"
 
-#define INPUTBUFFER 400 * 6
+int UCI::num_threads = THREADS_DEFAULT_NUM;
 
-static int threadNum = THREADS_DEFAULT_NUM;
+/*
 
-void UCI::UCI_loop() {
-	
-	setvbuf(stdout, NULL, _IOLBF, sizeof(NULL));
-	setvbuf(stdin, NULL, _IOLBF, sizeof(NULL));
-	
-	// Initialize board, searchinfo and make sure the tt size is correct.
+UCI_loop is the main function for handling communication with the GUI.
+
+*/
+
+void UCI::loop() {
+
+	// Step 1. Initialize an empty board and a search-driver. NOTE: This is the ony place where non-global strucures are declared with malloc in Loki.
 	GameState_t* pos = new GameState_t();
 	SearchInfo_t* info = new SearchInfo_t();
 
-
-	// Parse the starting fen. This is not required by UCI but we want to avoid crashing if given a "go" before a position has been given.
+	// Step 1A. Set up the starting position on the board. This is done to prevent Loki from crashing if a "go" is given before a "position ..."
 	pos->parseFen(START_FEN);
 
+	// Step 2. Make sure the transposition table is the default size
 	if (tt->size() != TT_DEFAULT_SIZE) {
 		tt->resize(uint64_t(TT_DEFAULT_SIZE));
 	}
+	int mb = TT_DEFAULT_SIZE; // The set size for the transposition table.
 
-	
-	char line[INPUTBUFFER] = { 0 };
-	int mb = TT_DEFAULT_SIZE;
-
+	// Step 3. Begin listening for GUI-commands
 	while (true) {
-		// Get GUI input
-		memset(&line[0], 0, sizeof(line));
-		fflush(stdout);
-		if (!fgets(line, INPUTBUFFER, stdin)) {
+
+		std::string input;
+		std::getline(std::cin, input);
+
+		// Step 3A. If a newline is given with nothing else, just wait for another instruction
+		if (input[0] == '\n' || input == "") {
 			continue;
 		}
 
-		if (line[0] == '\n') {
+		// Step 3B. If we're told to start a new game, clear the transposition table and set up the starting position
+		if (input.find(std::string("ucinewgame")) != std::string::npos) {
+			tt->clear_table();
+
+			pos->parseFen(START_FEN);
+
 			continue;
 		}
 
-		if (!strncmp(line, "uci", 3)) { // Give the GUI information about the engine
+		// Step 3C. If we are given a "uci" command, we should output all uci parameters and info of Loki.
+		else if (input.find(std::string("uci")) != std::string::npos) {
+
 			std::cout << "id name " << EngineInfo[NAME] << " " << EngineInfo[VERSION] << std::endl;
-			std::cout << "id author " << EngineInfo[AUTHOR] << std::endl;
+			std::cout << "id author" << EngineInfo[AUTHOR] << std::endl;
 
+			// Step 3C.1. Output all ajustible options for Loki.
 			std::cout << "option name Hash type spin default " << TT_DEFAULT_SIZE << " min " << TT_MIN_SIZE << " max " << TT_MAX_SIZE << std::endl;
 			std::cout << "option name Threads type spin default " << THREADS_DEFAULT_NUM << " min " << THREADS_MIN_NUM << " max " << THREADS_MAX_NUM << std::endl;
 			std::cout << "uciok" << std::endl;
+
 			continue;
+
 		}
 
-		else if (!strncmp(line, "isready", 7)) {
+		// Step 3D. When the GUI sends the "isready" command, Loki needs to signify that it is ready to take commands
+		else if (input.find(std::string("isready")) != std::string::npos) {
 			std::cout << "readyok" << std::endl;
+			continue;
 		}
 
+		// Step 3E. When we are told to change the hash size, do so.
+		else if (input.find(std::string("setoption name Hash value ")) != std::string::npos) {
+			// Step 3E.1. Extract the number of MB requested.
+			std::stringstream strm(input);
+			std::string unused[4];
+			strm >> unused[0] >> unused[1] >> unused[2] >> unused[3] >> mb;
 
-		else if (!strncmp(line, "setoption name Hash value ", 26)) {
-#if (defined(_WIN32) || defined(_WIN64))
-			sscanf_s(line, "%*s %*s %*s %*s %d", &mb);
-#else
-			sscanf(line, "%*s %*s %*s %*s %d", &mb);
-#endif
 
-			// Here we are just making sure that the set size doesn't exceed the set limits
-			if (mb < TT_MIN_SIZE) {
-				mb = TT_MIN_SIZE;
-			}
-			else if (mb > TT_MAX_SIZE) {
-				mb = TT_MAX_SIZE;
-			}
+			// Step 3E.2. Make sure the size is inside of the TT-size bounds
+			mb = std::min(TT_MAX_SIZE, std::max(TT_MIN_SIZE, mb));
 
+			// Step 3E.3. Finally, resize the transposition table.
 			tt->resize(uint64_t(mb));
+
 			continue;
 		}
 
 
-		else if (!strncmp(line, "setoption name Threads value ", 29)) {
-#if (defined(_WIN32) || defined(_WIN64))
-			sscanf_s(line, "%*s %*s %*s %*s %d", &threadNum);
-#else
-			sscanf(line, "%*s %*s %*s %*s %d", &threadNum);
-#endif
-			if (threadNum < THREADS_MIN_NUM) {
-				threadNum = THREADS_MIN_NUM;
-			}
-			else if (threadNum > THREADS_MAX_NUM) {
-				threadNum = THREADS_MAX_NUM;
-			}
-			std::cout << "Now using " << threadNum << " threads" << std::endl;
-		}
+		// Step 3F. When the GUI requests a certain number of threads for searching, set it.
+		else if (input.find(std::string("setoption name Threads value ")) != std::string::npos) {
+			// Step 3F.1. Extract the requested number of threads
+			std::stringstream strm(input);
+			std::string unused[4];
+			strm >> unused[0] >> unused[1] >> unused[2] >> unused[3] >> num_threads;
 
+			// Step 3F.2. Make sure the number of threads does not exceed the minimum/maximum number.
+			num_threads = std::min(THREADS_MAX_NUM, std::max(THREADS_MIN_NUM, num_threads));
 
-		else if (!strncmp(line, "ucinewgame", 10)) {
-			tt->clear_table();
-			char newLine[] = "position startpos\n";
-			parse_position(newLine, pos);
 			continue;
 		}
 
-		else if (!strncmp(line, "position", 8)) {
-			parse_position(line, pos);
+		// Step 3G. If we get the "position" command, parse it.
+		else if (input.find(std::string("position")) != std::string::npos) {
+			parse_position(input, pos);
 			continue;
 		}
 
-		else if (!strncmp(line, "probetable", 10)) {
-			printHashEntry(pos);
+		// Step 3H. If we get the "go" command, parse its parameters and begin searching
+		else if (input.find(std::string("go")) != std::string::npos) {
+			parse_go(input, pos, info);
 			continue;
 		}
 
-		else if (!strncmp(line, "evaltest", 8)) {
-			Eval::Debug::eval_balance();
-			continue;
+		// Step 3I. If we get told to quit, set the info->quit flag, but don't continue. Continuing would wait for a last instruction.
+		else if (input.find(std::string("quit")) != std::string::npos) {
+			info->quit = true;
 		}
 
-		else if (!strncmp(line, "do", 2)) {
-			char* ptr = line;
-
-			if (ptr != nullptr) {
-
-				while (*ptr) {
-					ptr += 3;
-					std::string moveStr = "";
-					for (int i = 0; i < 5; i++) {
-						moveStr += *(ptr + i);
-					}
-					MoveList ml; moveGen::generate<ALL>(pos, &ml);
-
-					int move = parseMove(moveStr, &ml);
-
-					if (move == NOMOVE) {
-						break;
-					}
-					Move_t m;
-					m.move = move;
-					pos->make_move(&m);
-				}
-			}
-		}
-
-		else if (!strncmp(line, "undo", 4)) {
-			pos->undo_move();
-			continue;
-		}
-
-		else if (!strncmp(line, "printmovelist", 13)) {
-			MoveList ml;
-			moveGen::generate<ALL>(pos, &ml);
-			printMoveList(&ml);
-			continue;
-		}
-
-		else if (!strncmp(line, "go", 2)) {
-			parse_go(line, pos, info);
-		}
-
-		else if (!strncmp(line, "d", 1)) {
+		// Below are some helper functions that can be used for debugging.
+		else if (input == "d") { // Print the board state.
 			pos->displayBoardState();
 			continue;
 		}
 
-		else if (!strncmp(line, "perft", 5)) {
-			goPerft(std::string(line), pos);
+		else if (input.find(std::string("probetable")) != std::string::npos) { // Print the hash-entry for the position
+			printHashEntry(pos);
 			continue;
 		}
 
-		else if (!strncmp(line, "quit", 4)) {
-			info->quit = true;
-			break;
-		}
-
-		else {
-			std::cout << "Unknown command: " << line << std::endl;
+		else if (input.find(std::string("evaltest")) != std::string::npos) { // Do an evaluation test to make sure the eval is the same for white and black.
+			Eval::Debug::eval_balance();
 			continue;
 		}
 
-		// If we've been told to quit in the search, we should do it.
-		if (info->quit == true) {
+		else if (input.find(std::string("perft")) != std::string::npos) { // Run a perft test on the current position
+			goPerft(input, pos);
+			continue;
+		}
+
+		// If we've been told to quit, do it.
+		if (info->quit) {
 			break;
 		}
 	}
 
+
+	// Lastly, delete the board and search-driver
 	delete pos;
 	delete info;
 }
 
 
+/*
+
+parse_position takes the GUI command as an input and sets up the position with the internal board structure of Loki.
+
+*/
+
+void UCI::parse_position(std::string setup, GameState_t* pos) {
+
+}
+
+
+/*
+
+parse_go takes all search parameters from the GUI and starts up the search.
+
+*/
+
+void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
+
+
+}
+
+
+/*
+
+goPerft parses the depth at which perft should be run, and runs it.
+
+*/
 
 void UCI::goPerft(std::string l, GameState_t* pos) {
-	char* cStr = new char[l.length() + 1];
-#if defined(_WIN32) || defined(_WIN64)
-	strcpy_s(cStr, l.length() + 1, l.c_str());
-#else
-	strcpy(cStr, l.c_str());
-#endif
 
-	char* ptr = nullptr;
-	ptr = strstr(cStr, "depth");
-	if (ptr != 0) {
-		int depth = atoi(ptr + 6);
-
-		Perft::perftTest(pos, depth);
-	}
-
-	delete[] cStr;
 }
 
 
+/*
 
-void UCI::parse_position(char* posLine, GameState_t* pos) {
-	posLine += 9;
+printHashEntry is a helper function for displaying the hash entry for the current position. Useful for debugging
 
-	char* ptrChar = posLine;
-
-	if (!strncmp(posLine, "startpos", 8)) {
-		pos->parseFen(START_FEN);
-	}
-
-	else {
-		ptrChar = strstr(posLine, "fen");
-
-		if (ptrChar == nullptr) {
-			pos->parseFen(START_FEN);
-		}
-		else {
-			ptrChar += 4;
-
-			pos->parseFen(std::string(ptrChar));
-		}
-	}
-
-	ptrChar = strstr(posLine, "moves");
-	int move = NOMOVE;
-
-	if (ptrChar != nullptr) {
-		ptrChar += 6;
-		
-		std::string moveStr = "";
-		while (*ptrChar) {
-			moveStr = "";
-
-			MoveList ml; moveGen::generate<ALL>(pos, &ml);
-
-			for (int i = 0; i < 5; i++) {
-				moveStr += *(ptrChar + i);
-			}
-
-			move = parseMove(moveStr, &ml);
-
-			if (move == NOMOVE) {
-				break;
-			}
-			Move_t m;
-			m.move = move;
-			if (!pos->make_move(&m)) {
-				break;
-			}
-			pos->ply = 0;
-
-			while (*ptrChar && *ptrChar != ' ') {
-				ptrChar++;
-			}
-			ptrChar++;
-		}
-	}
-}
-
-
-
-void UCI::parse_go(char* goLine, GameState_t* pos, SearchInfo_t* info) {
-	
-	int depth = -1, movestogo = 30, movetime = -1;
-	long long time = -1, inc = 0;
-	info->timeset = false;
-
-	char* ptr = nullptr;
-
-	ptr = strstr(goLine, "infinite");
-	if (ptr) {
-		;
-	}
-
-	ptr = strstr(goLine, "binc");
-	if (ptr && pos->side_to_move == BLACK) {
-		inc = atoi(ptr + 5);
-	}
-
-	ptr = strstr(goLine, "winc");
-	if (ptr && pos->side_to_move == WHITE) {
-		inc = atoi(ptr + 5);
-	}
-
-	ptr = strstr(goLine, "wtime");
-	if (ptr && pos->side_to_move == WHITE) {
-		time = atoi(ptr + 6);
-	}
-
-	ptr = strstr(goLine, "btime");
-	if (ptr && pos->side_to_move == BLACK) {
-		time = atoi(ptr + 6);
-	}
-
-	ptr = strstr(goLine, "movestogo");
-	if (ptr) {
-		movestogo = atoi(ptr + 10);
-	}
-
-	ptr = strstr(goLine, "movetime");
-	if (ptr) {
-		movetime = atoi(ptr + 9);
-	}
-
-	ptr = strstr(goLine, "depth");
-	if (ptr) {
-		depth = atoi(ptr + 6);
-	}
-
-	if (movetime != -1) {
-		time = movetime;
-		movestogo = 1;
-	}
-
-	info->starttime = getTimeMs();
-	info->depth = depth;
-
-	if (time != -1) {
-		info->timeset = true;
-		time /= movestogo;
-
-		if (time > 50) {
-			time -= 50;
-		}
-		else {
-			time = time;
-		}
-
-		info->stoptime = info->starttime + time + inc;
-	}
-
-	if (depth == -1) {
-		info->depth = MAXDEPTH;
-	}
-
-	std::cout << "time: " << time << " start: " << info->starttime << " stop: "
-		<< info->stoptime << " depth: " << info->depth << " timeset: " << info->timeset << "\n";
-
-	Search::runSearch(pos, info, threadNum);
-}
-
-
+*/
 
 void UCI::printHashEntry(GameState_t* pos) {
 	bool ttHit = false;
