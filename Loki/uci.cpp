@@ -154,6 +154,62 @@ parse_position takes the GUI command as an input and sets up the position with t
 
 void UCI::parse_position(std::string setup, GameState_t* pos) {
 
+	// Step 1. Find out where "position " ends.
+	size_t pos_end = setup.find("position") + 9;
+	std::string params = setup.substr(pos_end);
+
+	// Step 2. If we've been given the "position startpos", parse the START_FEN.
+	if (params.find(std::string("startpos")) != std::string::npos) {
+		pos->parseFen(START_FEN);
+	}
+	else { // Otherwise, load the given fen.
+		size_t fen_start = params.find("fen ");
+
+		// Step 2A. If no "fen" were found, just load the starting position.
+		if (fen_start == std::string::npos) {
+			pos->parseFen(START_FEN);
+		}
+		else {
+			fen_start += 4;
+
+			pos->parseFen(params.substr(fen_start));
+		}
+	}
+
+
+	// Step 3. If a sequence of moves were given, make them on the board
+	unsigned int move = NOMOVE;
+	size_t moves_start = setup.find("moves ");
+
+	if (moves_start != std::string::npos) {
+		moves_start += 6;
+		
+		std::string move_string = "";
+
+		std::istringstream ss(setup.substr(moves_start));
+		
+		// Step 3A. Go through all moves.
+		while (std::getline(ss, move_string, ' ')) {
+
+			// Step 3A.1. Generate the legal moves for the position.
+			MoveList ml; moveGen::generate<ALL>(pos, &ml);
+
+			move = parseMove(move_string, &ml);
+
+			if (move == NOMOVE) { // No more moves to be made
+				break;
+			}
+
+			else {
+				Move_t m; m.move = move; // We need to convert the unsigned int to a Move_t in order for GameState_t::make_move to work.
+
+				if (!pos->make_move(&m)) {
+					break;
+				}
+				pos->ply = 0;
+			}
+		}
+	}
 }
 
 
