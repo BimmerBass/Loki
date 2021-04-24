@@ -215,13 +215,90 @@ void UCI::parse_position(std::string setup, GameState_t* pos) {
 
 /*
 
-parse_go takes all search parameters from the GUI and starts up the search.
+parse_go takes all search parameters from the GUI and starts up the search. FIXME: Improve time allocation here.
 
 */
 
 void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
 
+	// Step 1. Initialize some of the variables
+	int depth = MAXDEPTH, movestogo = 30, movetime = -1;
+	long long time = -1, inc = 0;
+	info->timeset = false;
 
+	// Step 2. Parse the parameters given from the GUI.
+	
+	// Step 2A. If the infinite flag has been set, just search indefinitely
+	if (params.find("infinite") != std::string::npos) {
+		;
+	}
+
+	size_t index = std::string::npos;
+
+	// Step 2B. Parse the time and increment, starting with time
+	
+	index = params.find((pos->side_to_move == WHITE) ? "wtime" : "btime");
+
+	if (index != std::string::npos) {
+		time = std::stoi(params.substr(index + 6));
+	}
+
+	// Step 2B.1. Parse increment the same way.
+	index = params.find((pos->side_to_move == WHITE) ? "winc" : "binc");
+
+	if (index != std::string::npos) {
+		inc = std::stoi(params.substr(index + 5));
+	}
+
+	// Step 2C. Parse movestogo command --> this gives the number of moves we have left until the next time control is reached.
+	index = params.find("movestogo");
+
+	if (index != std::string::npos) {
+		movestogo = std::stoi(params.substr(index + 10));
+	}
+
+	// Step 2D. If were told to search for a certain amount of time, set this.
+	index = params.find("movetime");
+
+	if (index != std::string::npos) {
+		movetime = std::stoi(params.substr(index + 9));
+	}
+
+	// Step 2E. If a certain depth has been given, set the max depth to that.
+	index = params.find("depth");
+
+	if (index != std::string::npos) {
+		depth = std::stoi(params.substr(index + 6));
+	}
+
+	// Step 3. Configure the search time and depth depending on the parameters we've been given.
+	// FIXME: Add some more elaborate time management scheme here. Right now, Loki's time management is taken from Vice...
+	info->starttime = getTimeMs();
+	info->depth = depth;
+
+	// Step 3B. If "movetime" has been given, search for this specific amount of time.
+	if (movetime != -1) {
+		time = movetime;
+		movestogo = 1; // We divide remaining time with movestogo, so set this to 1.
+	}
+
+	// Step 3A. If we have a limited time to do the search, allocate some depending on movestogo
+	if (time != -1) {
+		info->timeset = true;
+
+		time /= movestogo;
+
+		// Step 3A.1. If we have more than 50 milliseconds, subtract some time which is used for setting up and ending the search.
+		if (time > 50) {
+			time -= 50;
+		}
+
+		info->stoptime = info->starttime + time + inc;
+
+	}
+
+	// Step 4. Finally, run the search.
+	Search::runSearch(pos, info, num_threads);
 }
 
 
