@@ -104,7 +104,6 @@ void UCI::loop() {
 		// Step 3H. If we get the "go" command, parse its parameters and begin searching
 		else if (input.find(std::string("go")) != std::string::npos) {
 			parse_go(input, pos, info);
-			continue;
 		}
 
 		// Step 3I. If we get told to quit, set the info->quit flag, but don't continue. Continuing would wait for a last instruction.
@@ -250,7 +249,7 @@ void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
 		inc = std::stoi(params.substr(index + 5));
 	}
 
-	// Step 2C. Parse movestogo command --> this gives the number of moves we have left until the next time control is reached.
+	// Step 2C. Parse movestogo command --> this gives the number of moves we have left until the next time control is reached
 	index = params.find("movestogo");
 
 	if (index != std::string::npos) {
