@@ -1,5 +1,5 @@
 # Loki
-Loki is a UCI-compliant chess engine written in C++. At the moment it has been tested to have a strength of 2036 (version 2.0.0 on CCRL blitz) elo, but this will hopefully be increased.
+Loki is a UCI-compliant chess engine written in C++. At the moment it has been tested to have a strength of 2453 (version 3.0.0 on CCRL blitz) elo.
 
 ## Why the name?
 After a bit of googling I found someone who recommended that one uses a name that describes what the program does (duh..). Then, I thought that a chess engine is cold, calculating and cunning, so naturally the first name to come to mind
@@ -9,8 +9,11 @@ was the nordic god, Loki. After elementary school - where we learned about the n
 | Version   | Elo   | TC   |
 |-----------|-------|------|
 | 1.0.2    | 1766  | 2'+1"|
-| 1.2.0     | 1820  | 2'+1''|
-| 2.0.0     | 2036  | 2'+1''|
+| 1.2.0     | 1820  | 2'+1"|
+| 2.0.0     | 2036  | 2'+1"|
+| 3.0.0     | 2453  | 2'+1"|
+
+Loki 3.0.0 is currently being tested with a time control of 40 moves in 15 minutes on [CCRL](https://ccrl.chessdom.com/ccrl/4040/cgi/engine_details.cgi?print=Details&each_game=1&eng=Loki%203.0.0%2064-bit#Loki_3_0_0_64-bit).
 
 ## Implementation
 Loki uses bitboards as its main board representation
@@ -77,8 +80,10 @@ It is also possible to change the amount of optimizations with both compilers by
     - Fail-High reductions.
     - Null move reductions.
     - Null move threat extensions.
+- Port the tuning framework to python, and make it work with search tuning.
 - Make the evaluation term for pieces work.
 - I am very amazed of Stockfish's NNUE evaluation, and if I ever get Loki to play descent chess on CCRL, I will look into creating a new evaluation with some sort of Machine Learning.
+- Create my own magic bitboard implementation. Early in the development of Loki, I didn't want to spend too much time with move generation since my primary goal was to get it to play chess. Therefore, I took the easy way, which is unsatisfactory now... 
 
 #### Special thanks to
 - The [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) which has been used extensively throughout the creation of Loki.
@@ -88,5 +93,5 @@ It is also possible to change the amount of optimizations with both compilers by
 - [Evaluation & Tuning in Chess Engines](https://github.com/AndyGrant/Ethereal/blob/master/Tuning.pdf), a paper written by Andrew Grant (creator of Ethereal), on tuning chess engines, which has contributed to my understanding of the usage of gradient descent algorithms in chess engines.
 - The creator of [Laser](https://github.com/jeffreyan11/laser-chess-engine) whose implementation of Lazy SMP has served as the inspiration for the one in Loki.
 - The [Computer Chess Club](http://www.talkchess.com/forum3/viewforum.php?f=7) which has provided a lot of knowledge and tips.
-- The creator of [chess_programming](https://github.com/maksimKorzh/chess_programming) from whom I've taken the magic bitboards implementation.
+- The creator of [chess_programming](https://github.com/maksimKorzh/chess_programming) from whom I've found Tord Romstad's implementation of magic bitboards.
 - [Cute Chess](https://cutechess.com/) the tool used for testing changes and additions.
