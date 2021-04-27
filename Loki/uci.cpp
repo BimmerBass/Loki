@@ -104,6 +104,12 @@ void UCI::loop() {
 		// Step 3H. If we get the "go" command, parse its parameters and begin searching
 		else if (input.find(std::string("go")) != std::string::npos) {
 			parse_go(input, pos, info);
+
+			if (info->quit) {
+				break;
+			}
+
+			continue;
 		}
 
 		// Step 3I. If we get told to quit, set the info->quit flag, but don't continue. Continuing would wait for a last instruction.

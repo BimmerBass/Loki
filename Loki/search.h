@@ -25,6 +25,32 @@ struct SearchPv {
 
 
 
+
+// This namespace handles communication with the GUI
+namespace COMM {
+	struct ListenData {
+		ListenData(bool _stop, bool _quit) {
+			stop = _stop;
+			quit = _quit;
+		}
+
+		bool stop;
+		bool quit;
+	};
+
+	// This object can be global since it'll only be written to by one thread.
+	extern ListenData ld;
+
+	// This function is handled by a separate thread which keeps track of input given to stdin
+	void listen_for_input(bool stopset, long long stoptime);
+
+	// check_stopped_search will be run by each thread every 2047 nodes. 
+	void check_stopped_search(SearchThread_t* ss);
+}
+
+
+
+
 namespace Search {
 	extern ThreadPool_t* threads;
 	extern std::vector<std::thread> threads_running;
@@ -82,7 +108,7 @@ Helper functions for search in general
 
 */
 
-extern void CheckUp(SearchThread_t* ss);
+//extern void CheckUp(SearchThread_t* ss);
 
 extern void ChangePV(int move, SearchPv* parent, SearchPv* child);
 
