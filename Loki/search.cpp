@@ -9,25 +9,8 @@ std::vector<std::thread> Search::threads_running;
 std::atomic<bool> Search::isStop(true);
 
 
-void check_stopped_search(SearchThread_t* ss) {
-	// Step 1. Check for timed out search and set isStop = true if we're the main thread
-	if (ss->info->timeset && getTimeMs() >= ss->info->stoptime) {
-		ss->info->stopped = true;
-
-		if (ss->thread_id == 0) {
-			Search::isStop = true;
-		}
-	}
-
-	// Step 2. Check if we've been told to stop
-	if (Search::isStop.load()) {
-		ss->info->stopped = true;
-	}
-}
-
-
 // The checkup function sees if we need to stop the search
-/*void CheckUp(SearchThread_t* ss) {
+void check_stopped_search(SearchThread_t* ss) {
 	// Only the 0'th (main) thread should check if the UCI has sent us commands to quit.
 	if (ss->thread_id == 0) {
 		if (ss->info->timeset && getTimeMs() >= ss->info->stoptime) {
@@ -51,7 +34,7 @@ void check_stopped_search(SearchThread_t* ss) {
 			ss->info->stopped = true;
 		}
 	}
-}*/
+}
 
 
 

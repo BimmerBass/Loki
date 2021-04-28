@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <chrono>
+#include <iostream>
+#include <sstream>
 
 #if (defined(_WIN32) || defined(_WIN64))
 
