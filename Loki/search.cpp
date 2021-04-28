@@ -9,68 +9,19 @@ std::vector<std::thread> Search::threads_running;
 std::atomic<bool> Search::isStop(true);
 
 
-COMM::ListenData COMM::ld(true, true);
-
-
-
-void COMM::listen_for_input(bool stopset, long long stoptime) {
-	std::string input = "";
-
-	while (!stopset || getTimeMs() < stoptime) {
-		input = "";
-		std::getline(std::cin, input);
-
-
-		if (input.find("quit") != std::string::npos) {
-			ld.quit = true;
-			return;
-		}
-		
-		if (input.find("stop") != std::string::npos) {
-			ld.stop = true;
-			return;
-		}
-
-		if ((stopset && getTimeMs() >= stoptime) || Search::isStop.load(std::memory_order_relaxed)) {
-			return;
-		}
-
-	}
-}
-
-
-void COMM::check_stopped_search(SearchThread_t* ss) {
-
-	// Step 1. Check for timed out search
+void check_stopped_search(SearchThread_t* ss) {
+	// Step 1. Check for timed out search and set isStop = true if we're the main thread
 	if (ss->info->timeset && getTimeMs() >= ss->info->stoptime) {
 		ss->info->stopped = true;
-	}
 
-	// Step 2. Check for input from the GUI telling us to quit or stop. Only do this if we're the main thread.
-	if (ss->thread_id == 0) {
-
-		// Step 2A. Check for stop command
-		if (ld.stop) {
-			ss->info->stopped = true;
-		}
-
-		// Step 2B. Check for quit command
-		if (ld.quit) {
-			ss->info->quit = true;
-			ss->info->stopped = true;
-		}
-
-		// Step 2C. If we've been told to stop or quit, tell the other threads with the std::atomic<bool> isStop flag
-		if (ss->info->stopped) {
+		if (ss->thread_id == 0) {
 			Search::isStop = true;
 		}
 	}
 
-	// Step 3. If we're not the main thread, check to see if we've been told to stop.
-	else {
-		if (Search::isStop.load(std::memory_order_relaxed)) {
-			ss->info->stopped = true;
-		}
+	// Step 2. Check if we've been told to stop
+	if (Search::isStop.load()) {
+		ss->info->stopped = true;
 	}
 }
 
@@ -184,13 +135,6 @@ namespace Search {
 		// Increment transposition table age
 		tt->increment_age();
 
-		// Set the stop and quit flags in the listendata to false.
-		COMM::ld.stop = false; COMM::ld.quit = false;
-
-		// Run separate thread that listens on stdin
-		isStop = false;
-		std::thread listener(COMM::listen_for_input, info->timeset, info->stoptime);
-
 		threads_running.clear();
 
 		ThreadPool_t tp(num_threads);
@@ -227,7 +171,6 @@ namespace Search {
 		}
 
 		isStop = true;
-		listener.join();
 		threads = nullptr;
 	}
 
@@ -607,7 +550,7 @@ namespace Search {
 		// Check to see if we've been told to abort the search.
 		if ((ss->info->nodes & 2047) == 0) {
 			//CheckUp(ss);
-			COMM::check_stopped_search(ss);
+			check_stopped_search(ss);
 		}
 
 		if (ss->info->stopped) {
@@ -1005,7 +948,7 @@ namespace Search {
 
 		if ((ss->info->nodes & 2047) == 0) {
 			//CheckUp(ss);
-			COMM::check_stopped_search(ss);
+			check_stopped_search(ss);
 		}
 
 		if (ss->info->stopped) {

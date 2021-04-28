@@ -303,7 +303,38 @@ void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
 	}
 
 	// Step 4. Finally, run the search.
-	Search::runSearch(pos, info, num_threads);
+	
+	Search::isStop = false;
+	std::thread searcher(Search::runSearch, std::ref(pos), std::ref(info), num_threads);
+
+	std::string interrupt = "";
+
+	while (!Search::isStop.load()) {
+
+		// Check if there's input waiting
+		if (std::cin.rdbuf()->in_avail() >= 0) {
+			std::getline(std::cin, interrupt);
+
+			if (interrupt.find("stop") != std::string::npos) {
+				Search::isStop = true;
+				break;
+			}
+
+			else if (interrupt.find("quit") != std::string::npos) {
+				Search::isStop = true;
+				info->quit = true;
+
+				break;
+			}
+		}
+	}
+
+	std::cout << "Out of loop" << std::endl;
+
+	searcher.join();
+
+	std::cout << "Joined" << std::endl;
+
 }
 
 
