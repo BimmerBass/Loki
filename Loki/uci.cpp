@@ -312,7 +312,7 @@ void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
 	while (!Search::isStop.load()) {
 
 		// Check if there's input waiting
-		if (std::cin.rdbuf()->in_avail() >= 0) {
+		if (InputWaiting()) {
 			std::getline(std::cin, interrupt);
 
 			if (interrupt.find("stop") != std::string::npos) {
@@ -329,12 +329,7 @@ void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
 		}
 	}
 
-	std::cout << "Out of loop" << std::endl;
-
 	searcher.join();
-
-	std::cout << "Joined" << std::endl;
-
 }
 
 
