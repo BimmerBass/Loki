@@ -2,7 +2,7 @@
 
 
 
-// http://home.arcor.de/dreamlike/chess/
+// I have lost the original link to the source of this function, but I have it from Vice.
 int InputWaiting()
 {
 #ifndef _WIN32
