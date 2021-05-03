@@ -826,7 +826,6 @@ namespace Search {
 			legal++;
 
 			bool gives_check = ss->pos->in_check(); // FIXME: Add function to determine if a move gives check before making it.
-			//bool is_tactical = capture || gives_check || in_check || SPECIAL(move) == PROMOTION || SPECIAL(move) == ENPASSANT;
 			bool is_tactical = gives_check || in_check || SPECIAL(move) == PROMOTION || SPECIAL(move) == ENPASSANT;
 
 			// Set the move we're searching for use in the countermove heuristic.
@@ -842,14 +841,14 @@ namespace Search {
 				continue;
 			}
 
-			// Step 13. Late move pruning (~19 elo). If we are near the horizon and the highest ordered moves haven't caused a beta cutoff, we're probably not going to
+			// Step 13. Late move pruning (~11.3 +/- 25.4 elo). If we are near the horizon and the highest ordered moves haven't caused a beta cutoff, we're probably not going to
 			//	get one, so we'll (depending on the depth) prune quiet moves
 			//if (moves_searched > late_move_pruning(depth)
-			//	&& !(is_tactical || capture)
 			//	&& ss->pos->non_pawn_material()
-			//	&& !is_pv
-			//	&& !root_node
+			//	&& (!(is_tactical || capture) || (capture && moves[m]->score < 0))
+			//	&& !is_pv && !root_node
 			//	&& extensions == 0) {
+			//
 			//	ss->pos->undo_move();
 			//	continue;
 			//}
