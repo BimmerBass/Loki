@@ -623,18 +623,16 @@ namespace Search {
 
 
 		// Step 5. Static evaluation.
+		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		
 		if (in_check) {
 			// If we're in check, we'll go directly to the moves since we don't want this branch pruned away.
-			ss->stats.static_eval[ss->pos->ply] = VALUE_NONE;
 			improving = false;
 		
 			goto moves_loop;
 		}
 		
-		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
-		improving = (ss->pos->ply >= 2) ?
-			(ss->stats.static_eval[ss->pos->ply] >= ss->stats.static_eval[ss->pos->ply - 2] || ss->stats.static_eval[ss->pos->ply - 2] == VALUE_NONE) :
-			false;
+		improving = (ss->pos->ply >= 2) ? (ss->stats.static_eval[ss->pos->ply] > ss->stats.static_eval[ss->pos->ply - 2]) : false;
 
 
 
@@ -871,6 +869,11 @@ namespace Search {
 				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
 					int R = 1; // For now, we use an initial reduction of one ply only.
 					//int R = late_move_reduction(depth, moves_searched);
+
+					// Increase reduction if we're not improving (~12 elo)
+					if (!improving && !ss->pos->is_endgame()) {
+						R += 1;
+					}
 
 					// Increase reduction for moves with history < 0 (~5 elo)
 					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
