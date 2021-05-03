@@ -44,7 +44,7 @@ constexpr int aspiration_depth = 5;
 /*
 Late move reductions
 */
-constexpr int lmr_limit = 4;
+constexpr int lmr_limit = 3;
 constexpr int lmr_depth = 2;
 constexpr int lmr_pieceVals[5] = { 100, 300, 300, 500, 900 };
 
