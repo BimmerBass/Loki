@@ -1248,13 +1248,8 @@ void Search::INIT() {
 	for (double d = 1; d < MAXDEPTH; d += 1.0) {
 
 		for (double c = 1; c < MAXPOSITIONMOVES; c += 1.0) {
-			//Reductions[d][c] = (int)std::round(0.75 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
-			//Reductions[d][c] = (int)std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
-			//Reductions[d][c] = (int)std::round(0.75 + (std::log(d) * std::log(c)) / 2.75);
-			//Reductions[d][c] = (int)std::round((std::log(d) * std::log(c)) / 2.75);
-			//Reductions[d][c] = (int)(std::log(2.0 * double(d) * std::log(2.0 * double(c)))) / 3.0;
-			//Reductions[d][c] = (int)std::round((std::log(double(d)) * std::log(double(c))) / 2.75);
-			Reductions[(int)d][(int)c] = (int)std::round((std::log(3.0 * d) * std::log(3.0 * c)) / 7.0);
+			
+			Reductions[(int)d][(int)c] = 1.75 + (int)std::round((std::log(3.0 * d) * std::log(3.0 * c)) / 5.5);
 
 			if (Reductions[(int)d][(int)c] < 1) {
 				Reductions[(int)d][(int)c] = 1;
