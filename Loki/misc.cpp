@@ -2,7 +2,7 @@
 
 
 
-// http://home.arcor.de/dreamlike/chess/
+// I have lost the original link to the source of this function, but I have it from Vice.
 int InputWaiting()
 {
 #ifndef _WIN32
@@ -40,26 +40,15 @@ int InputWaiting()
 }
 
 void ReadInput(bool& isStop, bool& isQuit) {
-	int             bytes = 0;
-	char            input[256] = "", * endc;
-
+	
 	if (InputWaiting()) {
 		isStop = true;
-		do {
-#ifndef _WIN32
-			bytes = read(fileno(stdin), input, 256);
-#else
-			bytes = _read(_fileno(stdin), input, 256);
-#endif
-		} while (bytes < 0);
-		endc = strchr(input, '\n');
-		if (endc) *endc = 0;
+		
+		std::string input = "";
+		std::getline(std::cin, input);
 
-		if (strlen(input) > 0) {
-			if (!strncmp(input, "quit", 4)) {
-				isQuit = true;
-			}
+		if (input.find("quit") != std::string::npos) {
+			isQuit = true;
 		}
-		return;
 	}
 }

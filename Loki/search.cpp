@@ -10,7 +10,7 @@ std::atomic<bool> Search::isStop(true);
 
 
 // The checkup function sees if we need to stop the search
-void CheckUp(SearchThread_t* ss) {
+void check_stopped_search(SearchThread_t* ss) {
 	// Only the 0'th (main) thread should check if the UCI has sent us commands to quit.
 	if (ss->thread_id == 0) {
 		if (ss->info->timeset && getTimeMs() >= ss->info->stoptime) {
@@ -115,7 +115,6 @@ namespace Search {
 		// Increment transposition table age
 		tt->increment_age();
 
-		isStop = false;
 		threads_running.clear();
 
 		ThreadPool_t tp(num_threads);
@@ -151,7 +150,7 @@ namespace Search {
 			info->quit = true;
 		}
 
-
+		isStop = true;
 		threads = nullptr;
 	}
 
@@ -530,7 +529,7 @@ namespace Search {
 
 		// Check to see if we've been told to abort the search.
 		if ((ss->info->nodes & 2047) == 0) {
-			CheckUp(ss);
+			check_stopped_search(ss);
 		}
 
 		if (ss->info->stopped) {
@@ -1002,7 +1001,7 @@ namespace Search {
 		ss->info->nodes++;
 
 		if ((ss->info->nodes & 2047) == 0) {
-			CheckUp(ss);
+			check_stopped_search(ss);
 		}
 
 		if (ss->info->stopped) {

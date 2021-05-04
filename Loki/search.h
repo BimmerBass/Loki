@@ -24,7 +24,6 @@ struct SearchPv {
 };
 
 
-
 namespace Search {
 	extern ThreadPool_t* threads;
 	extern std::vector<std::thread> threads_running;
@@ -82,7 +81,7 @@ Helper functions for search in general
 
 */
 
-extern void CheckUp(SearchThread_t* ss);
+extern void check_stopped_search(SearchThread_t* ss);
 
 extern void ChangePV(int move, SearchPv* parent, SearchPv* child);
 

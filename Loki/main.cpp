@@ -10,7 +10,7 @@ int main() {
 	PSQT::INIT();
 
 
-	UCI::UCI_loop();
+	UCI::loop();
 
 
 	//Texel::Parameters tuning_variables;
