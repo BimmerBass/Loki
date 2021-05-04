@@ -40,28 +40,6 @@ int InputWaiting()
 }
 
 void ReadInput(bool& isStop, bool& isQuit) {
-//	int             bytes = 0;
-//	char            input[256] = "", * endc;
-//
-//	if (InputWaiting()) {
-//		isStop = true;
-//		do {
-//#ifndef _WIN32
-//			bytes = read(fileno(stdin), input, 256);
-//#else
-//			bytes = _read(_fileno(stdin), input, 256);
-//#endif
-//		} while (bytes < 0);
-//		endc = strchr(input, '\n');
-//		if (endc) *endc = 0;
-//
-//		if (strlen(input) > 0) {
-//			if (!strncmp(input, "quit", 4)) {
-//				isQuit = true;
-//			}
-//		}
-//		return;
-//	}
 	
 	if (InputWaiting()) {
 		isStop = true;
