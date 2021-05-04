@@ -2,6 +2,7 @@
 #define UCI_H
 #include "search.h"
 #include "perft.h"
+#include "bench.h"
 
 #include <map>
 #include <sstream>

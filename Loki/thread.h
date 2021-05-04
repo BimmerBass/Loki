@@ -31,6 +31,8 @@ public:
 	}
 	SearchInfo_t(const SearchInfo_t& s);
 
+	// Just set the values in the struct to the default.
+	void clear();
 };
 
 

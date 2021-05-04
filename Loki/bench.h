@@ -2,56 +2,27 @@
 #define BENCH_H
 #include "search.h"
 
-#include <vector>
-#include <ctime>
-#include <iomanip>
-#include <sstream>
-#include <fstream>
+constexpr int BENCHMARK_DEPTH = 8;
 
-// Function to get the date and time to write to the filename
-inline std::string getDateTime()
-{
-	auto time = std::time(nullptr);
-	std::stringstream ss;
+inline void setup_params(SearchInfo_t* info) {
+    
+    // Step 1. Clear the object
+    info->clear();
 
-#if (defined(_WIN32) || defined(_WIN64))
-	tm ltm;
-	localtime_s(&ltm, &time);
-	ss << std::put_time(&ltm, "%F_%T"); // ISO 8601 without timezone information.
-#else
-	ss << std::put_time(std::localtime(&time), "%F_%T");
-#endif
-	auto s = ss.str();
-	std::replace(s.begin(), s.end(), ':', '-');
-	return s;
+    // Step 2. Set new values
+    info->starttime = getTimeMs();
+    info->depth = BENCHMARK_DEPTH;
+
+    // Step 3. Disable the isStop flag
+    Search::isStop = false;
 }
-
-
 
 namespace Bench {
+    // Ethereal's bench set -- found in Berskerk/bench.cpp
+    extern std::vector<std::string> benchmarks;
 
-	namespace SMP {
-
-		struct DataPoint {
-			int threads = 0;		// Amount of threads used
-			int depth = 0;			// Depth searched to
-			double ttd_avg = 0;		// Average time-to-depth
-			double ttd_dev = 0;		// Standard deviation of time-to-depth measurements
-		};
-
-		extern DataPoint results[THREADS_MAX_NUM][MAXDEPTH];
-
-		// Measures the time-to-depth stats of Lazy SMP and writes results to a .csv file.
-		void ttd_stats(int threads, int depth_min, int depth_max, int iterations, std::vector<std::string> fen_list);
-	}
-
-
+    extern void run_benchmark();
 }
-
-
-
-
-
 
 
 

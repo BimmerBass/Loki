@@ -15,6 +15,7 @@ perft_transposition_table = no # Only used to make perft faster when testing mov
 debug = no
 
 
+LIBS = -lm -lpthread
 
 ### Add compiler sepcific flags
 CXXFLAGS = -std=c++17 -lstdc++ -march=native
@@ -43,12 +44,12 @@ FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cp
 
 SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
-OUTFILE=Loki3
+EXE=Loki3
 
 # Add .exe exstension for windows builds.
 ifeq ($(OS), Windows_NT)
-OUTFILE = Loki3.exe
+EXE = Loki3.exe
 endif
 
 all:
-	g++ ${SOURCES} -o $(OUTFILE) ${CXXFLAGS}
+	g++ ${SOURCES} ${LIBS} -o $(EXE) ${CXXFLAGS}

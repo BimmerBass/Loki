@@ -24,10 +24,8 @@ void UCI::loop() {
 	int mb = TT_DEFAULT_SIZE; // The set size for the transposition table.
 
 	// Step 3. Begin listening for GUI-commands
-	while (true) {
-
-		std::string input;
-		std::getline(std::cin, input);
+	std::string input;
+	while (std::getline(std::cin, input)) {
 
 		// Step 3A. If a newline is given with nothing else, just wait for another instruction
 		if (input[0] == '\n' || input == "") {
@@ -135,6 +133,12 @@ void UCI::loop() {
 
 		else if (input.find(std::string("perft")) != std::string::npos) { // Run a perft test on the current position
 			goPerft(input, pos);
+			continue;
+		}
+
+		// Step 3J. If we receive a "bench", run a benchmark node-count measurement
+		else if (input.find("bench") != std::string::npos) {
+			Bench::run_benchmark();
 			continue;
 		}
 

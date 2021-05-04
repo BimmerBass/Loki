@@ -4,6 +4,35 @@
 
 /*
 
+Helper function to clear a searchinfo instance
+
+*/
+
+void SearchInfo_t::clear() {
+	starttime = 0;
+	stoptime = 0;
+
+	depth = MAXDEPTH;
+	seldepth = 0;
+	depthset = MAXDEPTH;
+
+	timeset = false;
+	movestogo = 0;
+	infinite = false;
+
+	nodes = 0;
+
+	quit = false;
+	stopped = false;
+
+	fh = 0;
+	fhf = 0;
+}
+
+
+
+/*
+
 Helper functions for SearchThread move-picking
 
 */
