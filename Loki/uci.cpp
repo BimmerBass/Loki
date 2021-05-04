@@ -316,7 +316,19 @@ goPerft parses the depth at which perft should be run, and runs it.
 */
 
 void UCI::goPerft(std::string l, GameState_t* pos) {
+	int depth = 1;
 
+	// Step 1. Parse the depth at which perft should be run. If none is given, set it to 1
+	int index = l.find("depth ");
+	if (index != std::string::npos) {
+		if (l.substr(index + 6) != "") {
+			depth = std::stoi(l.substr(index + 6));
+
+		}
+	}
+
+	// Step 2. Run perft.
+	Perft::perftTest(pos, depth);
 }
 
 

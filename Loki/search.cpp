@@ -532,7 +532,6 @@ namespace Search {
 
 		// Check to see if we've been told to abort the search.
 		if ((ss->info->nodes & 2047) == 0) {
-			//CheckUp(ss);
 			check_stopped_search(ss);
 		}
 
@@ -930,7 +929,6 @@ namespace Search {
 		ss->info->nodes++;
 
 		if ((ss->info->nodes & 2047) == 0) {
-			//CheckUp(ss);
 			check_stopped_search(ss);
 		}
 
