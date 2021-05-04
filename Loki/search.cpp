@@ -868,24 +868,24 @@ namespace Search {
 				// Step 13A. Late move reductions (~115 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha.
 				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
-					//int R = 1; // For now, we use an initial reduction of one ply only.
-					int R = late_move_reduction(depth, moves_searched);
+					int R = 1; // For now, we use an initial reduction of one ply only.
+					//int R = late_move_reduction(depth, moves_searched);
 
-					// Increase reduction if we're not improving (~12 elo)
-					if (!improving && !ss->pos->is_endgame()) {
-						R += 1;
-					}
-
-					// Increase reduction for moves with history < 0 (~5 elo)
-					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
-						R += 1;
-					}
-
-					// Decrease reduction if the move is a killer (~4 elo)
-					if (move == ss->stats.killers[ss->pos->ply - 1][0] || move == ss->stats.killers[ss->pos->ply - 1][1]) {
-						R -= 1;
-					}
-
+					//// Increase reduction if we're not improving (~12 elo)
+					//if (!improving && !ss->pos->is_endgame()) {
+					//	R += 1;
+					//}
+					//
+					//// Increase reduction for moves with history < 0 (~5 elo)
+					//if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
+					//	R += 1;
+					//}
+					//
+					//// Decrease reduction if the move is a killer (~4 elo)
+					//if (move == ss->stats.killers[ss->pos->ply - 1][0] || move == ss->stats.killers[ss->pos->ply - 1][1]) {
+					//	R -= 1;
+					//}
+					
 					// Increase reduction for captures with SEE < 0. Decrease otherwise (~12 elo).
 					if (capture) {
 						if (moves[m]->score < 0) {
@@ -895,21 +895,21 @@ namespace Search {
 							R -= 2;
 						}
 					}
-
-					// If the TT probe returned an ALL-entry, increase the reduction. (~25 elo)
-					if (ttHit && entry->flag == ttFlag::ALPHA && ttScore <= alpha) {
-						R += 1;
-					}
-
-					// Decrease reduction for moves with good history (~28 elo)
-					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] > std::min(200, (depth * depth) / 2)) {
-						R -= 1;
-					}
-
-					// If the static evaluation is below alpha based on a futility margin, increase reduction (~23 elo)
-					if (ss->stats.static_eval[ss->pos->ply - 1] + futility_margin(depth, improving) <= alpha) {
-						R += futility_margin(depth, improving) / 220;
-					}
+					
+					//// If the TT probe returned an ALL-entry, increase the reduction. (~25 elo)
+					//if (ttHit && entry->flag == ttFlag::ALPHA && ttScore <= alpha) {
+					//	R += 1;
+					//}
+					//
+					//// Decrease reduction for moves with good history (~28 elo)
+					//if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] > std::min(200, (depth * depth) / 2)) {
+					//	R -= 1;
+					//}
+					//
+					//// If the static evaluation is below alpha based on a futility margin, increase reduction (~23 elo)
+					//if (ss->stats.static_eval[ss->pos->ply - 1] + futility_margin(depth, improving) <= alpha) {
+					//	R += futility_margin(depth, improving) / 220;
+					//}
 
 					int d = std::max(1, std::min(depth - 1, depth - 1 - R));
 
