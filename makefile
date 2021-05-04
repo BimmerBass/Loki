@@ -15,6 +15,7 @@ perft_transposition_table = no # Only used to make perft faster when testing mov
 debug = no
 
 
+LIBS = -lm -lpthread
 
 ### Add compiler sepcific flags
 CXXFLAGS = -std=c++17 -lstdc++ -march=native
@@ -51,4 +52,4 @@ EXE = Loki3.exe
 endif
 
 all:
-	g++ ${SOURCES} -o $(EXE) ${CXXFLAGS}
+	g++ ${SOURCES} ${LIBS} -o $(EXE) ${CXXFLAGS}
