@@ -153,6 +153,9 @@ namespace Search {
 			info->quit = true;
 		}
 
+		// We save the node-count of the main thread to be used by the benchmarking method
+		info->nodes = (threads->at(0))->info->nodes;
+
 		isStop = true;
 		threads = nullptr;
 	}

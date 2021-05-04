@@ -138,6 +138,12 @@ void UCI::loop() {
 			continue;
 		}
 
+		// Step 3J. If we receive a "bench", run a benchmark node-count measurement
+		else if (input.find("bench") != std::string::npos) {
+			Bench::run_benchmark();
+			continue;
+		}
+
 		// If we've been told to quit, do it.
 		if (info->quit) {
 			break;
