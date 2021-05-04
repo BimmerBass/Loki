@@ -865,11 +865,11 @@ namespace Search {
 
 			else {
 				
-				// Step 13A. Late move reductions (~92 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
+				// Step 13A. Late move reductions (~115 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha.
 				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
-					int R = 1; // For now, we use an initial reduction of one ply only.
-					//int R = late_move_reduction(depth, moves_searched);
+					//int R = 1; // For now, we use an initial reduction of one ply only.
+					int R = late_move_reduction(depth, moves_searched);
 
 					// Increase reduction if we're not improving (~12 elo)
 					if (!improving && !ss->pos->is_endgame()) {
