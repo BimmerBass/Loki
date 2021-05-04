@@ -886,7 +886,7 @@ namespace Search {
 						R -= 1;
 					}
 
-					// Increase reduction for captures with SEE < 0. Decrease otherwise (~12 elo)
+					// Increase reduction for captures with SEE < 0. Decrease otherwise (~12 elo).
 					if (capture) {
 						if (moves[m]->score < 0) {
 							R += 1;
