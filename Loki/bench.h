@@ -2,7 +2,7 @@
 #define BENCH_H
 #include "search.h"
 
-constexpr int BENCHMARK_DEPTH = 7;
+constexpr int BENCHMARK_DEPTH = 8;
 
 inline void setup_params(SearchInfo_t* info) {
     

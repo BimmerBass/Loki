@@ -86,21 +86,22 @@ namespace Bench {
             total_time += end - start;
 
             long long duration = end - start;
+            long long nps = info->nodes / (((duration <= 0) ? 1 : duration) / 1000.0);
 
             // Step 2D. Just print out the results from the current position
             std::cout << "Benchmark position " << n + 1 <<
                 " nodes " << info->nodes <<
                 " time[ms] " << end - start <<
-                " nps " << info->nodes / (((duration <= 0) ? 1 : duration) / 1000.0)
+                " nps " << nps
                 << std::endl;
         }
 
         // Step 3. Output the time spent searching (only searching), the node-count and the nodes per second
         std::cout <<
             "\n======================\n" <<
-            "Time spent         " << total_time << "\n" <<
-            "Nodes searched     " << total_nodes << "\n" <<
-            "Nodes per second   " << total_nodes / (total_time / 1000.0) << std::endl;
+            "Time spent        " << total_time << "\n" <<
+            "Nodes             " << total_nodes << "\n" <<
+            "nps               " << total_nodes / (total_time / 1000) << std::endl;
         
     }
 
