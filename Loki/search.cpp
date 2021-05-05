@@ -903,15 +903,15 @@ namespace Search {
 					//	R += 1;
 					//}
 					
-					// Decrease reduction for moves with good history (~28 elo)
-					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] > std::min(200, (depth * depth) / 2)) {
-						R -= 1;
-					}
-					
-					//// If the static evaluation is below alpha based on a futility margin, increase reduction (~23 elo)
-					//if (ss->stats.static_eval[ss->pos->ply - 1] + futility_margin(depth, improving) <= alpha) {
-					//	R += futility_margin(depth, improving) / 220;
+					// Decrease reduction for moves with good history (~5 elo atm)
+					//if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] > std::min(200, (depth * depth) / 2)) {
+					//	R -= 1;
 					//}
+					
+					// If the static evaluation is below alpha based on a futility margin, increase reduction (~23 elo)
+					if (ss->stats.static_eval[ss->pos->ply - 1] + futility_margin(depth, improving) <= alpha) {
+						R += futility_margin(depth, improving) / 220;
+					}
 
 					int d = std::max(1, std::min(depth - 1, depth - 1 - R));
 
