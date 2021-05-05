@@ -883,10 +883,10 @@ namespace Search {
 						R += 1;
 					}
 					
-					//// Decrease reduction if the move is a killer (~4 elo)
-					//if (move == ss->stats.killers[ss->pos->ply - 1][0] || move == ss->stats.killers[ss->pos->ply - 1][1]) {
-					//	R -= 1;
-					//}
+					// Decrease reduction if the move is a killer (~4 elo)
+					if (move == ss->stats.killers[ss->pos->ply - 1][0] || move == ss->stats.killers[ss->pos->ply - 1][1]) {
+						R -= 1;
+					}
 					
 					// Increase reduction for captures with SEE < 0. Decrease otherwise (~12 elo).
 					if (capture) {
@@ -909,9 +909,9 @@ namespace Search {
 					//}
 					
 					// If the static evaluation is below alpha based on a futility margin, increase reduction (~23 elo)
-					if (ss->stats.static_eval[ss->pos->ply - 1] + futility_margin(depth, improving) <= alpha) {
-						R += futility_margin(depth, improving) / 220;
-					}
+					//if (ss->stats.static_eval[ss->pos->ply - 1] + futility_margin(depth, improving) <= alpha) {
+					//	R += futility_margin(depth, improving) / 220;
+					//}
 
 					int d = std::max(1, std::min(depth - 1, depth - 1 - R));
 
