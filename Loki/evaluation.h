@@ -169,4 +169,12 @@ constexpr int king_open_file_penalty = 100;
 constexpr int king_semi_open_file_penalty = 50;
 const Score pawnless_flank(248, -78);
 
+
+/*
+
+Piece coordination constants
+
+*/
+const Score bishops_from_hell(20, 40);
+
 #endif

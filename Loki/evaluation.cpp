@@ -818,7 +818,7 @@ namespace Eval {
 		*/
 		int closedness(const GameState_t* pos, Evaluation& eval) {
 
-			int score = 1;
+			int score = 0;
 
 			// Step 1. Give two points for each pawn on the board
 			score += 2 * countBits(pos->pieceBBS[PAWN][WHITE] | pos->pieceBBS[PAWN][BLACK]);
@@ -851,9 +851,57 @@ namespace Eval {
 			// Step 4C. Increase the score depending on the reciprocal of the amount of pawn breaks.
 			score += 112 / (white_breaks + black_breaks);
 
-			// Step 5. Return the closedness score
-			return score;
+			// Step 5. Return the closedness score and make sure it is between 1 and 256
+			return std::max(0, std::min(score, 256));
 		}
+
+
+		/*
+		
+		piece_coordination scores, as the name may suggest ;)), how well the pieces are coordinating. This is used as kind of an attack- or threat-predictor.
+		
+		*/
+		template<SIDE side>
+		void piece_coordination(const GameState_t* pos, Evaluation& eval) {
+			// Step 1. Define some constants
+			constexpr Bitboard queen_quadrant = (BBS::FileMasks8[FILE_A] | BBS::FileMasks8[FILE_B] | BBS::FileMasks8[FILE_C] | BBS::FileMasks8[FILE_D]) &
+				((side == WHITE) ? (BBS::RankMasks8[RANK_1] | BBS::RankMasks8[RANK_2] | BBS::RankMasks8[RANK_3] | BBS::RankMasks8[RANK_4]) :
+					(BBS::RankMasks8[RANK_8] | BBS::RankMasks8[RANK_7] | BBS::RankMasks8[RANK_6] | BBS::RankMasks8[RANK_5]));
+			constexpr Bitboard king_quadrant = (BBS::FileMasks8[FILE_E] | BBS::FileMasks8[FILE_F] | BBS::FileMasks8[FILE_G] | BBS::FileMasks8[FILE_H]) &
+				((side == WHITE) ? (BBS::RankMasks8[RANK_1] | BBS::RankMasks8[RANK_2] | BBS::RankMasks8[RANK_3] | BBS::RankMasks8[RANK_4]) :
+					(BBS::RankMasks8[RANK_8] | BBS::RankMasks8[RANK_7] | BBS::RankMasks8[RANK_6] | BBS::RankMasks8[RANK_5]));
+
+			// Step 2. Initialize all variables to be used
+			int mg = 0;
+			int eg = 0;
+
+
+			// Step 3. Reward having two or more bishops on the same "quadrant", which is just either queen or king side on our half of the board.
+			bool same_quadrant = countBits(pos->pieceBBS[BISHOP][side] & queen_quadrant) >= 2 || countBits(pos->pieceBBS[BISHOP][side] & king_quadrant) >= 2;
+
+			mg += same_quadrant * bishops_from_hell.mg;
+			eg += same_quadrant * bishops_from_hell.eg;
+
+			// Step 4. Analyze all attacks from our pieces (both actual attacks and the attack-rays) and access a "coordination table" from this.
+			int index = 0;
+
+
+
+
+
+			// Step 5. Scale down both scores depending on how closed our position is.
+			int closed_factor = closedness(pos, eval);
+
+			mg = mg * (256 - closed_factor) / 256;
+			eg = eg * (256 - closed_factor) / 256;
+
+
+			// Step 6. Add these scores to the evaluation object
+			eval.mg += (side == WHITE) ? mg : -mg;
+			eval.eg += (side == WHITE) ? eg : -eg;
+		}
+
+
 	}
 
 
