@@ -38,6 +38,8 @@ namespace Eval {
 
 		int king_zone_attackers[2] = { 0 };
 		int king_zone_attack_units[2] = { 0 };
+
+		Bitboard blocked_pawns[2] = { 0 };
 	};
 
 	extern Bitboard king_flanks[8];

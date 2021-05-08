@@ -339,6 +339,12 @@ namespace Eval {
 				//	}
 				//
 				//}
+
+				// If this pawn is blocked by an enemy pawn, add it to the bitmask.
+				if ((side == WHITE && ((uint64_t(1) << (sq + 8)) & pos->pieceBBS[PAWN][BLACK]) != 0)
+					|| (side == BLACK && ((uint64_t(1) << (sq - 8)) & pos->pieceBBS[PAWN][WHITE]) != 0)) {
+					eval.blocked_pawns[side] |= uint64_t(1) << sq;
+				}
 			}
 
 			// Populate the attacks bitboard with pawn attacks. This will be used in the evaluation of pieces.
