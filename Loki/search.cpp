@@ -874,9 +874,9 @@ namespace Search {
 					int R = late_move_reduction(depth, moves_searched);
 
 					// Increase reduction if we're not improving (~12 elo)
-					if (!improving && !ss->pos->is_endgame()) {
-						R += 1;
-					}
+					//if (!improving && !ss->pos->is_endgame()) {
+					//	R += 1;
+					//}
 					
 					// Increase reduction for moves with history < 0 (~35 elo)
 					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
@@ -898,10 +898,10 @@ namespace Search {
 						}
 					}
 					
-					//// If the TT probe returned an ALL-entry, increase the reduction. (~25 elo)
-					//if (ttHit && entry->flag == ttFlag::ALPHA && ttScore <= alpha) {
-					//	R += 1;
-					//}
+					// If the TT probe returned an ALL-entry, increase the reduction. (~25 elo)
+					if (ttHit && entry->flag == ttFlag::ALPHA && ttScore <= alpha && depth - ttDepth <= 4) {
+						R += 1;
+					}
 					
 					// Decrease reduction for moves with good history (~5 elo atm)
 					//if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] > std::min(200, (depth * depth) / 2)) {
