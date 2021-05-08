@@ -808,6 +808,52 @@ namespace Eval {
 			eval.mg += (side == WHITE) ? mg : -mg;
 			//eval.eg += (side == WHITE) ? eg : -eg;
 		}
+
+
+
+		/*
+		
+		The closedness evaluation consists of scoring certain aspects that determine how closed a position is. These consists of how many pawns, how many blocked pawns etc..
+		
+		*/
+		int closedness(const GameState_t* pos, Evaluation& eval) {
+
+			int score = 1;
+
+			// Step 1. Give two points for each pawn on the board
+			score += 2 * countBits(pos->pieceBBS[PAWN][WHITE] | pos->pieceBBS[PAWN][BLACK]);
+
+			// Step 2. Give 32 points for blocked E and/or D pawns, and half of that for blocked C and F pawns
+			// Note: We just use White's blocked pawn count here since it is arbitrary which side to use.
+			score += 32 * countBits(eval.blocked_pawns[WHITE] & (BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E]));
+			score += 16 * countBits(eval.blocked_pawns[WHITE] & (BBS::FileMasks8[FILE_C] | BBS::FileMasks8[FILE_F]));
+
+			// Step 3. Give four points for all other blocked pawns
+			score += 4 * countBits(eval.blocked_pawns[WHITE] & ~(BBS::FileMasks8[FILE_C] | BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E] | BBS::FileMasks8[FILE_F]));
+
+
+			// Step 4. Closed positions have very few possible pawn breaks, so score accordingly.
+			// Note: Here, a pawn break is defined as a move of a pawn that will attack a blocked enemy pawn.
+
+			// Step 4A. Define all legal pawn pushes.
+			Bitboard white_pushes = shift<NORTH>(pos->pieceBBS[PAWN][WHITE]) & ~(pos->all_pieces[WHITE] | pos->all_pieces[BLACK]);
+			Bitboard black_pushes = shift<SOUTH>(pos->pieceBBS[PAWN][BLACK]) & ~(pos->all_pieces[WHITE] | pos->all_pieces[BLACK]);
+
+			white_pushes |= shift<NORTH>(shift<NORTH>(pos->pieceBBS[PAWN][WHITE] & BBS::RankMasks8[RANK_2]) & ~(pos->all_pieces[WHITE] | pos->all_pieces[BLACK])) &
+				~(pos->all_pieces[WHITE] | pos->all_pieces[BLACK]);
+			black_pushes |= shift<SOUTH>(shift<SOUTH>(pos->pieceBBS[PAWN][BLACK] & BBS::RankMasks8[RANK_7]) & ~(pos->all_pieces[WHITE] | pos->all_pieces[BLACK])) &
+				~(pos->all_pieces[WHITE] | pos->all_pieces[BLACK]);
+
+			// Step 4B. Now count the breaks as amount of pawn moves that attack enemy blocked pawns
+			int white_breaks = countBits((shift<NORTHEAST>(white_pushes) | shift<NORTHWEST>(white_pushes)) & eval.blocked_pawns[BLACK]);
+			int black_breaks = countBits((shift<SOUTHEAST>(black_pushes) | shift<SOUTHWEST>(black_pushes)) & eval.blocked_pawns[WHITE]);
+
+			// Step 4C. Increase the score depending on the reciprocal of the amount of pawn breaks.
+			score += 112 / (white_breaks + black_breaks);
+
+			// Step 5. Return the closedness score
+			return score;
+		}
 	}
 
 
