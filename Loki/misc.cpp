@@ -41,14 +41,36 @@ int InputWaiting()
 
 void ReadInput(bool& isStop, bool& isQuit) {
 	
+	//if (InputWaiting()) {
+	//	isStop = true;
+	//	
+	//	std::string input = "";
+	//	std::getline(std::cin, input);
+	//
+	//	if (input.find("quit") != std::string::npos) {
+	//		isQuit = true;
+	//	}
+	//}
+	int             bytes = 0;
+	char            input[256] = "", * endc;
+
 	if (InputWaiting()) {
 		isStop = true;
-		
-		std::string input = "";
-		std::getline(std::cin, input);
+		do {
+#ifndef _WIN32
+			bytes = read(fileno(stdin), input, 256);
+#else
+			bytes = _read(_fileno(stdin), input, 256);
+#endif
+		} while (bytes < 0);
+		endc = strchr(input, '\n');
+		if (endc) *endc = 0;
 
-		if (input.find("quit") != std::string::npos) {
-			isQuit = true;
+		if (strlen(input) > 0) {
+			if (!strncmp(input, "quit", 4)) {
+				isQuit = true;
+			}
 		}
+		return;
 	}
 }
