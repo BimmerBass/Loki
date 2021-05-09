@@ -157,7 +157,7 @@ void UCI::loop() {
 
 /*
 
-parse_position takes the GUI command as an input and sets up the position with the internal board structure of Loki.
+parse_position takes the GUI command as an input and sets up the position with the internal board structure of Loki
 
 */
 
@@ -234,6 +234,7 @@ void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
 	int depth = MAXDEPTH, movestogo = 30, movetime = -1;
 	long long time = -1, inc = 0;
 	info->timeset = false;
+	info->starttime = getTimeMs();
 
 	// Step 2. Parse the parameters given from the GUI.
 	
@@ -282,7 +283,6 @@ void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
 
 	// Step 3. Configure the search time and depth depending on the parameters we've been given.
 	// FIXME: Add some more elaborate time management scheme here. Right now, Loki's time management is taken from Vice...
-	info->starttime = getTimeMs();
 	info->depth = depth;
 
 	// Step 3B. If "movetime" has been given, search for this specific amount of time.
@@ -295,15 +295,16 @@ void UCI::parse_go(std::string params, GameState_t* pos, SearchInfo_t* info) {
 	if (time != -1) {
 		info->timeset = true;
 
+		// Step 3A.1. Subtract a buffer time to compensate for the time used parsing the command.
 		time /= movestogo;
+		int total_time = time + inc - MOVE_BUFFER;
 
-		// Step 3A.1. If we have more than 50 milliseconds, subtract some time which is used for setting up and ending the search.
-		if (time > 50) {
-			time -= 50;
+		info->stoptime = info->starttime + total_time;
+
+		// Step 3A.2. If we had less time than the move buffer, our endtime is before our starttime. Handle this.
+		if (info->stoptime <= info->starttime) {
+			info->stoptime = info->starttime + 5;
 		}
-
-		info->stoptime = info->starttime + time + inc;
-
 	}
 
 	// Step 4. Finally, run the search.
