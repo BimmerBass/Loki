@@ -899,9 +899,9 @@ namespace Search {
 					}
 					
 					// If the TT probe returned an ALL-entry, increase the reduction. (~25 elo)
-					if (ttHit && entry->flag == ttFlag::ALPHA && ttScore <= alpha && depth - ttDepth <= 4) {
-						R += 1;
-					}
+					//if (ttHit && entry->flag == ttFlag::ALPHA && ttScore <= alpha && depth - ttDepth <= 4) {
+					//	R += 1;
+					//}
 					
 					// Decrease reduction for moves with good history (~5 elo atm)
 					//if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] > std::min(200, (depth * depth) / 2)) {
