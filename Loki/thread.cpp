@@ -52,8 +52,11 @@ void SearchThread_t::generate_moves(MoveList* moves, bool qsearch) {
 
 
 void SearchThread_t::setKillers(int ply, int move) {
-	stats.killers[ply][1] = stats.killers[ply][0];
-	stats.killers[ply][0] = move;
+	// If the move is already the first killer, don't add it since it'll just result in duplicate killers
+	if (stats.killers[ply][0] != move) {
+		stats.killers[ply][1] = stats.killers[ply][0];
+		stats.killers[ply][0] = move;
+	}
 }
 
 

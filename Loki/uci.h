@@ -18,6 +18,8 @@ static std::map<InfoParameters, std::string> EngineInfo {
 
 
 namespace UCI {
+	constexpr int MOVE_BUFFER = 50;
+
 	extern int num_threads; // Global such that it can be accessed by both loop() and parse_go();
 
 	// Main method of the UCI implementation. Responsible for listening for all input

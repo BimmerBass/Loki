@@ -6,7 +6,7 @@ constexpr int BENCHMARK_DEPTH = 10;
 
 inline void setup_params(SearchInfo_t* info) {
     
-    // Step 1. Clear the object
+    // Step 1. Clear the object.
     info->clear();
 
     // Step 2. Set new values
