@@ -865,7 +865,7 @@ namespace Search {
 
 			else {
 				
-				// Step 13A. Late move reductions (~115 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
+				// Step 13A. Late move reductions (~111 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha.
 				// NOTE: All elo measurements below are from self-play. They are used to give an image of which features give the best returns, but they
 				//	shouldn't be taken literally. Their sum is bigger than the real elo gain of LMR.
