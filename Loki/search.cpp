@@ -869,7 +869,7 @@ namespace Search {
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha.
 				// NOTE: All elo measurements below are from self-play. They are used to give an image of which features give the best returns, but they
 				//	shouldn't be taken literally. Their sum is bigger than the real elo gain of LMR.
-				if (moves_searched >= lmr_limit && depth > lmr_depth && !is_tactical && !is_pv && !root_node && extensions == 0) {
+				if (moves_searched >= lmr_limit && depth > lmr_depth && !in_check && !root_node) {
 					// Look up the logarithmic base reduction. (~28 elo)
 					int R = late_move_reduction(depth, moves_searched);
 
@@ -912,6 +912,14 @@ namespace Search {
 					//if (ss->stats.static_eval[ss->pos->ply - 1] + futility_margin(depth, improving) <= alpha) {
 					//	R += futility_margin(depth, improving) / 220;
 					//}
+
+					// Decrease reduction if we're in a PV node
+					R -= 2 * is_pv;
+
+					// Decrease reduction if the move is tactical
+					R -= gives_check;
+					R -= (SPECIAL(move) == PROMOTION);
+
 
 					int d = std::max(1, std::min(depth - 1, depth - 1 - R));
 
