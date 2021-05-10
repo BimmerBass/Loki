@@ -321,7 +321,7 @@ namespace Search {
 	====================================================================================
 	*/
 
-	// Calls search_root with aspiration windows (~22 elo)
+	// Calls search_root with aspiration windows (~10 elo)
 	int aspiration_search(SearchThread_t* ss, int depth, int estimate, SearchPv* line) {
 		// Step 1. Initialize some variables
 		int score = -INF;
