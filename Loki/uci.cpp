@@ -2,6 +2,22 @@
 
 int UCI::num_threads = THREADS_DEFAULT_NUM;
 
+
+/*
+
+print_info is just a helper method to run when given "uci"
+
+*/
+void UCI::print_info() {
+	std::cout << "id name " << EngineInfo[NAME] << " " << EngineInfo[VERSION] << std::endl;
+	std::cout << "id author " << EngineInfo[AUTHOR] << std::endl;
+
+	// Step 3C.1. Output all ajustible options for Loki.
+	std::cout << "option name Hash type spin default " << TT_DEFAULT_SIZE << " min " << TT_MIN_SIZE << " max " << TT_MAX_SIZE << std::endl;
+	std::cout << "option name Threads type spin default " << THREADS_DEFAULT_NUM << " min " << THREADS_MIN_NUM << " max " << THREADS_MAX_NUM << std::endl;
+	std::cout << "uciok" << std::endl;
+}
+
 /*
 
 UCI_loop is the main function for handling communication with the GUI.
@@ -44,13 +60,7 @@ void UCI::loop() {
 		// Step 3C. If we are given a "uci" command, we should output all uci parameters and info of Loki.
 		else if (input.find(std::string("uci")) != std::string::npos) {
 
-			std::cout << "id name " << EngineInfo[NAME] << " " << EngineInfo[VERSION] << std::endl;
-			std::cout << "id author" << EngineInfo[AUTHOR] << std::endl;
-
-			// Step 3C.1. Output all ajustible options for Loki.
-			std::cout << "option name Hash type spin default " << TT_DEFAULT_SIZE << " min " << TT_MIN_SIZE << " max " << TT_MAX_SIZE << std::endl;
-			std::cout << "option name Threads type spin default " << THREADS_DEFAULT_NUM << " min " << THREADS_MIN_NUM << " max " << THREADS_MAX_NUM << std::endl;
-			std::cout << "uciok" << std::endl;
+			print_info();
 
 			continue;
 

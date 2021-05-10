@@ -12,7 +12,7 @@ enum InfoParameters :int { NAME = 0, VERSION = 1, AUTHOR = 2 };
 
 static std::map<InfoParameters, std::string> EngineInfo {
 	{NAME, "Loki"},
-	{ VERSION, "3.0.0" },
+	{ VERSION, "3.5.0" },
 	{ AUTHOR, "Niels Abildskov" }
 };
 
@@ -24,6 +24,8 @@ namespace UCI {
 
 	// Main method of the UCI implementation. Responsible for listening for all input
 	void loop();
+
+	void print_info();
 
 	// Method for parsing the "position" command
 	void parse_position(std::string setup, GameState_t* pos);
