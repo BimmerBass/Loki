@@ -882,11 +882,6 @@ namespace Search {
 					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
 						R += 1;
 					}
-
-					// Increase reduction if we haven't raised alpha yet.
-					if (alpha <= old_alpha) {
-						R += 1;
-					}
 					
 					// Decrease reduction if the move is a killer (~4 elo)
 					//if (move == ss->stats.killers[ss->pos->ply - 1][0] || move == ss->stats.killers[ss->pos->ply - 1][1]) {
