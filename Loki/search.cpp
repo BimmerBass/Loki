@@ -189,7 +189,7 @@ namespace Search {
 			ss->info->seldepth = 0; // Clear seldepth
 
 			// Search the position. Use the previous score to center the aspiration windows.
-			score = search_root(ss, currDepth, -INF, INF, &pvLine);
+			score = aspiration_search(ss, currDepth, score, &pvLine);
 
 			// If we've been asked to stop, break out of the loop. We don't want the new PV from the lates alphabeta call because the tree hasn't been fully
 			// searched, so we'll take the next best, aka last iteration's result.
@@ -321,42 +321,54 @@ namespace Search {
 	====================================================================================
 	*/
 
-	// Calls search_root with aspiration windows (~22 elo)
+	// Calls search_root with aspiration windows (~10 elo)
 	int aspiration_search(SearchThread_t* ss, int depth, int estimate, SearchPv* line) {
+		// Step 1. Initialize some variables
 		int score = -INF;
-		
-		int alpha = -INF;
-		int beta = INF;
 
-		int delta_alpha = aspiration_window;
-		int delta_beta = aspiration_window;
+		int alpha_aspirated = -INF;
+		int beta_aspirated = INF;
 
-		// Only use narrow windows at high depths and if there are no mate scores
-		if (depth >= aspiration_depth && abs(estimate) < (MATE / 2)) {
-			alpha = std::max(alpha, estimate - delta_alpha);
-			beta = std::min(beta, estimate + delta_beta);
+		int delta = aspiration_window;
+
+		// Step 2. Determine whether aspiration windows should be used. Shallow searches are for example so fast that it doesn't make sense.
+		// And if we're in a position with mate scores, we need to search with a full window.
+		if (depth >= aspiration_depth && abs(estimate) < MATE / 2) {
+			alpha_aspirated = std::max(-INF, estimate - delta);
+			beta_aspirated = std::min(INF, estimate + delta);
 		}
 
-	asp_loop:
-		score = search_root(ss, depth, alpha, beta, line);
+		// Step 3. Search the position with the determined windows.
+		while (true) {
 
-		if (ss->info->stopped) { return 0; }
+			// Step 3A. Search.
+			score = search_root(ss, depth, alpha_aspirated, beta_aspirated, line);
 
+			// Step 3A.1. If we've been told to stop, return.
+			if (ss->info->stopped) { return 0; }
 
+			// Step 3B. Handle fail-low (score is below alpha)
+			if (score <= alpha_aspirated) {
+				alpha_aspirated = std::max(-INF, alpha_aspirated - delta);
 
-		// If the real score is below alpha, open this window fully
-		if (score <= alpha) {
-			alpha = -INF;
+				continue;
+			}
 
-			goto asp_loop;
+			// Step 3C. Handle fail-high (score is above beta)
+			else if (score >= beta_aspirated) {
+				beta_aspirated = std::min(INF, beta_aspirated + delta);
+
+				continue;
+			}
+
+			// Step 3D. If the score is within the bounds, we can return.
+			else {
+				break;
+			}
+
+			// Step 3E. Increase the aspiration widening
+			delta += delta / 2;
 		}
-
-		if (score >= beta) {
-			beta = INF;
-
-			goto asp_loop;
-		}
-
 
 		return score;
 	}
