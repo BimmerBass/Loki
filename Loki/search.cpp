@@ -875,8 +875,9 @@ namespace Search {
 
 					// Increase reduction if we're not improving (~12 elo)
 					//if (!improving && !ss->pos->is_endgame()) {
-					//	R += 1;
-					//}
+					if (!improving) {
+						R += 1;
+					}
 					
 					// Increase reduction for moves with history < 0 (~35 elo)
 					if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
