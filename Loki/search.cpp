@@ -873,8 +873,7 @@ namespace Search {
 					// Look up the logarithmic base reduction. (~28 elo)
 					int R = late_move_reduction(depth, moves_searched);
 
-					// Increase reduction if we're not improving (~12 elo)
-					//if (!improving && !ss->pos->is_endgame()) {
+					// Increase reduction if we're not improving (~6 elo)
 					if (!improving) {
 						R += 1;
 					}
