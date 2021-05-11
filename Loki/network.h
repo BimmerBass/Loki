@@ -56,6 +56,9 @@ namespace Neural {
 
 		// This method is responsible for saving a network to a file.
 		void save_net(std::string filename = "");
+
+		// Used by texel SPSA tuning
+		std::vector<int16_t*> get_tuning_parameters();
 	private:
 
 		// Layers

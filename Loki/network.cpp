@@ -339,3 +339,53 @@ Neural::Network::Network(const Network& n) {
 	}
 	HIDDEN_TO_OUTPUT = n.HIDDEN_TO_OUTPUT;
 }
+
+
+
+/*
+
+The following method returns a vector of pointers to the weights and biases we're using
+
+*/
+
+std::vector<int16_t*> Neural::Network::get_tuning_parameters() {
+	std::vector<int16_t*> weights_and_biases;
+
+	// Step 1. Copy all biases into it.
+	for (int n = 0; n < INPUT_SIZE; n++) {
+		weights_and_biases.push_back(&INPUT_LAYER[n].bias);
+	}
+	for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+		weights_and_biases.push_back(&FIRST_HIDDEN_LAYER[n].bias);
+	}
+	for (int i = 0; i < HIDDEN_STD_COUNT; i++) {
+		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
+			weights_and_biases.push_back(&HIDDEN_LAYERS[i][n].bias);
+		}
+	}
+
+	// Step 2. Copy all weights.
+	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+		for (int j = 0; j < INPUT_SIZE; j++) {
+			weights_and_biases.push_back(&INPUT_TO_FIRST[i][j]);
+		}
+	}
+	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+		for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
+			weights_and_biases.push_back(&FIRST_TO_HIDDEN[i][j]);
+		}
+	}
+	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				weights_and_biases.push_back(&HIDDEN_TO_HIDDEN[n][i][j]);
+			}
+		}
+	}
+	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+		weights_and_biases.push_back(&HIDDEN_TO_OUTPUT[i]);
+	}
+
+	// Step 3. Return the copied pointers
+	return weights_and_biases;
+}

@@ -1,5 +1,30 @@
 #include "texel.h"
 
+Neural::Network* texel_net = nullptr;
+
+
+void tune_network(std::string file_path) {
+	texel_net = new Neural::Network();
+
+	// Step 1. If our file_path is not given, initialize the network with random variables
+	if (file_path != "") {
+		texel_net->load_net(file_path);
+	}
+
+	// Step 2. Create a vector with pointers to all weights and biases
+	Texel::Parameters weights_and_biases;
+
+	// Step 2A. Copy pointers to all biases
+	std::vector<int16_t*> pointers = texel_net->get_tuning_parameters();
+
+	for (int i = 0; i < pointers.size(); i++) {
+		//weights_and_biases.push_back(Texel::Parameter((int*)pointers[i], Texel::Value(0.0025, 0.0025), Texel::Value(4.0, 4.0)));
+	}
+
+
+}
+
+
 
 
 namespace Texel {
