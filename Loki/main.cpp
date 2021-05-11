@@ -18,6 +18,7 @@ int main(int argc, char* argv[]) {
 	//}
 	//
 	//UCI::loop();
+	std::srand(std::chrono::duration_cast<std::chrono::nanoseconds> (std::chrono::system_clock::now().time_since_epoch()).count());
 
 	Neural::Network myNet("");
 
@@ -51,6 +52,39 @@ int main(int argc, char* argv[]) {
 
 		std::cout << "Random eval for position " << n << ": " << myNet.evaluate() << std::endl;
 	}
+
+	std::srand(std::chrono::duration_cast<std::chrono::nanoseconds> (std::chrono::system_clock::now().time_since_epoch()).count());
+	// evalnet_768x256x32x32.lnn
+	Neural::Network newNet("evalnet_768x256x32x32.lnn");
+	newNet.load_net("evalnet_768x256x32x32.lnn");
+
+	for (int n = 0; n < test_positions.size(); n++) {
+
+		pos->parseFen(test_positions[n]);
+
+
+		for (int i = PAWN; i <= KING; i++) {
+
+			for (int sq = 0; sq < 64; sq++) {
+				input[64 * i + sq] = ((((pos->pieceBBS[i][WHITE] >> sq) & 1) == 1) ? 1 : 0);
+			}
+
+		}
+
+		for (int i = PAWN; i <= KING; i++) {
+
+			for (int sq = 0; sq < 64; sq++) {
+				input[64 * i + sq] = ((((pos->pieceBBS[i][BLACK] >> sq) & 1) == 1) ? 1 : 0);
+			}
+
+		}
+
+		newNet.load_position(input);
+
+		std::cout << "Random eval for position " << n << ": " << newNet.evaluate() << std::endl;
+	}
+
+
 
 	delete pos;
 

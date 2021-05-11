@@ -80,19 +80,18 @@ void Neural::Network::load_position(std::array<int16_t, INPUT_SIZE>& inputs) {
 
 // Helper function for load_net
 std::vector<int16_t> split_line(std::string line) {
-	int curr = 0;
-	int last_space = 0;
 
+	std::vector<std::string> number_strings;
 	std::vector<int16_t> out;
 
-	for (int i = 0; i < line.size(); i++) {
-		if (line[i] == ' ') {
-			out.push_back(std::stoi(line.substr(last_space, curr)));
-			last_space = i;
-			curr = 0;
-			continue;
-		}
-		curr++;
+	std::istringstream iss(line);
+
+	std::copy(std::istream_iterator<std::string>(iss),
+		std::istream_iterator<std::string>(),
+		std::back_inserter(number_strings));
+
+	for (int i = 0; i < number_strings.size(); i++) {
+		out.push_back(std::stoi(number_strings[i]));
 	}
 
 	return out;
