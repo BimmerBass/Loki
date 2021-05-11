@@ -78,6 +78,26 @@ void Neural::Network::load_position(std::array<int16_t, INPUT_SIZE>& inputs) {
 }
 
 
+// Helper function for load_net
+std::vector<int16_t> split_line(std::string line) {
+	int curr = 0;
+	int last_space = 0;
+
+	std::vector<int16_t> out;
+
+	for (int i = 0; i < line.size(); i++) {
+		if (line[i] == ' ') {
+			out.push_back(std::stoi(line.substr(last_space, curr)));
+			last_space = i;
+			curr = 0;
+			continue;
+		}
+		curr++;
+	}
+
+	return out;
+}
+
 /*
 
 This function will load a neural network from a file with the ".lnn" (loki-neural-network) extension.
@@ -85,7 +105,74 @@ This function will load a neural network from a file with the ".lnn" (loki-neura
 */
 
 void Neural::Network::load_net(std::string file_path) {
+	// Step 1. Open the file.
+	std::fstream file;
+	file.open(file_path, std::fstream::in);
 
+	std::string data_str = "";
+	std::vector<int16_t> data;
+
+	// Step 2. Load all biases
+
+	// First hidden bias
+	std::getline(file, data_str);
+	data = split_line(data_str);
+
+	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+		FIRST_HIDDEN_LAYER[i].bias = data[i];
+	}
+
+	// Standard hidden layers
+	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
+		std::getline(file, data_str);
+		data = split_line(data_str);
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			HIDDEN_LAYERS[n][i].bias = data[i];
+		}
+	}
+
+	// Step 3. Load all weights
+
+	// Input to first hidden layer weights
+	std::getline(file, data_str);
+	data = split_line(data_str);
+
+	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+		for (int j = 0; j < INPUT_SIZE; j++) {
+			INPUT_TO_FIRST[i][j] = data[i * INPUT_SIZE + j];
+		}
+	}
+
+	// First hidden to standard hidden
+	std::getline(file, data_str);
+	data = split_line(data_str);
+	
+	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+		for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
+			FIRST_TO_HIDDEN[i][j] = data[i * FIRST_HIDDEN_SIZE + j];
+		}
+	}
+
+	// Hidden layers
+	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
+		std::getline(file, data_str);
+		data = split_line(data_str);
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				HIDDEN_TO_HIDDEN[n][i][j] = data[i * HIDDEN_STD_SIZE + j];
+			}
+		}
+	}
+
+	// Hidden to output layer
+	std::getline(file, data_str);
+	data = split_line(data_str);
+
+	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+		HIDDEN_TO_OUTPUT[i] = data[i];
+	}
 }
 
 
