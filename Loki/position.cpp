@@ -875,6 +875,10 @@ GameState_t::GameState_t(const GameState_t& pos) {
 	ply = pos.ply;
 	fiftyMove = pos.fiftyMove;
 
+	// Copy the network
+	net = pos.net;
+	use_net = pos.use_net;
+
 	// Copy zobrist hashkey
 	posKey = pos.posKey;
 

@@ -57,7 +57,7 @@ int16_t Neural::Network::evaluate() {
 	vector_dot_product<HIDDEN_STD_SIZE>(HIDDEN_TO_OUTPUT, HIDDEN_LAYERS[HIDDEN_STD_COUNT - 1], output, false, false);
 
 	// Step 4. Return the activation of the output, but make sure it stays inside +- 30000
-	return std::min(INF, std::max(int16_t(-INF), output.activation));
+	return std::min(OUTPUT_BOUND, std::max(int16_t(-OUTPUT_BOUND), output.activation));
 }
 
 
@@ -310,4 +310,32 @@ Neural::Network::Network(std::string net_file) {
 		// Output bias should always be zero.
 		output.bias = 0;
 	}
+}
+
+
+
+/*
+
+Copy constructur
+
+*/
+Neural::Network::Network(const Network& n) {
+	
+	// Step 1. Copy layers
+	INPUT_LAYER = n.INPUT_LAYER;
+	FIRST_HIDDEN_LAYER = n.FIRST_HIDDEN_LAYER;
+
+	for (int i = 0; i < HIDDEN_STD_COUNT; i++) {
+		HIDDEN_LAYERS[i] = n.HIDDEN_LAYERS[i];
+	}
+	output = n.output;
+
+	// Step 2. Copy weights
+	INPUT_TO_FIRST = n.INPUT_TO_FIRST;
+	FIRST_TO_HIDDEN = n.FIRST_TO_HIDDEN;
+
+	for (int i = 0; i < HIDDEN_STD_COUNT; i++) {
+		HIDDEN_TO_HIDDEN[i] = n.HIDDEN_TO_HIDDEN[i];
+	}
+	HIDDEN_TO_OUTPUT = n.HIDDEN_TO_OUTPUT;
 }

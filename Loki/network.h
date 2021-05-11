@@ -21,9 +21,18 @@ namespace Neural {
 	constexpr int HIDDEN_STD_COUNT = 2;		/* Two standard hidden layers */
 	constexpr int OUTPUT_SIZE = 1;			/* The output layer should have one neuron ==> A value network*/
 
+	// +/- bound for the output
+	constexpr int16_t OUTPUT_BOUND = 30000;
 
 	// A neuron has an activation and a bias.
 	struct Neuron {
+		Neuron(const Neuron& n) {
+			activation = n.activation; bias = n.bias;
+		}
+		Neuron() {
+			activation = 0; bias = 0;
+		}
+
 		int16_t activation = 0;
 		int16_t bias = 0;
 	};
@@ -34,7 +43,7 @@ namespace Neural {
 	class Network {
 	public:
 		Network(std::string net_file = "");
-
+		Network(const Network& n);
 
 		// This method is responsible for loading a position into the network and calculating the values of the first hidden layer.
 		void load_position(std::array<int16_t, INPUT_SIZE>& position);
@@ -60,9 +69,6 @@ namespace Neural {
 		std::array<std::array<int16_t, FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> FIRST_TO_HIDDEN;
 		std::array<std::array<std::array<int16_t, HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE>, HIDDEN_STD_COUNT> HIDDEN_TO_HIDDEN;
 		std::array<int16_t, HIDDEN_STD_SIZE> HIDDEN_TO_OUTPUT;
-
-		// +/- bound for the output
-		const int16_t INF = 30000;
 	};
 
 }

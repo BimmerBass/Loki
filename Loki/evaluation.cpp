@@ -809,47 +809,52 @@ namespace Eval {
 	int evaluate(GameState_t* pos) {
 		int v = 0;
 
-		// Step 1. Material draw check (~22 elo)
-		//if (material_draw(pos)) {
-		//	return 0;
-		//}
+		if (pos->use_net) {
+			v = pos->net.evaluate();
+		}
+		else {
+			// Step 1. Material draw check (~22 elo)
+			//if (material_draw(pos)) {
+			//	return 0;
+			//}
 
-		// Step 2. Create an evaluation object holding the middlegame and endgame score separately.
-		//Evaluation eval(mg_evaluate(pos), eg_evaluate(pos));
-		Evaluation eval(0, 0);
+			// Step 2. Create an evaluation object holding the middlegame and endgame score separately.
+			//Evaluation eval(mg_evaluate(pos), eg_evaluate(pos));
+			Evaluation eval(0, 0);
 
-		// Step 3. Material evaluation
-		material<WHITE>(pos, eval); material<BLACK>(pos, eval);
+			// Step 3. Material evaluation
+			material<WHITE>(pos, eval); material<BLACK>(pos, eval);
 
-		// Step 4. Piece-square tables
-		psqt<WHITE>(pos, eval); psqt<BLACK>(pos, eval);
+			// Step 4. Piece-square tables
+			psqt<WHITE>(pos, eval); psqt<BLACK>(pos, eval);
 
-		// Step 5. Calculate the material imbalance of the position. (+17 elo)
-		imbalance<WHITE>(pos, eval); imbalance<BLACK>(pos, eval);
+			// Step 5. Calculate the material imbalance of the position. (+17 elo)
+			imbalance<WHITE>(pos, eval); imbalance<BLACK>(pos, eval);
 
-		// Step 6. Pawn structure evaluation
-		pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
-		
-		// Step 7. Space evaluation
-		space<WHITE>(pos, eval); space<BLACK>(pos, eval);
+			// Step 6. Pawn structure evaluation
+			pawns<WHITE>(pos, eval); pawns<BLACK>(pos, eval);
 
-		// Step 8. Evaluate mobility (~)
-		mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
-		mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
-		mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
-		mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
-		
-		// Step 9. Simple king safety evaluation (~47 elo)
-		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
+			// Step 7. Space evaluation
+			space<WHITE>(pos, eval); space<BLACK>(pos, eval);
 
-		// Step 10. Piece evaluations --> loses elo (~-23) at the moment
-		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
-		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
-		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
-		//pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
+			// Step 8. Evaluate mobility (~)
+			mobility<WHITE, KNIGHT>(pos, eval); mobility<BLACK, KNIGHT>(pos, eval);
+			mobility<WHITE, BISHOP>(pos, eval); mobility<BLACK, BISHOP>(pos, eval);
+			mobility<WHITE, ROOK>(pos, eval); mobility<BLACK, ROOK>(pos, eval);
+			mobility<WHITE, QUEEN>(pos, eval); mobility<BLACK, QUEEN>(pos, eval);
 
-		// Step 11. Interpolate between the middlegame and endgame scores
-		v = eval.interpolate(pos);
+			// Step 9. Simple king safety evaluation (~47 elo)
+			king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
+
+			// Step 10. Piece evaluations --> loses elo (~-23) at the moment
+			//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
+			//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
+			//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
+			//pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
+
+			// Step 11. Interpolate between the middlegame and endgame scores
+			v = eval.interpolate(pos);
+		}
 
 		// Step 12. Add a tempo for the side to move and make the score side-relative.
 		v += (pos->side_to_move == WHITE) ? tempo : -tempo;
