@@ -2,6 +2,10 @@
 #define NETWORK_H
 #include <array>
 #include <vector>
+#include <string>
+#include <random>
+
+
 
 namespace Neural {
 
@@ -15,27 +19,32 @@ namespace Neural {
 	constexpr int OUTPUT_SIZE = 1;			/* The output layer should have one neuron ==> A value network*/
 
 
+	// A neuron has an activation and a bias.
+	struct Neuron {
+		int16_t activation = 0;
+		int16_t bias = 0;
+	};
+
 	/*
 	The network class will hold a network when it gets loaded.
 	*/
 	class Network {
 	public:
-		Network();
-		~Network();
+		Network(std::string net_file = "");
 
 
-		// This method is responsible for loading a position into the network
+		// This method is responsible for loading a position into the network and calculating the values of the first hidden layer.
 		void load_position(std::array<int16_t, INPUT_SIZE>& position);
 
 		// This is the key method of the network. It is responsible for evaluating a position.
 		int16_t evaluate();
 
+		// This method is responsible for loading a network from a file. The network will be initialized randomly at first.
+		void load_net(std::string file_path);
+
+		// This method is responsible for saving a network to a file.
+		void save_net();
 	private:
-		// A neuron has an activation and a bias.
-		struct Neuron {
-			int16_t activation = 0;
-			int16_t bias = 0;
-		};
 
 		// Layers
 		std::array<Neuron, INPUT_SIZE> INPUT_LAYER;
@@ -45,9 +54,12 @@ namespace Neural {
 
 		// Weights
 		std::array<std::array<int16_t, INPUT_SIZE>, FIRST_HIDDEN_SIZE> INPUT_TO_FIRST;
-		std::array<std::array<int16_t, FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> INPUT_TO_HIDDEN;
-		std::array<std::array<int16_t, HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE> HIDDEN_TO_HIDDEN;
+		std::array<std::array<int16_t, FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> FIRST_TO_HIDDEN;
+		std::array<std::array<std::array<int16_t, HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE>, HIDDEN_STD_COUNT> HIDDEN_TO_HIDDEN;
 		std::array<int16_t, HIDDEN_STD_SIZE> HIDDEN_TO_OUTPUT;
+
+		// +/- bound for the output
+		const int16_t INF = 30000;
 	};
 
 }
