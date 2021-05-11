@@ -1,5 +1,6 @@
 //#include "uci.h"
 #include "texel.h"
+#include "network.h"
 
 
 int main(int argc, char* argv[]) {
@@ -11,13 +12,45 @@ int main(int argc, char* argv[]) {
 
 
 	// If "bench" has been added as an argument, just run this and quit
-	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
-		Bench::run_benchmark();
-		return 0;
+	//if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
+	//	Bench::run_benchmark();
+	//	return 0;
+	//}
+	//
+	//UCI::loop();
+
+	Neural::Network myNet("");
+
+	GameState_t* pos = new GameState_t;
+
+	std::array<int16_t, Neural::INPUT_SIZE> input;
+	for (int n = 0; n < test_positions.size(); n++) {
+		
+		pos->parseFen(test_positions[n]);
+
+		
+		for (int i = PAWN; i <= KING; i++) {
+
+			for (int sq = 0; sq < 64; sq++) {
+				input[64 * i + sq] = ((((pos->pieceBBS[i][WHITE] >> sq) & 1) == 1) ? 1 : 0);
+			}
+
+		}
+
+		for (int i = PAWN; i <= KING; i++) {
+
+			for (int sq = 0; sq < 64; sq++) {
+				input[64 * i + sq] = ((((pos->pieceBBS[i][BLACK] >> sq) & 1) == 1) ? 1 : 0);
+			}
+
+		}
+
+		myNet.load_position(input);
+
+		std::cout << "Random eval for position " << n << ": " << myNet.evaluate() << std::endl;
 	}
 
-	UCI::loop();
-
+	delete pos;
 
 	//Texel::Parameters tuning_variables;
 	//
