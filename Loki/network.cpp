@@ -92,6 +92,88 @@ void Neural::Network::load_net(std::string file_path) {
 
 /*
 
+This function will save the current weights and biases to a ".lnn" file
+
+*/
+
+void Neural::Network::save_net(std::string filename) {
+
+	// Step 1. If no filename is given, we'll denote the architecture.
+	if (filename == "") {
+		filename = "evalnet_";
+
+		// Step 1A. Add all layer sizes
+		filename += std::to_string(INPUT_SIZE) + "x"
+			+ std::to_string(FIRST_HIDDEN_SIZE);
+
+		for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
+			filename += "x" + std::to_string(HIDDEN_STD_SIZE);
+		}
+		// Note: The output size being 1 is implicit, so it won't be written.
+	}
+	// Step 1B. If there are no extension, add it.
+	if (filename.find(".lnn") == std::string::npos) {
+		filename += ".lnn";
+	}
+
+	// Step 2. Open the file.
+	std::fstream file;
+	file.open(filename, std::fstream::out);
+
+	// Step 3. Write all the biases to the file.
+	// Note: The input layer doesn't use biases to these won't be written
+
+	file << std::to_string(FIRST_HIDDEN_LAYER[0].bias);
+	for (int n = 1; n < FIRST_HIDDEN_SIZE; n++) {
+		file << (" " + std::to_string(FIRST_HIDDEN_LAYER[n].bias));
+	}
+	file << "\n";
+
+	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
+
+		file << std::to_string(HIDDEN_LAYERS[n][0].bias);
+		for (int i = 1; i < HIDDEN_STD_SIZE; i++) {
+			file << (" " + std::to_string(HIDDEN_LAYERS[n][i].bias));
+		}
+		file << "\n";
+	}
+
+	// Step 4. Write all the weights to the file.
+	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+		for (int j = 0; j < INPUT_SIZE; j++) {
+			file << (std::to_string(INPUT_TO_FIRST[i][j]) + " ");
+		}
+	}
+	file << "\n";
+
+	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+		for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
+			file << (std::to_string(FIRST_TO_HIDDEN[i][j]) + " ");
+		}
+	}
+	file << "\n";
+
+	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				file << (std::to_string(HIDDEN_TO_HIDDEN[n][i][j]) + " ");
+			}
+		}
+		file << "\n";
+	}
+
+	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+		file << (std::to_string(HIDDEN_TO_OUTPUT[i]) + " ");
+	}
+
+	// Step 5. Close the file.
+	file.close();
+}
+
+
+/*
+
 The constructor is used to initialize the network. If not given a path to a working network file, it will do so randomly.
 
 */

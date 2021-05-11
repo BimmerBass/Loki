@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <fstream>
+#include <iostream>
 
 
 
@@ -43,7 +45,7 @@ namespace Neural {
 		void load_net(std::string file_path);
 
 		// This method is responsible for saving a network to a file.
-		void save_net();
+		void save_net(std::string filename = "");
 	private:
 
 		// Layers

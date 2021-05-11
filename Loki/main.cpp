@@ -21,6 +21,8 @@ int main(int argc, char* argv[]) {
 
 	Neural::Network myNet("");
 
+	myNet.save_net();
+
 	GameState_t* pos = new GameState_t;
 
 	std::array<int16_t, Neural::INPUT_SIZE> input;
