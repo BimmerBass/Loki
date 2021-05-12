@@ -24,6 +24,24 @@ namespace Neural {
 	// +/- bound for the output
 	constexpr int16_t OUTPUT_BOUND = 30000;
 
+
+	/*
+	Training hyper-parameter definitions
+	*/
+	constexpr int MINI_BATCH_SIZE = 10000;
+	constexpr int THREADS = 8;
+	constexpr double LRATE = 0.1;
+	constexpr double EPSILON = 0.0000000001;
+
+
+	typedef std::array<int16_t, INPUT_SIZE> NetworkInput;
+
+	struct TrainingPosition {
+		NetworkInput position;
+		int16_t result;
+	};
+
+
 	// A neuron has an activation and a bias.
 	struct Neuron {
 		Neuron(const Neuron& n) {
@@ -59,6 +77,9 @@ namespace Neural {
 
 		// Used by texel SPSA tuning
 		std::vector<int16_t*> get_tuning_parameters();
+
+		// Used to either train a new, random, model or tune an already saved one.
+		void train_model(std::string epd_file, std::string net_file = "", int iterations = 1000);
 	private:
 
 		// Layers
@@ -72,6 +93,12 @@ namespace Neural {
 		std::array<std::array<int16_t, FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> FIRST_TO_HIDDEN;
 		std::array<std::array<std::array<int16_t, HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE>, HIDDEN_STD_COUNT> HIDDEN_TO_HIDDEN;
 		std::array<int16_t, HIDDEN_STD_SIZE> HIDDEN_TO_OUTPUT;
+
+		/*
+		The below methods are used when training
+		*/
+		double mean_square_error(double K);
+		
 	};
 
 }
