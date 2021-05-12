@@ -16,10 +16,6 @@ constexpr int EVAL_THREADS = 8;
 
 static_assert(EVAL_THREADS >= 1);
 
-// This network is used to hold all weights and biases if we're tuning a network eval.
-extern Neural::Network* texel_net;
-
-void tune_network(std::string file_path = "");
 
 
 // Seed the RNG with the time since epoch.
