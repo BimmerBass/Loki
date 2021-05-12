@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="LNN">
-      <UniqueIdentifier>{17dd8d8d-ec43-44f5-ac9a-db0da9ace3f9}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="magics.cpp">
@@ -72,9 +69,6 @@
     <ClCompile Include="network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="train.cpp">
-      <Filter>LNN</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitboard.h">
@@ -130,9 +124,6 @@
     </ClInclude>
     <ClInclude Include="network.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="train.h">
-      <Filter>LNN</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
