@@ -30,9 +30,37 @@ namespace Neural {
 	*/
 	constexpr int MINI_BATCH_SIZE = 10000;
 	constexpr int THREADS = 8;
+	
+	// Adam
 	constexpr double LRATE = 0.1;
 	constexpr double EPSILON = 0.0000000001;
+	constexpr double BETA_ONE = 0.9;
+	constexpr double BETA_TWO = 0.999;
 
+	// SPSA
+	constexpr double C_END = 4.0;
+	constexpr double R_END = 0.002;
+	constexpr double gamma = 0.101;
+	constexpr double alpha = 0.602;
+
+
+	// This is the generator of the Bernoulli +/- 1 distribution with p = 50%, used in the tuning
+	static std::default_random_engine generator;
+	static std::bernoulli_distribution distribution(0.5);
+
+	inline double randemacher() {
+		return (distribution(generator)) ? 1.0 : -1.0;
+	}
+
+
+
+	typedef std::array<int16_t*, INPUT_SIZE + FIRST_HIDDEN_SIZE + HIDDEN_STD_SIZE * HIDDEN_STD_COUNT
+		+ INPUT_SIZE * FIRST_HIDDEN_SIZE + FIRST_HIDDEN_SIZE * HIDDEN_STD_SIZE 
+		+ HIDDEN_STD_COUNT * HIDDEN_STD_SIZE * HIDDEN_STD_SIZE + HIDDEN_STD_SIZE> WeightBiasVector;
+
+	typedef std::array<int16_t, INPUT_SIZE + FIRST_HIDDEN_SIZE + HIDDEN_STD_SIZE * HIDDEN_STD_COUNT
+		+ INPUT_SIZE * FIRST_HIDDEN_SIZE + FIRST_HIDDEN_SIZE * HIDDEN_STD_SIZE
+		+ HIDDEN_STD_COUNT * HIDDEN_STD_SIZE * HIDDEN_STD_SIZE + HIDDEN_STD_SIZE> ThetaVector;
 
 	typedef std::array<int16_t, INPUT_SIZE> NetworkInput;
 
@@ -40,6 +68,7 @@ namespace Neural {
 		NetworkInput position;
 		int16_t result;
 	};
+	typedef std::vector<TrainingPosition> TrainingSet;
 
 
 	// A neuron has an activation and a bias.
@@ -97,7 +126,13 @@ namespace Neural {
 		/*
 		The below methods are used when training
 		*/
-		double mean_square_error(double K);
+		double find_optimal_k(TrainingSet& positions);
+
+		double mean_square_error(ThetaVector& new_values, WeightBiasVector& params, TrainingSet& positions, double K);
+		void update_weights_and_biases(ThetaVector& new_values, WeightBiasVector& ptr_params);
+		void copy_weight_bias_pointers(WeightBiasVector& ptrs);
+
+		void load_epds(TrainingSet& s);
 		
 	};
 

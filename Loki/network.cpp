@@ -389,3 +389,103 @@ std::vector<int16_t*> Neural::Network::get_tuning_parameters() {
 	// Step 3. Return the copied pointers
 	return weights_and_biases;
 }
+
+
+
+/*
+
+Below is the training implementation for the neural networks
+
+*/
+
+
+void Neural::Network::train_model(std::string epd_file, std::string net_file = "", int iterations = 1000) {
+
+	// Step 1. If a network file has been given, load it.
+	if (net_file != "") {
+		load_net(net_file);
+	}
+
+	// Step 2. Copy the pointers to all weights and biases and set up all other constants/arrays
+	WeightBiasVector parameters;
+	copy_weight_bias_pointers(parameters);
+
+	// Step 2A. Set up the theta_plus, theta_minus, theta and delta vector. Copy all parameter values to theta
+	ThetaVector theta, theta_plus, theta_minus, delta;
+
+	for (int i = 0; i < parameters.size(); i++) {
+		theta[i] = *parameters[i];
+	}
+
+	// Step 3. Load all the positions and compute K.
+	TrainingSet positions;
+	load_epds(positions);
+
+	double k = find_optimal_k(positions);
+
+	// Step 4. Set up the Adam vectors, zero-initialize them, and set up the SPSA constants.
+	std::vector<double> adam_v, adam_m;
+
+	for (int i = 0; i < parameters.size(); i++) {
+		adam_v.push_back(0.0);
+		adam_m.push_back(0.0);
+	}
+
+	double c = C_END * std::pow(double(iterations), gamma);
+	double BIG_A = 0.1 * double(iterations);
+	double a_end = R_END * std::pow(c, 2.0);
+	double a = a_end * std::pow(BIG_A + double(iterations), alpha);
+
+	// Step 5. Run the algorithm
+	for (int n = 0; n < iterations; n++) {
+
+		// Step 5A. Calculate all the SPSA parameters
+		double cn = c / std::pow(double(n) + 1.0, gamma);
+		double an = a / std::pow(BIG_A + double(n) + 1.0, alpha);
+
+		// Step 5B. Determine the delta array and calculate theta_plus and theta_minus from that.
+		for (int i = 0; i < parameters.size(); i++) {
+			double d = randemacher();
+
+			delta[i] = d;
+
+			theta_plus[i] = std::round(theta[i] + cn * d);
+			theta_minus[i] = std::round(theta[i] - cn * d);
+		}
+
+		// Step 5C. Compute the error of theta_plus and theta_minus
+		double theta_plus_error = mean_square_error(theta_plus, parameters, positions, k);
+		double theta_minus_error = mean_square_error(theta_minus, parameters, positions, k);
+
+		// Step 5D. Now compute the gradient and update all weights in theta
+		for (int i = 0; i < parameters.size(); i++) {
+
+			double gradient = (theta_plus_error - theta_minus_error) / (2.0 * cn * delta[i]);
+
+			// Now calculate the adam parameters
+			adam_m[i] = BETA_ONE * adam_m[i] + (1.0 - BETA_ONE) * gradient;
+			adam_v[i] = BETA_TWO * adam_v[i] + (1.0 - BETA_TWO) * std::pow(gradient, 2.0);
+
+			double m_hat = adam_m[i] / (1.0 - std::pow(BETA_ONE, double(n) + 1.0));
+			double v_hat = adam_v[i] / (1.0 - std::pow(BETA_TWO, double(n) + 1.0));
+
+			// Update the parameter value.
+			theta[i] -= (LRATE / (std::sqrt(v_hat) + EPSILON)) * m_hat;
+		}
+
+		// Step 5E. We're now done with the iteration. Compute the error of theta and display it every ten iterations
+		if (n % 10 == 0) {
+			double curr_error = mean_square_error(theta, parameters, positions, k);
+			
+			std::cout << "Iteration " << (n + 1) << " error: " << curr_error << std::endl;
+		}
+	}
+
+	// Step 6. Now that we have a vector of optimized values (theta), insert them in the current net and save it.
+	for (int i = 0; i < parameters.size(); i++) {
+		*parameters[i] = theta[i];
+	}
+
+	save_net();
+
+}
