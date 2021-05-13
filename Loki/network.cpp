@@ -410,6 +410,13 @@ void Neural::Network::train_model(std::string epd_file, int iterations, std::str
 	WeightBiasVector* parameters = new WeightBiasVector;
 	copy_weight_bias_pointers(parameters);
 
+	// Step 2A. If we werent given a network to load, initialize it to 0
+	if (net_file == "") {
+		for (int i = 0; i < parameters->size(); i++) {
+			*(*parameters)[i] = 0;
+		}
+	}
+
 	// Step 2A. Set up the theta_plus, theta_minus, theta and delta vector. Copy all parameter values to theta
 	//ThetaVector theta, theta_plus, theta_minus, delta;
 	ThetaVector* theta = new ThetaVector;
@@ -569,7 +576,7 @@ void Neural::Network::load_epds(TrainingSet* s, std::string epd_file) {
 
 		info.starttime = getTimeMs();
 		info.timeset = false;
-		info.depth = 6;
+		info.depth = TRAINING_DEPTH;
 		info.depthset = true;
 
 		SearchThread_t ss;

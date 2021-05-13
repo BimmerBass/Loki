@@ -29,8 +29,9 @@ namespace Neural {
 	/*
 	Training hyper-parameter definitions
 	*/
-	constexpr int MINI_BATCH_SIZE = 10000;
+	constexpr int MINI_BATCH_SIZE = 5000;
 	constexpr int PROCESSORS = 8;
+	constexpr int TRAINING_DEPTH = 1;
 	
 	// Adam
 	constexpr double LRATE = 0.1;
