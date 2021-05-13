@@ -586,3 +586,56 @@ void Neural::Network::load_epds(TrainingSet& s, std::string epd_file) {
 
 	file.close();
 }
+
+
+/*
+
+The following method copies pointers to the weights and biases.
+
+*/
+void Neural::Network::copy_weight_bias_pointers(WeightBiasVector& ptrs) {
+	ptrs.fill(nullptr);
+	int current = 0;
+
+	// Step 1. Even though it is slower to firstly modify a vector, it makes implementation easier.
+	std::vector<int16_t*> v;
+
+	// Step 2. Copy pointers to all biases
+	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+		v.push_back(&FIRST_HIDDEN_LAYER[i].bias);
+	}
+	for (int i = 0; i < HIDDEN_STD_COUNT; i++) {
+		for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+			v.push_back(&HIDDEN_LAYERS[i][j].bias);
+		}
+	}
+
+	// Step 3. Copy pointers to all weights
+	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+		for (int j = 0; j < INPUT_SIZE; j++) {
+			v.push_back(&INPUT_TO_FIRST[i][j]);
+		}
+	}
+	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+		for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
+			v.push_back(&FIRST_TO_HIDDEN[i][j]);
+		}
+	}
+	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				v.push_back(&HIDDEN_TO_HIDDEN[n][i][j]);
+			}
+		}
+	}
+	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+		v.push_back(&HIDDEN_TO_OUTPUT[i]);
+	}
+
+	// Step 4. Now that we have copied all pointers into the vector, put this into the array
+	assert(v.size() == ptrs.size());
+
+	for (int i = 0; i < ptrs.size(); i++) {
+		ptrs[i] = v[i];
+	}
+}
