@@ -25,37 +25,6 @@ namespace Neural {
 	// +/- bound for the output
 	constexpr int16_t OUTPUT_BOUND = 30000;
 
-
-	/*
-	Training hyper-parameter definitions
-	*/
-	constexpr int MINI_BATCH_SIZE = 5000;
-	constexpr int PROCESSORS = 8;
-	constexpr int TRAINING_DEPTH = 1;
-	
-	// Adam
-	constexpr double LRATE = 0.1;
-	constexpr double EPSILON = 0.0000000001;
-	constexpr double BETA_ONE = 0.9;
-	constexpr double BETA_TWO = 0.999;
-
-	// SPSA
-	constexpr double C_END = 4.0;
-	constexpr double R_END = 0.002;
-	constexpr double gamma = 0.101;
-	constexpr double alpha = 0.602;
-
-
-	// This is the generator of the Bernoulli +/- 1 distribution with p = 50%, used in the tuning
-	static std::default_random_engine generator;
-	static std::bernoulli_distribution distribution(0.5);
-
-	inline double randemacher() {
-		return (distribution(generator)) ? 1.0 : -1.0;
-	}
-
-
-
 	typedef std::array<int16_t*, FIRST_HIDDEN_SIZE + HIDDEN_STD_SIZE * HIDDEN_STD_COUNT
 		+ INPUT_SIZE * FIRST_HIDDEN_SIZE + FIRST_HIDDEN_SIZE * HIDDEN_STD_SIZE 
 		+ HIDDEN_STD_COUNT * HIDDEN_STD_SIZE * HIDDEN_STD_SIZE + HIDDEN_STD_SIZE> WeightBiasVector;
@@ -109,12 +78,6 @@ namespace Neural {
 
 		// This method is responsible for saving a network to a file.
 		void save_net(std::string filename = "");
-
-		// Used by texel SPSA tuning
-		std::vector<int16_t*> get_tuning_parameters();
-
-		// Used to either train a new, random, model or tune an already saved one.
-		void train_model(std::string epd_file, int iterations = 1000, std::string net_file = "");
 	private:
 
 		// Layers
@@ -128,31 +91,7 @@ namespace Neural {
 		std::array<std::array<int16_t, FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> FIRST_TO_HIDDEN;
 		std::array<std::array<std::array<int16_t, HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE>, HIDDEN_STD_COUNT> HIDDEN_TO_HIDDEN;
 		std::array<int16_t, HIDDEN_STD_SIZE> HIDDEN_TO_OUTPUT;
-
-		/*
-		The below methods are used when training
-		*/
-
-		double mean_square_error(ThetaVector* new_values, WeightBiasVector* params, TrainingSet* positions);
-		void update_weights_and_biases(ThetaVector* new_values, WeightBiasVector* ptr_params);
-		void copy_weight_bias_pointers(WeightBiasVector* ptrs);
-
-		void load_epds(TrainingSet* s, std::string epd_file);
-		
 	};
-
-
-
-	inline void seed_random() {
-		std::srand(std::chrono::duration_cast<std::chrono::nanoseconds> (std::chrono::system_clock::now().time_since_epoch()).count());
-	}
-
-	// This function simply returns a random number in the range [start, end]
-	inline int random_num(int start, int end) {
-		seed_random();
-		int range = (end - start) + 1;
-		return (start + (std::rand() % range));
-	}
 
 }
 
