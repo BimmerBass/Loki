@@ -639,3 +639,18 @@ void Neural::Network::copy_weight_bias_pointers(WeightBiasVector& ptrs) {
 		ptrs[i] = v[i];
 	}
 }
+
+
+
+/*
+
+The following method will update all the weights and biases
+
+*/
+void Neural::Network::update_weights_and_biases(ThetaVector& new_values, WeightBiasVector& ptr_params) {
+	// This is a relatively easy method since we just need to loop over the parameters.
+	// It is just here so we don't need to constantly write out this loop.
+	for (int i = 0; i < ptr_params.size(); i++) {
+		*ptr_params[i] = new_values[i];
+	}
+}
