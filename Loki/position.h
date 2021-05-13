@@ -4,7 +4,6 @@
 
 #include "bitboard.h"
 #include "move.h"
-#include "network.h"
 
 #if !defined(_MSC_VER)
 #include <cstring> // To use strcpy with GCC
@@ -52,12 +51,6 @@ public:
 
 	volatile int ply = 0;
 	int fiftyMove = 0;
-
-	/*
-	Neural network
-	*/
-	Neural::Network net;
-	bool use_net = false;
 
 
 	// The zobrist hash of the position.

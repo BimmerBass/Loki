@@ -1,6 +1,7 @@
 //#include "uci.h"
-#include "texel.h"
-
+//#include "texel.h"
+#include "network.h"
+#include "uci.h"
 
 int main(int argc, char* argv[]) {
 	BBS::INIT();
@@ -11,14 +12,16 @@ int main(int argc, char* argv[]) {
 
 
 	// If "bench" has been added as an argument, just run this and quit
-	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
-		Bench::run_benchmark();
-		return 0;
-	}
+	//if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
+	//	Bench::run_benchmark();
+	//	return 0;
+	//}
+	//
+	//UCI::loop();
+
+	Neural::Network net;
 	
-	UCI::loop();
-
-
+	net.train_model("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", "", 100);
 
 	//Texel::Parameters tuning_variables;
 	//
