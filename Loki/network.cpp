@@ -399,7 +399,7 @@ Below is the training implementation for the neural networks
 */
 
 
-void Neural::Network::train_model(std::string epd_file, std::string net_file = "", int iterations = 1000) {
+void Neural::Network::train_model(std::string epd_file, int iterations, std::string net_file) {
 
 	// Step 1. If a network file has been given, load it.
 	if (net_file != "") {

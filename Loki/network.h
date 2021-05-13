@@ -113,7 +113,7 @@ namespace Neural {
 		std::vector<int16_t*> get_tuning_parameters();
 
 		// Used to either train a new, random, model or tune an already saved one.
-		void train_model(std::string epd_file, std::string net_file = "", int iterations = 1000);
+		void train_model(std::string epd_file, int iterations = 1000, std::string net_file = "");
 	private:
 
 		// Layers

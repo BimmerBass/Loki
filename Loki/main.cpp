@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 
 	Neural::Network net;
 	
-	net.train_model("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", "", 100);
+	net.train_model("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 100);
 
 	//Texel::Parameters tuning_variables;
 	//
