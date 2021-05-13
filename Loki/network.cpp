@@ -419,9 +419,7 @@ void Neural::Network::train_model(std::string epd_file, std::string net_file = "
 
 	// Step 3. Load all the positions and compute K.
 	TrainingSet positions;
-	load_epds(positions);
-
-	double k = find_optimal_k(positions);
+	load_epds(positions, epd_file);
 
 	// Step 4. Set up the Adam vectors, zero-initialize them, and set up the SPSA constants.
 	std::vector<double> adam_v, adam_m;
@@ -454,8 +452,8 @@ void Neural::Network::train_model(std::string epd_file, std::string net_file = "
 		}
 
 		// Step 5C. Compute the error of theta_plus and theta_minus
-		double theta_plus_error = mean_square_error(theta_plus, parameters, positions, k);
-		double theta_minus_error = mean_square_error(theta_minus, parameters, positions, k);
+		double theta_plus_error = mean_square_error(theta_plus, parameters, positions);
+		double theta_minus_error = mean_square_error(theta_minus, parameters, positions);
 
 		// Step 5D. Now compute the gradient and update all weights in theta
 		for (int i = 0; i < parameters.size(); i++) {
@@ -475,7 +473,7 @@ void Neural::Network::train_model(std::string epd_file, std::string net_file = "
 
 		// Step 5E. We're now done with the iteration. Compute the error of theta and display it every ten iterations
 		if (n % 10 == 0) {
-			double curr_error = mean_square_error(theta, parameters, positions, k);
+			double curr_error = mean_square_error(theta, parameters, positions);
 			
 			std::cout << "Iteration " << (n + 1) << " error: " << curr_error << std::endl;
 		}
@@ -488,4 +486,103 @@ void Neural::Network::train_model(std::string epd_file, std::string net_file = "
 
 	save_net();
 
+}
+
+
+
+/*
+
+The load_epds method will set up the traning set. It will save a board representation that the network should take as input, then search the position to depth 6
+	and save the resulting score in centipawns
+
+*/
+
+void Neural::Network::load_epds(TrainingSet& s, std::string epd_file) {
+	
+	// Step 1. Set up some parameters.
+	std::string epd = "";
+	std::string fen = "";
+	std::vector<std::string> FENS;
+	s.clear();
+	
+	// Step 2. Load the epd file
+	std::ifstream file(epd_file);
+
+	// Step 2A. Load epds and extract the fen's until EOF
+	while (std::getline(file, epd)) {
+		fen = "";
+
+		auto fen_end = epd.find_first_of("-");
+
+		if (epd[fen_end + 2] == '-') {
+			fen_end = fen_end + 2;
+		}
+
+		fen = epd.substr(0, fen_end + 1);
+
+		FENS.push_back(fen);
+	}
+
+	// Step 3. Use a gamestate object to parse the fen's and then copy their network input arrays into the trainingset vector
+	GameState_t* pos = new GameState_t();
+	NetworkInput i;
+	Bitboard pceBoard = 0;
+	int sq = NO_SQ;
+
+	for (int n = 0; n < FENS.size(); n++) {
+		// Step 3A. Clear the input and parse the fen
+		i.fill(0);
+		pos->parseFen(FENS[n]);
+
+		// Step 3B. Loop through the position object's bitboards and copy their values to the NetworkInput. We start with the white pieces.
+		for (int pce = PAWN; pce <= KING; pce++) {
+			pceBoard = pos->pieceBBS[pce][WHITE];
+
+			while (pceBoard) {
+				sq = PopBit(&pceBoard); // Find the square that a piece occupies
+
+				// Now add this to i
+				i[64 * pce + sq] = 1;
+			}
+		}
+		for (int pce = PAWN; pce <= KING; pce++) {
+			pceBoard = pos->pieceBBS[pce][BLACK];
+
+			while (pceBoard) {
+				sq = PopBit(&pceBoard); // Find the square that a piece occupies
+
+				// Now add this to i --> we need to add 64*5 to the index since that is all the white pieces before that.
+				i[64*5 + 64 * pce + sq] = 1;
+			}
+		}
+
+		// Step 3C. Now add this to the training set.
+		s.push_back(TrainingPosition(i, 0));
+
+		// Step 3D. Set up a SearchInfo and SearchThread and search the position to depth 6.
+		SearchInfo_t info;
+		info.clear();
+
+		info.starttime = getTimeMs();
+		info.timeset = false;
+		info.depth = 6;
+		info.depthset = true;
+
+		SearchThread_t ss;
+
+		*ss.pos = *pos;
+		*ss.info = info;
+		SearchPv line;
+		// Now search the position
+		int score = Search::alphabeta(&ss, info.depth, -40000, 40000, true, &line);
+
+		// Step 3E. Now add this score to the trainingset and we can move on to the next position
+		s[n].score = int16_t(score);
+
+		if (n % 1024 == 0) {
+			std::cout << "Generated " << (n + 1) << " training positions" << std::endl;
+		}
+	}
+
+	file.close();
 }

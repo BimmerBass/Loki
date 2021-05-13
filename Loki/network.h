@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "search.h"		/* Used for searching all epd positions when generating the training set. Change this to however your engine searches */
 
 
 namespace Neural {
@@ -65,8 +66,12 @@ namespace Neural {
 	typedef std::array<int16_t, INPUT_SIZE> NetworkInput;
 
 	struct TrainingPosition {
+		TrainingPosition(NetworkInput& i, int16_t s) {
+			position = i; score = s;
+		}
+
 		NetworkInput position;
-		int16_t result;
+		int16_t score;
 	};
 	typedef std::vector<TrainingPosition> TrainingSet;
 
@@ -126,13 +131,12 @@ namespace Neural {
 		/*
 		The below methods are used when training
 		*/
-		double find_optimal_k(TrainingSet& positions);
 
-		double mean_square_error(ThetaVector& new_values, WeightBiasVector& params, TrainingSet& positions, double K);
+		double mean_square_error(ThetaVector& new_values, WeightBiasVector& params, TrainingSet& positions);
 		void update_weights_and_biases(ThetaVector& new_values, WeightBiasVector& ptr_params);
 		void copy_weight_bias_pointers(WeightBiasVector& ptrs);
 
-		void load_epds(TrainingSet& s);
+		void load_epds(TrainingSet& s, std::string epd_file);
 		
 	};
 
