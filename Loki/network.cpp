@@ -654,3 +654,45 @@ void Neural::Network::update_weights_and_biases(ThetaVector& new_values, WeightB
 		*ptr_params[i] = new_values[i];
 	}
 }
+
+
+/*
+
+The MSE method is one of the key methods in the training implementation. It computes the mean squared error from the network's output to the expected one.
+
+*/
+double Neural::Network::mean_square_error(ThetaVector& new_values, WeightBiasVector& params, TrainingSet& positions) {
+	// Step 1. Change the weights and biases to the ones in the theta vector
+	update_weights_and_biases(new_values, params);
+
+	// Step 2. Determine the batch to use.
+	int start, end;
+	if (positions.size() <= MINI_BATCH_SIZE) {
+		start = 0;
+		end = positions.size();
+	}
+	else {
+
+		// Choose start as a random number
+		start = random_num(0, positions.size() - MINI_BATCH_SIZE);
+		end = start + MINI_BATCH_SIZE;
+	}
+
+	// Step 3. Now go through all the positions in the batch and compute the error
+	int64_t accumulated_error = 0;
+	int16_t network_output = 0;
+
+	for (int p = start; p < end; p++) {
+		// Step 3A. Load the position and evaluate
+		load_position(positions[p].position);
+
+		network_output = evaluate();
+
+		// Step 3B. Now take the mean squared error --> this should be added as (observed - predicted)^2
+		accumulated_error += std::pow(network_output - positions[p].score, 2);
+	}
+
+	// Step 4. Now divide the accumulated error by the amount of positions tried and return.
+	double mse = double(accumulated_error) / double(MINI_BATCH_SIZE);
+	return mse;
+}

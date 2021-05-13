@@ -30,7 +30,7 @@ namespace Neural {
 	Training hyper-parameter definitions
 	*/
 	constexpr int MINI_BATCH_SIZE = 10000;
-	constexpr int THREADS = 8;
+	constexpr int PROCESSORS = 8;
 	
 	// Adam
 	constexpr double LRATE = 0.1;
@@ -139,6 +139,19 @@ namespace Neural {
 		void load_epds(TrainingSet& s, std::string epd_file);
 		
 	};
+
+
+
+	inline void seed_random() {
+		std::srand(std::chrono::duration_cast<std::chrono::nanoseconds> (std::chrono::system_clock::now().time_since_epoch()).count());
+	}
+
+	// This function simply returns a random number in the range [start, end]
+	inline int random_num(int start, int end) {
+		seed_random();
+		int range = (end - start) + 1;
+		return (start + (std::rand() % range));
+	}
 
 }
 
