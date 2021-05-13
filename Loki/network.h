@@ -132,11 +132,11 @@ namespace Neural {
 		The below methods are used when training
 		*/
 
-		double mean_square_error(ThetaVector& new_values, WeightBiasVector& params, TrainingSet& positions);
-		void update_weights_and_biases(ThetaVector& new_values, WeightBiasVector& ptr_params);
-		void copy_weight_bias_pointers(WeightBiasVector& ptrs);
+		double mean_square_error(ThetaVector* new_values, WeightBiasVector* params, TrainingSet* positions);
+		void update_weights_and_biases(ThetaVector* new_values, WeightBiasVector* ptr_params);
+		void copy_weight_bias_pointers(WeightBiasVector* ptrs);
 
-		void load_epds(TrainingSet& s, std::string epd_file);
+		void load_epds(TrainingSet* s, std::string epd_file);
 		
 	};
 

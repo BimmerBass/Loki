@@ -407,24 +407,28 @@ void Neural::Network::train_model(std::string epd_file, int iterations, std::str
 	}
 
 	// Step 2. Copy the pointers to all weights and biases and set up all other constants/arrays
-	WeightBiasVector parameters;
+	WeightBiasVector* parameters = new WeightBiasVector;
 	copy_weight_bias_pointers(parameters);
 
 	// Step 2A. Set up the theta_plus, theta_minus, theta and delta vector. Copy all parameter values to theta
-	ThetaVector theta, theta_plus, theta_minus, delta;
+	//ThetaVector theta, theta_plus, theta_minus, delta;
+	ThetaVector* theta = new ThetaVector;
+	ThetaVector* theta_plus = new ThetaVector;
+	ThetaVector* theta_minus = new ThetaVector;
+	ThetaVector* delta = new ThetaVector;
 
-	for (int i = 0; i < parameters.size(); i++) {
-		theta[i] = *parameters[i];
+	for (int i = 0; i < parameters->size(); i++) {
+		(*theta)[i] = *(*parameters)[i];
 	}
 
 	// Step 3. Load all the positions and compute K.
-	TrainingSet positions;
+	TrainingSet* positions = new TrainingSet;
 	load_epds(positions, epd_file);
 
 	// Step 4. Set up the Adam vectors, zero-initialize them, and set up the SPSA constants.
 	std::vector<double> adam_v, adam_m;
 
-	for (int i = 0; i < parameters.size(); i++) {
+	for (int i = 0; i < parameters->size(); i++) {
 		adam_v.push_back(0.0);
 		adam_m.push_back(0.0);
 	}
@@ -442,13 +446,13 @@ void Neural::Network::train_model(std::string epd_file, int iterations, std::str
 		double an = a / std::pow(BIG_A + double(n) + 1.0, alpha);
 
 		// Step 5B. Determine the delta array and calculate theta_plus and theta_minus from that.
-		for (int i = 0; i < parameters.size(); i++) {
+		for (int i = 0; i < parameters->size(); i++) {
 			double d = randemacher();
 
-			delta[i] = d;
+			(*delta)[i] = d;
 
-			theta_plus[i] = std::round(theta[i] + cn * d);
-			theta_minus[i] = std::round(theta[i] - cn * d);
+			(*theta_plus)[i] = std::round((*theta)[i] + cn * d);
+			(*theta_minus)[i] = std::round((*theta)[i] - cn * d);
 		}
 
 		// Step 5C. Compute the error of theta_plus and theta_minus
@@ -456,9 +460,9 @@ void Neural::Network::train_model(std::string epd_file, int iterations, std::str
 		double theta_minus_error = mean_square_error(theta_minus, parameters, positions);
 
 		// Step 5D. Now compute the gradient and update all weights in theta
-		for (int i = 0; i < parameters.size(); i++) {
+		for (int i = 0; i < parameters->size(); i++) {
 
-			double gradient = (theta_plus_error - theta_minus_error) / (2.0 * cn * delta[i]);
+			double gradient = (theta_plus_error - theta_minus_error) / (2.0 * cn * (*delta)[i]);
 
 			// Now calculate the adam parameters
 			adam_m[i] = BETA_ONE * adam_m[i] + (1.0 - BETA_ONE) * gradient;
@@ -468,7 +472,7 @@ void Neural::Network::train_model(std::string epd_file, int iterations, std::str
 			double v_hat = adam_v[i] / (1.0 - std::pow(BETA_TWO, double(n) + 1.0));
 
 			// Update the parameter value.
-			theta[i] -= (LRATE / (std::sqrt(v_hat) + EPSILON)) * m_hat;
+			(*theta)[i] -= (LRATE / (std::sqrt(v_hat) + EPSILON)) * m_hat;
 		}
 
 		// Step 5E. We're now done with the iteration. Compute the error of theta and display it every ten iterations
@@ -480,8 +484,8 @@ void Neural::Network::train_model(std::string epd_file, int iterations, std::str
 	}
 
 	// Step 6. Now that we have a vector of optimized values (theta), insert them in the current net and save it.
-	for (int i = 0; i < parameters.size(); i++) {
-		*parameters[i] = theta[i];
+	for (int i = 0; i < parameters->size(); i++) {
+		*(*parameters)[i] = (*theta)[i];
 	}
 
 	save_net();
@@ -497,13 +501,13 @@ The load_epds method will set up the traning set. It will save a board represent
 
 */
 
-void Neural::Network::load_epds(TrainingSet& s, std::string epd_file) {
+void Neural::Network::load_epds(TrainingSet* s, std::string epd_file) {
 	
 	// Step 1. Set up some parameters.
 	std::string epd = "";
 	std::string fen = "";
 	std::vector<std::string> FENS;
-	s.clear();
+	s->clear();
 	
 	// Step 2. Load the epd file
 	std::ifstream file(epd_file);
@@ -557,7 +561,7 @@ void Neural::Network::load_epds(TrainingSet& s, std::string epd_file) {
 		}
 
 		// Step 3C. Now add this to the training set.
-		s.push_back(TrainingPosition(i, 0));
+		s->push_back(TrainingPosition(i, 0));
 
 		// Step 3D. Set up a SearchInfo and SearchThread and search the position to depth 6.
 		SearchInfo_t info;
@@ -577,7 +581,7 @@ void Neural::Network::load_epds(TrainingSet& s, std::string epd_file) {
 		int score = Search::alphabeta(&ss, info.depth, -40000, 40000, true, &line);
 
 		// Step 3E. Now add this score to the trainingset and we can move on to the next position
-		s[n].score = int16_t(score);
+		(*s)[n].score = int16_t(score);
 
 		if (n % 1024 == 0) {
 			std::cout << "Generated " << (n + 1) << " training positions" << std::endl;
@@ -593,8 +597,8 @@ void Neural::Network::load_epds(TrainingSet& s, std::string epd_file) {
 The following method copies pointers to the weights and biases.
 
 */
-void Neural::Network::copy_weight_bias_pointers(WeightBiasVector& ptrs) {
-	ptrs.fill(nullptr);
+void Neural::Network::copy_weight_bias_pointers(WeightBiasVector* ptrs) {
+	ptrs->fill(nullptr);
 	int current = 0;
 
 	// Step 1. Even though it is slower to firstly modify a vector, it makes implementation easier.
@@ -633,10 +637,10 @@ void Neural::Network::copy_weight_bias_pointers(WeightBiasVector& ptrs) {
 	}
 
 	// Step 4. Now that we have copied all pointers into the vector, put this into the array
-	assert(v.size() == ptrs.size());
+	assert(v.size() == ptrs->size());
 
-	for (int i = 0; i < ptrs.size(); i++) {
-		ptrs[i] = v[i];
+	for (int i = 0; i < ptrs->size(); i++) {
+		(*ptrs)[i] = v[i];
 	}
 }
 
@@ -647,11 +651,11 @@ void Neural::Network::copy_weight_bias_pointers(WeightBiasVector& ptrs) {
 The following method will update all the weights and biases
 
 */
-void Neural::Network::update_weights_and_biases(ThetaVector& new_values, WeightBiasVector& ptr_params) {
+void Neural::Network::update_weights_and_biases(ThetaVector* new_values, WeightBiasVector* ptr_params) {
 	// This is a relatively easy method since we just need to loop over the parameters.
 	// It is just here so we don't need to constantly write out this loop.
-	for (int i = 0; i < ptr_params.size(); i++) {
-		*ptr_params[i] = new_values[i];
+	for (int i = 0; i < ptr_params->size(); i++) {
+		*(*ptr_params)[i] = (*new_values)[i];
 	}
 }
 
@@ -661,20 +665,20 @@ void Neural::Network::update_weights_and_biases(ThetaVector& new_values, WeightB
 The MSE method is one of the key methods in the training implementation. It computes the mean squared error from the network's output to the expected one.
 
 */
-double Neural::Network::mean_square_error(ThetaVector& new_values, WeightBiasVector& params, TrainingSet& positions) {
+double Neural::Network::mean_square_error(ThetaVector* new_values, WeightBiasVector* params, TrainingSet* positions) {
 	// Step 1. Change the weights and biases to the ones in the theta vector
 	update_weights_and_biases(new_values, params);
 
 	// Step 2. Determine the batch to use.
 	int start, end;
-	if (positions.size() <= MINI_BATCH_SIZE) {
+	if (positions->size() <= MINI_BATCH_SIZE) {
 		start = 0;
-		end = positions.size();
+		end = positions->size();
 	}
 	else {
 
 		// Choose start as a random number
-		start = random_num(0, positions.size() - MINI_BATCH_SIZE);
+		start = random_num(0, positions->size() - MINI_BATCH_SIZE);
 		end = start + MINI_BATCH_SIZE;
 	}
 
@@ -684,12 +688,12 @@ double Neural::Network::mean_square_error(ThetaVector& new_values, WeightBiasVec
 
 	for (int p = start; p < end; p++) {
 		// Step 3A. Load the position and evaluate
-		load_position(positions[p].position);
+		load_position((*positions)[p].position);
 
 		network_output = evaluate();
 
 		// Step 3B. Now take the mean squared error --> this should be added as (observed - predicted)^2
-		accumulated_error += std::pow(network_output - positions[p].score, 2);
+		accumulated_error += std::pow(network_output - (*positions)[p].score, 2);
 	}
 
 	// Step 4. Now divide the accumulated error by the amount of positions tried and return.
