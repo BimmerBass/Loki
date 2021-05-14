@@ -118,6 +118,25 @@ int16_t Neural::NeuralNet::evaluate() {
 }
 
 
+void Neural::NeuralNet::copy_weights_and_biases(std::vector<int32_t*>& v) {
+	// Step 1. Clear the vector
+	v.clear();
+
+	// Step 2. Loop through all layers, add biases for all hidden layers only.
+	for (int l = 0; l < layers.size() - 1; l++) {
+		if (l != 0) {
+			for (int n = 0; n < layers[l].neuron_count; n++) {
+				v.push_back(&layers[l].biases[n]);
+			}
+		}
+		for (int i = 0; i < layers[l + 1].neuron_count; i++) {
+			for (int j = 0; j < layers[l].neuron_count; j++) {
+				v.push_back(&layers[l].weights[i][j]);
+			}
+		}
+	}
+}
+
 
 
 

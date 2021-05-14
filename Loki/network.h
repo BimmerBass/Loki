@@ -91,6 +91,7 @@ namespace Neural {
 	private:
 		std::vector<Layer> layers;
 
+		void copy_weights_and_biases(std::vector<int32_t*>& v);
 	};
 
 
