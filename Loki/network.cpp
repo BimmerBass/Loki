@@ -37,12 +37,23 @@ Mathematical helper functions
 //	}
 //}
 
-template<size_t SIZE>
-void vector_dot_product(int16_t* v1, int16_t* v2, int16_t& out) { // A vector dot product is just the sum of element-wise multiplication
+
+void vector_dot_product(int16_t* v1, int16_t* v2, int16_t& out, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
 	out = 0;
 	for (int i = 0; i < SIZE; i++) {
 		out += v1[i] * v2[i];
 	}
+}
+
+// Matrix should be indexed by matrix[COLUMN][ROW] and v should be indexed by [ROW]
+void matrix_vector_dot_product(int COLS, int ROWS, int16_t** matrix, int16_t* v, int16_t* v_out) {
+
+	for (int r = 0; r < ROWS; r++) {
+
+		vector_dot_product(matrix[r], v, v_out[r], COLS);
+
+	}
+
 }
 
 /*
@@ -54,11 +65,11 @@ New implementation below:
 
 */
 template<>
-int16_t Neural::activation_function<Neural::A_NONE>(int16_t x) {
+int16_t Neural::activation_function<Neural::A_FUNC::A_NONE>(int16_t x) {
 	return double(x);
 }
 template<>
-int16_t Neural::activation_function<Neural::RELU>(int16_t x) {
+int16_t Neural::activation_function<Neural::A_FUNC::RELU>(int16_t x) {
 	return std::max(0.0, double(x));
 }
 

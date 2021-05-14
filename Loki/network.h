@@ -26,7 +26,7 @@ namespace Neural {
 	constexpr int16_t OUTPUT_BOUND = 30000;
 
 
-	enum A_FUNC {
+	enum class A_FUNC {
 		A_NONE = 0,
 		RELU = 1
 	};
@@ -39,6 +39,7 @@ namespace Neural {
 			// There are no weights from an output layer, so if next_layer_len == 0, we shouldn't have any weights
 			if (next_layer_len > 0) {
 				weights = new int16_t[neuron_count * next_layer_len];
+
 				weight_count = neuron_count * next_layer_len;
 			}
 			else {
@@ -62,6 +63,8 @@ namespace Neural {
 
 		int neuron_count;
 		int weight_count;
+		int weight_rows;
+		int weight_colums;
 
 		A_FUNC activation_function;
 
