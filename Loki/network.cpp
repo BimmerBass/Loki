@@ -7,7 +7,7 @@ Mathematical helper functions
 
 */
 
-int vector_dot_product(int32_t* v1, int32_t* v2, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
+int32_t vector_dot_product(int32_t* v1, int32_t* v2, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
 	int out = 0;
 	for (int i = 0; i < SIZE; i++) {
 		out += v1[i] * v2[i];
