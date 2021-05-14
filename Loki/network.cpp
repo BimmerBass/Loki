@@ -37,305 +37,70 @@ void matrix_vector_dot_product(const std::array<std::array<int16_t, COLS>, ROWS>
 	}
 }
 
-/*
-
-After having loaded a position into the network, this method will be run to evaluate it.
-
-*/
-int16_t Neural::Network::evaluate() {
-	// Since we have already calculated until the first hidden layer, we just need to calculate the rest.
-	// Step 1. Calculate the first standard hidden layer
-	matrix_vector_dot_product<HIDDEN_STD_SIZE, FIRST_HIDDEN_SIZE>(FIRST_TO_HIDDEN, FIRST_HIDDEN_LAYER, HIDDEN_LAYERS[0]);
-
-	// Step 2. Calculate the next standard hidden layers
-	for (int n = 1; n < HIDDEN_STD_COUNT; n++) {
-		matrix_vector_dot_product<HIDDEN_STD_SIZE, HIDDEN_STD_SIZE>(HIDDEN_TO_HIDDEN[n], HIDDEN_LAYERS[n - 1], HIDDEN_LAYERS[n]);
-	}
-
-	// Step 3. Calculate the output. Here we just need to take a standard vector dot product
-	// Note: We don't use an activation function for the output.
-	vector_dot_product<HIDDEN_STD_SIZE>(HIDDEN_TO_OUTPUT, HIDDEN_LAYERS[HIDDEN_STD_COUNT - 1], output, false, false);
-
-	// Step 4. Return the activation of the output, but make sure it stays inside +- 30000
-	return std::min(OUTPUT_BOUND, std::max(int16_t(-OUTPUT_BOUND), output.activation));
-}
-
 
 /*
 
-The load_position method loads a position and calculates the first hidden layer.
+
+
+New implementation below:
+
 
 */
-void Neural::Network::load_position(std::array<int16_t, INPUT_SIZE>& inputs) {
-	// Step 1. Copy the inputs
-	for (int i = 0; i < INPUT_SIZE; i++) {
-		INPUT_LAYER[i].activation = inputs[i];
-		INPUT_LAYER[i].bias = 0;
-	}
-
-	// Step 2. Calculate the first hidden layer.
-	matrix_vector_dot_product<FIRST_HIDDEN_SIZE, INPUT_SIZE>(INPUT_TO_FIRST, INPUT_LAYER, FIRST_HIDDEN_LAYER);
+template<>
+int16_t Neural::activation_function<Neural::A_NONE>(int16_t x) {
+	return double(x);
+}
+template<>
+int16_t Neural::activation_function<Neural::RELU>(int16_t x) {
+	return std::max(0.0, double(x));
 }
 
 
-// Helper function for load_net
-std::vector<int16_t> split_line(std::string line) {
-
-	std::vector<std::string> number_strings;
-	std::vector<int16_t> out;
-
-	std::istringstream iss(line);
-
-	std::copy(std::istream_iterator<std::string>(iss),
-		std::istream_iterator<std::string>(),
-		std::back_inserter(number_strings));
-
-	for (int i = 0; i < number_strings.size(); i++) {
-		out.push_back(std::stoi(number_strings[i]));
+void Neural::Layer::set(int val) {
+	for (int n = 0; n < neuron_count; n++) {
+		neurons[n] = val;
 	}
-
-	return out;
 }
 
-/*
 
-This function will load a neural network from a file with the ".lnn" (loki-neural-network) extension.
 
-*/
+Neural::NeuralNet::NeuralNet(std::vector<int> arch) {
+	assert(arch.size() > 0);
+	// Step 1. Allocate the hidden layers, plus the input and output
+	layers.clear();
+	layers.push_back(Layer(INPUT_SIZE, arch[0], A_NONE)); // Input
 
-void Neural::Network::load_net(std::string file_path) {
-	// Step 1. Open the file.
-	std::fstream file;
-	file.open(file_path, std::fstream::in);
-
-	std::string data_str = "";
-	std::vector<int16_t> data;
-
-	// Step 2. Load all biases
-
-	// First hidden bias
-	std::getline(file, data_str);
-	data = split_line(data_str);
-
-	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-		FIRST_HIDDEN_LAYER[i].bias = data[i];
+	for (int l = 0; l < arch.size(); l++) { // all hidden layers. These use the ReLU activation function
+		layers.push_back(Layer(arch[l], (l == arch.size() - 1) ? 1 : arch[l + 1], RELU));
 	}
 
-	// Standard hidden layers
-	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
-		std::getline(file, data_str);
-		data = split_line(data_str);
+	layers.push_back(Layer(OUTPUT_SIZE, 0, A_NONE)); // Output shouldn't be bounded by an activation function
 
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			HIDDEN_LAYERS[n][i].bias = data[i];
-		}
-	}
+}
 
-	// Step 3. Load all weights
 
-	// Input to first hidden layer weights
-	std::getline(file, data_str);
-	data = split_line(data_str);
-
-	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-		for (int j = 0; j < INPUT_SIZE; j++) {
-			INPUT_TO_FIRST[i][j] = data[i * INPUT_SIZE + j];
-		}
-	}
-
-	// First hidden to standard hidden
-	std::getline(file, data_str);
-	data = split_line(data_str);
+// Set up all pieces such that an input neuron with value 1 designates a piece's presence on that square
+void Neural::NeuralNet::load_position(std::array<uint64_t, 12>& bitboards) {
+	// Step 1. Set the input layer to zero
+	layers[0].set(0);
 	
-	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-		for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
-			FIRST_TO_HIDDEN[i][j] = data[i * FIRST_HIDDEN_SIZE + j];
+	// Step 2. Load the position
+	uint64_t pieceBoard = 0;
+	int sq = 0;
+
+	for (int pce = 0; pce < 12; pce++) {
+		pieceBoard = bitboards[pce];
+
+		// Find all high bits.
+		while (pieceBoard) {
+			sq = PopBit(&pieceBoard);
+
+			layers[0].neurons[calculate_index(pce, sq)] = 1;
 		}
-	}
-
-	// Hidden layers
-	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
-		std::getline(file, data_str);
-		data = split_line(data_str);
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
-				HIDDEN_TO_HIDDEN[n][i][j] = data[i * HIDDEN_STD_SIZE + j];
-			}
-		}
-	}
-
-	// Hidden to output layer
-	std::getline(file, data_str);
-	data = split_line(data_str);
-
-	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-		HIDDEN_TO_OUTPUT[i] = data[i];
 	}
 }
 
+// Feed forward
+int16_t Neural::NeuralNet::evaluate() {
 
-
-/*
-
-This function will save the current weights and biases to a ".lnn" file
-
-*/
-
-void Neural::Network::save_net(std::string filename) {
-
-	// Step 1. If no filename is given, we'll denote the architecture.
-	if (filename == "") {
-		filename = "evalnet_";
-
-		// Step 1A. Add all layer sizes
-		filename += std::to_string(INPUT_SIZE) + "x"
-			+ std::to_string(FIRST_HIDDEN_SIZE);
-
-		for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
-			filename += "x" + std::to_string(HIDDEN_STD_SIZE);
-		}
-		// Note: The output size being 1 is implicit, so it won't be written.
-	}
-	// Step 1B. If there are no extension, add it.
-	if (filename.find(".lnn") == std::string::npos) {
-		filename += ".lnn";
-	}
-
-	// Step 2. Open the file.
-	std::fstream file;
-	file.open(filename, std::fstream::out);
-
-	// Step 3. Write all the biases to the file.
-	// Note: The input layer doesn't use biases to these won't be written
-
-	file << std::to_string(FIRST_HIDDEN_LAYER[0].bias);
-	for (int n = 1; n < FIRST_HIDDEN_SIZE; n++) {
-		file << (" " + std::to_string(FIRST_HIDDEN_LAYER[n].bias));
-	}
-	file << "\n";
-
-	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
-
-		file << std::to_string(HIDDEN_LAYERS[n][0].bias);
-		for (int i = 1; i < HIDDEN_STD_SIZE; i++) {
-			file << (" " + std::to_string(HIDDEN_LAYERS[n][i].bias));
-		}
-		file << "\n";
-	}
-
-	// Step 4. Write all the weights to the file.
-	for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-		for (int j = 0; j < INPUT_SIZE; j++) {
-			file << (std::to_string(INPUT_TO_FIRST[i][j]) + " ");
-		}
-	}
-	file << "\n";
-
-	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-		for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
-			file << (std::to_string(FIRST_TO_HIDDEN[i][j]) + " ");
-		}
-	}
-	file << "\n";
-
-	for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
-				file << (std::to_string(HIDDEN_TO_HIDDEN[n][i][j]) + " ");
-			}
-		}
-		file << "\n";
-	}
-
-	for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-		file << (std::to_string(HIDDEN_TO_OUTPUT[i]) + " ");
-	}
-
-	// Step 5. Close the file.
-	file.close();
-}
-
-
-/*
-
-The constructor is used to initialize the network. If not given a path to a working network file, it will do so randomly.
-
-*/
-Neural::Network::Network(std::string net_file) {
-	if (net_file != "") {
-		load_net(net_file);
-	}
-
-	else {
-		// Step 1. Initialize all weights randomly.
-		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			for (int j = 0; j < INPUT_SIZE; j++){
-				INPUT_TO_FIRST[i][j] = std::rand();
-			}
-		}
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
-				FIRST_TO_HIDDEN[i][j] = std::rand();
-			}
-		}
-
-		for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
-
-			for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-				for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
-					HIDDEN_TO_HIDDEN[n][i][j] = std::rand();
-				}
-			}
-		}
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			HIDDEN_TO_OUTPUT[i] = std::rand();
-		}
-
-
-		// Step 2. Initialize all biases randomly
-		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			FIRST_HIDDEN_LAYER[i].bias = std::rand();
-		}
-
-		for (int n = 0; n < HIDDEN_STD_COUNT; n++) {
-			for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-				HIDDEN_LAYERS[n][i].bias = std::rand();
-			}
-		}
-
-		// Output bias should always be zero.
-		output.bias = 0;
-	}
-}
-
-
-
-/*
-
-Copy constructur
-
-*/
-Neural::Network::Network(const Network& n) {
-	
-	// Step 1. Copy layers
-	INPUT_LAYER = n.INPUT_LAYER;
-	FIRST_HIDDEN_LAYER = n.FIRST_HIDDEN_LAYER;
-
-	for (int i = 0; i < HIDDEN_STD_COUNT; i++) {
-		HIDDEN_LAYERS[i] = n.HIDDEN_LAYERS[i];
-	}
-	output = n.output;
-
-	// Step 2. Copy weights
-	INPUT_TO_FIRST = n.INPUT_TO_FIRST;
-	FIRST_TO_HIDDEN = n.FIRST_TO_HIDDEN;
-
-	for (int i = 0; i < HIDDEN_STD_COUNT; i++) {
-		HIDDEN_TO_HIDDEN[i] = n.HIDDEN_TO_HIDDEN[i];
-	}
-	HIDDEN_TO_OUTPUT = n.HIDDEN_TO_OUTPUT;
 }
