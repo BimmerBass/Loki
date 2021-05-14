@@ -159,38 +159,105 @@ int16_t Neural::NeuralNet::evaluate() {
 
 
 // Backpropagation algorithm as found in nn repo (FIXME: find credz)
-void Neural::NeuralNet::do_backpropagation(int16_t output) {
+void Neural::NeuralNet::do_backpropagation(int16_t expected) {
 	// Step 1. Compute the output's error.
-	Layer* output_layer = &layers[layers.size() - 1];
+	Layer* next = nullptr;
+	Layer* current = &layers[layers.size() - 1];
+	double error = expected - current->neurons[0];
+	current->deltas[0] = activation_function_derivative<A_FUNC::A_NONE>(current->neurons[0]);
+	current->deltas[0] *= error;
 
-	double diff = output_layer->neurons[0] - output;
-	output_layer->deltas[0] = activation_function_derivative<A_FUNC::A_NONE>(output_layer->neurons[0]);
-	output_layer->deltas[0] *= diff;
-
-	// Step 2. Inner layers
+	// Step 2. Now go back in the network
 	for (int l = layers.size() - 2; l > 0; l--) {
-		Layer* current = &layers[l];
-		Layer* next = &layers[l + 1];
+		current = &layers[l];
+		next = &layers[l + 1];
+
+		error = 0.0;
 
 		for (int n = 0; n < next->neuron_count; n++) {
 			for (int i = 0; i < current->neuron_count; i++) {
+
 				current->deltas[i] += current->weights[n][i] * next->deltas[n];
 			}
 		}
 
-		for (int n = 0; n < current->neuron_count; n++) {
-
+		for (int i = 0; i < current->neuron_count; i++) {
+			
 			if (current->activation_function == A_FUNC::A_NONE) {
-				current->deltas[n] *= activation_function_derivative<A_FUNC::A_NONE>(current->neurons[n]);
+				current->deltas[i] *= activation_function_derivative<A_FUNC::A_NONE>(current->neurons[i]);
 			}
 			else {
-				current->deltas[n] *= activation_function_derivative<A_FUNC::RELU>(current->neurons[n]);
+				current->deltas[i] *= activation_function_derivative<A_FUNC::RELU>(current->neurons[i]);
 			}
+		}
+
+	}
+
+}
+
+
+void Neural::NeuralNet::do_gradient_estimates() {
+
+	double gradient = 0.0;
+	// Loop through each layer
+	for (int l = 0; l < layers.size(); l++) {
+		Layer* current = &layers[l];
+		Layer* next = &layers[l + 1];
+		
+		// Loop through each neuron in this layer and the next layer
+		for (int k = 0; k < next->neuron_count; k++) {
+			for (int n = 0; n < current->neuron_count; n++) {
+
+				// Weight gradient
+				gradient = current->neurons[n] * next->deltas[k];
+
+				// Update the weight
+				current->weights[k][n] -= LEARNING_RATE * gradient;
+
+				// Bias gradient
+				gradient = next->deltas[k];
+
+				// Update the bias
+				current->biases[n] -= LEARNING_RATE * gradient;
+			}
+			
 		}
 
 	}
 }
 
+
+
+void Neural::NeuralNet::train_model(int iterations) {
+	assert(iterations > 0);
+
+	// Step 1. Loop through all iterations
+	for (int i = 0; i < iterations; i++) {
+
+		// Step 2. Clear the deltas
+		clear_deltas();
+
+		// Step 3. Load a position and evaluate
+		//load_position()
+		evaluate();
+
+		// Step 4. Do backpropagation to obtain new deltas
+		do_backpropagation(0);
+
+		// Step 5. Update the weights and biases.
+		do_gradient_estimates();
+	}
+
+}
+
+
+void Neural::NeuralNet::clear_deltas() {
+	for (int l = 0; l < layers.size(); l++) {
+		for (int n = 0; n < layers[l].neuron_count; n++) {
+			layers[l].deltas[n] = 0.0;
+		}
+	}
+}
 
 
 /*

@@ -24,7 +24,8 @@ namespace Neural {
 
 	// +/- bound for the output
 	constexpr int16_t OUTPUT_BOUND = 30000;
-
+	
+	constexpr double LEARNING_RATE = 0.1;
 
 	enum class A_FUNC {
 		A_NONE = 0,
@@ -44,8 +45,6 @@ namespace Neural {
 
 		int neuron_count;
 		int weight_count;
-		int weight_rows;
-		int weight_colums;
 
 		int next_layer_length;
 
@@ -69,9 +68,17 @@ namespace Neural {
 		// Note: The ordering of the bitboards array should be: WP, WN, WB, WR, WQ, WK, BP, BN, BB, BR, BQ, BK
 		void load_position(std::array<uint64_t, 12>& bitboards);
 
-		void do_backpropagation(int16_t output);
+		void train_model(int iterations);
+
+		void save_net();
+		void load_net(std::string file);
 	private:
 		std::vector<Layer> layers;
+
+		void do_backpropagation(int16_t expected);
+		void do_gradient_estimates();
+
+		void clear_deltas();
 	};
 
 
