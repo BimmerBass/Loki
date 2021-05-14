@@ -76,6 +76,16 @@ int16_t Neural::activation_function<Neural::A_FUNC::RELU>(int16_t x) {
 }
 
 
+template<>
+double Neural::activation_function_derivative<Neural::A_FUNC::A_NONE>(int16_t x) {
+	return 1.0;
+}
+template<>
+double Neural::activation_function_derivative<Neural::A_FUNC::RELU>(int16_t x) {
+	return (x > 0) ? 1.0 : 0.0;
+}
+
+
 void Neural::Layer::set(int val) {
 	for (int n = 0; n < neuron_count; n++) {
 		neurons[n] = val;
@@ -134,7 +144,7 @@ int16_t Neural::NeuralNet::evaluate() {
 		for (int n = 0; n < next->neuron_count; n++) {
 			weighted_sum = vector_dot_product(current->neurons, current->weights[n], current->neuron_count);
 
-			// Add the neuron's bias and run the resulting value through the activation function
+			// Add the neuron's bias and run the resulting value through the activation function.
 			next->neurons[n] = weighted_sum + next->biases[n];
 
 			next->neurons[n] = (next->activation_function == A_FUNC::A_NONE) ? activation_function<A_FUNC::A_NONE>(next->neurons[n]) :
@@ -145,4 +155,89 @@ int16_t Neural::NeuralNet::evaluate() {
 
 	// Return the output's value, bounded between -30k and +30k
 	return layers[layers.size() - 1].neurons[0];
+}
+
+
+// Backpropagation algorithm as found in nn repo (FIXME: find credz)
+void Neural::NeuralNet::do_backpropagation(int16_t output) {
+	// Step 1. Compute the output's error.
+	Layer* output_layer = &layers[layers.size() - 1];
+
+	double diff = output_layer->neurons[0] - output;
+	output_layer->deltas[0] = activation_function_derivative<A_FUNC::A_NONE>(output_layer->neurons[0]);
+	output_layer->deltas[0] *= diff;
+
+	// Step 2. Inner layers
+	for (int l = layers.size() - 2; l > 0; l--) {
+		Layer* current = &layers[l];
+		Layer* next = &layers[l + 1];
+
+		for (int n = 0; n < next->neuron_count; n++) {
+			for (int i = 0; i < current->neuron_count; i++) {
+				current->deltas[i] += current->weights[n][i] * next->deltas[n];
+			}
+		}
+
+		for (int n = 0; n < current->neuron_count; n++) {
+
+			if (current->activation_function == A_FUNC::A_NONE) {
+				current->deltas[n] *= activation_function_derivative<A_FUNC::A_NONE>(current->neurons[n]);
+			}
+			else {
+				current->deltas[n] *= activation_function_derivative<A_FUNC::RELU>(current->neurons[n]);
+			}
+		}
+
+	}
+}
+
+
+
+/*
+
+Constructor and destructor of Layer struc
+
+*/
+
+Neural::Layer::Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_input) {
+	neuron_count = n_cnt;
+	neurons = new int16_t[neuron_count];
+	next_layer_length = next_layer_len;
+
+	// There are no weights from an output layer, so if next_layer_len == 0, we shouldn't have any weights
+	if (next_layer_len > 0) {
+		//weights = new int16_t[neuron_count * next_layer_len];
+
+		weights = new int16_t * [next_layer_len];
+
+		for (int n = 0; n < next_layer_len; n++) {
+			weights[n] = new int16_t[neuron_count];
+		}
+
+
+		weight_count = neuron_count * next_layer_len;
+	}
+	else {
+		weights = nullptr;
+		weight_count = 0;
+	}
+
+	biases = new int16_t[neuron_count];
+
+	if (!is_input) {
+		deltas = new double[neuron_count];
+	}
+
+	activation_function = a_function;
+}
+
+Neural::Layer::~Layer() {
+	delete[] neurons, biases;
+	if (weights != nullptr) {
+		for (int n = 0; n < next_layer_length; n++) {
+			delete[] weights[n];
+		}
+		delete[] weights;
+	}
+	if (deltas != nullptr) { delete[] deltas; }
 }

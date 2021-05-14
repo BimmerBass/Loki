@@ -32,46 +32,22 @@ namespace Neural {
 	};
 
 	struct Layer {
-		Layer(int n_cnt, int next_layer_len, A_FUNC a_function) {
-			neuron_count = n_cnt;
-			neurons = new int16_t[neuron_count];
-
-			// There are no weights from an output layer, so if next_layer_len == 0, we shouldn't have any weights
-			if (next_layer_len > 0) {
-				//weights = new int16_t[neuron_count * next_layer_len];
-
-				weights = new int16_t*[next_layer_len];
-
-				for (int n = 0; n < next_layer_len; n++) {
-					weights[n] = new int16_t[neuron_count];
-				}
-
-
-				weight_count = neuron_count * next_layer_len;
-			}
-			else {
-				weights = nullptr;
-				weight_count = 0;
-			}
-
-			biases = new int16_t[neuron_count];
-
-			activation_function = a_function;
-		}
-		~Layer() {
-			delete[] neurons, biases;
-			if (weights != nullptr) { delete[] weights; }
-		}
+		Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_input = false);
+		~Layer();
 
 		int16_t* neurons;
 
 		int16_t** weights;
 		int16_t* biases;
 
+		double* deltas = nullptr; // Derivatives or the error w.r.t each neurons input (NULL for input)
+
 		int neuron_count;
 		int weight_count;
 		int weight_rows;
 		int weight_colums;
+
+		int next_layer_length;
 
 		A_FUNC activation_function;
 
@@ -93,7 +69,7 @@ namespace Neural {
 		// Note: The ordering of the bitboards array should be: WP, WN, WB, WR, WQ, WK, BP, BN, BB, BR, BQ, BK
 		void load_position(std::array<uint64_t, 12>& bitboards);
 
-
+		void do_backpropagation(int16_t output);
 	private:
 		std::vector<Layer> layers;
 	};
@@ -102,6 +78,10 @@ namespace Neural {
 	// Activation function
 	template<A_FUNC A>
 	int16_t activation_function(int16_t x);
+
+	template<A_FUNC>
+	double activation_function_derivative(int16_t x);
+
 
 	inline int calculate_index(int pce, int sq) {
 		assert(pce >= 0 && pce <= 11);
