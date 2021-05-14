@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
 	//UCI::loop();
 
 	//std::vector<int> arch = { 256, 32, 32 };
-	std::vector<int> arch = { 32, 32, 32, 64, 32, 24 };
+	std::vector<int> arch = { 256 };
 
 	Neural::NeuralNet network(arch);
 

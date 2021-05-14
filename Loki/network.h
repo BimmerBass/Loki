@@ -27,22 +27,24 @@ namespace Neural {
 	constexpr int16_t OUTPUT_BOUND = 30000;
 
 	constexpr int BATCH_SIZE = 150;
+	constexpr double BETA_ONE = 0.9;
+	constexpr double BETA_TWO = 0.999;
+	constexpr double EPSILON = 0.000000001;
+	constexpr double LEARNING_RATE = 0.1;
 
 	namespace Training {
 		struct TrainingPosition {
-			TrainingPosition(std::array<uint64_t, 12> pieces, int16_t eval) {
+			TrainingPosition(std::array<uint64_t, 12> pieces, int32_t eval) {
 				pieceBoards = pieces; value = eval;
 			}
 
 			std::array<uint64_t, 12> pieceBoards;
-			int16_t value;
+			int32_t value;
 		};
 		typedef std::vector<TrainingPosition> TrainingSet;
 
 		void load_epd(std::string filepath, TrainingSet& set);
 	}
-	
-	constexpr double LEARNING_RATE = 0.1;
 
 	enum class A_FUNC {
 		A_NONE = 0,
@@ -78,7 +80,7 @@ namespace Neural {
 		NeuralNet(std::vector<int> arch);
 
 		// This is the feedforward method for the network
-		int16_t evaluate();
+		int32_t evaluate();
 
 		// This method is responsible for loading a position. This is slow and should not be used when making and un-making moves. Only initialization
 		// Note: The ordering of the bitboards array should be: WP, WN, WB, WR, WQ, WK, BP, BN, BB, BR, BQ, BK
@@ -92,6 +94,9 @@ namespace Neural {
 		std::vector<Layer> layers;
 
 		void copy_weights_and_biases(std::vector<int32_t*>& v);
+
+		void change_parameters(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters);
+		double compute_error(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set);
 	};
 
 
@@ -108,6 +113,32 @@ namespace Neural {
 		assert(sq >= 0 && sq <= 63);
 
 		return (pce * 64) + sq;
+	}
+
+
+	// Seed the RNG with the time since epoch.
+	inline void seed_random() {
+		std::srand(std::chrono::duration_cast<std::chrono::nanoseconds> (std::chrono::system_clock::now().time_since_epoch()).count());
+	}
+
+	// This function simply returns a random number in the range [start, end]
+	inline int random_num(int start, int end) {
+		seed_random();
+		int range = (end - start) + 1;
+		return (start + (std::rand() % range));
+	}
+
+
+	// This is the generator of the Bernoulli +/- 1 distribution with p = 50%, used in the tuning
+	static std::default_random_engine generator;
+	static std::bernoulli_distribution distribution(0.5);
+
+	inline double randemacher() {
+		return (distribution(generator)) ? 1 : -1;
+	}
+
+	inline double sigmoid(int32_t x) {
+		return 1.0 / (1.0 + std::exp(-static_cast<double>(x)));
 	}
 }
 

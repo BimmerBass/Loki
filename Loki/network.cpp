@@ -91,7 +91,7 @@ void Neural::NeuralNet::load_position(std::array<uint64_t, 12>& bitboards) {
 }
 
 // Feed forward
-int16_t Neural::NeuralNet::evaluate() {
+int32_t Neural::NeuralNet::evaluate() {
 
 	// Loop through all layers, stopping at the last hidden layer
 	for (int l = 0; l < layers.size() - 1; l++) {
@@ -147,11 +147,100 @@ void Neural::NeuralNet::train_model(int iterations) {
 	Training::TrainingSet positions;
 	Training::load_epd("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", positions);
 
-	// Step 2. Loop through all iterations
-	for (int i = 0; i < iterations; i++) {
+	double BIG_A = 0.1 * double(iterations);
+	double C = 4.0 * std::pow(double(iterations), 0.101);
+
+	std::vector<int32_t*> parameters;
+	copy_weights_and_biases(parameters);
 	
+	std::vector<int32_t> theta, theta_plus, theta_minus, delta;
+	std::vector<double> adam_m, adam_v;
+
+	for (int i = 0; i < parameters.size(); i++) {
+		theta.push_back(*parameters[i]);
+		theta_plus.push_back(0);
+		theta_minus.push_back(0);
+		delta.push_back(0);
+
+		adam_m.push_back(0.0);
+		adam_v.push_back(0.0);
 	}
 
+
+	// Step 2. Loop through all iterations
+	for (int i = 0; i < iterations; i++) {
+
+		double cn = C / std::pow(double(i) + 1, 0.101);
+
+		for (int p = 0; p < parameters.size(); p++) {
+			int d = randemacher();
+			assert(d == 1 || d == -1);
+
+			delta[p] = static_cast<int32_t>(d);
+
+			theta_plus[p] = theta[p] + static_cast<int32_t>(cn * d);
+			theta_minus[p] = theta[p] - static_cast<int32_t>(cn * d);
+		}
+
+
+		double theta_plus_error = compute_error(theta_plus, parameters, positions);
+		double theta_minus_error = compute_error(theta_minus, parameters, positions);
+
+		for (int p = 0; p < parameters.size(); p++) {
+			double gradient = (theta_plus_error - theta_minus_error) / (2.0 * cn * static_cast<double>(delta[p]));
+
+			adam_m[p] = BETA_ONE * adam_m[p] + (1.0 - BETA_ONE) * gradient;
+			adam_v[p] = BETA_TWO * adam_v[p] + (1.0 - BETA_TWO) * std::pow(gradient, 2.0);
+
+			double m_hat = adam_m[p] / (1.0 - std::pow(BETA_ONE, i + 1));
+			double v_hat = adam_v[p] / (1.0 - std::pow(BETA_TWO, i + 1));
+
+			// Finally, update theta
+			theta[p] -= static_cast<int32_t>((LEARNING_RATE / (std::sqrt(v_hat) + EPSILON)) * m_hat);
+		}
+
+		// Output something each 100 iterations
+		if (i % 100 == 0) {
+			std::cout << "Iteration " << i << ": Theta plus error " << theta_plus_error << ", theta minus error " << theta_minus_error << std::endl;
+		}
+	}
+
+}
+
+
+double Neural::NeuralNet::compute_error(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set) {
+	// Step 1. Change the parameters
+	change_parameters(new_values, parameters);
+
+	// Step 2. Determine the batch.
+	assert(set.size() > BATCH_SIZE);
+	int start_position = random_num(0, set.size() - BATCH_SIZE - 1);
+
+	// Step 3. Now loop through the positions, load them and evaluate them
+	double average_error = 0.0;
+
+	for (int p = start_position; p < BATCH_SIZE; p++) {
+		// Load it to the inputs
+		load_position(set[p].pieceBoards);
+
+		// Score it
+		int32_t eval = evaluate();
+
+		// Now map it to a win probability and take the mean squared error.
+		average_error += std::pow(sigmoid(set[p].value) - sigmoid(eval), 2.0);
+	}
+	
+	// Step 4. Divide the error by the batch size and return it.
+	return average_error / static_cast<double>(BATCH_SIZE);
+}
+
+
+void Neural::NeuralNet::change_parameters(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters) {
+	assert(new_values.size() == parameters.size());
+
+	for (int p = 0; p < parameters.size(); p++) {
+		*(parameters[p]) = new_values[p];
+	}
 }
 
 
@@ -252,7 +341,7 @@ void Neural::Training::load_epd(std::string filepath, TrainingSet& set) {
 	// The data we extract from each line of the EPD.
 	std::string epd = "";
 	std::string fen = "";
-	int eval = 0;
+	int32_t eval = 0;
 
 	// We use a GameState_t object to parse the FENs and to evaluate the positions
 	GameState_t* pos = new GameState_t;
