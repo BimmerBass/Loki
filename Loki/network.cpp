@@ -7,38 +7,7 @@ Mathematical helper functions
 
 */
 
-//template<size_t SIZE>
-//void vector_dot_product(const std::array<int16_t, SIZE>& w, const std::array<Neural::Neuron, SIZE>& l, Neural::Neuron& out, bool ReLU, bool apply_bias) {
-//	out.activation = 0;
-//
-//	for (int i = 0; i < SIZE; i++) {
-//		out.activation += w[i] * l[i].activation;
-//	}
-//
-//	// If apply_bias is true, add the bias
-//	if (apply_bias) {
-//		out.activation += out.bias;
-//	}
-//
-//
-//	// If ReLU is true, just apply the relu activation function
-//	if (ReLU) {
-//		out.activation = std::max(int16_t(0), out.activation);
-//	}
-//}
-//
-//template<size_t ROWS, size_t COLS>
-//void matrix_vector_dot_product(const std::array<std::array<int16_t, COLS>, ROWS>& M, const std::array<Neural::Neuron, COLS>& L, std::array<Neural::Neuron, ROWS>& O) {
-//
-//	// Each row in the output vector is the dot product of that row number in the matrix, and the input vector
-//	for (int r = 0; r < ROWS; r++) {
-//		
-//		vector_dot_product<COLS>(M[r], L, O[r], true, true);
-//	}
-//}
-
-
-int vector_dot_product(int16_t* v1, int16_t* v2, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
+int vector_dot_product(int32_t* v1, int32_t* v2, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
 	int out = 0;
 	for (int i = 0; i < SIZE; i++) {
 		out += v1[i] * v2[i];
@@ -46,17 +15,6 @@ int vector_dot_product(int16_t* v1, int16_t* v2, int SIZE) { // A vector dot pro
 
 	return out;
 }
-
-// Matrix should be indexed by matrix[COLUMN][ROW] and v should be indexed by [ROW]
-//void matrix_vector_dot_product(int COLS, int ROWS, int16_t** matrix, int16_t* v, int16_t* v_out) {
-//
-//	for (int r = 0; r < ROWS; r++) {
-//
-//		vector_dot_product(matrix[r], v, v_out[r], COLS);
-//
-//	}
-//
-//}
 
 /*
 
@@ -187,19 +145,19 @@ Constructor and destructor of Layer struc
 
 Neural::Layer::Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_input) {
 	neuron_count = n_cnt;
-	neurons = new int16_t[neuron_count];
-	memset(neurons, 0, sizeof(int16_t) * neuron_count);
+	neurons = new int32_t[neuron_count];
+	memset(neurons, 0, sizeof(int32_t) * neuron_count);
 	next_layer_length = next_layer_len;
 
 	// There are no weights from an output layer, so if next_layer_len == 0, we shouldn't have any weights
 	if (next_layer_len > 0) {
 		//weights = new int16_t[neuron_count * next_layer_len];
 
-		weights = new int16_t*[next_layer_len];
+		weights = new int32_t*[next_layer_len];
 
 		for (int n = 0; n < next_layer_len; n++) {
-			weights[n] = new int16_t[neuron_count];
-			memset(weights[n], 0, sizeof(int16_t) * neuron_count);
+			weights[n] = new int32_t[neuron_count];
+			memset(weights[n], 0, sizeof(int32_t) * neuron_count);
 		}
 
 
@@ -210,8 +168,8 @@ Neural::Layer::Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_i
 		weight_count = 0;
 	}
 
-	biases = new int16_t[neuron_count];
-	memset(biases, 0, sizeof(int16_t) * neuron_count);
+	biases = new int32_t[neuron_count];
+	memset(biases, 0, sizeof(int32_t) * neuron_count);
 
 	activation_function = a_function;
 }
@@ -232,24 +190,24 @@ Neural::Layer::~Layer() {
 
 Neural::Layer::Layer(const Layer& l) {
 
-	neurons = new int16_t[l.neuron_count];
-	memcpy(neurons, l.neurons, sizeof(int16_t) * l.neuron_count);
+	neurons = new int32_t[l.neuron_count];
+	memcpy(neurons, l.neurons, sizeof(int32_t) * l.neuron_count);
 
 	if (l.weights != nullptr) {
 
-		weights = new int16_t*[l.next_layer_length];
+		weights = new int32_t*[l.next_layer_length];
 
 		for (int i = 0; i < l.next_layer_length; i++) {
-			weights[i] = new int16_t[l.neuron_count];
-			memcpy(weights[i], l.weights[i], sizeof(int16_t) * l.neuron_count);
+			weights[i] = new int32_t[l.neuron_count];
+			memcpy(weights[i], l.weights[i], sizeof(int32_t) * l.neuron_count);
 		}
 	}
 	else {
 		weights = nullptr;
 	}
 
-	biases = new int16_t[l.neuron_count];
-	memcpy(biases, l.biases, sizeof(int16_t) * l.neuron_count);
+	biases = new int32_t[l.neuron_count];
+	memcpy(biases, l.biases, sizeof(int32_t) * l.neuron_count);
 
 	neuron_count = l.neuron_count;
 	weight_count = l.weight_count;

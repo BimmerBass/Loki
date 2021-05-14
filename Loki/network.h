@@ -54,10 +54,10 @@ namespace Neural {
 		~Layer();
 		Layer(const Layer& l);
 
-		int16_t* neurons;
+		int32_t* neurons;
 
-		int16_t** weights;
-		int16_t* biases;
+		int32_t** weights;
+		int32_t* biases;
 
 		int neuron_count;
 		int weight_count;
