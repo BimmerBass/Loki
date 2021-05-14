@@ -7,36 +7,43 @@ Mathematical helper functions
 
 */
 
+//template<size_t SIZE>
+//void vector_dot_product(const std::array<int16_t, SIZE>& w, const std::array<Neural::Neuron, SIZE>& l, Neural::Neuron& out, bool ReLU, bool apply_bias) {
+//	out.activation = 0;
+//
+//	for (int i = 0; i < SIZE; i++) {
+//		out.activation += w[i] * l[i].activation;
+//	}
+//
+//	// If apply_bias is true, add the bias
+//	if (apply_bias) {
+//		out.activation += out.bias;
+//	}
+//
+//
+//	// If ReLU is true, just apply the relu activation function
+//	if (ReLU) {
+//		out.activation = std::max(int16_t(0), out.activation);
+//	}
+//}
+//
+//template<size_t ROWS, size_t COLS>
+//void matrix_vector_dot_product(const std::array<std::array<int16_t, COLS>, ROWS>& M, const std::array<Neural::Neuron, COLS>& L, std::array<Neural::Neuron, ROWS>& O) {
+//
+//	// Each row in the output vector is the dot product of that row number in the matrix, and the input vector
+//	for (int r = 0; r < ROWS; r++) {
+//		
+//		vector_dot_product<COLS>(M[r], L, O[r], true, true);
+//	}
+//}
+
 template<size_t SIZE>
-void vector_dot_product(const std::array<int16_t, SIZE>& w, const std::array<Neural::Neuron, SIZE>& l, Neural::Neuron& out, bool ReLU, bool apply_bias) {
-	out.activation = 0;
-
+void vector_dot_product(int16_t* v1, int16_t* v2, int16_t& out) { // A vector dot product is just the sum of element-wise multiplication
+	out = 0;
 	for (int i = 0; i < SIZE; i++) {
-		out.activation += w[i] * l[i].activation;
-	}
-
-	// If apply_bias is true, add the bias
-	if (apply_bias) {
-		out.activation += out.bias;
-	}
-
-
-	// If ReLU is true, just apply the relu activation function
-	if (ReLU) {
-		out.activation = std::max(int16_t(0), out.activation);
+		out += v1[i] * v2[i];
 	}
 }
-
-template<size_t ROWS, size_t COLS>
-void matrix_vector_dot_product(const std::array<std::array<int16_t, COLS>, ROWS>& M, const std::array<Neural::Neuron, COLS>& L, std::array<Neural::Neuron, ROWS>& O) {
-
-	// Each row in the output vector is the dot product of that row number in the matrix, and the input vector
-	for (int r = 0; r < ROWS; r++) {
-		
-		vector_dot_product<COLS>(M[r], L, O[r], true, true);
-	}
-}
-
 
 /*
 
