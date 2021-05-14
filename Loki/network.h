@@ -9,6 +9,7 @@
 #include <sstream>
 #include <assert.h>
 
+#include "bitboard.h" // For popBit
 
 namespace Neural {
 
