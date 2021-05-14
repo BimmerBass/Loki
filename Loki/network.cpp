@@ -86,13 +86,13 @@ Neural::NeuralNet::NeuralNet(std::vector<int> arch) {
 	assert(arch.size() > 0);
 	// Step 1. Allocate the hidden layers, plus the input and output
 	layers.clear();
-	layers.push_back(Layer(INPUT_SIZE, arch[0], A_NONE)); // Input
+	layers.push_back(Layer(INPUT_SIZE, arch[0], A_FUNC::A_NONE)); // Input
 
 	for (int l = 0; l < arch.size(); l++) { // all hidden layers. These use the ReLU activation function
-		layers.push_back(Layer(arch[l], (l == arch.size() - 1) ? 1 : arch[l + 1], RELU));
+		layers.push_back(Layer(arch[l], (l == arch.size() - 1) ? 1 : arch[l + 1], A_FUNC::RELU));
 	}
 
-	layers.push_back(Layer(OUTPUT_SIZE, 0, A_NONE)); // Output shouldn't be bounded by an activation function
+	layers.push_back(Layer(OUTPUT_SIZE, 0, A_FUNC::A_NONE)); // Output shouldn't be bounded by an activation function
 
 }
 
