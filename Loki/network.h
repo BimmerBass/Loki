@@ -8,8 +8,9 @@
 #include <iostream>
 #include <sstream>
 #include <assert.h>
+#include <chrono>
 
-#include "bitboard.h" // For popBit
+#include "evaluation.h" // For popBit and GameState_t
 
 namespace Neural {
 
@@ -24,6 +25,22 @@ namespace Neural {
 
 	// +/- bound for the output
 	constexpr int16_t OUTPUT_BOUND = 30000;
+
+	constexpr int BATCH_SIZE = 150;
+
+	namespace Training {
+		struct TrainingPosition {
+			TrainingPosition(std::array<uint64_t, 12> pieces, int16_t eval) {
+				pieceBoards = pieces; value = eval;
+			}
+
+			std::array<uint64_t, 12> pieceBoards;
+			int16_t value;
+		};
+		typedef std::vector<TrainingPosition> TrainingSet;
+
+		void load_epd(std::string filepath, TrainingSet& set);
+	}
 	
 	constexpr double LEARNING_RATE = 0.1;
 
@@ -35,13 +52,12 @@ namespace Neural {
 	struct Layer {
 		Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_input = false);
 		~Layer();
+		Layer(const Layer& l);
 
 		int16_t* neurons;
 
 		int16_t** weights;
 		int16_t* biases;
-
-		double* deltas = nullptr; // Derivatives or the error w.r.t each neurons input (NULL for input)
 
 		int neuron_count;
 		int weight_count;
@@ -70,15 +86,11 @@ namespace Neural {
 
 		void train_model(int iterations);
 
-		void save_net();
-		void load_net(std::string file);
+		//void save_net();
+		//void load_net(std::string file);
 	private:
 		std::vector<Layer> layers;
 
-		void do_backpropagation(int16_t expected);
-		void do_gradient_estimates();
-
-		void clear_deltas();
 	};
 
 

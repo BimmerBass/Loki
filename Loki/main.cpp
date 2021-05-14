@@ -1,5 +1,6 @@
 //#include "uci.h"
 #include "texel.h"
+#include "network.h"
 
 int main(int argc, char* argv[]) {
 	BBS::INIT();
@@ -10,12 +11,19 @@ int main(int argc, char* argv[]) {
 
 
 	// If "bench" has been added as an argument, just run this and quit
-	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
-		Bench::run_benchmark();
-		return 0;
-	}
-	
-	UCI::loop();
+	//if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
+	//	Bench::run_benchmark();
+	//	return 0;
+	//}
+	//
+	//UCI::loop();
+
+	//std::vector<int> arch = { 256, 32, 32 };
+	std::vector<int> arch = { 32, 32, 32, 64, 32, 24 };
+
+	Neural::NeuralNet network(arch);
+
+	network.train_model(4096);
 
 	//Texel::Parameters tuning_variables;
 	//
