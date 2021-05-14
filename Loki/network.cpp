@@ -25,21 +25,21 @@ New implementation below:
 
 */
 template<>
-int16_t Neural::activation_function<Neural::A_FUNC::A_NONE>(int16_t x) {
+int32_t Neural::activation_function<Neural::A_FUNC::A_NONE>(int32_t x) {
 	return double(x);
 }
 template<>
-int16_t Neural::activation_function<Neural::A_FUNC::RELU>(int16_t x) {
+int32_t Neural::activation_function<Neural::A_FUNC::RELU>(int32_t x) {
 	return std::max(0.0, double(x));
 }
 
 
 template<>
-double Neural::activation_function_derivative<Neural::A_FUNC::A_NONE>(int16_t x) {
+double Neural::activation_function_derivative<Neural::A_FUNC::A_NONE>(int32_t x) {
 	return 1.0;
 }
 template<>
-double Neural::activation_function_derivative<Neural::A_FUNC::RELU>(int16_t x) {
+double Neural::activation_function_derivative<Neural::A_FUNC::RELU>(int32_t x) {
 	return (x > 0) ? 1.0 : 0.0;
 }
 

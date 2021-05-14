@@ -96,10 +96,10 @@ namespace Neural {
 
 	// Activation function
 	template<A_FUNC A>
-	int16_t activation_function(int16_t x);
+	int32_t activation_function(int32_t x);
 
 	template<A_FUNC>
-	double activation_function_derivative(int16_t x);
+	double activation_function_derivative(int32_t x);
 
 
 	inline int calculate_index(int pce, int sq) {
