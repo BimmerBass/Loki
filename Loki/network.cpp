@@ -149,6 +149,8 @@ void Neural::NeuralNet::train_model(int iterations) {
 
 	double BIG_A = 0.1 * double(iterations);
 	double C = 4.0 * std::pow(double(iterations), 0.101);
+	double a_end = 0.002 * std::pow(C, 2.0);
+	double A = a_end * std::pow(BIG_A + double(iterations), 0.602);
 
 	std::vector<int32_t*> parameters;
 	copy_weights_and_biases(parameters);
@@ -168,7 +170,7 @@ void Neural::NeuralNet::train_model(int iterations) {
 
 
 	// Step 2. Loop through all iterations
-	for (int i = 0; i < iterations; i++) {
+	for (volatile int i = 0; i < iterations; i++) {
 
 		double cn = C / std::pow(double(i) + 1, 0.101);
 
@@ -187,23 +189,33 @@ void Neural::NeuralNet::train_model(int iterations) {
 		double theta_minus_error = compute_error(theta_minus, parameters, positions);
 
 		for (int p = 0; p < parameters.size(); p++) {
-			double gradient = (theta_plus_error - theta_minus_error) / (2.0 * cn * static_cast<double>(delta[p]));
+			volatile double gradient = (theta_plus_error - theta_minus_error) / (2.0 * cn * static_cast<double>(delta[p]));
 
 			adam_m[p] = BETA_ONE * adam_m[p] + (1.0 - BETA_ONE) * gradient;
 			adam_v[p] = BETA_TWO * adam_v[p] + (1.0 - BETA_TWO) * std::pow(gradient, 2.0);
-
-			double m_hat = adam_m[p] / (1.0 - std::pow(BETA_ONE, i + 1));
-			double v_hat = adam_v[p] / (1.0 - std::pow(BETA_TWO, i + 1));
-
+			
+			volatile double m_hat = adam_m[p] / (1.0 - std::pow(BETA_ONE, i + 1));
+			volatile double v_hat = adam_v[p] / (1.0 - std::pow(BETA_TWO, i + 1));
+			
 			// Finally, update theta
 			theta[p] -= static_cast<int32_t>((LEARNING_RATE / (std::sqrt(v_hat) + EPSILON)) * m_hat);
 		}
 
 		// Output something each 100 iterations
 		if (i % 100 == 0) {
-			std::cout << "Iteration " << i << ": Theta plus error " << theta_plus_error << ", theta minus error " << theta_minus_error << std::endl;
+			double error = compute_error(theta, parameters, positions);
+			std::cout << std::setprecision(5) << std::showpoint << std::fixed;
+			std::cout << "Iteration " << i << " error: " << error 
+				<< ", theta plus error " << theta_plus_error << ", theta minus error " << theta_minus_error << std::endl;
 		}
 	}
+
+
+	load_position(positions[0].pieceBoards);
+
+	int32_t eval = evaluate();
+
+	std::cout << "Network vs HCE: " << eval << " <---> " << positions[0].value << std::endl;
 
 }
 
@@ -214,24 +226,24 @@ double Neural::NeuralNet::compute_error(std::vector<int32_t>& new_values, std::v
 
 	// Step 2. Determine the batch.
 	assert(set.size() > BATCH_SIZE);
-	int start_position = random_num(0, set.size() - BATCH_SIZE - 1);
-
+	//int start_position = random_num(0, set.size() - BATCH_SIZE - 1);
+	int start_position = 0;
 	// Step 3. Now loop through the positions, load them and evaluate them
-	double average_error = 0.0;
+	volatile double average_error = 0.0;
 
-	for (int p = start_position; p < BATCH_SIZE; p++) {
+	for (volatile int p = start_position; p < start_position + BATCH_SIZE; p++) {
 		// Load it to the inputs
 		load_position(set[p].pieceBoards);
 
 		// Score it
-		int32_t eval = evaluate();
-
+		volatile int32_t eval = evaluate();
 		// Now map it to a win probability and take the mean squared error.
-		average_error += std::pow(sigmoid(set[p].value) - sigmoid(eval), 2.0);
+		//average_error += std::pow(sigmoid(set[p].value) - sigmoid(eval), 2.0);
+		average_error += std::pow(set[p].value - eval, 2.0);
 	}
 	
 	// Step 4. Divide the error by the batch size and return it.
-	return average_error / static_cast<double>(BATCH_SIZE);
+	return average_error / BATCH_SIZE;
 }
 
 
@@ -365,11 +377,11 @@ void Neural::Training::load_epd(std::string filepath, TrainingSet& set) {
 		pos->parseFen(fen);
 
 		for (int pce = PAWN; pce <= KING; pce++) {
-			pieces[pce] = pos->pieceBBS[PAWN][WHITE];
+			pieces[pce] = pos->pieceBBS[pce][WHITE];
 		}
 		for (int pce = PAWN + 1; pce <= KING + 1; pce++) {
 
-			pieces[KING + pce] = pos->pieceBBS[PAWN][BLACK];
+			pieces[KING + pce] = pos->pieceBBS[pce][BLACK];
 		}
 		
 		eval = Eval::evaluate(pos);

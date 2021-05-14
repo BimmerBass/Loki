@@ -6,6 +6,7 @@
 #include <random>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 #include <assert.h>
 #include <chrono>
@@ -26,7 +27,7 @@ namespace Neural {
 	// +/- bound for the output
 	constexpr int16_t OUTPUT_BOUND = 30000;
 
-	constexpr int BATCH_SIZE = 150;
+	constexpr int BATCH_SIZE = 100;
 	constexpr double BETA_ONE = 0.9;
 	constexpr double BETA_TWO = 0.999;
 	constexpr double EPSILON = 0.000000001;

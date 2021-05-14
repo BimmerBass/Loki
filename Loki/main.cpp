@@ -19,11 +19,10 @@ int main(int argc, char* argv[]) {
 	//UCI::loop();
 
 	//std::vector<int> arch = { 256, 32, 32 };
-	std::vector<int> arch = { 256 };
-
+	std::vector<int> arch = { 128 };
 	Neural::NeuralNet network(arch);
 
-	network.train_model(4096);
+	network.train_model(30000);
 
 	//Texel::Parameters tuning_variables;
 	//
