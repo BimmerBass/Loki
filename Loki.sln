@@ -17,6 +17,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{CA90CD45
 		tests\perft.py = tests\perft.py
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "training positions", "training positions", "{D66CB16C-182A-4647-81C8-3B4580E4C48D}"
+	ProjectSection(SolutionItems) = preProject
+		TextFile1.txt = TextFile1.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -39,6 +44,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{CA90CD45-8DC7-4A91-A920-619F08716444} = {32241FE4-8A56-497C-9120-BEB6F321D580}
+		{D66CB16C-182A-4647-81C8-3B4580E4C48D} = {32241FE4-8A56-497C-9120-BEB6F321D580}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9D4D3C4B-9471-47FE-953B-40A84B01B801}
