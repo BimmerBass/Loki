@@ -38,23 +38,25 @@ Mathematical helper functions
 //}
 
 
-void vector_dot_product(int16_t* v1, int16_t* v2, int16_t& out, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
-	out = 0;
+int vector_dot_product(int16_t* v1, int16_t* v2, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
+	int out = 0;
 	for (int i = 0; i < SIZE; i++) {
 		out += v1[i] * v2[i];
 	}
+
+	return out;
 }
 
 // Matrix should be indexed by matrix[COLUMN][ROW] and v should be indexed by [ROW]
-void matrix_vector_dot_product(int COLS, int ROWS, int16_t** matrix, int16_t* v, int16_t* v_out) {
-
-	for (int r = 0; r < ROWS; r++) {
-
-		vector_dot_product(matrix[r], v, v_out[r], COLS);
-
-	}
-
-}
+//void matrix_vector_dot_product(int COLS, int ROWS, int16_t** matrix, int16_t* v, int16_t* v_out) {
+//
+//	for (int r = 0; r < ROWS; r++) {
+//
+//		vector_dot_product(matrix[r], v, v_out[r], COLS);
+//
+//	}
+//
+//}
 
 /*
 
@@ -121,4 +123,26 @@ void Neural::NeuralNet::load_position(std::array<uint64_t, 12>& bitboards) {
 // Feed forward
 int16_t Neural::NeuralNet::evaluate() {
 
+	// Loop through all layers, stopping at the last hidden layer
+	for (int l = 0; l < layers.size() - 1; l++) {
+
+		Layer* current = &layers[l];
+		Layer* next = &layers[l + 1];
+		
+		int16_t weighted_sum = 0;
+		// Loop through each neuron in the next layer, calculating the dot product of our weight matrix and this layer's neurons.
+		for (int n = 0; n < next->neuron_count; n++) {
+			weighted_sum = vector_dot_product(current->neurons, current->weights[n], current->neuron_count);
+
+			// Add the neuron's bias and run the resulting value through the activation function
+			next->neurons[n] = weighted_sum + next->biases[n];
+
+			next->neurons[n] = (next->activation_function == A_FUNC::A_NONE) ? activation_function<A_FUNC::A_NONE>(next->neurons[n]) :
+				activation_function<A_FUNC::RELU>(next->neurons[n]);
+		}
+
+	}
+
+	// Return the output's value, bounded between -30k and +30k
+	return layers[layers.size() - 1].neurons[0];
 }

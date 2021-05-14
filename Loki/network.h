@@ -38,7 +38,14 @@ namespace Neural {
 
 			// There are no weights from an output layer, so if next_layer_len == 0, we shouldn't have any weights
 			if (next_layer_len > 0) {
-				weights = new int16_t[neuron_count * next_layer_len];
+				//weights = new int16_t[neuron_count * next_layer_len];
+
+				weights = new int16_t*[next_layer_len];
+
+				for (int n = 0; n < next_layer_len; n++) {
+					weights[n] = new int16_t[neuron_count];
+				}
+
 
 				weight_count = neuron_count * next_layer_len;
 			}
@@ -58,7 +65,7 @@ namespace Neural {
 
 		int16_t* neurons;
 
-		int16_t* weights;
+		int16_t** weights;
 		int16_t* biases;
 
 		int neuron_count;
