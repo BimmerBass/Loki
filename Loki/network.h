@@ -110,8 +110,7 @@ namespace Neural {
 	template<A_FUNC A>
 	int32_t activation_function(int32_t x);
 
-	template<A_FUNC>
-	double activation_function_derivative(int32_t x);
+	double activation_function_derivative(int32_t x, A_FUNC type);
 
 
 	inline int calculate_index(int pce, int sq) {

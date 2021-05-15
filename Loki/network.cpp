@@ -33,16 +33,14 @@ int32_t Neural::activation_function<Neural::A_FUNC::RELU>(int32_t x) {
 	return std::max(0.0, double(x));
 }
 
-
-template<>
-double Neural::activation_function_derivative<Neural::A_FUNC::A_NONE>(int32_t x) {
-	return 1.0;
+double Neural::activation_function_derivative(int32_t x, A_FUNC type){
+	if (type == A_FUNC::A_NONE) {
+		return 1.0;
+	}
+	else { // ReLU
+		return (x > 0) ? 1.0 : 0.0;
+	}
 }
-template<>
-double Neural::activation_function_derivative<Neural::A_FUNC::RELU>(int32_t x) {
-	return (x > 0) ? 1.0 : 0.0;
-}
-
 
 void Neural::Layer::set(int val) {
 	for (int n = 0; n < neuron_count; n++) {
@@ -266,11 +264,19 @@ void Neural::NeuralNet::back_propagate(int32_t expected) {
 	current->deltas[0] = 2.0 * (static_cast<double>(expected) - static_cast<double>(current->neurons[0]));
 
 	// Step 2. Propagate this error back in the network
-	for (int l = layers.size() - 2; l > 0; l++) {
+	for (int l = layers.size() - 2; l > 0; l--) {
 		current = &layers[l];
 		next = &layers[l + 1];
 
+		for (int j = 0; j < next->neuron_count; j++) {
+			for (int i = 0; i < current->neuron_count; i++) {
+				current->deltas[i] += static_cast<double>(current->weights[j][i]) * next->deltas[j];
+			}
+		}
 
+		for (int i = 0; i < current->neuron_count; i++) {
+			current->deltas[i] *= activation_function_derivative(current->neurons[i], current->activation_function);
+		}
 	}
 }
 
