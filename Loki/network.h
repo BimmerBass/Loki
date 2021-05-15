@@ -62,6 +62,9 @@ namespace Neural {
 		int32_t** weights;
 		int32_t* biases;
 
+		double* deltas;
+
+
 		int neuron_count;
 		int weight_count;
 
@@ -98,6 +101,8 @@ namespace Neural {
 
 		void change_parameters(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters);
 		double compute_error(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set);
+
+		void back_propagate(int32_t expected);
 	};
 
 

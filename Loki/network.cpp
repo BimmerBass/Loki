@@ -257,6 +257,25 @@ void Neural::NeuralNet::change_parameters(std::vector<int32_t>& new_values, std:
 
 
 
+void Neural::NeuralNet::back_propagate(int32_t expected) {
+
+	Layer* current = &layers[layers.size() - 1];
+	Layer* next = nullptr;
+
+	// Step 1. Compute d_loss/d_z for the output
+	current->deltas[0] = 2.0 * (static_cast<double>(expected) - static_cast<double>(current->neurons[0]));
+
+	// Step 2. Propagate this error back in the network
+	for (int l = layers.size() - 2; l > 0; l++) {
+		current = &layers[l];
+		next = &layers[l + 1];
+
+
+	}
+}
+
+
+
 /*
 
 Constructor and destructor of Layer struc
