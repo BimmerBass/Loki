@@ -27,10 +27,11 @@ namespace Neural {
 	// +/- bound for the output
 	constexpr int16_t OUTPUT_BOUND = 30000;
 
-	constexpr int BATCH_SIZE = 100;
-	constexpr double BETA_ONE = 0.9;
-	constexpr double BETA_TWO = 0.999;
-	constexpr double EPSILON = 0.000000001;
+	constexpr int BATCH_SIZE = 75;
+	
+	constexpr int POPULATION_SIZE = 50;
+	constexpr double ALPHA = 0.05;
+	constexpr double MUTATION_RATE = 0.01;
 	constexpr double LEARNING_RATE = 0.1;
 
 	namespace Training {
@@ -100,8 +101,16 @@ namespace Neural {
 		void copy_weights_and_biases(std::vector<int32_t*>& v);
 
 		void change_parameters(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters);
-		double compute_error(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set);
+		double compute_error(int start, std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set);
+
+		void back_propagate(int32_t expected_output);
+		void update_weights();
+		void clear_deltas();
 	};
+
+
+	// Selection in the genetic algorithm
+	void pick_best(std::vector<int>& index_vector, std::vector<double> losses);
 
 
 	// Activation function

@@ -127,6 +127,35 @@ void Neural::NeuralNet::copy_weights_and_biases(std::vector<int32_t*>& v) {
 }
 
 
+inline int find_smallest(const std::vector<double>& v) {
+	double smallest_value = std::numeric_limits<double>::max();
+	int smallest_index = 0;
+
+	for (int i = 0; i < v.size(); i++) {
+		if (v[i] < smallest_value) {
+			smallest_value = v[i];
+			smallest_index = i;
+		}
+	}
+
+	return smallest_index;
+}
+
+
+void Neural::pick_best(std::vector<int>& index_vector, std::vector<double> losses) {
+	// Step 1. Clear the index vector
+	index_vector.clear();
+
+	for (int i = 0; i < POPULATION_SIZE / 10; i++) {
+		// Find the smallest element and insert its index.
+		int smallest_index = find_smallest(losses);
+		index_vector.push_back(smallest_index);
+
+		// Remove the smallest element in losses.
+		losses.erase(losses.begin() + smallest_index);
+	}
+}
+
 
 
 void Neural::NeuralNet::train_model(int iterations) {
@@ -136,7 +165,124 @@ void Neural::NeuralNet::train_model(int iterations) {
 	Training::TrainingSet positions;
 	Training::load_epd("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", positions);
 
-	// Step 2
+	// Step 2. Copy pointers to all weights and biases.
+	std::vector<int32_t*> parameters;
+	copy_weights_and_biases(parameters);
+
+	// Step 3. Generate the population with random values
+	std::array<std::vector<int32_t>, POPULATION_SIZE> population;
+	std::vector<double> loss;
+
+	for (int i = 0; i < POPULATION_SIZE; i++) {
+		std::vector<int32_t> individual;
+
+		for (int i = 0; i < parameters.size(); i++) {
+			individual.push_back(std::rand());
+		}
+
+		population[i] = individual;
+	}
+
+	uint64_t total_children = 0;
+	uint64_t total_mutations = 0;
+
+	// Step 4. Loop through generations
+	for (int n = 0; n < iterations; n++) {
+
+		// Step 4A. Compute the loss of each individual with a batch of positions
+		loss.clear();
+		int start_position = random_num(0, positions.size() - BATCH_SIZE - 1);
+
+		for (int i = 0; i < POPULATION_SIZE; i++) {
+
+			// Step 4A.1. Change the weights and biases in the network
+			change_parameters(population[i], parameters);
+
+			// Step 4A.2. Train the current individual
+			for (int p = start_position; p < start_position + BATCH_SIZE; p++) {
+
+				load_position(positions[p].pieceBoards);
+
+				int32_t eval = evaluate();
+
+				// Backpropagation
+				back_propagate(positions[p].value);
+				update_weights();
+			}
+			
+			// Step 4A.3. Copy the new parameter values into the individual and compute it's error
+			for (int j = 0; j < parameters.size(); j++) {
+				population[i][j] = *parameters[j];
+			}
+
+			loss.push_back(compute_error(start_position, population[i], parameters, positions));
+		}
+
+		// Step 4B. Selection. Pick out the 10% of the population with the lowest loss
+		std::vector<int> fittest_individuals;
+		pick_best(fittest_individuals, loss);
+
+		// Step 4C. Further selection. From the top 10%, pick two parents randomly and let them crossover
+		//int parent_1 = random_num(0, fittest_individuals.size() - 1);
+		//int parent_2 = 0;
+		//if (parent_1 > fittest_individuals.size() / 2) {
+		//	parent_2 = random_num(0, parent_1 - 1);
+		//}
+		//else {
+		//	parent_2 = random_num(parent_1 + 1, fittest_individuals.size() - 1);
+		//}
+		int parent_1 = 0, parent_2 = random_num(1, fittest_individuals.size() - 1);
+		assert(parent_1 != parent_2);
+		
+		// Step 4D. Crossover. Here we use the BLX-alpha algorithm
+		int parent_1_index = fittest_individuals[parent_1];
+		int parent_2_index = fittest_individuals[parent_2];
+
+		std::vector<int32_t> p1_params = population[parent_1_index];
+		std::vector<int32_t> p2_params = population[parent_2_index];
+
+		for (int i = 0; i < POPULATION_SIZE; i++) {
+
+			population[i].clear();
+			total_children++;
+
+			// Copy the two parents
+			if (i == 0) {
+				population[i] = p1_params;
+			}
+			else if (i == 1) {
+				population[i] = p2_params;
+			}
+			else {
+				for (int p = 0; p < parameters.size(); p++) {
+					int max = (p1_params[p] > p2_params[p]) ? p1_params[p] : p2_params[p];
+					int min = (max == p1_params[p]) ? p2_params[p] : p1_params[p];
+
+					// Now we use the BLX-alpha algorithm to find the new weight for the child
+					population[i].push_back(random_num(min - ALPHA * (max - min), max + ALPHA * (max - min)));
+				}
+			}
+			// Determine if a random gene in the offspring should be mutated.
+			bool mutate = ((double(std::rand()) / double(RAND_MAX)) <= MUTATION_RATE) ? true : false;
+			mutate = false;
+			if (mutate) { // If our gene is to mutate, we need to add or subtract a number in the alpha range
+				total_mutations++;
+				int p = random_num(0, parameters.size() - 1);
+
+				int max = (p1_params[p] > p2_params[p]) ? p1_params[p] : p2_params[p];
+				int min = (max == p1_params[p]) ? p2_params[p] : p1_params[p];
+
+				//population[i][p] += (randemacher() * random_num(0, ALPHA * (max - min)));
+				//population[i][p] += (randemacher() * random_num(1, 2));
+				population[i][p] *= -1;
+			}
+		}
+
+		std::cout << "Generation " << n << " lowest error: " << loss[fittest_individuals[0]] 
+			<< ", mutation rate: " << (double(total_mutations) / double(total_children))*100.0 << "%" << std::endl;
+
+	}
+
 
 
 	load_position(positions[0].pieceBoards);
@@ -148,18 +294,18 @@ void Neural::NeuralNet::train_model(int iterations) {
 }
 
 
-double Neural::NeuralNet::compute_error(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set) {
+double Neural::NeuralNet::compute_error(int start, std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set) {
 	// Step 1. Change the parameters
 	change_parameters(new_values, parameters);
 
 	// Step 2. Determine the batch.
 	assert(set.size() > BATCH_SIZE);
-	//int start_position = random_num(0, set.size() - BATCH_SIZE - 1);
-	int start_position = 0;
+
+
 	// Step 3. Now loop through the positions, load them and evaluate them
 	volatile double average_error = 0.0;
 
-	for (volatile int p = start_position; p < start_position + BATCH_SIZE; p++) {
+	for (volatile int p = start; p < start + BATCH_SIZE; p++) {
 		// Load it to the inputs
 		load_position(set[p].pieceBoards);
 
@@ -183,6 +329,75 @@ void Neural::NeuralNet::change_parameters(std::vector<int32_t>& new_values, std:
 	}
 }
 
+
+void Neural::NeuralNet::back_propagate(int32_t expected_output) {
+
+	Layer* current = &layers[layers.size() - 1];
+	Layer* next = nullptr;
+
+	// Step 1. Compute the output delta.
+	current->deltas[0] = 2.0 * (current->neurons[0] - expected_output);
+
+	// Step 2. Now go back in the network
+	for (int l = layers.size() - 2; l > 0; l--) {
+
+		current = &layers[l];
+		next = &layers[l + 1];
+
+		for (int j = 0; j < next->neuron_count; j++) {
+			for (int i = 0; i < current->neuron_count; i++) {
+				current->deltas[i] += current->weights[j][i] * next->deltas[j];
+			}
+		}
+
+		for (int i = 0; i < current->neuron_count; i++) {
+			current->deltas[i] *= (current->neurons[i] > 0) ? 1.0 : 0.0;
+		}
+	}
+
+}
+
+
+void Neural::NeuralNet::update_weights() {
+
+	// Step 1. Set the biases at the input layer and output layer to zero
+	for (int i = 0; i < layers[0].neuron_count; i++) {
+		layers[0].biases[i] = 0;
+	}
+	layers[layers.size() - 1].biases[0] = 0;
+
+	Layer* current = nullptr;
+	Layer* previous = nullptr;
+
+	for (int l = 1; l < layers.size(); l++) {
+		double gradient = 0;
+		
+		current = &layers[l];
+		previous = &layers[l - 1];
+
+		if (l != 1) {
+			for (int i = 0; i < previous->neuron_count; i++) {
+				previous->biases[i] -= LEARNING_RATE * previous->deltas[i];
+			}
+		}
+
+		for (int j = 0; j < current->neuron_count; j++) {
+			for (int i = 0; i < previous->neuron_count; i++) {
+				previous->weights[j][i] -= LEARNING_RATE * previous->neurons[i] * current->deltas[j];
+			}
+		}
+
+	}
+}
+
+
+void Neural::NeuralNet::clear_deltas() {
+	for (int l = 0; l < layers.size(); l++) {
+		for (int i = 0; i < layers[l].neuron_count; i++) {
+			layers[l].deltas[i] = 0.0;
+		}
+	}
+}
 
 
 /*
@@ -219,6 +434,9 @@ Neural::Layer::Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_i
 	biases = new int32_t[neuron_count];
 	memset(biases, 0, sizeof(int32_t) * neuron_count);
 
+	deltas = new double[neuron_count];
+	memset(deltas, 0, sizeof(double) * neuron_count);
+
 	activation_function = a_function;
 }
 
@@ -233,6 +451,7 @@ Neural::Layer::~Layer() {
 		delete[] weights;
 
 	}
+	delete[] deltas;
 }
 
 
@@ -256,6 +475,9 @@ Neural::Layer::Layer(const Layer& l) {
 
 	biases = new int32_t[l.neuron_count];
 	memcpy(biases, l.biases, sizeof(int32_t) * l.neuron_count);
+
+	deltas = new double[l.neuron_count];
+	memcpy(deltas, l.deltas, sizeof(double) * l.neuron_count);
 
 	neuron_count = l.neuron_count;
 	weight_count = l.weight_count;
