@@ -33,15 +33,6 @@ int32_t Neural::activation_function<Neural::A_FUNC::RELU>(int32_t x) {
 	return std::max(0.0, double(x));
 }
 
-double Neural::activation_function_derivative(int32_t x, A_FUNC type){
-	if (type == A_FUNC::A_NONE) {
-		return 1.0;
-	}
-	else { // ReLU
-		return (x > 0) ? 1.0 : 0.0;
-	}
-}
-
 void Neural::Layer::set(int val) {
 	for (int n = 0; n < neuron_count; n++) {
 		neurons[n] = val;
@@ -145,68 +136,7 @@ void Neural::NeuralNet::train_model(int iterations) {
 	Training::TrainingSet positions;
 	Training::load_epd("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", positions);
 
-	double BIG_A = 0.1 * double(iterations);
-	double C = 4.0 * std::pow(double(iterations), 0.101);
-	double a_end = 0.002 * std::pow(C, 2.0);
-	double A = a_end * std::pow(BIG_A + double(iterations), 0.602);
-
-	std::vector<int32_t*> parameters;
-	copy_weights_and_biases(parameters);
-	
-	std::vector<int32_t> theta, theta_plus, theta_minus, delta;
-	std::vector<double> adam_m, adam_v;
-
-	for (int i = 0; i < parameters.size(); i++) {
-		theta.push_back(*parameters[i]);
-		theta_plus.push_back(0);
-		theta_minus.push_back(0);
-		delta.push_back(0);
-
-		adam_m.push_back(0.0);
-		adam_v.push_back(0.0);
-	}
-
-
-	// Step 2. Loop through all iterations
-	for (volatile int i = 0; i < iterations; i++) {
-
-		double cn = C / std::pow(double(i) + 1, 0.101);
-
-		for (int p = 0; p < parameters.size(); p++) {
-			int d = randemacher();
-			assert(d == 1 || d == -1);
-
-			delta[p] = static_cast<int32_t>(d);
-
-			theta_plus[p] = theta[p] + static_cast<int32_t>(cn * d);
-			theta_minus[p] = theta[p] - static_cast<int32_t>(cn * d);
-		}
-
-
-		double theta_plus_error = compute_error(theta_plus, parameters, positions);
-		double theta_minus_error = compute_error(theta_minus, parameters, positions);
-
-		for (int p = 0; p < parameters.size(); p++) {
-			volatile double gradient = (theta_plus_error - theta_minus_error) / (2.0 * cn * static_cast<double>(delta[p]));
-
-			adam_m[p] = BETA_ONE * adam_m[p] + (1.0 - BETA_ONE) * gradient;
-			adam_v[p] = BETA_TWO * adam_v[p] + (1.0 - BETA_TWO) * std::pow(gradient, 2.0);
-			
-			volatile double m_hat = adam_m[p] / (1.0 - std::pow(BETA_ONE, i + 1));
-			volatile double v_hat = adam_v[p] / (1.0 - std::pow(BETA_TWO, i + 1));
-			
-			// Finally, update theta
-			theta[p] -= static_cast<int32_t>((LEARNING_RATE / (std::sqrt(v_hat) + EPSILON)) * m_hat);
-		}
-
-		// Output something each 100 iterations
-		if (i % 100 == 0) {
-			double error = compute_error(theta, parameters, positions);
-			std::cout << std::setprecision(5) << std::showpoint << std::fixed;
-			std::cout << "Iteration " << i << " error: " << error 
-				<< ", theta plus error " << theta_plus_error << ", theta minus error " << theta_minus_error << std::endl;
-		}
-	}
+	// Step 2
 
 
 	load_position(positions[0].pieceBoards);
@@ -250,33 +180,6 @@ void Neural::NeuralNet::change_parameters(std::vector<int32_t>& new_values, std:
 
 	for (int p = 0; p < parameters.size(); p++) {
 		*(parameters[p]) = new_values[p];
-	}
-}
-
-
-
-void Neural::NeuralNet::back_propagate(int32_t expected) {
-
-	Layer* current = &layers[layers.size() - 1];
-	Layer* next = nullptr;
-
-	// Step 1. Compute d_loss/d_z for the output
-	current->deltas[0] = 2.0 * (static_cast<double>(expected) - static_cast<double>(current->neurons[0]));
-
-	// Step 2. Propagate this error back in the network
-	for (int l = layers.size() - 2; l > 0; l--) {
-		current = &layers[l];
-		next = &layers[l + 1];
-
-		for (int j = 0; j < next->neuron_count; j++) {
-			for (int i = 0; i < current->neuron_count; i++) {
-				current->deltas[i] += static_cast<double>(current->weights[j][i]) * next->deltas[j];
-			}
-		}
-
-		for (int i = 0; i < current->neuron_count; i++) {
-			current->deltas[i] *= activation_function_derivative(current->neurons[i], current->activation_function);
-		}
 	}
 }
 

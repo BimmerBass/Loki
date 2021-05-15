@@ -101,17 +101,12 @@ namespace Neural {
 
 		void change_parameters(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters);
 		double compute_error(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set);
-
-		void back_propagate(int32_t expected);
 	};
 
 
 	// Activation function
 	template<A_FUNC A>
 	int32_t activation_function(int32_t x);
-
-	double activation_function_derivative(int32_t x, A_FUNC type);
-
 
 	inline int calculate_index(int pce, int sq) {
 		assert(pce >= 0 && pce <= 11);
