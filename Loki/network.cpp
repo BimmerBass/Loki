@@ -24,16 +24,16 @@ New implementation below:
 
 
 */
-template<>
-int32_t Neural::activation_function<Neural::A_FUNC::A_NONE>(int32_t x) {
-	return double(x);
-}
-template<>
-int32_t Neural::activation_function<Neural::A_FUNC::RELU>(int32_t x) {
-	return std::max(0.0, double(x));
-}
+//template<>
+//int32_t Neural::activation_function<Neural::A_FUNC::A_NONE>(int32_t x) {
+//	return double(x);
+//}
+//template<>
+//int32_t Neural::activation_function<Neural::A_FUNC::RELU>(int32_t x) {
+//	return std::max(0.0, double(x));
+//}
 
-void Neural::Layer::set(int val) {
+void Neural::Layer::set(neuron_t val) {
 	for (int n = 0; n < neuron_count; n++) {
 		neurons[n] = val;
 	}
@@ -48,7 +48,7 @@ Neural::NeuralNet::NeuralNet(std::vector<int> arch) {
 	layers.push_back(Layer(INPUT_SIZE, arch[0], A_FUNC::A_NONE, true)); // Input
 
 	for (int l = 0; l < arch.size(); l++) { // all hidden layers. These use the ReLU activation function
-		Layer L(arch[l], (l == arch.size() - 1) ? 1 : arch[l + 1], A_FUNC::RELU);
+		Layer L(arch[l], (l == arch.size() - 1) ? 1 : arch[l + 1], A_FUNC::SIGMOID);
 		layers.push_back(L);
 		//layers.push_back(Layer(arch[l], (l == arch.size() - 1) ? 1 : arch[l + 1], A_FUNC::RELU));
 	}
@@ -61,7 +61,7 @@ Neural::NeuralNet::NeuralNet(std::vector<int> arch) {
 // Set up all pieces such that an input neuron with value 1 designates a piece's presence on that square
 void Neural::NeuralNet::load_position(std::array<uint64_t, 12>& bitboards) {
 	// Step 1. Set the input layer to zero
-	layers[0].set(0);
+	layers[0].set(0.0);
 	
 	// Step 2. Load the position
 	uint64_t pieceBoard = 0;
@@ -74,7 +74,7 @@ void Neural::NeuralNet::load_position(std::array<uint64_t, 12>& bitboards) {
 		while (pieceBoard) {
 			sq = PopBit(&pieceBoard);
 
-			layers[0].neurons[calculate_index(pce, sq)] = 1;
+			layers[0].neurons[calculate_index(pce, sq)] = 1.0;
 		}
 	}
 }
@@ -88,7 +88,7 @@ int32_t Neural::NeuralNet::evaluate() {
 		Layer* current = &layers[l];
 		Layer* next = &layers[l + 1];
 		
-		int16_t weighted_sum = 0;
+		neuron_t weighted_sum = 0;
 		// Loop through each neuron in the next layer, calculating the dot product of our weight matrix and this layer's neurons.
 		for (int n = 0; n < next->neuron_count; n++) {
 			weighted_sum = vector_dot_product(current->neurons, current->weights[n], current->neuron_count);
@@ -96,14 +96,17 @@ int32_t Neural::NeuralNet::evaluate() {
 			// Add the neuron's bias and run the resulting value through the activation function.
 			next->neurons[n] = weighted_sum + next->biases[n];
 
-			next->neurons[n] = (next->activation_function == A_FUNC::A_NONE) ? activation_function<A_FUNC::A_NONE>(next->neurons[n]) :
-				activation_function<A_FUNC::RELU>(next->neurons[n]);
+			// Apply the activation function
+			if (next->activation_function != A_FUNC::A_NONE) {
+				next->neurons[n] = sigmoid(next->neurons[n]);
+			}
 		}
 
 	}
 
 	// Return the output's value, bounded between -30k and +30k
-	return layers[layers.size() - 1].neurons[0];
+	//return layers[layers.size() - 1].neurons[0];
+	return static_cast<int32_t>(layers[layers.size() - 1].neurons[0]);
 }
 
 
@@ -366,7 +369,7 @@ void Neural::NeuralNet::back_propagate(int32_t expected_output) {
 	Layer* next = nullptr;
 
 	// Step 1. Compute the output delta.
-	current->deltas[0] = 2.0 * (current->neurons[0] - expected_output);
+	current->deltas[0] = 2.0 * (current->neurons[0] - static_cast<neuron_t>(expected_output));
 
 	// Step 2. Now go back in the network
 	for (int l = layers.size() - 2; l > 0; l--) {
@@ -381,7 +384,8 @@ void Neural::NeuralNet::back_propagate(int32_t expected_output) {
 		}
 
 		for (int i = 0; i < current->neuron_count; i++) {
-			current->deltas[i] *= (current->neurons[i] > 0) ? 1.0 : 0.0;
+			//current->deltas[i] *= (current->neurons[i] > 0) ? 1.0 : 0.0;
+			current->deltas[i] *= sigmoid_derivative(current->neurons[i]);
 		}
 	}
 

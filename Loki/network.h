@@ -50,7 +50,7 @@ namespace Neural {
 
 	enum class A_FUNC {
 		A_NONE = 0,
-		RELU = 1
+		SIGMOID = 1
 	};
 
 	typedef float neuron_t;
@@ -76,7 +76,7 @@ namespace Neural {
 		A_FUNC activation_function;
 
 		// Set all neurons to this value
-		void set(int val);
+		void set(neuron_t val);
 	};
 
 
@@ -116,8 +116,8 @@ namespace Neural {
 
 
 	// Activation function
-	template<A_FUNC A>
-	int32_t activation_function(int32_t x);
+	//template<A_FUNC A>
+	//int32_t activation_function(int32_t x);
 
 	inline int calculate_index(int pce, int sq) {
 		assert(pce >= 0 && pce <= 11);
@@ -148,9 +148,15 @@ namespace Neural {
 		return (distribution(generator)) ? 1 : -1;
 	}
 
-	inline double sigmoid(int32_t x) {
-		return 1.0 / (1.0 + std::exp(-static_cast<double>(x)));
+	inline neuron_t sigmoid(neuron_t x) {
+		//return 1.0 / (1.0 + std::exp(-x));
+		return std::tanh(x);
 	}
+
+	inline neuron_t sigmoid_derivative(neuron_t x) {
+		return std::pow(1.0 / std::cosh(x), 2.0);
+	}
+
 }
 
 
