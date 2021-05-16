@@ -65,7 +65,7 @@ namespace Neural {
 		neuron_t** weights;
 		neuron_t* biases;
 
-		double* deltas;
+		float* deltas;
 
 
 		int neuron_count;
@@ -149,12 +149,13 @@ namespace Neural {
 	}
 
 	inline neuron_t sigmoid(neuron_t x) {
-		//return 1.0 / (1.0 + std::exp(-x));
-		return std::tanh(x);
+		return 1.0 / (1.0 + std::exp(-x));
+		//return std::tanh(x);
 	}
 
 	inline neuron_t sigmoid_derivative(neuron_t x) {
-		return std::pow(1.0 / std::cosh(x), 2.0);
+		//return std::pow(1.0 / std::cosh(x), 2.0);
+		return x * (1.0 - x);
 	}
 
 }

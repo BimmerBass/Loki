@@ -20,7 +20,8 @@ int main(int argc, char* argv[]) {
 
 	//std::vector<int> arch = { 256, 32, 32 };
 
-	std::vector<int> arch = { 256, 32, 32 };
+	std::vector<int> arch = { 256 };
+
 	Neural::NeuralNet network(arch);
 
 	network.train_model(30000);
