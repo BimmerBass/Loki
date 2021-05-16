@@ -7,8 +7,8 @@ Mathematical helper functions
 
 */
 
-int32_t vector_dot_product(int32_t* v1, int32_t* v2, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
-	int out = 0;
+Neural::neuron_t vector_dot_product(Neural::neuron_t* v1, Neural::neuron_t* v2, int SIZE) { // A vector dot product is just the sum of element-wise multiplication
+	Neural::neuron_t out = 0;
 	for (int i = 0; i < SIZE; i++) {
 		out += v1[i] * v2[i];
 	}
@@ -53,7 +53,7 @@ Neural::NeuralNet::NeuralNet(std::vector<int> arch) {
 		//layers.push_back(Layer(arch[l], (l == arch.size() - 1) ? 1 : arch[l + 1], A_FUNC::RELU));
 	}
 
-	layers.push_back(Layer(OUTPUT_SIZE, 0, A_FUNC::A_NONE)); // Output shouldn't be bounded by an activation function
+	layers.push_back(Layer(OUTPUT_SIZE, 0, A_FUNC::A_NONE, false)); // Output shouldn't be bounded by an activation function
 
 }
 
@@ -107,7 +107,7 @@ int32_t Neural::NeuralNet::evaluate() {
 }
 
 
-void Neural::NeuralNet::copy_weights_and_biases(std::vector<int32_t*>& v) {
+void Neural::NeuralNet::copy_weights_and_biases(std::vector<neuron_t*>& v) {
 	// Step 1. Clear the vector
 	v.clear();
 
@@ -166,11 +166,11 @@ void Neural::NeuralNet::train_model(int iterations) {
 	Training::load_epd("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", positions);
 
 	// Step 2. Copy pointers to all weights and biases.
-	std::vector<int32_t*> parameters;
+	std::vector<neuron_t*> parameters;
 	copy_weights_and_biases(parameters);
 
 	// Step 3. Generate the population with random values
-	std::array<std::vector<int32_t>, POPULATION_SIZE> population;
+	/*std::array<std::vector<int32_t>, POPULATION_SIZE> population;
 	std::vector<double> loss;
 
 	for (int i = 0; i < POPULATION_SIZE; i++) {
@@ -185,12 +185,42 @@ void Neural::NeuralNet::train_model(int iterations) {
 
 	uint64_t total_children = 0;
 	uint64_t total_mutations = 0;
+	*/
+
+	// Initialize the network randomly
+	for (int i = 0; i < parameters.size(); i++) {
+		*parameters[i] = randemacher() * random_num(1, 10);
+	}
 
 	// Step 4. Loop through generations
 	for (int n = 0; n < iterations; n++) {
 
+		//int start_position = random_num(0, positions.size() - BATCH_SIZE - 1);
+		int start_position = 0;
+
+		for (int i = start_position; i < start_position + BATCH_SIZE; i++) {
+			clear_deltas();
+			load_position(positions[i].pieceBoards);
+
+			int32_t eval = evaluate();
+
+			back_propagate(positions[i].value);
+			update_weights();
+		}
+
+		if (n % 10 == 0) {
+			std::vector<neuron_t> values;
+
+			for (int i = 0; i < parameters.size(); i++) {
+				values.push_back(*parameters[i]);
+			}
+
+			double err = compute_error(start_position, values, parameters, positions);
+			std::cout << "Epoch " << n << " error " << err << std::endl;
+		}
+
 		// Step 4A. Compute the loss of each individual with a batch of positions
-		loss.clear();
+		/*loss.clear();
 		int start_position = random_num(0, positions.size() - BATCH_SIZE - 1);
 
 		for (int i = 0; i < POPULATION_SIZE; i++) {
@@ -280,7 +310,7 @@ void Neural::NeuralNet::train_model(int iterations) {
 
 		std::cout << "Generation " << n << " lowest error: " << loss[fittest_individuals[0]] 
 			<< ", mutation rate: " << (double(total_mutations) / double(total_children))*100.0 << "%" << std::endl;
-
+		*/
 	}
 
 
@@ -294,7 +324,7 @@ void Neural::NeuralNet::train_model(int iterations) {
 }
 
 
-double Neural::NeuralNet::compute_error(int start, std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set) {
+double Neural::NeuralNet::compute_error(int start, std::vector<neuron_t>& new_values, std::vector<neuron_t*>& parameters, Training::TrainingSet& set) {
 	// Step 1. Change the parameters
 	change_parameters(new_values, parameters);
 
@@ -321,7 +351,7 @@ double Neural::NeuralNet::compute_error(int start, std::vector<int32_t>& new_val
 }
 
 
-void Neural::NeuralNet::change_parameters(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters) {
+void Neural::NeuralNet::change_parameters(std::vector<neuron_t>& new_values, std::vector<neuron_t*>& parameters) {
 	assert(new_values.size() == parameters.size());
 
 	for (int p = 0; p < parameters.size(); p++) {
@@ -408,7 +438,7 @@ Constructor and destructor of Layer struc
 
 Neural::Layer::Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_input) {
 	neuron_count = n_cnt;
-	neurons = new int32_t[neuron_count];
+	neurons = new neuron_t[neuron_count];
 	memset(neurons, 0, sizeof(int32_t) * neuron_count);
 	next_layer_length = next_layer_len;
 
@@ -416,11 +446,11 @@ Neural::Layer::Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_i
 	if (next_layer_len > 0) {
 		//weights = new int16_t[neuron_count * next_layer_len];
 
-		weights = new int32_t*[next_layer_len];
+		weights = new neuron_t *[next_layer_len];
 
 		for (int n = 0; n < next_layer_len; n++) {
-			weights[n] = new int32_t[neuron_count];
-			memset(weights[n], 0, sizeof(int32_t) * neuron_count);
+			weights[n] = new neuron_t[neuron_count];
+			memset(weights[n], 0, sizeof(neuron_t) * neuron_count);
 		}
 
 
@@ -431,8 +461,8 @@ Neural::Layer::Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_i
 		weight_count = 0;
 	}
 
-	biases = new int32_t[neuron_count];
-	memset(biases, 0, sizeof(int32_t) * neuron_count);
+	biases = new neuron_t[neuron_count];
+	memset(biases, 0, sizeof(neuron_t) * neuron_count);
 
 	deltas = new double[neuron_count];
 	memset(deltas, 0, sizeof(double) * neuron_count);
@@ -457,24 +487,24 @@ Neural::Layer::~Layer() {
 
 Neural::Layer::Layer(const Layer& l) {
 
-	neurons = new int32_t[l.neuron_count];
-	memcpy(neurons, l.neurons, sizeof(int32_t) * l.neuron_count);
+	neurons = new neuron_t[l.neuron_count];
+	memcpy(neurons, l.neurons, sizeof(neuron_t) * l.neuron_count);
 
 	if (l.weights != nullptr) {
 
-		weights = new int32_t*[l.next_layer_length];
+		weights = new neuron_t *[l.next_layer_length];
 
 		for (int i = 0; i < l.next_layer_length; i++) {
-			weights[i] = new int32_t[l.neuron_count];
-			memcpy(weights[i], l.weights[i], sizeof(int32_t) * l.neuron_count);
+			weights[i] = new neuron_t[l.neuron_count];
+			memcpy(weights[i], l.weights[i], sizeof(neuron_t) * l.neuron_count);
 		}
 	}
 	else {
 		weights = nullptr;
 	}
 
-	biases = new int32_t[l.neuron_count];
-	memcpy(biases, l.biases, sizeof(int32_t) * l.neuron_count);
+	biases = new neuron_t[l.neuron_count];
+	memcpy(biases, l.biases, sizeof(neuron_t) * l.neuron_count);
 
 	deltas = new double[l.neuron_count];
 	memcpy(deltas, l.deltas, sizeof(double) * l.neuron_count);

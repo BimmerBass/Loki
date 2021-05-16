@@ -53,15 +53,17 @@ namespace Neural {
 		RELU = 1
 	};
 
+	typedef float neuron_t;
+
 	struct Layer {
 		Layer(int n_cnt, int next_layer_len, A_FUNC a_function, bool is_input = false);
 		~Layer();
 		Layer(const Layer& l);
 
-		int32_t* neurons;
+		neuron_t* neurons;
 
-		int32_t** weights;
-		int32_t* biases;
+		neuron_t** weights;
+		neuron_t* biases;
 
 		double* deltas;
 
@@ -98,10 +100,10 @@ namespace Neural {
 	private:
 		std::vector<Layer> layers;
 
-		void copy_weights_and_biases(std::vector<int32_t*>& v);
+		void copy_weights_and_biases(std::vector<neuron_t*>& v);
 
-		void change_parameters(std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters);
-		double compute_error(int start, std::vector<int32_t>& new_values, std::vector<int32_t*>& parameters, Training::TrainingSet& set);
+		void change_parameters(std::vector<neuron_t>& new_values, std::vector<neuron_t*>& parameters);
+		double compute_error(int start, std::vector<neuron_t>& new_values, std::vector<neuron_t*>& parameters, Training::TrainingSet& set);
 
 		void back_propagate(int32_t expected_output);
 		void update_weights();
