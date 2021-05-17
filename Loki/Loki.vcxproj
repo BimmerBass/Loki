@@ -164,7 +164,6 @@
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="move.cpp" />
     <ClCompile Include="movegen.cpp" />
-    <ClCompile Include="network.cpp" />
     <ClCompile Include="perft.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="psqt.cpp" />
