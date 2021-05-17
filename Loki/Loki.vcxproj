@@ -152,6 +152,8 @@
     <ClCompile Include="bench.cpp" />
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="evaluation.cpp" />
+    <ClCompile Include="lnn\network.cpp" />
+    <ClCompile Include="lnn\types\layer.cpp" />
     <ClCompile Include="magics.cpp" />
     <ClCompile Include="main.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">USE_POPCNT</PreprocessorDefinitions>
@@ -178,10 +180,12 @@
     <ClInclude Include="bitboard.h" />
     <ClInclude Include="defs.h" />
     <ClInclude Include="evaluation.h" />
+    <ClInclude Include="lnn\network.h" />
+    <ClInclude Include="lnn\types\architecture.h" />
+    <ClInclude Include="lnn\types\layer.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="movegen.h" />
-    <ClInclude Include="network.h" />
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="psqt.h" />

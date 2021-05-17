@@ -9,8 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		makefile = makefile
 		README.md = README.md
-		Loki\LNN\trainer.cpp = Loki\LNN\trainer.cpp
-		Loki\LNN\trainer.h = Loki\LNN\trainer.h
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{CA90CD45-8DC7-4A91-A920-619F08716444}"

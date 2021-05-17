@@ -69,6 +69,12 @@
     <ClCompile Include="network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lnn\network.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lnn\types\layer.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitboard.h">
@@ -122,7 +128,13 @@
     <ClInclude Include="texel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="network.h">
+    <ClInclude Include="lnn\network.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnn\types\architecture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnn\types\layer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
