@@ -2,6 +2,7 @@
 #define NETWORK_H
 #include <array>
 #include <cstdint>
+#include <assert.h>
 
 #include "types/layer.h"
 #include "types/architecture.h"
