@@ -1,6 +1,11 @@
 #ifndef ARCHITECTURE_H
 #define ARCHITECTURE_H
 
+/*
+
+This header file just holds the architecture/size specifications for Loki's neural network.
+
+*/
 
 typedef float neuron_t;
 constexpr size_t INPUT_SIZE = 768; // Twelve pieces with 64 squares each
