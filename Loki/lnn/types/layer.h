@@ -1,6 +1,6 @@
 #ifndef LAYER_H
 #define LAYER_H
-
+#include <array>
 
 
 template<size_t SIZE, size_t NEXT_SIZE, typename T>
@@ -18,7 +18,7 @@ class Layer{
         // For this class, the next Layer's size isn't a constant expression, so we
         // have to declare the weights on heap...
         // They will be declared to be indexed by weights[next_layer_neuron][this_layer_neuron]
-        T weights**;
+        T** weights;
 
         size_t size() const;
 };

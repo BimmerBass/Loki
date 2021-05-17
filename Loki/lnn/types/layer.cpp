@@ -5,6 +5,7 @@
 /*
 Constructor and destructor for the layer class
 */
+template<size_t SIZE, size_t NEXT_SIZE, typename T>
 Layer<SIZE, NEXT_SIZE, T>::Layer(){
     if constexpr (NEXT_SIZE > 0){
         weights = new T*[NEXT_SIZE];
@@ -21,6 +22,7 @@ Layer<SIZE, NEXT_SIZE, T>::Layer(){
     }
 }
 
+template<size_t SIZE, size_t NEXT_SIZE, typename T>
 Layer<SIZE, NEXT_SIZE, T>::~Layer(){
     if (weights != nullptr){
         for (int i = 0; i < NEXT_SIZE;i++){
@@ -32,6 +34,7 @@ Layer<SIZE, NEXT_SIZE, T>::~Layer(){
 
 
 // Return the size of the layer
+template<size_t SIZE, size_t NEXT_SIZE, typename T>
 size_t Layer<SIZE, NEXT_SIZE, T>::size() const {
     return SIZE;
 }

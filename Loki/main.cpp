@@ -1,6 +1,6 @@
 //#include "uci.h"
 #include "texel.h"
-#include "network.h"
+#include "lnn/network.h"
 
 int main(int argc, char* argv[]) {
 	BBS::INIT();
