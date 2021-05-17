@@ -7,33 +7,11 @@ Constructor and destructor for the layer class
 */
 template<size_t SIZE, size_t NEXT_SIZE, typename T>
 Layer<SIZE, NEXT_SIZE, T>::Layer(){
-    // Step 1. Initialize all neurons and biases to a value of 0
+    // Initialize all neurons, weights and biases to a value of 0
     neurons.fill(0);
     biases.fill(0);
-
-    // Step 2. If we're given a size for the next layer (for all layers except the output), allocate this.
-    if constexpr (NEXT_SIZE > 0){
-        weights = new T*[NEXT_SIZE];
-
-        for (int i = 0; i < NEXT_SIZE; i++){
-            weights[i] = new T[SIZE];
-
-            // Pre-initialize the weights to zero
-            memset(weights[i], 0, sizeof(T)*SIZE);
-        }
-    }
-    else{
-        weights = nullptr;
-    }
-}
-
-template<size_t SIZE, size_t NEXT_SIZE, typename T>
-Layer<SIZE, NEXT_SIZE, T>::~Layer(){
-    if (weights != nullptr){
-        for (int i = 0; i < NEXT_SIZE;i++){
-            delete[] weights[i];
-        }
-        delete[] weights;
+    for (int i = 0; i < NEXT_SIZE; i++) {
+        weights[i].fill(0);
     }
 }
 

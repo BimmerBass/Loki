@@ -10,15 +10,12 @@ class Layer{
 
     public:
         Layer();
-        ~Layer();
 
         std::array<T,SIZE> neurons;
         std::array<T,SIZE> biases;
 
-        // For this class, the next Layer's size isn't a constant expression, so we
-        // have to declare the weights on heap...
         // They will be declared to be indexed by weights[next_layer_neuron][this_layer_neuron]
-        T** weights;
+        std::array<std::array<T, SIZE>, NEXT_SIZE> weights;
 
         size_t size() const;
 };
