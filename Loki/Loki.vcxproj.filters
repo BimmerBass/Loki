@@ -70,7 +70,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="lnn\types\layer.cpp">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
