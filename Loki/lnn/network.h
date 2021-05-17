@@ -14,6 +14,9 @@ namespace LNN{
 
     template<size_t SIZE, size_t NEXT_SIZE, typename T>
     class Layer{
+        static_assert(SIZE > 0);
+        static_assert(NEXT_SIZE >= 0);
+
         public:
             Layer();
             ~Layer();
