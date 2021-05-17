@@ -7,6 +7,11 @@ Constructor and destructor for the layer class
 */
 template<size_t SIZE, size_t NEXT_SIZE, typename T>
 Layer<SIZE, NEXT_SIZE, T>::Layer(){
+    // Step 1. Initialize all neurons and biases to a value of 0
+    neurons.fill(0);
+    biases.fill(0);
+
+    // Step 2. If we're given a size for the next layer (for all layers except the output), allocate this.
     if constexpr (NEXT_SIZE > 0){
         weights = new T*[NEXT_SIZE];
 
