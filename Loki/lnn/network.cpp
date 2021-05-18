@@ -7,7 +7,7 @@ Compute the dot-product between two vectors (std::array).
 
 */
 template<typename T, size_t SIZE>
-void dot_product(std::array<T, SIZE>& v1, std::array<T, SIZE>& v2, T& out) {
+void dot_product(const std::array<T, SIZE>& v1, const std::array<T, SIZE>& v2, T& out) {
 
 	out = 0;
 
@@ -38,7 +38,7 @@ namespace LNN {
 			// Make sure we only have allowed values in the input array
 			assert(pos[i] == 0 || pos[i] == 1);
 
-			INPUT_LAYER.neurons[i] = static_cast<neuron_t>(pos[i]);
+			(INPUT_LAYER.back()).neurons[i] = static_cast<neuron_t>(pos[i]);
 		}
 	}
 
@@ -58,7 +58,7 @@ namespace LNN {
 			for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
 
 				// Step 1A. Calculate the dot product of the input neurons and the weights between the layers
-				dot_product<neuron_t, INPUT_SIZE>(INPUT_LAYER.neurons, INPUT_LAYER.weights[i], FIRST_HIDDEN.neurons[i]);
+				dot_product<neuron_t, INPUT_SIZE>((INPUT_LAYER.back()).neurons, (INPUT_LAYER.back()).weights[i], FIRST_HIDDEN.neurons[i]);
 
 				// Add bias and apply the activation function
 				FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
@@ -89,4 +89,18 @@ namespace LNN {
 		return static_cast<int>(OUTPUT_LAYER.neurons[0]);
 	}
 
+
+	// The following four functions are for parsing a move when finding the incremental update parameters
+	int Update::fromSq(const unsigned int move) const {
+		return (((move) >> (4)) & (63));
+	}
+	int Update::toSq(const unsigned int move) const {
+		return ((move) >> (10));
+	}
+	int Update::special_flag(const unsigned int move) const {
+		return ((move) & (3));
+	}
+	int Update::promotion_piece(const unsigned int move) const {
+		return (((move) >> (2)) & (3));
+	}
 }
