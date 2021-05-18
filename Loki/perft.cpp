@@ -15,35 +15,6 @@ namespace Perft {
 		void perft(GameState_t* pos, int depth) {
 			
 			if (depth <= 0) {
-				std::array<neuron_t, INPUT_SIZE> net_input = net.get_input();
-
-				std::array<int8_t, INPUT_SIZE> initial_input;
-				initial_input.fill(0);
-
-				for (int i = PAWN; i <= KING; i++) {
-					Bitboard pceBoard = pos->pieceBBS[i][WHITE];
-
-					while (pceBoard) {
-						int sq = PopBit(&pceBoard);
-						initial_input[LNN::calculate_input_index(i, true, sq)] = 1;
-					}
-				}
-				for (int i = PAWN; i <= KING; i++) {
-					Bitboard pceBoard = pos->pieceBBS[i][BLACK];
-
-					while (pceBoard) {
-						int sq = PopBit(&pceBoard);
-						initial_input[LNN::calculate_input_index(i, false, sq)] = 1;
-					}
-				}
-
-				for (int i = 0; i < INPUT_SIZE; i++) {
-				
-					if (initial_input[i] != static_cast<int8_t>(net_input[i])) {
-						std::cout << "FAIL" << std::endl;
-					}
-				}
-
 				leaf_count += 1;
 				return;
 			}
@@ -65,13 +36,7 @@ namespace Perft {
 #endif
 
 			for (int m = 0; m < moves.size(); m++) {
-				net.network_updates.calculate_update(moves[m]->move,
-					pos->piece_on(FROMSQ(moves[m]->move), pos->side_to_move),
-					(pos->side_to_move == WHITE) ? (pos->piece_list[BLACK][TOSQ(moves[m]->move)] != NO_TYPE) : (pos->piece_list[WHITE][TOSQ(moves[m]->move)] != NO_TYPE),
-					pos->piece_on(TOSQ(moves[m]->move), (pos->side_to_move == WHITE) ? BLACK : WHITE),
-					(pos->side_to_move == WHITE) ? true : false
-				);
-				net.do_incremental();
+				
 				
 				if (!pos->make_move(moves[m])) {
 					continue;
@@ -80,7 +45,6 @@ namespace Perft {
 				perft(pos, depth - 1);
 
 				pos->undo_move();
-				net.undo_incremental();
 			}
 
 #if defined(PERFT_TT)
@@ -99,40 +63,12 @@ namespace Perft {
 
 		MoveList moves; moveGen::generate<ALL>(pos, &moves);
 
-		std::array<int8_t, INPUT_SIZE> initial_input;
-		initial_input.fill(0);
-
-		for (int i = PAWN; i <= KING; i++) {
-			Bitboard pceBoard = pos->pieceBBS[i][WHITE];
-
-			while (pceBoard) {
-				int sq = PopBit(&pceBoard);
-				initial_input[LNN::calculate_input_index(i, true, sq)] = 1;
-			}
-		}
-		for (int i = PAWN; i <= KING; i++) {
-			Bitboard pceBoard = pos->pieceBBS[i][BLACK];
-
-			while (pceBoard) {
-				int sq = PopBit(&pceBoard);
-				initial_input[LNN::calculate_input_index(i, false, sq)] = 1;
-			}
-		}
-
-		net.load_position(initial_input);
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();
 
 		int legal = 0;
 
 		for (int m = 0; m < moves.size(); m++) {
-			net.network_updates.calculate_update(moves[m]->move,
-				pos->piece_on(FROMSQ(moves[m]->move), pos->side_to_move),
-				(pos->side_to_move == WHITE) ? (pos->piece_list[BLACK][TOSQ(moves[m]->move)] != NO_TYPE) : (pos->piece_list[WHITE][TOSQ(moves[m]->move)] != NO_TYPE),
-				pos->piece_on(TOSQ(moves[m]->move), (pos->side_to_move == WHITE) ? BLACK : WHITE),
-				(pos->side_to_move == WHITE) ? true : false
-			);
-			net.do_incremental();
 
 			if (!pos->make_move(moves[m])) {
 				continue;
@@ -144,7 +80,6 @@ namespace Perft {
 			perft(pos, depth - 1);
 
 			pos->undo_move();
-			net.undo_incremental();
 
 			std::cout << "[" << legal << "] " << printMove(moves[m]->move) << "	---> " << (leaf_count - old_nodes) << " nodes." << std::endl;
 		}

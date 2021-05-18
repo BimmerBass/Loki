@@ -1,9 +1,7 @@
 #include "movegen.h"
-#include "lnn/network.h"
 
 #include <chrono>
 
-static LNN::Network net;
 
 namespace Perft {
 	extern long long leaf_count;
