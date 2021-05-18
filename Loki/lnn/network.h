@@ -12,8 +12,6 @@ namespace LNN {
 
     class Network {
     public:
-        Network();
-
         // The function used when evaluating the position
         int evaluate(bool fast = true);
 
