@@ -20,7 +20,7 @@ namespace LNN {
         };
 
         size_t size;
-        UpdatePoint deltas[4];
+        std::array<UpdatePoint, 4> deltas;
     };
 
     /*
@@ -32,7 +32,7 @@ namespace LNN {
         int evaluate(bool fast = true);
 
         // The function for updating the inputs incrementally.
-        void do_incremental();
+        void do_incremental(Update& update);
         void undo_incremental();
 
         // Method for loading a position which will then be updated incrementally afterwards

@@ -62,13 +62,13 @@ namespace LNN {
 				// Step 1A. Calculate the dot product of the input neurons and the weights between the layers
 				dot_product<neuron_t, INPUT_SIZE>(INPUT_LAYER.neurons, INPUT_LAYER.weights[i], FIRST_HIDDEN.neurons[i]);
 
-				// Add bias
-				FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
 			}
 		}
 
 		// Step 1B. For each neuron in the hidden layer, apply the activation function (do_incremental doesn't do this, so we need to do this extra loop here)
+		// Also, add its bias beforehand. We do this since all weight calculations are already done, regardless of the value of "fast".
 		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
 			FIRST_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(FIRST_HIDDEN.neurons[i]);
 		}
 
@@ -98,7 +98,30 @@ namespace LNN {
 	/*
 	Make a move incrementally
 	*/
-	void Network::do_incremental() {
+	void Network::do_incremental(Update& update) {
+
+		for (size_t i = 0; i < update.size; i++) {
+
+			assert((INPUT_LAYER.neurons[update.deltas[i].index] == 0 && update.deltas[i].delta == 1)
+				|| (INPUT_LAYER.neurons[update.deltas[i].index] == 1 && update.deltas[i].delta == -1));
+
+			// Step 1. Update the input.
+			INPUT_LAYER.neurons[update.deltas[i].index] += static_cast<neuron_t>(update.deltas[i].delta);
+
+			// Step 2. Now update all connections to the first hidden layer from this, updated, neuron
+			for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+				if (update.deltas[i].delta == 1) {
+					FIRST_HIDDEN.neurons[n] += INPUT_LAYER.weights[n][update.deltas[i].index];
+				}
+				else {
+					FIRST_HIDDEN.neurons[n] -= INPUT_LAYER.weights[n][update.deltas[i].index];
+				}
+			}
+
+		}
+
+		// Step 3. Now save this update point such that we can easily undo the incremental update later on.
+		changes.push_back(update);
 	}
 
 
@@ -106,6 +129,31 @@ namespace LNN {
 	Undo a move. We just delete the latest change of the input layer
 	*/
 	void Network::undo_incremental() {
+		assert(changes.size() > 0);
+
+		// Copy the last change made in the network
+		Update* update = &changes[changes.size()];
+
+		for (size_t i = 0; i < update->size; i++) {
+			assert((INPUT_LAYER.neurons[update->deltas[i].index] == 0 && update->deltas[i].delta == -1)
+				|| (INPUT_LAYER.neurons[update->deltas[i].index] == 1 && update->deltas[i].delta == 1));
+
+			// Step 1. Change the input back
+			INPUT_LAYER.neurons[update->deltas[i].index] -= static_cast<neuron_t>(update->deltas[i].delta);
+
+			// Step 2. Change all connections to the first hidden layer
+			for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+				if (update->deltas[i].delta == 1) {
+					FIRST_HIDDEN.neurons[n] -= INPUT_LAYER.weights[n][update->deltas[i].index];
+				}
+				else {
+					FIRST_HIDDEN.neurons[n] += INPUT_LAYER.weights[n][update->deltas[i].index];
+				}
+			}
+		}
+
+		// Step 3. Now delete the last written element
+		changes.pop_back();
 	}
 
 }
