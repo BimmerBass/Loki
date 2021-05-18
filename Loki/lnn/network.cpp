@@ -60,12 +60,15 @@ namespace LNN {
 				// Step 1A. Calculate the dot product of the input neurons and the weights between the layers
 				dot_product<neuron_t, INPUT_SIZE>((INPUT_LAYER.back()).neurons, (INPUT_LAYER.back()).weights[i], FIRST_HIDDEN.neurons[i]);
 
-				// Add bias and apply the activation function
+				// Add bias
 				FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
-				FIRST_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(FIRST_HIDDEN.neurons[i]);
 			}
 		}
 
+		// Step 1B. For each neuron in the hidden layer, apply the activation function (do_incremental doesn't do this, so we need to do this extra loop here)
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			FIRST_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(FIRST_HIDDEN.neurons[i]);
+		}
 
 		// Step 2. Now calculate all other layers starting with first hidden to second hidden
 		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
@@ -87,6 +90,46 @@ namespace LNN {
 		dot_product<neuron_t, HIDDEN_STD_SIZE>(THIRD_HIDDEN.neurons, THIRD_HIDDEN.weights[0], OUTPUT_LAYER.neurons[0]);
 
 		return static_cast<int>(OUTPUT_LAYER.neurons[0]);
+	}
+
+
+	/*
+	Make a move incrementally
+	*/
+	void Network::do_incremental() {
+		// Step 1. Update the input layer
+		// Copy the current input layer and add it to the back of the vector
+		INPUT_LAYER.push_back(INPUT_LAYER.back());
+
+		for (int i = 0; i < network_updates.changes; i++) {
+			// Make sure we dont update something impossible
+			assert(((INPUT_LAYER.back()).neurons[network_updates.updates[i].index] == 1 && network_updates.updates[i].delta == -1)
+				|| ((INPUT_LAYER.back()).neurons[network_updates.updates[i].index] == 0 && network_updates.updates[i].delta == 1));
+			// Make the update
+			(INPUT_LAYER.back()).neurons[network_updates.updates[i].index] += network_updates.updates[i].delta;
+		}
+
+		// Step 2. Propagate these updates to the hidden layer
+		for (int i = 0; i < network_updates.changes; i++) {
+
+			for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
+				if (network_updates.updates[i].delta == 1) { // Add
+					FIRST_HIDDEN.neurons[j] += (INPUT_LAYER.back()).weights[j][network_updates.updates[i].index];
+				}
+				else { // Subtract.
+					FIRST_HIDDEN.neurons[j] -= (INPUT_LAYER.back()).weights[j][network_updates.updates[i].index];
+				}
+			}
+		}
+
+	}
+
+
+	/*
+	Undo a move. We just delete the latest change of the input layer
+	*/
+	void Network::undo_incremental() {
+		INPUT_LAYER.pop_back();
 	}
 
 

@@ -27,6 +27,7 @@ namespace LNN {
         //  3. If a piece is captured, that piece will be removed from the board.
         //  4. If the move is a castling move, two pieces are moved simultaneously. The rook and king.
         Change updates[4];
+        size_t changes = 0;
     private:
         int fromSq(const unsigned int move) const;
         int toSq(const unsigned int move) const;
@@ -44,8 +45,8 @@ namespace LNN {
         int evaluate(bool fast = true);
 
         // The function for updating the inputs incrementally.
-        void do_incremental(const Update& parameters);
-        void undo_incremental(const Update& parameters);
+        void do_incremental();
+        void undo_incremental();
 
         // Method for loading a position which will then be updated incrementally afterwards
         void load_position(std::array<int8_t, INPUT_SIZE>& pos);
