@@ -12,6 +12,17 @@
 
 namespace LNN {
 
+    // This structure implementation is taken from Halogen's code.
+    struct Update {
+        struct UpdatePoint {
+            size_t index;
+            int delta;
+        };
+
+        size_t size;
+        UpdatePoint deltas[4];
+    };
+
     /*
     Network class
     */
@@ -46,6 +57,10 @@ namespace LNN {
         Layer<HIDDEN_STD_SIZE, HIDDEN_STD_SIZE, neuron_t> SECOND_HIDDEN;
         Layer<HIDDEN_STD_SIZE, OUTPUT_SIZE, neuron_t> THIRD_HIDDEN;
         Layer<OUTPUT_SIZE, 0, neuron_t> OUTPUT_LAYER;
+
+        // This vector holds all Update's that has been used incrementally to get to this position.
+        // They are used to undo an incremental update
+        std::vector<Update> changes;
     };
 
     constexpr int piece_conversion[2][6] = {
