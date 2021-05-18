@@ -15,7 +15,7 @@ namespace LNN {
         Network();
 
         // The function used when evaluating the position
-        int evaluate();
+        int evaluate(bool fast = true);
 
         // The function for updating the inputs incrementally.
         void do_incremental();

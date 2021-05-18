@@ -17,6 +17,14 @@ void dot_product(std::array<T, SIZE>& v1, std::array<T, SIZE>& v2, T& out) {
 	}
 }
 
+// ReLU activation function
+template<typename T, size_t SIZE>
+void apply_ReLU(std::array<T, SIZE>& v) {
+
+	for (int i = 0; i < SIZE; i++) {
+		v[i] = std::max(T(0), v[i]);
+	}
+}
 
 namespace LNN {
 
@@ -37,5 +45,53 @@ namespace LNN {
 		}
 	}
 
+
+	/*
+	
+	Evaluate a position through forward-propagation. This is the main method used in the network class.
+	The parameter "fast" is used to determine how much of the net should be calculated.
+		- true: Calculate from the first hidden layer, which is already calculated itself from the inverse updates.
+		- false: Calculate the entire network from the input
+	*/
+	int Network::evaluate(bool fast) {
+
+		// Step 1. If we're told to do a full calculation, compute the first hidden layer
+		if (!fast) {
+
+			for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+
+				// Step 1A. Calculate the dot product of the input neurons and the weights between the layers
+				dot_product<neuron_t, INPUT_SIZE>(INPUT_LAYER.neurons, INPUT_LAYER.weights[i], FIRST_HIDDEN.neurons[i]);
+
+				// Add bias
+				FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
+			}
+
+			// Apply the ReLU activation function
+			apply_ReLU<neuron_t, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN.neurons);
+		}
+
+
+		// Step 2. Now calculate all other layers starting with first hidden to second hidden
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			dot_product<neuron_t, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN.neurons, FIRST_HIDDEN.weights[i], SECOND_HIDDEN.neurons[i]);
+
+			SECOND_HIDDEN.neurons[i] += SECOND_HIDDEN.biases[i];
+		}
+		apply_ReLU<neuron_t, HIDDEN_STD_SIZE>(SECOND_HIDDEN.neurons);
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			dot_product<neuron_t, HIDDEN_STD_SIZE>(SECOND_HIDDEN.neurons, SECOND_HIDDEN.weights[i], THIRD_HIDDEN.neurons[i]);
+
+			THIRD_HIDDEN.neurons[i] += THIRD_HIDDEN.biases[i];
+		}
+
+		apply_ReLU<neuron_t, HIDDEN_STD_SIZE>(THIRD_HIDDEN.neurons);
+
+		// Step 3. Now calculate the output, but don't apply an activation function or a bias
+		dot_product<neuron_t, HIDDEN_STD_SIZE>(THIRD_HIDDEN.neurons, THIRD_HIDDEN.weights[0], OUTPUT_LAYER.neurons[0]);
+
+		return static_cast<int>(OUTPUT_LAYER.neurons[0]);
+	}
 
 }
