@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <assert.h>
+#include <string>
 
 #include "types/layer.h"
 #include "types/architecture.h"
@@ -23,6 +24,8 @@ namespace LNN {
         // Method for loading a position which will then be updated incrementally afterwards
         void load_position(std::array<int8_t, INPUT_SIZE>& pos);
 
+        // Method for loading a network from a file. This should always be used at startup.
+        void load_net(std::string file_path);
     private:
         // For the network, we use the following architecture:
         //  768 input neurons --> There are 12 pieces with 64 squares each
