@@ -23,7 +23,7 @@ namespace LNN {
     // Class for updating the network inputs incrementally. This is inspired from Halogen
     class Update {
     public:
-        void calculate_update(unsigned int move, int piece_moved, bool is_capture, int piece_captured);
+        void calculate_update(const unsigned int move, const int piece_moved, const bool is_capture, const int piece_captured, const bool white_to_move);
 
         struct Change {
             int index = 0;  /* What index should be updated */

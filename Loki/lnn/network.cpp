@@ -146,4 +146,70 @@ namespace LNN {
 	int Update::promotion_piece(const unsigned int move) const {
 		return (((move) >> (2)) & (3));
 	}
+
+
+	/*
+	
+	This method sets up all changes that should be applied to the input layer
+
+	*/
+	void Update::calculate_update(const unsigned int move, const int piece_moved, const bool is_capture, const int piece_captured, const bool white_to_move) {
+
+		changes = 0; // Start by assuming we don't want to change anything
+
+		// Step 1. Prepare the piece moved to be removed from the origin square
+		updates[changes].delta = -1;
+		updates[changes].index = calculate_input_index(piece_moved, white_to_move, fromSq(move));
+		changes++;
+
+
+		// Step 2. Prepare a piece to be placed on the destination square.
+		if (special_flag(move) != 0) { // Not a promotion. Add the piece moved to the destination
+			updates[changes].delta = 1;
+			updates[changes].index = calculate_input_index(piece_moved, white_to_move, toSq(move));
+		}
+		else { // Add the promotion piece.
+			updates[changes].delta = 1;
+			updates[changes].index = calculate_input_index(promotion_piece(move) + 1, white_to_move, toSq(move));
+		}
+		changes++;
+
+		// Step 3. If the move is a castling move, the rook's move should be set in the last two entries
+		if (special_flag(move) == 2) {
+
+			int origin_sq;
+			int dest_sq;
+			bool king_side = toSq(move) > fromSq(move);
+			if (white_to_move) {
+				origin_sq = king_side ? 7 : 0;
+				dest_sq = king_side ? 5 : 3;
+			}
+			else {
+				origin_sq = king_side ? 63 : 56;
+				dest_sq = king_side ? 61 : 59;
+			}
+
+			updates[changes].delta = -1;
+			updates[changes].index = calculate_input_index(3, white_to_move, origin_sq);
+			changes++;
+			updates[changes].delta = 1;
+			updates[changes].index = calculate_input_index(3, white_to_move, dest_sq);
+		}
+		else {
+			// Step 4. If the move is a capture, set the captured piece to be removed
+			if (is_capture) {
+				updates[changes].delta = -1;
+				updates[changes].index = calculate_input_index(piece_captured, !white_to_move, toSq(move));
+				changes++;
+			}
+			else if (special_flag(move) == 1) { // En passant
+				int capture_sq = (white_to_move) ? toSq(move) - 8 : toSq(move) + 8;
+
+				updates[changes].delta = 1;
+				updates[changes].index = calculate_input_index(0, !white_to_move, capture_sq);
+			}
+		}
+
+		assert(changes <= 3);
+	}
 }
