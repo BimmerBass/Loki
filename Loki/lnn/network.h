@@ -10,11 +10,20 @@
 #include "types/architecture.h"
 
 namespace LNN {
+    // piece_type should go from 0 to 5, and square should go from 0 to 63.
+    inline int calculate_input_index(int piece_type, bool white, int sq) {
+        if (white) {
+            return (64 * piece_type + sq);
+        }
+        else {
+            return (6 * 64 + 64 * piece_type + sq);
+        }
+    }
 
     // Class for updating the network inputs incrementally. This is inspired from Halogen
     class Update {
     public:
-        void calculate_update(unsigned int move, bool is_capture, int piece_captured);
+        void calculate_update(unsigned int move, int piece_moved, bool is_capture, int piece_captured);
 
         struct Change {
             int index = 0;  /* What index should be updated */
