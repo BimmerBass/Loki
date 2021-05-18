@@ -18,12 +18,9 @@ void dot_product(std::array<T, SIZE>& v1, std::array<T, SIZE>& v2, T& out) {
 }
 
 // ReLU activation function
-template<typename T, size_t SIZE>
-void apply_ReLU(std::array<T, SIZE>& v) {
-
-	for (int i = 0; i < SIZE; i++) {
-		v[i] = std::max(T(0), v[i]);
-	}
+template<typename T>
+T apply_ReLU(T v) {
+	return std::max(T(0), v);
 }
 
 namespace LNN {
@@ -63,12 +60,10 @@ namespace LNN {
 				// Step 1A. Calculate the dot product of the input neurons and the weights between the layers
 				dot_product<neuron_t, INPUT_SIZE>(INPUT_LAYER.neurons, INPUT_LAYER.weights[i], FIRST_HIDDEN.neurons[i]);
 
-				// Add bias
+				// Add bias and apply the activation function
 				FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
+				FIRST_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(FIRST_HIDDEN.neurons[i]);
 			}
-
-			// Apply the ReLU activation function
-			apply_ReLU<neuron_t, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN.neurons);
 		}
 
 
@@ -77,16 +72,16 @@ namespace LNN {
 			dot_product<neuron_t, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN.neurons, FIRST_HIDDEN.weights[i], SECOND_HIDDEN.neurons[i]);
 
 			SECOND_HIDDEN.neurons[i] += SECOND_HIDDEN.biases[i];
+			SECOND_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(SECOND_HIDDEN.neurons[i]);
 		}
-		apply_ReLU<neuron_t, HIDDEN_STD_SIZE>(SECOND_HIDDEN.neurons);
 
 		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
 			dot_product<neuron_t, HIDDEN_STD_SIZE>(SECOND_HIDDEN.neurons, SECOND_HIDDEN.weights[i], THIRD_HIDDEN.neurons[i]);
 
 			THIRD_HIDDEN.neurons[i] += THIRD_HIDDEN.biases[i];
+			THIRD_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(THIRD_HIDDEN.neurons[i]);
 		}
-
-		apply_ReLU<neuron_t, HIDDEN_STD_SIZE>(THIRD_HIDDEN.neurons);
+		
 
 		// Step 3. Now calculate the output, but don't apply an activation function or a bias
 		dot_product<neuron_t, HIDDEN_STD_SIZE>(THIRD_HIDDEN.neurons, THIRD_HIDDEN.weights[0], OUTPUT_LAYER.neurons[0]);
