@@ -153,7 +153,6 @@
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="evaluation.cpp" />
     <ClCompile Include="lnn\network.cpp" />
-    <ClCompile Include="lnn\types\layer.cpp" />
     <ClCompile Include="magics.cpp" />
     <ClCompile Include="main.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">USE_POPCNT</PreprocessorDefinitions>

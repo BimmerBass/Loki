@@ -5,20 +5,12 @@
 #include <cstdint>
 #include <assert.h>
 #include <string>
+#include <iostream>
 
 #include "types/layer.h"
 #include "types/architecture.h"
 
 namespace LNN {
-    // piece_type should go from 0 to 5, and square should go from 0 to 63.
-    inline int calculate_input_index(int piece_type, bool white, int sq) {
-        if (white) {
-            return (64 * piece_type + sq);
-        }
-        else {
-            return (6 * 64 + 64 * piece_type + sq);
-        }
-    }
 
     // Class for updating the network inputs incrementally. This is inspired from Halogen
     class Update {
@@ -50,6 +42,8 @@ namespace LNN {
     */
     class Network {
     public:
+        Network();
+
         // The function used when evaluating the position
         int evaluate(bool fast = true);
 
@@ -61,7 +55,11 @@ namespace LNN {
         void load_position(std::array<int8_t, INPUT_SIZE>& pos);
 
         // Method for loading a network from a file. This should always be used at startup.
-        void load_net(std::string file_path);
+        //void load_net(std::string file_path);
+
+        std::array<neuron_t, INPUT_SIZE> get_input() {
+            return (INPUT_LAYER.back()).neurons;
+        }
 
         Update network_updates;
     private:
@@ -77,6 +75,16 @@ namespace LNN {
         Layer<HIDDEN_STD_SIZE, OUTPUT_SIZE, neuron_t> THIRD_HIDDEN;
         Layer<OUTPUT_SIZE, 0, neuron_t> OUTPUT_LAYER;
     };
+
+    constexpr int piece_conversion[2][6] = {
+        {6, 7, 8, 9, 10, 11},
+        {0, 1, 2, 3, 4, 5}
+    };
+
+    // piece_type should go from 0 to 5, and square should go from 0 to 63.
+    inline int calculate_input_index(int piece_type, bool white, int sq) {
+        return 64 * piece_conversion[(white) ? 1 : 0][piece_type] + sq;
+    }
 }
 
 

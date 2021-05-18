@@ -69,9 +69,6 @@
     <ClCompile Include="lnn\network.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lnn\types\layer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitboard.h">

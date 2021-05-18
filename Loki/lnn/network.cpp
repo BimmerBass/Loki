@@ -25,6 +25,12 @@ T apply_ReLU(T v) {
 
 namespace LNN {
 
+	LNN::Network::Network() {
+		Layer<INPUT_SIZE, FIRST_HIDDEN_SIZE, neuron_t> first_layer;
+
+		INPUT_LAYER.push_back(first_layer);
+	}
+
 	/*
 	
 	Load a position into the input. This will be done when we're given the position by the GUI.
@@ -32,6 +38,11 @@ namespace LNN {
 
 	*/
 	void Network::load_position(std::array<int8_t, INPUT_SIZE>& pos) {
+
+		INPUT_LAYER.clear();
+		Layer<INPUT_SIZE, FIRST_HIDDEN_SIZE, neuron_t> first_layer;
+
+		INPUT_LAYER.push_back(first_layer);
 
 		// Loop through the inputs
 		for (int i = 0; i < INPUT_SIZE; i++) {
@@ -103,8 +114,12 @@ namespace LNN {
 
 		for (int i = 0; i < network_updates.changes; i++) {
 			// Make sure we dont update something impossible
-			assert(((INPUT_LAYER.back()).neurons[network_updates.updates[i].index] == 1 && network_updates.updates[i].delta == -1)
-				|| ((INPUT_LAYER.back()).neurons[network_updates.updates[i].index] == 0 && network_updates.updates[i].delta == 1));
+			//assert(((INPUT_LAYER.back()).neurons[network_updates.updates[i].index] == 1 && network_updates.updates[i].delta == -1)
+			//	|| ((INPUT_LAYER.back()).neurons[network_updates.updates[i].index] == 0 && network_updates.updates[i].delta == 1));
+			if (!(((INPUT_LAYER.back()).neurons[network_updates.updates[i].index] == 1 && network_updates.updates[i].delta == -1)
+				|| ((INPUT_LAYER.back()).neurons[network_updates.updates[i].index] == 0 && network_updates.updates[i].delta == 1))) {
+				std::cout << "FUUCK" << std::endl;
+			}
 			// Make the update
 			(INPUT_LAYER.back()).neurons[network_updates.updates[i].index] += network_updates.updates[i].delta;
 		}
@@ -155,27 +170,37 @@ namespace LNN {
 	*/
 	void Update::calculate_update(const unsigned int move, const int piece_moved, const bool is_capture, const int piece_captured, const bool white_to_move) {
 
-		changes = 0; // Start by assuming we don't want to change anything
+		changes = 0;
 
-		// Step 1. Prepare the piece moved to be removed from the origin square
 		updates[changes].delta = -1;
 		updates[changes].index = calculate_input_index(piece_moved, white_to_move, fromSq(move));
 		changes++;
 
+		if (special_flag(move) != 0) { // Not a promotion
 
-		// Step 2. Prepare a piece to be placed on the destination square.
-		if (special_flag(move) != 0) { // Not a promotion. Add the piece moved to the destination
+			// Add the piece to the destination square
 			updates[changes].delta = 1;
 			updates[changes].index = calculate_input_index(piece_moved, white_to_move, toSq(move));
+			changes++;
 		}
-		else { // Add the promotion piece.
-			updates[changes].delta = 1;
-			updates[changes].index = calculate_input_index(promotion_piece(move) + 1, white_to_move, toSq(move));
-		}
-		changes++;
 
-		// Step 3. If the move is a castling move, the rook's move should be set in the last two entries
-		if (special_flag(move) == 2) {
+		// En passant
+		if (special_flag(move) == 1) {
+			updates[changes].delta = -1;
+			
+			int capture_sq = (white_to_move) ? toSq(move) - 8 : toSq(move) + 8;
+			updates[changes].index = calculate_input_index(0, !white_to_move, capture_sq);
+			changes++;
+		}
+
+		if (is_capture) {
+			updates[changes].delta = -1;
+			updates[changes].index = calculate_input_index(piece_captured, !white_to_move, toSq(move));
+			changes++;
+		}
+
+		// Castle move
+		/*if (special_flag(move) == 2) {
 
 			int origin_sq;
 			int dest_sq;
@@ -194,20 +219,18 @@ namespace LNN {
 			changes++;
 			updates[changes].delta = 1;
 			updates[changes].index = calculate_input_index(3, white_to_move, dest_sq);
-		}
-		else {
-			// Step 4. If the move is a capture, set the captured piece to be removed
-			if (is_capture) {
-				updates[changes].delta = -1;
-				updates[changes].index = calculate_input_index(piece_captured, !white_to_move, toSq(move));
-				changes++;
-			}
-			else if (special_flag(move) == 1) { // En passant
-				int capture_sq = (white_to_move) ? toSq(move) - 8 : toSq(move) + 8;
+			changes++;
+		}*/
 
-				updates[changes].delta = 1;
-				updates[changes].index = calculate_input_index(0, !white_to_move, capture_sq);
-			}
+		// Promotions
+		if (special_flag(move) == 0) {
+			updates[changes].delta = 1;
+			updates[changes].index = calculate_input_index(promotion_piece(move) + 1, white_to_move, toSq(move));
+			changes++;
+
+			updates[changes].delta = -1;
+			updates[changes].index = calculate_input_index(piece_moved, white_to_move, fromSq(move));
+			changes++;
 		}
 
 		assert(changes <= 3);
