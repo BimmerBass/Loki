@@ -1,6 +1,22 @@
 #include "network.h"
 
 
+/*
+
+Compute the dot-product between two vectors (std::array).
+
+*/
+template<typename T, size_t SIZE>
+void dot_product(std::array<T, SIZE>& v1, std::array<T, SIZE>& v2, T& out) {
+
+	out = 0;
+
+	// A vector dot product is just a sum of element-wise multiplications
+	for (int i = 0; i < SIZE; i++) {
+		out += v1[i] * v2[i];
+	}
+}
+
 
 namespace LNN {
 
