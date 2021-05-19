@@ -160,4 +160,71 @@ namespace LNN {
 		changes.pop_back();
 	}
 
+
+	/*
+	
+	Functions for loading a network from a file. This can be done two ways: By reading a csv (debug/development) or a binary file.
+	
+	*/
+	template<>
+	void Network::load_net<BIN>(std::string file_path) {
+		return;
+	}
+
+
+	// Helper function to split a string by semi-colons
+	std::vector<std::string> split_string(std::string s) {
+		std::vector<std::string> out;
+
+		std::string curr_string = "";
+
+		for (int i = 0; i < s.length(); i++) {
+			if (s[i] == ';') {
+				out.push_back(curr_string);
+				curr_string = "";
+				continue;
+			}
+			curr_string += s[i];
+		}
+		return out;
+	}
+
+	// Helper function to extract all numbers in the csv file.
+	std::vector<std::vector<neuron_t>> read_csv(std::string fp) {
+		// Step 1. Initialize the data matrix and open the file
+		std::vector<std::vector<neuron_t>> data;
+		std::ifstream csv_file(fp);
+
+		std::string line = "";
+
+		// Step 2. Read the file line-by-line
+		while (std::getline(csv_file, line)) {
+			// Step 2A. Split the string.
+			std::vector<std::string> sl = split_string(line);
+			std::vector<neuron_t> row;
+			double tmp = 0.0;
+			// Step 2B. For each string in the vector of strings, convert it to a double and then to a neuron_t.
+			for (int i = 0; i < sl.size(); i++) {
+				tmp = std::stod(sl[i]);
+
+				row.push_back(static_cast<neuron_t>(tmp));
+			}
+			data.push_back(row);
+		}
+
+		return data;
+	}
+
+	template<>
+	void Network::load_net<CSV>(std::string file_path) {
+
+		// Step 1. Open the csv file and extract the numbers
+		std::vector<std::vector<neuron_t>> data = read_csv(file_path);
+		
+		std::cout << "Length of first bias layer: " << data[0].size() << std::endl;
+
+		for (int i = 0; i < data[0].size(); i++) {
+			std::cout << i << ": " << data[0][i] << std::endl;
+		}
+	}
 }
