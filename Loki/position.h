@@ -112,7 +112,7 @@ public:
 	LNN::Update delta;	// Used for updating the network incrementally
 	LNN::Update& compute_updates(unsigned int move);
 
-	void setup_network() const; // Used when parsing an FEN or if the user suddenly wants to use the network
+	void setup_network(); // Used when parsing an FEN or if the user suddenly wants to use the network
 
 	/*
 	Debugging functions

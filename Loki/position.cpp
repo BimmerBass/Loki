@@ -1135,7 +1135,7 @@ LNN::Update& GameState_t::compute_updates(unsigned int move){
 }
 
 
-void GameState_t::setup_network() const {
+void GameState_t::setup_network() {
 	// Step 1. Set up an array to pass to LNN
 	std::array<int8_t, INPUT_SIZE> network_inputs;
 	network_inputs.fill(0);
