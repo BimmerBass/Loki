@@ -442,7 +442,11 @@ bool GameState_t::make_move(Move_t* move) {
 
 	posKey ^= BBS::Zobrist::castling_keys[castleRights];
 	posKey ^= (enPasSq == NO_SQ) ? 0 : BBS::Zobrist::empty_keys[enPasSq];
-	
+
+	// Step 3A. Before changing the GameState_t object, update the network (if we're using it)
+	if (use_lnn) {
+		net.do_incremental(compute_updates(move.move));
+	}
 
 	// Step 4. Remove the piece moved from the origin and place it on destination. Additionally, xor out from posKey
 
@@ -617,6 +621,11 @@ void GameState_t::undo_move() {
 
 	int piece_moved = info->piece_moved;
 	int piece_captured = info->piece_captured;
+
+	// Step 1A. Revert the network update
+	if (use_lnn) {
+		net.undo_incremental();
+	}
 
 	// Step 2. Toggle the side to move.
 	side_to_move = (side_to_move == WHITE) ? BLACK : WHITE;
@@ -1043,4 +1052,79 @@ bool GameState_t::is_ok() {
 	}
 
 	return true;
+}
+
+
+
+/*
+
+Neural network implementation
+
+*/
+LNN::Update& GameState_t::compute_updates(unsigned int move){
+
+	// Assume we wont change anything of the network
+	delta.size = 0;
+
+	int piece_moved = piece_list[side_to_move];
+	bool is_white = side_to_move == WHITE;
+
+	// All moves result in the piece moved leaving the square, so set this change
+	delta.deltas[delta.size].delta = -1;
+	delta.deltas[delta.size].index = LNN::calculate_input_index(piece_moved, is_white, FROMSQ(move));
+	delta.size++;
+
+	// If we're not promoting, the piece moved should end up on the destination square
+	if (SPECIAL(move) != PROMOTION){
+		delta.deltas[delta.size].delta = 1;
+		delta.deltas[delta.size].index = LNN::calculate_input_index(piece_moved, is_white, TOSQ(move));
+		delta.size++;
+	}
+	else{ // If it is a promotion, place the pnew piece on the destination
+		delta.deltas[delta.size].delta = 1;
+		delta.deltas[delta.size].index = LNN::calculate_input_index(PROMTO(move) + 1, is_white, TOSQ(move));
+		delta.size++;
+	}
+
+	// If it is a capture, we need to remove the opponent piece from the destination square
+	bool is_capture = piece_list[(side_to_move == WHITE) ? BLACK:WHITE][TOSQ(move)] != NO_TYPE;
+	int piece_captured = piece_list[(side_to_move == WHITE) ? BLACK:WHITE][TOSQ(move)];
+
+	if (is_capture){
+		delta.deltas[delta.size].delta = -1;
+		delta.deltas[delta.size].index = LNN::calculate_input_index(piece_captured, !is_white, TOSQ(move));
+		delta.size++;
+	}
+	else if (SPECIAL(move) == ENPASSANT){ // En-passant handling
+		delta.deltas[delta.size].delta = -1
+		delta.deltas[delta.size].index = LNN::calculate_input_index(PAWN, !is_white,
+		 (side_to_move == WHITE) ? TOSQ(mpve) - 8:TOSQ(move) + 8);
+		delta.size++;
+	}
+
+	// Castling should hold the king's position change and the rook's
+	else if (SPECIAL(move) == CASTLING){
+		bool is_kingside = (TOSQ(move) > FROMSQ(move));
+		
+		int rook_origin = NO_SQ;
+		int rook_destination = NO_SQ;
+
+		if (is_white) {
+			rook_origin = (is_kingside) ? H1 : A1;
+			rook_destination = (is_kingside) ? F1 : D1;
+		}
+		else{
+			rook_origin = (is_kingside) ? H8 : A8;
+			rook_destination = (is_kingside) ? F8 : H8;
+		}
+		delta.deltas[delta.size].delta = -1;
+		delta.deltas[delta.size].index = LNN::calculate_input_index(ROOK, is_white, rook_origin);
+		delta.size++;
+		delta.deltas[delta.size].delta = 1;
+		delta.deltas[delta.size].index = LNN::calculate_input_index(ROOK, is_white, rook_destination);
+		delta.size++;
+	}
+
+	assert(delta.size <= 3);
+	return delta;
 }

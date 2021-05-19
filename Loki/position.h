@@ -4,6 +4,7 @@
 
 #include "bitboard.h"
 #include "move.h"
+#include "lnn/network.h"
 
 #if !defined(_MSC_VER)
 #include <cstring> // To use strcpy with GCC
@@ -101,6 +102,15 @@ public:
 
 	int see(unsigned int move) const;
 
+	/*
+	Functions and objects for using the neural network.
+		Use of the network should be user specified since a file to load should be given.
+	*/
+	bool use_lnn = false;
+	LNN::Network net;
+
+	LNN::Update delta;	// Used for updating the network incrementally
+	LNN::Update& compute_updates(unsigned int move);
 
 	/*
 	Debugging functions
