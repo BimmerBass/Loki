@@ -38,4 +38,7 @@ namespace Perft {
 	};
 
 	extern PerftTable* pt;
+
+
+	bool check_incremental_updates(GameState_t* pos);
 }

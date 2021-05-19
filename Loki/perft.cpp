@@ -128,4 +128,43 @@ namespace Perft {
 		return nullptr;
 	}
 
+	bool check_incremental_updates(GameState_t* pos){
+		std::array<neuron_t, INPUT_SIZE> desired_inputs;
+		desired_inputs.fill(0);
+
+		Bitboard piece_board = 0;
+		int sq = NO_SQ;
+
+
+		for (int pce = PAWN; pce <= KING; pce++){
+			piece_board = pieceBBS[pce][WHITE];
+
+			while (piece_board){
+				sq = PopBit(&piece_board);
+
+				desired_inputs[LNN::calculate_input_index(pce, true, sq)] = 1;
+			}
+		}
+
+		for (int pce = PAWN; pce <= KING; pce++){
+			piece_board = pieceBBS[pce][BLACK];
+
+			while (piece_board){
+				sq = PopBit(&piece_board);
+
+				desired_inputs[LNN::calculate_input_index(pce, false, sq)] = 1;
+			}
+		}
+
+		std::array<neuron_t, INPUT_SIZE> real_inputs = pos->net.get_input();
+
+		for (int i = 0; i < INPUT_SIZE; i++){
+			if (real_inputs[i] != desired_inputs[i]){
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 }
