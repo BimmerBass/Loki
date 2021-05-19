@@ -6,7 +6,7 @@
 namespace Perft {
 	extern long long leaf_count;
 
-	constexpr bool CHECK_NETWORK = true;
+	constexpr bool CHECK_NETWORK = false;
 	
 	void perftTest(GameState_t* pos, int depth);
 
