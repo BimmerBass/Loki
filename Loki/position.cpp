@@ -445,7 +445,7 @@ bool GameState_t::make_move(Move_t* move) {
 
 	// Step 3A. Before changing the GameState_t object, update the network (if we're using it)
 	if (use_lnn) {
-		net.do_incremental(compute_updates(move.move));
+		net.do_incremental(compute_updates(move->move));
 	}
 
 	// Step 4. Remove the piece moved from the origin and place it on destination. Additionally, xor out from posKey
@@ -624,7 +624,7 @@ void GameState_t::undo_move() {
 
 	// Step 1A. Revert the network update
 	if (use_lnn) {
-		net.undo_incremental();
+		net.undo_incremental();	
 	}
 
 	// Step 2. Toggle the side to move.
@@ -1066,7 +1066,7 @@ LNN::Update& GameState_t::compute_updates(unsigned int move){
 	// Assume we wont change anything of the network
 	delta.size = 0;
 
-	int piece_moved = piece_list[side_to_move];
+	int piece_moved = piece_list[side_to_move][FROMSQ(move)];
 	bool is_white = side_to_move == WHITE;
 
 	// All moves result in the piece moved leaving the square, so set this change
@@ -1096,9 +1096,9 @@ LNN::Update& GameState_t::compute_updates(unsigned int move){
 		delta.size++;
 	}
 	else if (SPECIAL(move) == ENPASSANT){ // En-passant handling
-		delta.deltas[delta.size].delta = -1
+		delta.deltas[delta.size].delta = -1;
 		delta.deltas[delta.size].index = LNN::calculate_input_index(PAWN, !is_white,
-		 (side_to_move == WHITE) ? TOSQ(mpve) - 8:TOSQ(move) + 8);
+		 (side_to_move == WHITE) ? TOSQ(move) - 8:TOSQ(move) + 8);
 		delta.size++;
 	}
 

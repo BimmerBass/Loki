@@ -40,7 +40,7 @@ endif
 
 SRC_PATH=Loki
 
-FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cpp movegen.cpp perft.cpp position.cpp psqt.cpp search.cpp see.cpp thread.cpp transposition.cpp uci.cpp texel.cpp
+FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cpp movegen.cpp lnn/network.cpp perft.cpp position.cpp psqt.cpp search.cpp see.cpp thread.cpp transposition.cpp uci.cpp texel.cpp
 
 SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
