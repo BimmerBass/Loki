@@ -15,6 +15,12 @@ namespace Perft {
 		void perft(GameState_t* pos, int depth) {
 			
 			if (depth <= 0) {
+				if (CHECK_NETWORK){
+					if (!check_incremental_updates(pos)){
+						std::cout << "Error with incremental updates" << std::endl;
+					}
+				}
+
 				leaf_count += 1;
 				return;
 			}
@@ -62,7 +68,10 @@ namespace Perft {
 
 
 		MoveList moves; moveGen::generate<ALL>(pos, &moves);
-
+		if (CHECK_NETWORK){
+			pos->use_lnn = true;
+			pos->setup_network();
+		}
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();
 
@@ -137,7 +146,7 @@ namespace Perft {
 
 
 		for (int pce = PAWN; pce <= KING; pce++){
-			piece_board = pieceBBS[pce][WHITE];
+			piece_board = pos->pieceBBS[pce][WHITE];
 
 			while (piece_board){
 				sq = PopBit(&piece_board);
@@ -147,7 +156,7 @@ namespace Perft {
 		}
 
 		for (int pce = PAWN; pce <= KING; pce++){
-			piece_board = pieceBBS[pce][BLACK];
+			piece_board = pos->pieceBBS[pce][BLACK];
 
 			while (piece_board){
 				sq = PopBit(&piece_board);
