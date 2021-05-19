@@ -282,6 +282,11 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 
 	// Generate the position hash key
 	generate_poskey();
+
+	// If we are to use the neural network, load the current position into it.
+	if (use_lnn){
+		setup_network();
+	}
 }
 
 
@@ -1127,4 +1132,39 @@ LNN::Update& GameState_t::compute_updates(unsigned int move){
 
 	assert(delta.size <= 3);
 	return delta;
+}
+
+
+void GameState_t::setup_network() const {
+	// Step 1. Set up an array to pass to LNN
+	std::array<int8_t, INPUT_SIZE> network_inputs;
+	network_inputs.fill(0);
+
+	Bitboard piece_board = 0;
+	int sq = NO_SQ;
+
+	// Step 2. Add all white pieces
+	for (int pce = PAWN; pce <= KING; pce++){
+		piece_board = pieceBBS[pce][WHITE];
+
+		while (piece_board){
+			sq = PopBit(&piece_board);
+
+			network_inputs[LNN::calculate_input_index(pce, true, sq)] = 1;
+		}
+	}
+
+	// Step 3. Now do the same for the black pieces
+	for (int pce = PAWN; pce <= KING; pce++){
+		piece_board = pieceBBS[pce][BLACK];
+
+		while (piece_board){
+			sq = PopBit(&piece_board);
+
+			network_inputs[LNN::calculate_input_index(pce, false, sq)] = 1;
+		}
+	}
+
+	// Step 4. Now load this array into the net.
+	net.load_position(network_inputs);
 }
