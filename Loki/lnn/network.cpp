@@ -109,11 +109,13 @@ namespace LNN {
 			INPUT_LAYER.neurons[update.deltas[i].index] += static_cast<neuron_t>(update.deltas[i].delta);
 
 			// Step 2. Now update all connections to the first hidden layer from this, updated, neuron
-			for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-				if (update.deltas[i].delta == 1) {
+			if (update.deltas[i].delta == 1) {
+				for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
 					FIRST_HIDDEN.neurons[n] += INPUT_LAYER.weights[n][update.deltas[i].index];
 				}
-				else {
+			}
+			else {
+				for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
 					FIRST_HIDDEN.neurons[n] -= INPUT_LAYER.weights[n][update.deltas[i].index];
 				}
 			}
@@ -142,11 +144,13 @@ namespace LNN {
 			INPUT_LAYER.neurons[update->deltas[i].index] -= static_cast<neuron_t>(update->deltas[i].delta);
 
 			// Step 2. Change all connections to the first hidden layer
-			for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-				if (update->deltas[i].delta == 1) {
+			if (update->deltas[i].delta == 1) {
+				for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
 					FIRST_HIDDEN.neurons[n] -= INPUT_LAYER.weights[n][update->deltas[i].index];
 				}
-				else {
+			}
+			else {
+				for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
 					FIRST_HIDDEN.neurons[n] += INPUT_LAYER.weights[n][update->deltas[i].index];
 				}
 			}
