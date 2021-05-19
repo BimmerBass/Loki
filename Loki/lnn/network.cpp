@@ -132,7 +132,7 @@ namespace LNN {
 		assert(changes.size() > 0);
 
 		// Copy the last change made in the network
-		Update* update = &changes[changes.size()];
+		Update* update = &changes[changes.size() - 1];
 
 		for (size_t i = 0; i < update->size; i++) {
 			assert((INPUT_LAYER.neurons[update->deltas[i].index] == 0 && update->deltas[i].delta == -1)
