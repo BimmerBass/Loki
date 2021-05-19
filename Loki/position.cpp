@@ -432,7 +432,7 @@ bool GameState_t::make_move(Move_t* move) {
 	if (piece_captured == KING) {
 		return false;
 	}
-
+	
 	// Step 3. Copy irreversible information about the position and save it.
 	SavedInfo_t* info = &history[history_ply];
 
@@ -1073,6 +1073,10 @@ LNN::Update& GameState_t::compute_updates(unsigned int move){
 
 	int piece_moved = piece_list[side_to_move][FROMSQ(move)];
 	bool is_white = side_to_move == WHITE;
+	int to_sq = TOSQ(move);
+	int from_sq = FROMSQ(move);
+	int moveType = SPECIAL(move);
+	int piece_prom = PROMTO(move) + 1;
 
 	// All moves result in the piece moved leaving the square, so set this change
 	delta.deltas[delta.size].delta = -1;
@@ -1120,7 +1124,7 @@ LNN::Update& GameState_t::compute_updates(unsigned int move){
 		}
 		else{
 			rook_origin = (is_kingside) ? H8 : A8;
-			rook_destination = (is_kingside) ? F8 : H8;
+			rook_destination = (is_kingside) ? F8 : D8;
 		}
 		delta.deltas[delta.size].delta = -1;
 		delta.deltas[delta.size].index = LNN::calculate_input_index(ROOK, is_white, rook_origin);
@@ -1130,7 +1134,7 @@ LNN::Update& GameState_t::compute_updates(unsigned int move){
 		delta.size++;
 	}
 
-	assert(delta.size <= 3);
+	assert(delta.size <= 4);
 	return delta;
 }
 

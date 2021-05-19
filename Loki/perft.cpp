@@ -15,11 +15,11 @@ namespace Perft {
 		void perft(GameState_t* pos, int depth) {
 			
 			if (depth <= 0) {
-				if (CHECK_NETWORK){
-					if (!check_incremental_updates(pos)){
-						std::cout << "Error with incremental updates" << std::endl;
-					}
-				}
+				//if (CHECK_NETWORK){
+				//	if (!check_incremental_updates(pos)){
+				//		std::cout << "Error with incremental updates" << std::endl;
+				//	}
+				//}
 
 				leaf_count += 1;
 				return;
