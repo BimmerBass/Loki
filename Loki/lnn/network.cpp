@@ -173,19 +173,34 @@ namespace LNN {
 
 
 	// Helper function to split a string by semi-colons
-	std::vector<std::string> split_string(std::string s) {
+	std::vector<std::string> split_string(std::string s, char delimeter=';') {
 		std::vector<std::string> out;
+
+		// Remove all spaces in the string
+		s.erase(std::remove_if(s.begin(), s.end(), std::isspace), s.end());
 
 		std::string curr_string = "";
 
 		for (int i = 0; i < s.length(); i++) {
-			if (s[i] == ';') {
+			// If we're at the last character, add it to the current string (if it's not the delimeter) and then to the output vector
+			if (i == s.length() - 1) {
+				if (s[i] != delimeter) {
+					curr_string += s[i];
+				}
+
+				out.push_back(curr_string);
+				continue;
+			}
+			// If we hit the delimeter, continue
+			else if (s[i] == delimeter) {
 				out.push_back(curr_string);
 				curr_string = "";
 				continue;
 			}
+
 			curr_string += s[i];
 		}
+
 		return out;
 	}
 
@@ -196,35 +211,73 @@ namespace LNN {
 		std::ifstream csv_file(fp);
 
 		std::string line = "";
+		int n = 0;
 
 		// Step 2. Read the file line-by-line
 		while (std::getline(csv_file, line)) {
-			// Step 2A. Split the string.
-			std::vector<std::string> sl = split_string(line);
-			std::vector<neuron_t> row;
-			double tmp = 0.0;
-			// Step 2B. For each string in the vector of strings, convert it to a double and then to a neuron_t.
-			for (int i = 0; i < sl.size(); i++) {
-				tmp = std::stod(sl[i]);
+			
+			// Step 2A. Split the line such that we get all numbers in std::string format.
+			std::vector<std::string> number_strings = split_string(line);
 
-				row.push_back(static_cast<neuron_t>(tmp));
+			std::vector<neuron_t> number_types;
+
+			for (int i = 0; i < number_strings.size(); i++) {
+				number_types.push_back(static_cast<neuron_t>(std::stod(number_strings[i])));
 			}
-			data.push_back(row);
+			data.push_back(number_types); n++;
 		}
 
 		return data;
 	}
+
+
 
 	template<>
 	void Network::load_net<CSV>(std::string file_path) {
 
 		// Step 1. Open the csv file and extract the numbers
 		std::vector<std::vector<neuron_t>> data = read_csv(file_path);
-		
-		std::cout << "Length of first bias layer: " << data[0].size() << std::endl;
 
-		for (int i = 0; i < data[0].size(); i++) {
-			std::cout << i << ": " << data[0][i] << std::endl;
+		int current_row = 0;
+
+		// Step 2. Load the biases. These are ordered by layer in the csv.
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			FIRST_HIDDEN.biases[i] = data[current_row][i];
 		}
+		current_row++;
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			SECOND_HIDDEN.biases[i] = data[current_row][i];
+		}
+		current_row++;
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			THIRD_HIDDEN.biases[i] = data[current_row][i];
+		}
+		current_row++;
+
+
+		// Step 3. Now we can move on to the weights. These are indexed by weight[prevLayer][nextLayer]
+		for (size_t i = current_row; i < INPUT_SIZE; i++) {
+			for (size_t j = 0; j < FIRST_HIDDEN_SIZE; j++) {
+				INPUT_LAYER.weights[j][i] = data[i][j];
+			}
+			current_row++;
+		}
+		for (size_t i = current_row; i < FIRST_HIDDEN_SIZE; i++) {
+			for (size_t j = 0; j < HIDDEN_STD_SIZE; j++) {
+				FIRST_HIDDEN.weights[j][i] = data[i][j];
+			}
+			current_row++;
+		}
+		for (size_t i = current_row; i < HIDDEN_STD_SIZE; i++) {
+			for (size_t j = 0; j < HIDDEN_STD_SIZE; j++) {
+				SECOND_HIDDEN.weights[j][i] = data[i][j];
+			}
+			current_row++;
+		}
+		for (size_t i = current_row; i < HIDDEN_STD_SIZE; i++) {
+			THIRD_HIDDEN.weights[0][i] = data[i][0];
+		}
+
+
 	}
 }
