@@ -30,6 +30,9 @@ void UCI::loop() {
 	GameState_t* pos = new GameState_t();
 	SearchInfo_t* info = new SearchInfo_t();
 
+	pos->use_lnn = true;
+	pos->net.load_net<LNN::CSV>("C:\\Users\\abild\\Desktop\\trained_csv.csv");
+
 	// Step 1A. Set up the starting position on the board. This is done to prevent Loki from crashing if a "go" is given before a "position ..."
 	pos->parseFen(START_FEN);
 

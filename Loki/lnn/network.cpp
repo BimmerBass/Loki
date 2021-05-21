@@ -91,7 +91,7 @@ namespace LNN {
 		// Step 3. Now calculate the output, but don't apply an activation function or a bias
 		dot_product<neuron_t, HIDDEN_STD_SIZE>(THIRD_HIDDEN.neurons, THIRD_HIDDEN.weights[0], OUTPUT_LAYER.neurons[0]);
 
-		return static_cast<int>(OUTPUT_LAYER.neurons[0]);
+		return std::max(-OUTPUT_BOUND, std::min(OUTPUT_BOUND, static_cast<int>(OUTPUT_LAYER.neurons[0])));
 	}
 
 
@@ -255,29 +255,28 @@ namespace LNN {
 		current_row++;
 
 
-		// Step 3. Now we can move on to the weights. These are indexed by weight[prevLayer][nextLayer]
-		for (size_t i = current_row; i < INPUT_SIZE; i++) {
+		// Step 3. Now we can move on to the weights. These are indexed by weight[prevLayer][nextLayer] in the csv file.
+		for (size_t i = 0; i < INPUT_SIZE; i++) {
 			for (size_t j = 0; j < FIRST_HIDDEN_SIZE; j++) {
-				INPUT_LAYER.weights[j][i] = data[i][j];
+				INPUT_LAYER.weights[j][i] = data[current_row][j];
 			}
 			current_row++;
 		}
-		for (size_t i = current_row; i < FIRST_HIDDEN_SIZE; i++) {
+		for (size_t i = 0; i < FIRST_HIDDEN_SIZE; i++) {
 			for (size_t j = 0; j < HIDDEN_STD_SIZE; j++) {
-				FIRST_HIDDEN.weights[j][i] = data[i][j];
+				FIRST_HIDDEN.weights[j][i] = data[current_row][j];
 			}
 			current_row++;
 		}
-		for (size_t i = current_row; i < HIDDEN_STD_SIZE; i++) {
+		for (size_t i = 0; i < HIDDEN_STD_SIZE; i++) {
 			for (size_t j = 0; j < HIDDEN_STD_SIZE; j++) {
-				SECOND_HIDDEN.weights[j][i] = data[i][j];
+				SECOND_HIDDEN.weights[j][i] = data[current_row][j];
 			}
 			current_row++;
 		}
-		for (size_t i = current_row; i < HIDDEN_STD_SIZE; i++) {
-			THIRD_HIDDEN.weights[0][i] = data[i][0];
+		for (size_t i = 0; i < HIDDEN_STD_SIZE; i++) {
+			THIRD_HIDDEN.weights[0][i] = data[current_row][0];
+			current_row++;
 		}
-
-
 	}
 }

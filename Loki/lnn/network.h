@@ -16,6 +16,7 @@
 namespace LNN {
 
     enum LNN_FileType :int { BIN = 0, CSV = 1 };
+    constexpr int OUTPUT_BOUND = 20000;
 
     // This structure implementation is taken from Halogen's code.
     struct Update {
