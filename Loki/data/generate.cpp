@@ -3,13 +3,13 @@
 
 namespace DataGeneration {
 
-    void generate_batch(std::vector<DataPoint>& data, std::vector<std::string> FENS, GenerationInfo info){
+    void generate_batch(std::vector<DataPoint>& data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread){
 
         // Step 1. Clear the data vector, declare a position object and an array for holding the network input.
         data.clear();
         GameState_t* pos = new GameState_t;
-        std::array<neuron_t, INPUT_SIZE> net_input;
-
+        //std::array<neuron_t, INPUT_SIZE> net_input;
+        std::array<neuron_t, INPUT_SIZE>* net_input = new std::array<neuron_t, INPUT_SIZE>;
 
         // Step 2. Loop through all the positions
         for (int p = 0; p < FENS.size(); p++){
@@ -18,35 +18,38 @@ namespace DataGeneration {
             int score = 0;
 
             // Step 2B. If we're told to use search, set up a searchthread.
-            if (info.search_scores){
-                SearchThread_t ss;
-                SearchInfo_t search_info;
-                
-                // Step 2B.1. Set up the search info and a pvLine since alphabeta requires this to be given.
-                search_info.timeset = false;
-                search_info.depth = info.search_depth;
-                SearchPv pv;
+            //if (info.search_scores){
+            //    SearchThread_t ss;
+            //    SearchInfo_t search_info;
+            //    
+            //    // Step 2B.1. Set up the search info and a pvLine since alphabeta requires this to be given.
+            //    search_info.timeset = false;
+            //    search_info.depth = info.search_depth;
+            //    SearchPv pv;
+            //
+            //    // Step 2B.2. Set up the searchthread and run an alphabeta search
+            //    *ss.pos = *pos;
+            //    *ss.info = search_info;
+            //
+            //    score = Search::alphabeta(&ss, search_info.depth, -INF, INF, true, &pv);
+            //}
+            //else{
+            //    score = Eval::evaluate(pos);
+            //}
+            score = Eval::evaluate(pos);
 
-                // Step 2B.2. Set up the searchthread and run an alphabeta search
-                *ss.pos = *pos;
-                *ss.info = search_info;
-
-                score = Search::alphabeta(&ss, search_info.depth, -INF, INF, true, &pv);
-            }
-            else{
-                score = Eval::evaluate(pos);
-            }
+            if (pos->side_to_move == BLACK) { score *= -1; }
 
             // Step 2C. Set up the array of the position.
             Bitboard pceBoard = 0;
-            net_input.fill(neuron_t(0));
+            net_input->fill(neuron_t(0));
             for (int pce = PAWN; pce <= KING; pce++){
                 pceBoard = pos->pieceBBS[pce][WHITE];
 
                 while (pceBoard){
                     int sq = PopBit(&pceBoard);
 
-                    net_input[LNN::calculate_input_index(pce, true, sq)] = neuron_t(1);
+                    (*net_input)[LNN::calculate_input_index(pce, true, sq)] = neuron_t(1);
                 }
             }
             for (int pce = PAWN; pce <= KING; pce++){
@@ -55,20 +58,25 @@ namespace DataGeneration {
                 while (pceBoard){
                     int sq = PopBit(&pceBoard);
 
-                    net_input[LNN::calculate_input_index(pce, false, sq)] = neuron_t(1);
+                    (*net_input)[LNN::calculate_input_index(pce, false, sq)] = neuron_t(1);
                 }
             }
 
             // Step 2D. Now we can set up a DataPoint and push it to the vector.
             DataPoint dp;
-            dp.network_input = net_input;
+            dp.network_input = *net_input;
             dp.score = static_cast<neuron_t>(score);
 
             data.push_back(dp);
+
+            if (main_thread && p % 10000 == 0) {
+                std::cout << "Generated " << p << "/" << FENS.size() << " positions" << std::endl;
+            }
         }
 
         // Step 3. Delete pos and return
         delete pos;
+        delete net_input;
     }
 
 
@@ -92,39 +100,50 @@ namespace DataGeneration {
         }
         epd_file.close();
 
+        std::cout << "Extracted " << FENS.size() << " fens" << std::endl;
+
         // Step 3. Set up the requested number of threads and subdivide the fen list depending on that.
         std::vector<std::thread> thread_list;
         std::vector<std::vector<std::string>> divided_fens;
-        std::vector<std::vector<DataPoint>> data;
+        //std::vector<std::vector<DataPoint>> data;
 
+        //size_t batch_size = FENS.size() / THREADS;
+
+
+        std::vector<DataPoint> data[THREADS];
+        std::vector<std::string> thread_fens[THREADS];
         size_t batch_size = FENS.size() / THREADS;
+        int current = 0;
 
-        for (int t = 0; t < THREADS; t++){
-            std::vector<std::string> thread_fens;
-            std::vector<DataPoint> tmp;
+        for (int t = 0; t < THREADS; t++) {
+            int i = 0;
 
-            for (int f = t * batch_size; f < (t + 1) * batch_size; f++) {
-                thread_fens.push_back(FENS[f]);
+            while (i <= batch_size && (i + current) < FENS.size()) {
+                thread_fens[t].push_back(FENS[current + i]);
+                i++;
             }
-
-            divided_fens.push_back(thread_fens);
-            data.push_back(tmp);
-
-            // Now start the thread
-            thread_list.push_back(std::thread(generate_batch, std::ref(data[data.size() - 1]), divided_fens[divided_fens.size() - 1], info));
+            current += i;
         }
 
-        // Wait for the threads to join
-        for (int tn = 0; tn < THREADS; tn++){
-            thread_list[tn].join();
+        for (int t = 0; t < THREADS; t++) {
+            thread_list.push_back(std::thread(generate_batch,
+                std::ref(data[t]),
+                std::ref(thread_fens[t]),
+                info,
+                (t == 0) ? true : false
+            ));
+        }
+
+        for (int t = 0; t < THREADS; t++) {
+            thread_list[t].join();
         }
 
 
         std::vector<DataPoint> combined_data;
 
-        for (int i = 0; i < data.size(); i++){
-            for (int j = 0; j < data[i].size();j++){
-                combined_data.push_back(data[i][j]);
+        for (int t = 0; t < THREADS; t++) {
+            for (int i = 0; i < data[t].size(); i++) {
+                combined_data.push_back(data[t][i]);
             }
         }
 

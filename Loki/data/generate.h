@@ -23,7 +23,7 @@ namespace DataGeneration {
     };
 
     // This function will be run by a thread and generate data.
-    void generate_batch(std::vector<DataPoint>& data, std::vector<std::string> FENS, GenerationInfo info);
+    void generate_batch(std::vector<DataPoint>& data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread = false);
     
     // Will spin up threads and generate the training data. Writes out to a CSV file afterwards
     void generate_training_data(std::string epd_in, std::string csv_out, bool use_search=false, int depth=0);

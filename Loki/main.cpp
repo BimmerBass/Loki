@@ -1,5 +1,7 @@
 //#include "uci.h"
-#include "texel.h"
+//#include "texel.h"
+
+#include "data/generate.h"
 
 int main(int argc, char* argv[]) {
 	BBS::INIT();
@@ -10,12 +12,15 @@ int main(int argc, char* argv[]) {
 
 
 	// If "bench" has been added as an argument, just run this and quit
-	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
-		Bench::run_benchmark();
-		return 0;
-	}
-	
-	UCI::loop();
+	//if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
+	//	Bench::run_benchmark();
+	//	return 0;
+	//}
+	//
+	//UCI::loop();
+
+	DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\texel-set-clean.epd", "C:\\Users\\abild\\Desktop\\training_data.csv");
+
 	//GameState_t* pos = new GameState_t;
 	//
 	//pos->net.load_net<LNN::CSV>("C:\\Users\\abild\\Desktop\\trained_csv.csv");
