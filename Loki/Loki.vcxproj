@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="bench.cpp" />
     <ClCompile Include="bitboard.cpp" />
+    <ClCompile Include="data\generate.cpp" />
     <ClCompile Include="evaluation.cpp" />
     <ClCompile Include="lnn\network.cpp" />
     <ClCompile Include="magics.cpp" />
@@ -176,6 +177,7 @@
   <ItemGroup>
     <ClInclude Include="bench.h" />
     <ClInclude Include="bitboard.h" />
+    <ClInclude Include="data\generate.h" />
     <ClInclude Include="defs.h" />
     <ClInclude Include="evaluation.h" />
     <ClInclude Include="lnn\network.h" />
