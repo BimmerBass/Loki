@@ -60,9 +60,13 @@ namespace LNN {
         //  32 neurons in the last hidden layer
         //  1 output neuron since this is a value-based neural network
         Layer<INPUT_SIZE, FIRST_HIDDEN_SIZE, neuron_t> INPUT_LAYER;
+        
         Layer<FIRST_HIDDEN_SIZE, HIDDEN_STD_SIZE, neuron_t> FIRST_HIDDEN;
+        std::array<neuron_t, FIRST_HIDDEN_SIZE> Zeta; // Zeta is a container for the incrementally updated neurons of the first hidden layer.
+
         Layer<HIDDEN_STD_SIZE, HIDDEN_STD_SIZE, neuron_t> SECOND_HIDDEN;
         Layer<HIDDEN_STD_SIZE, OUTPUT_SIZE, neuron_t> THIRD_HIDDEN;
+        
         Layer<OUTPUT_SIZE, 0, neuron_t> OUTPUT_LAYER;
 
         // This vector holds all Update's that has been used incrementally to get to this position.

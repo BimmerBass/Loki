@@ -34,6 +34,7 @@ namespace LNN {
 	void Network::load_position(std::array<int8_t, INPUT_SIZE>& pos) {
 
 		INPUT_LAYER.neurons.fill(0);
+		Zeta.fill(0);
 
 		// Loop through the inputs
 		for (int i = 0; i < INPUT_SIZE; i++) {
@@ -41,7 +42,13 @@ namespace LNN {
 			assert(pos[i] == 0 || pos[i] == 1);
 
 			INPUT_LAYER.neurons[i] = static_cast<neuron_t>(pos[i]);
+
+			// Calculate Zeta
+			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+				Zeta[n] += INPUT_LAYER.neurons[i] * INPUT_LAYER.weights[n][i];
+			}
 		}
+
 	}
 
 
@@ -62,15 +69,24 @@ namespace LNN {
 				// Step 1A. Calculate the dot product of the input neurons and the weights between the layers
 				dot_product<neuron_t, INPUT_SIZE>(INPUT_LAYER.neurons, INPUT_LAYER.weights[i], FIRST_HIDDEN.neurons[i]);
 
+				// Step 1B. Apply the bias and the relu activation function
+				FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
+				FIRST_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(FIRST_HIDDEN.neurons[i]);
+			}
+		}
+		else {
+			// Step 1C. If we use the incrementally updated values, apply the relu activation to the Zeta
+			for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+				FIRST_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(Zeta[i] + FIRST_HIDDEN.biases[i]);
 			}
 		}
 
 		// Step 1B. For each neuron in the hidden layer, apply the activation function (do_incremental doesn't do this, so we need to do this extra loop here)
 		// Also, add its bias beforehand. We do this since all weight calculations are already done, regardless of the value of "fast".
-		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
-			FIRST_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(FIRST_HIDDEN.neurons[i]);
-		}
+		//for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+		//	FIRST_HIDDEN.neurons[i] += FIRST_HIDDEN.biases[i];
+		//	FIRST_HIDDEN.neurons[i] = apply_ReLU<neuron_t>(FIRST_HIDDEN.neurons[i]);
+		//}
 
 		// Step 2. Now calculate all other layers starting with first hidden to second hidden
 		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
@@ -111,12 +127,14 @@ namespace LNN {
 			// Step 2. Now update all connections to the first hidden layer from this, updated, neuron
 			if (update.deltas[i].delta == 1) {
 				for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-					FIRST_HIDDEN.neurons[n] += INPUT_LAYER.weights[n][update.deltas[i].index];
+					//FIRST_HIDDEN.neurons[n] += INPUT_LAYER.weights[n][update.deltas[i].index];
+					Zeta[n] += INPUT_LAYER.weights[n][update.deltas[i].index];
 				}
 			}
 			else {
 				for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-					FIRST_HIDDEN.neurons[n] -= INPUT_LAYER.weights[n][update.deltas[i].index];
+					//FIRST_HIDDEN.neurons[n] -= INPUT_LAYER.weights[n][update.deltas[i].index];
+					Zeta[n] -= INPUT_LAYER.weights[n][update.deltas[i].index];
 				}
 			}
 
@@ -146,12 +164,14 @@ namespace LNN {
 			// Step 2. Change all connections to the first hidden layer
 			if (update->deltas[i].delta == 1) {
 				for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-					FIRST_HIDDEN.neurons[n] -= INPUT_LAYER.weights[n][update->deltas[i].index];
+					//FIRST_HIDDEN.neurons[n] -= INPUT_LAYER.weights[n][update->deltas[i].index];
+					Zeta[n] -= INPUT_LAYER.weights[n][update->deltas[i].index];
 				}
 			}
 			else {
 				for (size_t n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-					FIRST_HIDDEN.neurons[n] += INPUT_LAYER.weights[n][update->deltas[i].index];
+					//FIRST_HIDDEN.neurons[n] += INPUT_LAYER.weights[n][update->deltas[i].index];
+					Zeta[n] += INPUT_LAYER.weights[n][update->deltas[i].index];
 				}
 			}
 		}

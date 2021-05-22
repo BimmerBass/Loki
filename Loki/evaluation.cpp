@@ -815,7 +815,7 @@ namespace Eval {
 		//}
 
 		if (pos->use_lnn) {
-			v = pos->net.evaluate(false);
+			v = pos->net.evaluate();
 		}
 		else {
 			// Step 2. Create an evaluation object holding the middlegame and endgame score separately.
