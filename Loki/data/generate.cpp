@@ -72,4 +72,75 @@ namespace DataGeneration {
     }
 
 
+    // Main method.
+    void generate_training_data(std::string epd_in, std::string csv_out, bool use_search, int depth){
+        // Step 1. Open the epd file, parse all the FENS and set up a generation data object.
+        std::vector<std::string> FENS;
+        std::string fen, epd;
+        std::ifstream epd_file(epd_in);
+
+        GenerationInfo info;
+        info.search_scores = use_search;
+        info.search_depth = depth;
+
+        // Step 2. Extract the FENS from the epd file.
+        while (std::getline(epd_file, epd)){
+            auto fen_end = epd.find_first_of('"');
+
+            fen = epd.substr(0, fen_end);
+            FENS.push_back(fen);
+        }
+        epd_file.close();
+
+        // Step 3. Set up the requested number of threads and subdivide the fen list depending on that.
+        std::vector<std::thread> thread_list;
+        std::vector<std::vector<std::string>> divided_fens;
+        std::vector<std::vector<DataPoint>> data;
+
+        size_t batch_size = FENS.size() / THREADS;
+
+        for (int t = 0; t < THREADS; t++){
+            std::vector<std::string> thread_fens;
+            std::vector<DataPoint> tmp;
+
+            for (int f = t*batch_size, f < (t + 1)*batch_size;t++){
+                thread_fens.push_back(FENS[f]);
+            }
+
+            divided_fens.push_back(thread_fens);
+            data.push_back(tmp);
+
+            // Now start the thread
+            thread_list.push_back(std::thread(generate_batch, std::ref(data[data.size() - 1]), divided_fens[divided_fens.size() - 1], info));
+        }
+
+        // Wait for the threads to join
+        for (int tn = 0; tn < THREADS; tn++){
+            thread_list[tn].join();
+        }
+
+
+        std::vector<DataPoint> combined_data;
+
+        for (int i = 0; i < data.size(); i++){
+            for (int j = 0; j < data[i].size();j++){
+                combined_data.push_back(data[i][j]);
+            }
+        }
+
+        // Lastly, open the csv file and write the data.
+        std::ifstream csv_file(csv_out);
+
+        for (int i = 0; i < combined_data.size(); i++){
+            csv_file << std::to_string(combined_data[i][0]);
+
+            for (int j = 0; j < combined_data[i].size(); j++){
+                csv_file << ";" << std::to_string(combined_data[i][j]);
+            }
+            csv_file << "\n";
+        }
+        // Close the csv file.
+        csv_file.close();
+    }
+
 }

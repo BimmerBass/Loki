@@ -8,6 +8,7 @@
 namespace DataGeneration {
     // The number of threads to use.
     constexpr int THREADS = 8;
+    static_assert(THREADS >= 1);
 
     // Struct for holding the position to give the network and the evaluation score
     struct DataPoint{
@@ -25,7 +26,7 @@ namespace DataGeneration {
     void generate_batch(std::vector<DataPoint>& data, std::vector<std::string> FENS, GenerationInfo info);
     
     // Will spin up threads and generate the training data. Writes out to a CSV file afterwards
-    void generate_training_data(std::string epd_in, std::string csv_out, bool use_search=false);
+    void generate_training_data(std::string epd_in, std::string csv_out, bool use_search=false, int depth=0);
 }
 
 
