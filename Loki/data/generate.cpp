@@ -31,7 +31,7 @@ namespace DataGeneration {
                 *ss.pos = *pos;
                 *ss.info = search_info;
 
-                score = Search::alphabeta(ss, search_info.depth, -INF, INF, true, &pv);
+                score = Search::alphabeta(&ss, search_info.depth, -INF, INF, true, &pv);
             }
             else{
                 score = Eval::evaluate(pos);
@@ -103,7 +103,7 @@ namespace DataGeneration {
             std::vector<std::string> thread_fens;
             std::vector<DataPoint> tmp;
 
-            for (int f = t*batch_size, f < (t + 1)*batch_size;t++){
+            for (int f = t * batch_size; f < (t + 1) * batch_size; f++) {
                 thread_fens.push_back(FENS[f]);
             }
 
@@ -129,14 +129,17 @@ namespace DataGeneration {
         }
 
         // Lastly, open the csv file and write the data.
-        std::ifstream csv_file(csv_out);
+        std::ofstream csv_file(csv_out);
 
         for (int i = 0; i < combined_data.size(); i++){
-            csv_file << std::to_string(combined_data[i][0]);
+            csv_file << std::to_string(combined_data[i].network_input[0]);
 
-            for (int j = 0; j < combined_data[i].size(); j++){
-                csv_file << ";" << std::to_string(combined_data[i][j]);
+            for (int j = 0; j < INPUT_SIZE; j++){
+                csv_file << ";" << std::to_string(combined_data[i].network_input[j]);
             }
+
+            csv_file << ";" << std::to_string(combined_data[i].score);
+
             csv_file << "\n";
         }
         // Close the csv file.

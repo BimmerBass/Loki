@@ -16,11 +16,11 @@ namespace DataGeneration {
         neuron_t score;
     };
 
-    struct GenerationInfo{
+    struct GenerationInfo {
         bool search_scores = false;
 
         int search_depth = 0;
-    }
+    };
 
     // This function will be run by a thread and generate data.
     void generate_batch(std::vector<DataPoint>& data, std::vector<std::string> FENS, GenerationInfo info);
