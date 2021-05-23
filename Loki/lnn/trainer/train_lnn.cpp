@@ -68,6 +68,7 @@ namespace Training {
 
 		// Step 1. Open the data file.
 		std::ifstream data_file(filepath);
+		std::vector<std::string> string_numbers;
 		std::string line = "";
 
 		if (!data_file.is_open()) {
@@ -76,8 +77,33 @@ namespace Training {
 		}
 
 		// Step 2. Now go through all lines in the file.
+		size_t current = 0;
 		while (std::getline(data_file, line)) {
+			
+			// Step 2A. Split the string
+			string_numbers.clear();
+			string_numbers = split_string(line, ';');
+			assert(string_numbers.size() == INPUT_SIZE + 1);
 
+			// Step 2B. Copy the inputs/outputs in string_numbers to a new training position object
+			TrainingPosition tp;
+			tp.set(0);
+
+			for (int i = 0; i < INPUT_SIZE; i++) {
+				tp.network_input[i] = std::stoi(string_numbers[i]);
+			}
+			tp.score = std::stoi(string_numbers[string_numbers.size() - 1]);
+
+			// Step 2C. Add this to the data vector and output to the user if a certain number of data-points has been loaded
+			training_data->push_back(tp);
+			current++;
+
+			if (current % 500000 == 0) {
+				std::cout << "[*] Loaded " << current << " positions" << std::endl;
+			}
 		}
+
+		// Step 3. Close the file, and we're done loading the data :))
+		data_file.close();
 	}
 }
