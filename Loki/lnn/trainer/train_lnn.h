@@ -10,6 +10,19 @@ namespace Training {
 		AAE = 1,	/* Average absolute error */
 	};
 
+
+	// Used to hold a datapoint for the trainer
+	struct TrainingPosition {
+		int8_t network_input[INPUT_SIZE] = { 0 };
+		int score = 0;
+
+		void set(int val) {
+			memset(network_input, val, sizeof(int8_t) * INPUT_SIZE);
+		}
+	};
+
+
+
 	class Trainer : private LNN::Network {
 	public:
 		Trainer(std::string dataset, int epochs, size_t batch_size, LOSS_F loss);
@@ -28,6 +41,9 @@ namespace Training {
 		double OUTPUT_DELTA;
 	};
 
+
+	template<LOSS_F F>
+	double compute_loss(const std::vector<double>& ai, const std::vector<double>& yi);
 }
 
 #endif
