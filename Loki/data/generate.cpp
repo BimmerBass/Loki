@@ -64,7 +64,7 @@ namespace DataGeneration {
             }
 
             // Step 2D. Now we can set up a DataPoint and push it to the vector.
-            dp.score = static_cast<neuron_t>(score);
+            dp.score = score;
 
             data->push_back(dp);
 
@@ -139,6 +139,7 @@ namespace DataGeneration {
         std::ofstream csv_file(csv_out);
 
         std::vector<DataPoint>* combined_data = new std::vector<DataPoint>;
+        combined_data->reserve(FENS.size());
         generate_batch(combined_data, FENS, info, true);
 
         //for (int t = 0; t < THREADS; t++) {
@@ -162,6 +163,10 @@ namespace DataGeneration {
             csv_file << ";" << std::to_string((*combined_data)[i].score);
         
             csv_file << "\n";
+
+            if (i % 100000 == 0) {
+                std::cout << "Wrote " << i << "/" << FENS.size() << " positions to the CSV file" << std::endl;
+            }
         }
         // Close the csv file.
         csv_file.close();

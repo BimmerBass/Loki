@@ -19,7 +19,8 @@ int main(int argc, char* argv[]) {
 	//
 	//UCI::loop();
 
-	DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\texel-set-clean.epd", "C:\\Users\\abild\\Desktop\\training_data.csv");
+	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\texel-set-clean.epd", "C:\\Users\\abild\\Desktop\\training_data.csv");
+	DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", "C:\\Users\\abild\\Desktop\\training_data.csv");
 
 	//GameState_t* pos = new GameState_t;
 	//
