@@ -138,7 +138,7 @@ namespace Training {
 		// Step 4. Calculate the second hidden layer's deltas.
 		for (int m = 0; m < HIDDEN_STD_SIZE; m++) { // Each neuron in third hidden layer
 			for (int n = 0; n < HIDDEN_STD_SIZE; n++) { // Each neuron in second hidden layer
-				SECOND_HIDDEN_DELTAS_CHANGES[n] = static_cast<double>(SECOND_HIDDEN.weights[m][n]) * THIRD_HIDDEN_DELTAS_CHANGES[m];
+				SECOND_HIDDEN_DELTAS_CHANGES[n] += static_cast<double>(SECOND_HIDDEN.weights[m][n]) * THIRD_HIDDEN_DELTAS_CHANGES[m];
 			}
 		}
 
@@ -151,7 +151,7 @@ namespace Training {
 		// Step 5. Lastly, calculate the first hidden layer's deltas.
 		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
 			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-				FIRST_HIDDEN_DELTAS_CHANGES[n] = static_cast<double>(FIRST_HIDDEN.weights[m][n]) * SECOND_HIDDEN_DELTAS_CHANGES[m];
+				FIRST_HIDDEN_DELTAS_CHANGES[n] += static_cast<double>(FIRST_HIDDEN.weights[m][n]) * SECOND_HIDDEN_DELTAS_CHANGES[m];
 			}
 		}
 
@@ -171,7 +171,7 @@ namespace Training {
 	
 	*/
 	void Trainer::update_weights() {
-		double weight_gradient = 0.0, bias_gradient = 0.0;
+		volatile double weight_gradient = 0.0, bias_gradient = 0.0;
 
 		// Step 1. Update the weights between the output and the third hidden layer.
 		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
