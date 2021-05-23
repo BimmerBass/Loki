@@ -106,4 +106,39 @@ namespace Training {
 		// Step 3. Close the file, and we're done loading the data :))
 		data_file.close();
 	}
+
+
+
+
+
+	/*
+	
+	When we compute the deltas, we calculate the sum of each individual delta from each data point. Therefore this method is used to take the average of all deltas.
+	
+	*/
+	void Trainer::take_avg_deltas() {
+
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			FIRST_HIDDEN_DELTAS[i] /= static_cast<double>(batch_size);
+		}
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			SECOND_HIDDEN_DELTAS[i] /= static_cast<double>(batch_size);
+			THIRD_HIDDEN_DELTAS[i] /= static_cast<double>(batch_size);
+		}
+
+		OUTPUT_DELTA /= static_cast<double>(batch_size);
+	}
+
+	/*
+	
+	Set all deltas to zero. This is done before each batch step.
+	
+	*/
+	void Trainer::clear_deltas() {
+		FIRST_HIDDEN_DELTAS.fill(0.0);
+		SECOND_HIDDEN_DELTAS.fill(0.0);
+		THIRD_HIDDEN_DELTAS.fill(0.0);
+		OUTPUT_DELTA = 0.0;
+	}
 }

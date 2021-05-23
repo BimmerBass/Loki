@@ -38,6 +38,9 @@ namespace Training {
 		void do_backprop(neuron_t expected_value);
 		void update_weights();
 
+		void take_avg_deltas();
+		void clear_deltas();
+
 		// The following arrays hold all deltas for the hidden layers and the output layer.
 		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_DELTAS;
 		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_DELTAS;
