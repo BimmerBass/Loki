@@ -109,6 +109,24 @@ namespace Training {
 
 
 
+	/*
+	
+	Backpropagation. When doing forward propagation of a single dataset, we need to propagate the error backwards in the network in order to appropriately update
+		each weight and bias according to it's specific contribution to the error.
+	
+	*/
+
+	void Trainer::do_backprop(neuron_t expected_value) {
+
+		// Step 1. Compute the error for the output value.
+		// Note: Since the output doesn't use an activation function in LNN, we don't need to multiply any derivative of such function. This would normally be needed.
+		OUTPUT_DELTA += (loss_function == LOSS_F::AAE) ? abs(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value)) :
+			std::pow(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value), 2.0);
+
+		// Step 2. Now we can calculate the deltas for the third hidden layer
+
+	}
+
 
 
 	/*

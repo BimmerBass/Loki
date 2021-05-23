@@ -55,7 +55,7 @@ namespace LNN {
             return INPUT_LAYER.neurons;
         }
 
-    private:
+    protected:  /* All layers are protected because the Trainer-child class needs to access them */
         // For the network, we use the following architecture:
         //  768 input neurons --> There are 12 pieces with 64 squares each
         //  256 neurons in the first hidden layer
@@ -72,6 +72,7 @@ namespace LNN {
         
         Layer<OUTPUT_SIZE, 0, neuron_t> OUTPUT_LAYER;
 
+    private:
         // This vector holds all Update's that has been used incrementally to get to this position.
         // They are used to undo an incremental update
         std::vector<Update> changes;

@@ -57,6 +57,11 @@ namespace Training {
 	// Loss function
 	template<LOSS_F F>
 	double compute_loss(const std::vector<double>& ai, const std::vector<double>& yi);
+
+	// Here we use the assumption that the ReLU function derivative at x = 0 is 1. In reality this is undefined
+	double ReLU_derivate(neuron_t x) {
+		return (x < 0) ? 0.0 : 1.0;
+	}
 }
 
 
