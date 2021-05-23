@@ -45,11 +45,12 @@ namespace Training {
 
 	Trainer::Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, double lRate, double lRate_decay)
 		: epochs(_epochs), batch_size(_batch_size), loss_function(loss), learning_rate(lRate), learning_rate_decay(lRate_decay) {
-		// Step 1. Load the dataset
-		load_dataset(dataset);
-
-		// Step 2. Allocate a vector for the dataset
+		
+		// Step 1. Allocate a vector for the dataset
 		training_data = new std::vector<TrainingPosition>;
+		
+		// Step 2. Load the dataset
+		load_dataset(dataset);
 	}
 
 	Trainer::~Trainer() {
@@ -273,6 +274,51 @@ namespace Training {
 
 		// Step 6. Set the output bias to 0
 		OUTPUT_LAYER.biases[0] = neuron_t(0);
+	}
+
+
+
+	/*
+	
+	Train a model. This is the main method of the Trainer class and it is responsible for training a network.
+	
+	*/
+	void Trainer::train_model(std::string saved_model) {
+
+		// Step 1. If we have a saved model that we want to train further, load it. Otherwise, initialize all relevant weights and biases randomly.
+		if (saved_model != "") {
+			if (saved_model.find(".csv") != std::string::npos) {
+				load_net<LNN::CSV>(saved_model);
+			}
+			else {
+				load_net<LNN::BIN>(saved_model);
+			}
+		}
+		else {
+			init_parameters();
+		}
+
+
+		// Step 2. We can now start the training.
+		std::cout << "+----------------------------------------------------------------+\n"
+				  << "|                     Loki NN tuning session                     |\n"
+				  << "+---------------------+------------------------------------------+\n"
+				  << "| Size of dataset		| " << training_data->size() << "\n"
+				  << "| Epochs				| " << epochs << "\n"
+				  << "| Batch size			| " << batch_size << "\n"
+				  << "| Loss function		| " << ((loss_function == LOSS_F::AAE) ? "Average absolute error" : "Mean squared error") << "\n"
+				  << "| Learning rate		| " << learning_rate << "\n"
+				  << "| Learning decay rate	| " << learning_rate_decay << "\n"
+				  << "+---------------------+------------------------------------------+" << std::endl;
+
+		for (int e = 0; e < epochs; e++) {
+
+			// Step 2A. Sub-divide the data into batches
+			int current_position = 0;
+
+
+
+		}
 	}
 
 
