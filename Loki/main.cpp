@@ -1,7 +1,8 @@
 //#include "uci.h"
-#include "texel.h"
-#include "lnn/trainer/train_lnn.h"
+//#include "texel.h"
+//#include "lnn/trainer/train_lnn.h"
 
+#include "data/generate.h"
 
 int main(int argc, char* argv[]) {
 	BBS::INIT();
@@ -20,10 +21,10 @@ int main(int argc, char* argv[]) {
 	//UCI::loop();
 
 	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\texel-set-clean.epd", "C:\\Users\\abild\\Desktop\\training_data.csv");
-	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", "C:\\Users\\abild\\Desktop\\quiet.csv");
+	DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", "C:\\Users\\abild\\Desktop\\quiet.csv");
 	//Training::Trainer tr("C:\\Users\\abild\\Desktop\\training_data.csv", 100, 10, Training::LOSS_F::MSE);
-	Training::Trainer tr("C:\\Users\\abild\\Desktop\\quiet.csv", 100, 7250, Training::LOSS_F::AAE, 0.00001);
-	tr.train_model();
+	//Training::Trainer tr("C:\\Users\\abild\\Desktop\\quiet.csv", 100, 725, Training::LOSS_F::AAE);
+	//tr.train_model();
 
 	return 0;
 }

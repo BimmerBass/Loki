@@ -125,8 +125,10 @@ namespace Training {
 
 		// Step 2. Compute the error for the output value.
 		// Note: Since the output doesn't use an activation function in LNN, we don't need to multiply any derivative of such function. This would normally be needed.
-		OUTPUT_DELTA_CHANGE = (loss_function == LOSS_F::AAE) ? abs(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value)) :
-			std::pow(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value), 2.0);
+		//OUTPUT_DELTA_CHANGE = (loss_function == LOSS_F::AAE) ? abs(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value)) :
+		//	std::pow(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value), 2.0);
+		//OUTPUT_DELTA += OUTPUT_DELTA_CHANGE;
+		OUTPUT_DELTA_CHANGE = static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value);
 		OUTPUT_DELTA += OUTPUT_DELTA_CHANGE;
 
 		// Step 3. Now we can calculate the deltas for the third hidden layer
