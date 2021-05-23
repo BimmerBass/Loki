@@ -120,38 +120,45 @@ namespace Training {
 
 	void Trainer::do_backprop(neuron_t expected_value) {
 
-		// Step 1. Compute the error for the output value.
-		// Note: Since the output doesn't use an activation function in LNN, we don't need to multiply any derivative of such function. This would normally be needed.
-		OUTPUT_DELTA += (loss_function == LOSS_F::AAE) ? abs(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value)) :
-			std::pow(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value), 2.0);
+		// Step 1. Reset the changes in the deltas
+		clear_delta_changes();
 
-		// Step 2. Now we can calculate the deltas for the third hidden layer
+		// Step 2. Compute the error for the output value.
+		// Note: Since the output doesn't use an activation function in LNN, we don't need to multiply any derivative of such function. This would normally be needed.
+		OUTPUT_DELTA_CHANGE = (loss_function == LOSS_F::AAE) ? abs(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value)) :
+			std::pow(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value), 2.0);
+		OUTPUT_DELTA += OUTPUT_DELTA_CHANGE;
+
+		// Step 3. Now we can calculate the deltas for the third hidden layer
 		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
-			THIRD_HIDDEN_DELTAS[n] += static_cast<double>(THIRD_HIDDEN.weights[0][n]) * OUTPUT_DELTA * ReLU_derivate(THIRD_HIDDEN.neurons[n]);
+			THIRD_HIDDEN_DELTAS_CHANGES[n] = static_cast<double>(THIRD_HIDDEN.weights[0][n]) * OUTPUT_DELTA_CHANGE * ReLU_derivate(THIRD_HIDDEN.neurons[n]);
+			THIRD_HIDDEN_DELTAS[n] += THIRD_HIDDEN_DELTAS_CHANGES[n];
 		}
 
-		// Step 3. Calculate the second hidden layer's deltas.
+		// Step 4. Calculate the second hidden layer's deltas.
 		for (int m = 0; m < HIDDEN_STD_SIZE; m++) { // Each neuron in third hidden layer
 			for (int n = 0; n < HIDDEN_STD_SIZE; n++) { // Each neuron in second hidden layer
-				SECOND_HIDDEN_DELTAS[n] += static_cast<double>(SECOND_HIDDEN.weights[m][n]) * THIRD_HIDDEN_DELTAS[m];
+				SECOND_HIDDEN_DELTAS_CHANGES[n] = static_cast<double>(SECOND_HIDDEN.weights[m][n]) * THIRD_HIDDEN_DELTAS_CHANGES[m];
 			}
 		}
 
-		// Step 3A. Multiply all the deltas with the activation function derivative
+		// Step 4A. Multiply all the deltas with the activation function derivative
 		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
-			SECOND_HIDDEN_DELTAS[n] *= ReLU_derivate(SECOND_HIDDEN.neurons[n]);
+			SECOND_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(SECOND_HIDDEN.neurons[n]);
+			SECOND_HIDDEN_DELTAS[n] += SECOND_HIDDEN_DELTAS_CHANGES[n];
 		}
 
-		// Step 4. Lastly, calculate the first hidden layer's deltas.
+		// Step 5. Lastly, calculate the first hidden layer's deltas.
 		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
 			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-				FIRST_HIDDEN_DELTAS[n] += static_cast<double>(FIRST_HIDDEN.weights[m][n]) * SECOND_HIDDEN_DELTAS[m];
+				FIRST_HIDDEN_DELTAS_CHANGES[n] = static_cast<double>(FIRST_HIDDEN.weights[m][n]) * SECOND_HIDDEN_DELTAS_CHANGES[m];
 			}
 		}
 
-		// Step 4A. Multiply these deltas by the activation function derivatives and we're done :))
+		// Step 5A. Multiply these deltas by the activation function derivatives and we're done :))
 		for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-			FIRST_HIDDEN_DELTAS[n] *= ReLU_derivate(FIRST_HIDDEN.neurons[n]);
+			FIRST_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(FIRST_HIDDEN.neurons[n]);
+			FIRST_HIDDEN_DELTAS[n] += FIRST_HIDDEN_DELTAS_CHANGES[n];
 		}
 
 	}
@@ -285,7 +292,7 @@ namespace Training {
 	*/
 	void Trainer::train_model(std::string saved_model) {
 		assert(epochs > 0);
-		assert(batch_size > 0);
+		assert(batch_size > 0 && batch_size < training_data->size());
 		assert(learning_rate > 0);
 		assert(learning_rate_decay > 0);
 
@@ -315,12 +322,55 @@ namespace Training {
 				  << "| Learning decay rate	| " << learning_rate_decay << "\n"
 				  << "+---------------------+------------------------------------------+" << std::endl;
 
+		// These are used for computing the loss
+		std::vector<double> outputs;
+		std::vector<double> expected;
+
 		for (int e = 0; e < epochs; e++) {
 
 			// Step 2A. Sub-divide the data into batches
-			
+			std::vector<size_t> batches;
+			int batch_count = training_data->size() / batch_size;
+			int remainder = training_data->size() % batch_size;
 
+			for (int i = 0; i < batch_count; i++) {
+				batches.push_back(i * batch_size);
+			}
+			if (remainder > 0) {
+				batches.push_back(remainder);
+			}
+			batches.push_back(training_data->size());
 
+			// Step 2B. Loop through the batches.
+			for (int b = 0; b < batches.size() - 1; b++) {
+				// Step 2B.1. Reset the deltas
+				clear_deltas();
+				outputs.clear();
+				expected.clear();
+
+				// Step 2B.2. For each position in the batch, do backpropagation
+				for (int p = batches[b]; p < batches[b + 1]; p++) {
+					// Load position and forward propagate
+					load_position((*training_data)[p].network_input);
+					int forwardprop_score = evaluate(false); // We're not updating incrementally, so we should do a full forward propagation
+					outputs.push_back(static_cast<double>(forwardprop_score));
+
+					// Back-propagate
+					do_backprop(static_cast<neuron_t>((*training_data)[p].score));
+					expected.push_back(static_cast<double>((*training_data)[p].score));
+				}
+
+				// Step 2B.3. Take the average of all the deltas and update the weights
+				take_avg_deltas(batches[b + 1] - batches[b]);
+				update_weights();
+
+				// Step 2B.4. Output this batch's error.
+				std::string progress((b + 1) / batches.size(), '=');
+				std::cout << "[" << b + 1 << "/" << batches.size() << "][" << progress << ">" << std::string(batches.size() - (b + 1) / batches.size(), ' ') << "] "
+					<< "MSE:	" << compute_loss<LOSS_F::MSE>(outputs, expected) << "	AAE:	" << compute_loss<LOSS_F::AAE>(outputs, expected) << std::endl;
+			}
+
+			// Step 2C. When validation split is implemented, output the score of that here.
 		}
 	}
 
@@ -331,18 +381,18 @@ namespace Training {
 	When we compute the deltas, we calculate the sum of each individual delta from each data point. Therefore this method is used to take the average of all deltas.
 	
 	*/
-	void Trainer::take_avg_deltas() {
+	void Trainer::take_avg_deltas(size_t current_batch_size) {
 
 		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			FIRST_HIDDEN_DELTAS[i] /= static_cast<double>(batch_size);
+			FIRST_HIDDEN_DELTAS[i] /= static_cast<double>(current_batch_size);
 		}
 
 		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			SECOND_HIDDEN_DELTAS[i] /= static_cast<double>(batch_size);
-			THIRD_HIDDEN_DELTAS[i] /= static_cast<double>(batch_size);
+			SECOND_HIDDEN_DELTAS[i] /= static_cast<double>(current_batch_size);
+			THIRD_HIDDEN_DELTAS[i] /= static_cast<double>(current_batch_size);
 		}
 
-		OUTPUT_DELTA /= static_cast<double>(batch_size);
+		OUTPUT_DELTA /= static_cast<double>(current_batch_size);
 	}
 
 	/*
@@ -355,5 +405,12 @@ namespace Training {
 		SECOND_HIDDEN_DELTAS.fill(0.0);
 		THIRD_HIDDEN_DELTAS.fill(0.0);
 		OUTPUT_DELTA = 0.0;
+	}
+
+	void Trainer::clear_delta_changes() {
+		FIRST_HIDDEN_DELTAS_CHANGES.fill(0.0);
+		SECOND_HIDDEN_DELTAS_CHANGES.fill(0.0);
+		THIRD_HIDDEN_DELTAS_CHANGES.fill(0.0);
+		OUTPUT_DELTA_CHANGE = 0.0;
 	}
 }

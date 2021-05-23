@@ -15,11 +15,11 @@ namespace Training {
 
 	// Used to hold a datapoint for the trainer
 	struct TrainingPosition {
-		int8_t network_input[INPUT_SIZE] = { 0 };
+		std::array<int8_t, INPUT_SIZE> network_input;
 		int score = 0;
 
 		void set(int val) {
-			memset(network_input, val, sizeof(int8_t) * INPUT_SIZE);
+			network_input.fill(val);
 		}
 	};
 
@@ -40,7 +40,7 @@ namespace Training {
 		void do_backprop(neuron_t expected_value);
 		void update_weights();
 
-		void take_avg_deltas();
+		void take_avg_deltas(size_t current_batch_size);
 		void clear_deltas();
 
 		void init_parameters();
@@ -50,6 +50,15 @@ namespace Training {
 		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_DELTAS;
 		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_DELTAS;
 		double OUTPUT_DELTA;
+
+		// To do proper backpropagation with batch gradient descent, we need to record the changes in the deltas.
+		// The below containers are used for that purpose
+		void clear_delta_changes();
+
+		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_DELTAS_CHANGES;
+		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_DELTAS_CHANGES;
+		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_DELTAS_CHANGES;
+		double OUTPUT_DELTA_CHANGE = 0;
 
 
 		const int epochs;
