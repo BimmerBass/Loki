@@ -156,7 +156,7 @@ namespace DataGeneration {
         
             csv_file << std::to_string(net_inp[0]);
         
-            for (int j = 0; j < INPUT_SIZE; j++){
+            for (int j = 1; j < INPUT_SIZE; j++){
                 csv_file << ";" << std::to_string(net_inp[j]);
             }
         

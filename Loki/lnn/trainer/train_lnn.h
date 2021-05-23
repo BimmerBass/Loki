@@ -7,6 +7,11 @@
 
 namespace Training {
 
+	// Here we use the assumption that the ReLU function derivative at x = 0 is 1. In reality this is undefined
+	inline double ReLU_derivate(neuron_t x) {
+		return (x < 0) ? 0.0 : 1.0;
+	}
+
 	enum class LOSS_F :int {
 		MSE = 0,	/* Mean squared error */
 		AAE = 1,	/* Average absolute error */
@@ -74,10 +79,6 @@ namespace Training {
 	template<LOSS_F F>
 	double compute_loss(const std::vector<double>& ai, const std::vector<double>& yi);
 
-	// Here we use the assumption that the ReLU function derivative at x = 0 is 1. In reality this is undefined
-	double ReLU_derivate(neuron_t x) {
-		return (x < 0) ? 0.0 : 1.0;
-	}
 }
 
 

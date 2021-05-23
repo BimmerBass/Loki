@@ -100,7 +100,7 @@ namespace Training {
 			training_data->push_back(tp);
 			current++;
 
-			if (current % 500000 == 0) {
+			if (current % 100000 == 0) {
 				std::cout << "[*] Loaded " << current << " positions" << std::endl;
 			}
 		}
@@ -255,7 +255,7 @@ namespace Training {
 			FIRST_HIDDEN.biases[n] = random_num(-1, 1);
 
 			for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
-				FIRST_HIDDEN.weights[n][m] = random_num(-1, 1);
+				FIRST_HIDDEN.weights[m][n] = random_num(-1, 1);
 			}
 		}
 
@@ -265,7 +265,7 @@ namespace Training {
 			SECOND_HIDDEN.biases[n] = random_num(-1, 1);
 
 			for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
-				SECOND_HIDDEN.weights[n][m] = random_num(-1, 1);
+				SECOND_HIDDEN.weights[m][n] = random_num(-1, 1);
 			}
 		}
 
@@ -274,9 +274,7 @@ namespace Training {
 
 			THIRD_HIDDEN.biases[n] = random_num(-1, 1);
 
-			for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
-				THIRD_HIDDEN.weights[n][m] = random_num(-1, 1);
-			}
+			THIRD_HIDDEN.weights[0][n] = random_num(-1, 1);
 		}
 
 		// Step 6. Set the output bias to 0
@@ -365,8 +363,13 @@ namespace Training {
 				update_weights();
 
 				// Step 2B.4. Output this batch's error.
-				std::string progress((b + 1) / batches.size(), '=');
-				std::cout << "[" << b + 1 << "/" << batches.size() << "][" << progress << ">" << std::string(batches.size() - (b + 1) / batches.size(), ' ') << "] "
+				int width = 30;
+				int right_padding = (double(b) / double(batches.size())) * width;
+				int left_padding = width - right_padding;
+
+
+				std::string progress(right_padding, '=');
+				std::cout << "[" << b + 1 << "/" << batches.size() << "][" << progress << ">" << std::string(left_padding, ' ') << "] "
 					<< "MSE:	" << compute_loss<LOSS_F::MSE>(outputs, expected) << "	AAE:	" << compute_loss<LOSS_F::AAE>(outputs, expected) << std::endl;
 			}
 

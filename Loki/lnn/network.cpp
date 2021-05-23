@@ -5,7 +5,7 @@
 Split a string
 
 */
-std::vector<std::string> split_string(std::string s, char delimiter = ';') {
+std::vector<std::string> split_string(std::string s, char delimiter) {
 	std::vector<std::string> out;
 
 	// Remove all spaces in the string
