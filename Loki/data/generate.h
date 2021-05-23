@@ -12,8 +12,8 @@ namespace DataGeneration {
 
     // Struct for holding the position to give the network and the evaluation score
     struct DataPoint{
-        std::array<neuron_t, INPUT_SIZE> network_input;
-        neuron_t score;
+        int8_t network_input[INPUT_SIZE] = { 0 };
+        int score = 0;
     };
 
     struct GenerationInfo {
@@ -23,7 +23,7 @@ namespace DataGeneration {
     };
 
     // This function will be run by a thread and generate data.
-    void generate_batch(std::vector<DataPoint>& data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread = false);
+    void generate_batch(std::vector<DataPoint>* data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread = false);
     
     // Will spin up threads and generate the training data. Writes out to a CSV file afterwards
     void generate_training_data(std::string epd_in, std::string csv_out, bool use_search=false, int depth=0);

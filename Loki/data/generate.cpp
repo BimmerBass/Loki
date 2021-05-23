@@ -3,16 +3,16 @@
 
 namespace DataGeneration {
 
-    void generate_batch(std::vector<DataPoint>& data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread){
+    void generate_batch(std::vector<DataPoint>* data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread){
 
         // Step 1. Clear the data vector, declare a position object and an array for holding the network input.
-        data.clear();
+        data->clear();
         GameState_t* pos = new GameState_t;
-        //std::array<neuron_t, INPUT_SIZE> net_input;
-        std::array<neuron_t, INPUT_SIZE>* net_input = new std::array<neuron_t, INPUT_SIZE>;
+        int current_filerow = 0;
 
         // Step 2. Loop through all the positions
         for (int p = 0; p < FENS.size(); p++){
+            DataPoint dp;
             // Step 2A. Parse the FEN
             pos->parseFen(FENS[p]);
             int score = 0;
@@ -42,14 +42,15 @@ namespace DataGeneration {
 
             // Step 2C. Set up the array of the position.
             Bitboard pceBoard = 0;
-            net_input->fill(neuron_t(0));
+            memset(dp.network_input, 0, sizeof(int8_t) * INPUT_SIZE);
+
             for (int pce = PAWN; pce <= KING; pce++){
                 pceBoard = pos->pieceBBS[pce][WHITE];
 
                 while (pceBoard){
                     int sq = PopBit(&pceBoard);
 
-                    (*net_input)[LNN::calculate_input_index(pce, true, sq)] = neuron_t(1);
+                    dp.network_input[LNN::calculate_input_index(pce, true, sq)] = 1;
                 }
             }
             for (int pce = PAWN; pce <= KING; pce++){
@@ -58,16 +59,14 @@ namespace DataGeneration {
                 while (pceBoard){
                     int sq = PopBit(&pceBoard);
 
-                    (*net_input)[LNN::calculate_input_index(pce, false, sq)] = neuron_t(1);
+                    dp.network_input[LNN::calculate_input_index(pce, false, sq)] = 1;
                 }
             }
 
             // Step 2D. Now we can set up a DataPoint and push it to the vector.
-            DataPoint dp;
-            dp.network_input = *net_input;
             dp.score = static_cast<neuron_t>(score);
 
-            data.push_back(dp);
+            data->push_back(dp);
 
             if (main_thread && p % 10000 == 0) {
                 std::cout << "Generated " << p << "/" << FENS.size() << " positions" << std::endl;
@@ -76,7 +75,6 @@ namespace DataGeneration {
 
         // Step 3. Delete pos and return
         delete pos;
-        delete net_input;
     }
 
 
@@ -103,7 +101,7 @@ namespace DataGeneration {
         std::cout << "Extracted " << FENS.size() << " fens" << std::endl;
 
         // Step 3. Set up the requested number of threads and subdivide the fen list depending on that.
-        std::vector<std::thread> thread_list;
+        /*std::vector<std::thread> thread_list;
         std::vector<std::vector<std::string>> divided_fens;
         //std::vector<std::vector<DataPoint>> data;
 
@@ -136,29 +134,33 @@ namespace DataGeneration {
 
         for (int t = 0; t < THREADS; t++) {
             thread_list[t].join();
-        }
+        }*/
 
-
-        std::vector<DataPoint> combined_data;
-
-        for (int t = 0; t < THREADS; t++) {
-            for (int i = 0; i < data[t].size(); i++) {
-                combined_data.push_back(data[t][i]);
-            }
-        }
-
-        // Lastly, open the csv file and write the data.
         std::ofstream csv_file(csv_out);
 
-        for (int i = 0; i < combined_data.size(); i++){
-            csv_file << std::to_string(combined_data[i].network_input[0]);
+        std::vector<DataPoint>* combined_data = new std::vector<DataPoint>;
+        generate_batch(combined_data, FENS, info, true);
 
+        //for (int t = 0; t < THREADS; t++) {
+        //    for (int i = 0; i < data[t].size(); i++) {
+        //        combined_data.push_back(data[t][i]);
+        //    }
+        //}
+
+        // Lastly, open the csv file and write the data.
+        //std::ofstream csv_file(csv_out);
+        
+        for (int i = 0; i < combined_data->size(); i++){
+            int8_t* net_inp = (*combined_data)[i].network_input;
+        
+            csv_file << std::to_string(net_inp[0]);
+        
             for (int j = 0; j < INPUT_SIZE; j++){
-                csv_file << ";" << std::to_string(combined_data[i].network_input[j]);
+                csv_file << ";" << std::to_string(net_inp[j]);
             }
-
-            csv_file << ";" << std::to_string(combined_data[i].score);
-
+        
+            csv_file << ";" << std::to_string((*combined_data)[i].score);
+        
             csv_file << "\n";
         }
         // Close the csv file.
