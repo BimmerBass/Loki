@@ -43,7 +43,8 @@ namespace Training {
 	
 	*/
 
-	Trainer::Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss) : epochs(_epochs), batch_size(_batch_size), loss_function(loss) {
+	Trainer::Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, double lRate, double lRate_decay)
+		: epochs(_epochs), batch_size(_batch_size), loss_function(loss), learning_rate(lRate), learning_rate_decay(lRate_decay) {
 		// Step 1. Load the dataset
 		load_dataset(dataset);
 
@@ -151,6 +152,64 @@ namespace Training {
 		for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
 			FIRST_HIDDEN_DELTAS[n] *= ReLU_derivate(FIRST_HIDDEN.neurons[n]);
 		}
+
+	}
+
+
+	/*
+	
+	Weight update. When we have done backpropagation on all the data points in the set (given by the batch size), update the weights depending on their
+		deltas.
+	
+	*/
+	void Trainer::update_weights() {
+		double weight_gradient = 0.0, bias_gradient = 0.0;
+
+		// Step 1. Update the weights between the output and the third hidden layer.
+		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
+			weight_gradient = THIRD_HIDDEN.neurons[n] * OUTPUT_DELTA;
+			bias_gradient = OUTPUT_DELTA;
+
+			// Update the weight and bias.
+			THIRD_HIDDEN.weights[0][n] -= learning_rate * weight_gradient;
+			THIRD_HIDDEN.biases[n] -= learning_rate * bias_gradient;
+		}
+
+		// Step 2. Update the weights and biases of the second hidden layer.
+		for (int m = 0; m < HIDDEN_STD_SIZE; m++) { // For each neuron in the third hidden layer
+			for (int n = 0; n < HIDDEN_STD_SIZE; n++) { // For each neuron in the second hidden layer
+				weight_gradient = SECOND_HIDDEN.neurons[n] * THIRD_HIDDEN_DELTAS[m];
+				bias_gradient = THIRD_HIDDEN_DELTAS[m];
+
+				// Update the weight and bias
+				SECOND_HIDDEN.weights[m][n] -= learning_rate * weight_gradient;
+				SECOND_HIDDEN.biases[n] -= learning_rate * bias_gradient;
+			}
+		}
+
+		// Step 3. Update weights and biases for the first hidden layer
+		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
+			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+				weight_gradient = FIRST_HIDDEN.neurons[n] * SECOND_HIDDEN_DELTAS[m];
+				bias_gradient = SECOND_HIDDEN_DELTAS[m];
+
+				// Update the weight and the bias
+				FIRST_HIDDEN.weights[m][n] -= learning_rate * weight_gradient;
+				FIRST_HIDDEN.biases[n] -= learning_rate * bias_gradient;
+			}
+		}
+
+		// Step 4. Lastly, update the weights from the input to the first hidden layer.
+		// Note: The input shouldn't have any bias, so this won't be updated.
+		for (int m = 0; m < FIRST_HIDDEN_SIZE; m++) {
+			for (int n = 0; n < INPUT_SIZE; n++) {
+				weight_gradient = INPUT_LAYER.neurons[n] * FIRST_HIDDEN_DELTAS[m];
+				
+				// Update the weight
+				INPUT_LAYER.weights[m][n] -= learning_rate * weight_gradient;
+			}
+		}
+
 
 	}
 

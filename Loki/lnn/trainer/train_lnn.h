@@ -25,7 +25,7 @@ namespace Training {
 
 	class Trainer : private LNN::Network {
 	public:
-		Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss);
+		Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, double lRate = 0.001, double lRate_decay = 0.00001);
 		~Trainer();
 
 		// Main method. This is responsible for running the training of the network.
@@ -51,6 +51,9 @@ namespace Training {
 		const int epochs;
 		const size_t batch_size;
 		const LOSS_F loss_function;
+
+		const double learning_rate;
+		const double learning_rate_decay;
 	};
 
 
