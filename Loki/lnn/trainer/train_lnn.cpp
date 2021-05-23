@@ -214,6 +214,68 @@ namespace Training {
 	}
 
 
+	/*
+	
+	Parameter initialization.
+		If we aren't loading a network from a file, we need to initialize it with random values. The Network class initializes all weights/biases to zero,
+		which won't work with the backpropagation algorithm.
+	
+	*/
+	inline neuron_t random_num(int start, int end) {
+		
+		neuron_t f = static_cast<neuron_t>(std::rand()) / static_cast<neuron_t>(RAND_MAX);
+		return static_cast<neuron_t>(start) + f * (static_cast<neuron_t>(end) - static_cast<neuron_t>(start));
+	}
+
+	void Trainer::init_parameters() {
+		
+		// Step 1. Seed the RNG randomly
+		std::srand(std::time(nullptr));
+		
+		// Step 2. Initialize the input randomly
+		INPUT_LAYER.biases.fill(neuron_t(0));
+
+		for (int n = 0; n < INPUT_SIZE; n++) {
+			for (int m = 0; m < FIRST_HIDDEN_SIZE; m++) {
+				INPUT_LAYER.weights[m][n] = random_num(-1, 1);
+			}
+		}
+
+		// Step 3. Initialize weights and biases of the first hidden layer
+		for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+
+			FIRST_HIDDEN.biases[n] = random_num(-1, 1);
+
+			for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
+				FIRST_HIDDEN.weights[n][m] = random_num(-1, 1);
+			}
+		}
+
+		// Step 4. Initialize the second hidden layer
+		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
+
+			SECOND_HIDDEN.biases[n] = random_num(-1, 1);
+
+			for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
+				SECOND_HIDDEN.weights[n][m] = random_num(-1, 1);
+			}
+		}
+
+		// Step 5. Initialize the third hidden layer
+		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
+
+			THIRD_HIDDEN.biases[n] = random_num(-1, 1);
+
+			for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
+				THIRD_HIDDEN.weights[n][m] = random_num(-1, 1);
+			}
+		}
+
+		// Step 6. Set the output bias to 0
+		OUTPUT_LAYER.biases[0] = neuron_t(0);
+	}
+
+
 
 	/*
 	

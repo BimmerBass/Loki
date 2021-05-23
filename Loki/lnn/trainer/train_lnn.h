@@ -1,5 +1,7 @@
 #ifndef TRAIN_LNN_H
 #define TRAIN_LNN_H
+#include <ctime>
+
 #include "../network.h"
 
 
@@ -40,6 +42,8 @@ namespace Training {
 
 		void take_avg_deltas();
 		void clear_deltas();
+
+		void init_parameters();
 
 		// The following arrays hold all deltas for the hidden layers and the output layer.
 		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_DELTAS;
