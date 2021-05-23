@@ -124,6 +124,33 @@ namespace Training {
 			std::pow(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value), 2.0);
 
 		// Step 2. Now we can calculate the deltas for the third hidden layer
+		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
+			THIRD_HIDDEN_DELTAS[n] += static_cast<double>(THIRD_HIDDEN.weights[0][n]) * OUTPUT_DELTA * ReLU_derivate(THIRD_HIDDEN.neurons[n]);
+		}
+
+		// Step 3. Calculate the second hidden layer's deltas.
+		for (int m = 0; m < HIDDEN_STD_SIZE; m++) { // Each neuron in third hidden layer
+			for (int n = 0; n < HIDDEN_STD_SIZE; n++) { // Each neuron in second hidden layer
+				SECOND_HIDDEN_DELTAS[n] += static_cast<double>(SECOND_HIDDEN.weights[m][n]) * THIRD_HIDDEN_DELTAS[m];
+			}
+		}
+
+		// Step 3A. Multiply all the deltas with the activation function derivative
+		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
+			SECOND_HIDDEN_DELTAS[n] *= ReLU_derivate(SECOND_HIDDEN.neurons[n]);
+		}
+
+		// Step 4. Lastly, calculate the first hidden layer's deltas.
+		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
+			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+				FIRST_HIDDEN_DELTAS[n] += static_cast<double>(FIRST_HIDDEN.weights[m][n]) * SECOND_HIDDEN_DELTAS[m];
+			}
+		}
+
+		// Step 4A. Multiply these deltas by the activation function derivatives and we're done :))
+		for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+			FIRST_HIDDEN_DELTAS[n] *= ReLU_derivate(FIRST_HIDDEN.neurons[n]);
+		}
 
 	}
 
