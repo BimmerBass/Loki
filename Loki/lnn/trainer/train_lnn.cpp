@@ -284,6 +284,10 @@ namespace Training {
 	
 	*/
 	void Trainer::train_model(std::string saved_model) {
+		assert(epochs > 0);
+		assert(batch_size > 0);
+		assert(learning_rate > 0);
+		assert(learning_rate_decay > 0);
 
 		// Step 1. If we have a saved model that we want to train further, load it. Otherwise, initialize all relevant weights and biases randomly.
 		if (saved_model != "") {
@@ -314,8 +318,7 @@ namespace Training {
 		for (int e = 0; e < epochs; e++) {
 
 			// Step 2A. Sub-divide the data into batches
-			int current_position = 0;
-
+			
 
 
 		}
