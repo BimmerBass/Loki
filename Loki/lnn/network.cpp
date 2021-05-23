@@ -1,5 +1,41 @@
 #include "network.h"
 
+/*
+
+Split a string
+
+*/
+std::vector<std::string> split_string(std::string s, char delimiter = ';') {
+	std::vector<std::string> out;
+
+	// Remove all spaces in the string
+	s.erase(std::remove_if(s.begin(), s.end(), std::isspace), s.end());
+
+	std::string curr_string = "";
+
+	for (int i = 0; i < s.length(); i++) {
+		// If we're at the last character, add it to the current string (if it's not the delimeter) and then to the output vector
+		if (i == s.length() - 1) {
+			if (s[i] != delimiter) {
+				curr_string += s[i];
+			}
+
+			out.push_back(curr_string);
+			continue;
+		}
+		// If we hit the delimeter, continue
+		else if (s[i] == delimiter) {
+			out.push_back(curr_string);
+			curr_string = "";
+			continue;
+		}
+
+		curr_string += s[i];
+	}
+
+	return out;
+}
+
 
 /*
 
@@ -189,39 +225,6 @@ namespace LNN {
 	template<>
 	void Network::load_net<BIN>(std::string file_path) {
 		return;
-	}
-
-
-	// Helper function to split a string by semi-colons
-	std::vector<std::string> split_string(std::string s, char delimeter=';') {
-		std::vector<std::string> out;
-
-		// Remove all spaces in the string
-		s.erase(std::remove_if(s.begin(), s.end(), std::isspace), s.end());
-
-		std::string curr_string = "";
-
-		for (int i = 0; i < s.length(); i++) {
-			// If we're at the last character, add it to the current string (if it's not the delimeter) and then to the output vector
-			if (i == s.length() - 1) {
-				if (s[i] != delimeter) {
-					curr_string += s[i];
-				}
-
-				out.push_back(curr_string);
-				continue;
-			}
-			// If we hit the delimeter, continue
-			else if (s[i] == delimeter) {
-				out.push_back(curr_string);
-				curr_string = "";
-				continue;
-			}
-
-			curr_string += s[i];
-		}
-
-		return out;
 	}
 
 	// Helper function to extract all numbers in the csv file.

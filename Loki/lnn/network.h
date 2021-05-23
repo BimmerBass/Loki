@@ -13,6 +13,9 @@
 #include "types/layer.h"
 #include "types/architecture.h"
 
+// Helper function to split a string by a certain delimiter.
+extern std::vector<std::string> split_string(std::string s, char delimiter = ';');
+
 namespace LNN {
 
     enum LNN_FileType :int { BIN = 0, CSV = 1 };
