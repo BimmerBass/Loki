@@ -1,7 +1,6 @@
 #ifndef TRAIN_LNN_H
 #define TRAIN_LNN_H
 #include <ctime>
-#include <iomanip>
 
 #include "../network.h"
 
@@ -96,25 +95,6 @@ namespace Training {
 	// Loss function
 	template<LOSS_F F>
 	double compute_loss(const std::vector<double>& ai, const std::vector<double>& yi);
-
-
-	// Function to get the date and time to write to the filename
-	inline std::string getDateTime()
-	{
-		auto time = std::time(nullptr);
-		std::stringstream ss;
-
-#if (defined(_WIN32) || defined(_WIN64))
-		tm ltm;
-		localtime_s(&ltm, &time);
-		ss << std::put_time(&ltm, "%F_%T"); // ISO 8601 without timezone information.
-#else
-		ss << std::put_time(std::localtime(&time), "%F_%T");
-#endif
-		auto s = ss.str();
-		std::replace(s.begin(), s.end(), ':', '-');
-		return s;
-	}
 
 }
 
