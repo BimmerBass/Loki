@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", "C:\\Users\\abild\\Desktop\\quiet_test.csv");
 	//Training::Trainer tr("C:\\Users\\abild\\Desktop\\training_data.csv", 100, 10, Training::LOSS_F::MSE);
 	//Training::Trainer tr("C:\\Users\\abild\\Desktop\\quiet.csv", 100, 1, Training::LOSS_F::AAE, 0.0001);
-	Training::Trainer tr("C:\\Users\\abild\\Desktop\\quiet_test.csv", 1000, 1, Training::LOSS_F::AAE, 0.05);
+	Training::Trainer tr("C:\\Users\\abild\\Desktop\\quiet_test.csv", 1000, 1, Training::LOSS_F::AAE, 0.05, 0.0001);
 	tr.train_model();
 
 

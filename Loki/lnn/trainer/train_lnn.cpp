@@ -44,7 +44,7 @@ namespace Training {
 	*/
 
 	Trainer::Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, double lRate, double lRate_decay)
-		: epochs(_epochs), batch_size(_batch_size), loss_function(loss), learning_rate(lRate), learning_rate_decay(lRate_decay) {
+		: epochs(_epochs), batch_size(_batch_size), loss_function(loss), initial_learning_rate(lRate), learning_rate_decay(lRate_decay) {
 		
 		// Step 1. Allocate a vector for the dataset
 		training_data = new std::vector<TrainingPosition>;
@@ -299,7 +299,6 @@ namespace Training {
 	void Trainer::train_model(std::string saved_model) {
 		assert(epochs > 0);
 		assert(batch_size > 0 && batch_size < training_data->size());
-		assert(learning_rate > 0);
 		assert(learning_rate_decay > 0);
 
 		// Step 1. If we have a saved model that we want to train further, load it. Otherwise, initialize all relevant weights and biases randomly.
@@ -334,6 +333,9 @@ namespace Training {
 
 
 		for (int e = 0; e < epochs; e++) {
+			// Calculate this epoch's learning rate
+			learning_rate = calc_learning_rate(e);
+			assert(learning_rate > 0);
 
 			// Step 2A. Sub-divide the data into batches
 			std::vector<size_t> batches;

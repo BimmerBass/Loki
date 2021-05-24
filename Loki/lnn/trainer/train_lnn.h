@@ -87,8 +87,14 @@ namespace Training {
 		const size_t batch_size;
 		const LOSS_F loss_function;
 
-		const double learning_rate;
+		const double initial_learning_rate;
 		const double learning_rate_decay;
+
+		double learning_rate;
+
+		double calc_learning_rate(int epoch) {
+			return initial_learning_rate / (1.0 + learning_rate_decay * double(epoch));
+		}
 	};
 
 
