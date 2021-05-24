@@ -32,7 +32,7 @@ namespace Training {
 
 	class Trainer : private LNN::Network {
 	public:
-		Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, double lRate = 0.0001, double lRate_decay = 0.00001);
+		Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, double lRate = 0.000001, double lRate_decay = 0.00001);
 		~Trainer();
 
 		// Main method. This is responsible for running the training of the network.
