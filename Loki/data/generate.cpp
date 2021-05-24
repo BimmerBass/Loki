@@ -150,7 +150,7 @@ namespace DataGeneration {
 
         // Lastly, open the csv file and write the data.
         //std::ofstream csv_file(csv_out);
-        
+
         for (int i = 0; i < combined_data->size(); i++){
             int8_t* net_inp = (*combined_data)[i].network_input;
         

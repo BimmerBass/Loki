@@ -1,6 +1,7 @@
 #ifndef TRAIN_LNN_H
 #define TRAIN_LNN_H
 #include <ctime>
+#include <iomanip>
 
 #include "../network.h"
 
@@ -13,12 +14,20 @@ namespace Training {
 	}
 
 	// As suggested by Andrew Grant, a sigmoid function is used on the output during training
+	constexpr double SIGMOID_BASE = 1.2471; // Found numerically by texel tuning
+
 	inline double sigmoid(int x) {
-		return 1.0 / (1.0 + std::exp(-static_cast<double>(x)));
+		return 1.0 / (1.0 + std::pow(10, -(SIGMOID_BASE * static_cast<double>(x) / 400.0)));
 	}
 
 	inline double sigmoid_derivative(int x) {
-		return sigmoid(x) * (1.0 - sigmoid(x));
+		
+		double K = SIGMOID_BASE / 400.0;
+
+		double nominator = std::pow(10.0, -K * double(x)) * K * std::log(10);
+		double denominator = std::pow(1.0 + std::pow(10.0, -K * double(x)), 2.0);
+
+		return nominator / denominator;
 	}
 
 	enum class LOSS_F :int {
@@ -51,7 +60,7 @@ namespace Training {
 		std::vector<TrainingPosition>* training_data;
 		void load_dataset(std::string filepath);
 
-		void do_backprop(neuron_t expected_value);
+		void do_backprop(double expected_value);
 		void update_weights();
 
 		void take_avg_deltas(size_t current_batch_size);
@@ -87,6 +96,25 @@ namespace Training {
 	// Loss function
 	template<LOSS_F F>
 	double compute_loss(const std::vector<double>& ai, const std::vector<double>& yi);
+
+
+	// Function to get the date and time to write to the filename
+	inline std::string getDateTime()
+	{
+		auto time = std::time(nullptr);
+		std::stringstream ss;
+
+#if (defined(_WIN32) || defined(_WIN64))
+		tm ltm;
+		localtime_s(&ltm, &time);
+		ss << std::put_time(&ltm, "%F_%T"); // ISO 8601 without timezone information.
+#else
+		ss << std::put_time(std::localtime(&time), "%F_%T");
+#endif
+		auto s = ss.str();
+		std::replace(s.begin(), s.end(), ':', '-');
+		return s;
+	}
 
 }
 

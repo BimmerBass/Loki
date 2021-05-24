@@ -118,18 +118,23 @@ namespace Training {
 	
 	*/
 
-	void Trainer::do_backprop(neuron_t expected_value) {
+	void Trainer::do_backprop(volatile double expected_value) {
 
 		// Step 1. Reset the changes in the deltas
 		clear_delta_changes();
 
 		// Step 2. Compute the error for the output value.
 		// Note: Since the output doesn't use an activation function in LNN, we don't need to multiply any derivative of such function. This would normally be needed.
-		//OUTPUT_DELTA_CHANGE = (loss_function == LOSS_F::AAE) ? abs(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value)) :
-		//	std::pow(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value), 2.0);
-		//OUTPUT_DELTA += OUTPUT_DELTA_CHANGE;
-		OUTPUT_DELTA_CHANGE = static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value);
-		OUTPUT_DELTA_CHANGE *= sigmoid_derivative(OUTPUT_LAYER.neurons[0]);
+		double diff = double(OUTPUT_LAYER.neurons[0]) - expected_value;
+		OUTPUT_DELTA_CHANGE = sigmoid_derivative(OUTPUT_LAYER.neurons[0]);
+
+		if (loss_function == LOSS_F::AAE) {
+			OUTPUT_DELTA_CHANGE *= (diff > 0) ? 1.0 : -1.0;
+		}
+		else {
+			OUTPUT_DELTA_CHANGE *= 2 * (diff);
+		}
+
 		OUTPUT_DELTA += OUTPUT_DELTA_CHANGE;
 
 		// Step 3. Now we can calculate the deltas for the third hidden layer
@@ -327,6 +332,7 @@ namespace Training {
 		std::vector<double> outputs;
 		std::vector<double> expected;
 
+
 		for (int e = 0; e < epochs; e++) {
 
 			// Step 2A. Sub-divide the data into batches
@@ -374,10 +380,13 @@ namespace Training {
 				int right_padding = (double(b) / double(batches.size())) * width;
 				int left_padding = width - right_padding;
 
+				double loss_MSE = compute_loss<LOSS_F::MSE>(outputs, expected);
+				double loss_AAE = compute_loss<LOSS_F::AAE>(outputs, expected);
 
 				std::string progress(right_padding, '=');
 				std::cout << "[" << b + 1 << "/" << batches.size() << "][" << progress << ">" << std::string(left_padding, ' ') << "] "
-					<< "MSE:	" << compute_loss<LOSS_F::MSE>(outputs, expected) << "	AAE:	" << compute_loss<LOSS_F::AAE>(outputs, expected) << std::endl;
+					<< "MSE:	" << loss_MSE << "	AAE:	" << loss_AAE << std::endl;
+
 			}
 
 			// Step 2C. When validation split is implemented, output the score of that here.
