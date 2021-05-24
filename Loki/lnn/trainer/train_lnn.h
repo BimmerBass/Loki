@@ -12,6 +12,15 @@ namespace Training {
 		return (x < 0) ? 0.0 : 1.0;
 	}
 
+	// As suggested by Andrew Grant, a sigmoid function is used on the output during training
+	inline double sigmoid(int x) {
+		return 1.0 / (1.0 + std::exp(-static_cast<double>(x)));
+	}
+
+	inline double sigmoid_derivative(int x) {
+		return sigmoid(x) * (1.0 - sigmoid(x));
+	}
+
 	enum class LOSS_F :int {
 		MSE = 0,	/* Mean squared error */
 		AAE = 1,	/* Average absolute error */

@@ -129,6 +129,7 @@ namespace Training {
 		//	std::pow(static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value), 2.0);
 		//OUTPUT_DELTA += OUTPUT_DELTA_CHANGE;
 		OUTPUT_DELTA_CHANGE = static_cast<double>(OUTPUT_LAYER.neurons[0]) - static_cast<double>(expected_value);
+		OUTPUT_DELTA_CHANGE *= sigmoid_derivative(OUTPUT_LAYER.neurons[0]);
 		OUTPUT_DELTA += OUTPUT_DELTA_CHANGE;
 
 		// Step 3. Now we can calculate the deltas for the third hidden layer
@@ -353,10 +354,14 @@ namespace Training {
 					// Load position and forward propagate
 					load_position((*training_data)[p].network_input);
 					int forwardprop_score = evaluate(false); // We're not updating incrementally, so we should do a full forward propagation
+
+					// Step 2B.2A. Since we're training, we'll apply the sigmoid activation function to the output
+					OUTPUT_LAYER.neurons[0] = sigmoid(OUTPUT_LAYER.neurons[0]);
+
 					outputs.push_back(static_cast<double>(forwardprop_score));
 
 					// Back-propagate
-					do_backprop(static_cast<neuron_t>((*training_data)[p].score));
+					do_backprop(sigmoid((*training_data)[p].score));
 					expected.push_back(static_cast<double>((*training_data)[p].score));
 				}
 
