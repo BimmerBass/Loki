@@ -18,7 +18,7 @@ namespace Training {
 	};
 
 
-	// Used to hold a datapoint for the trainer
+	// Used to hold a datapoint for the trainer.
 	struct TrainingPosition {
 		std::array<int8_t, INPUT_SIZE> network_input;
 		int score = 0;
