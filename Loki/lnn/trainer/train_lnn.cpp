@@ -65,6 +65,7 @@ namespace Training {
 		for (int i = 0; i < threads; i++) {
 			deltas.push_back(new Deltas);
 		}
+		main_deltas = new Deltas;
 
 		// Step 3. Load the dataset
 		load_dataset(dataset);
@@ -77,6 +78,9 @@ namespace Training {
 		// Delete all Deltas objects
 		for (int i = 0; i < deltas.size(); i++) {
 			if (deltas[i] != nullptr) { delete deltas[i]; }
+		}
+		if (main_deltas != nullptr) {
+			delete main_deltas;
 		}
 	}
 
@@ -202,8 +206,8 @@ namespace Training {
 
 		// Step 2. Compute the error for the output value.
 		// Note: Since the output doesn't use an activation function in LNN, we don't need to multiply any derivative of such function. This would normally be needed.
-		double diff = double(OUTPUT_LAYER.neurons[0]) - expected_value;
-		deltas[thread_id]->OUTPUT_DELTA_CHANGE = sigmoid_derivative(OUTPUT_LAYER.neurons[0]);
+		double diff = double(deltas[thread_id]->OUTPUT_NEURON) - expected_value;
+		deltas[thread_id]->OUTPUT_DELTA_CHANGE = sigmoid_derivative(deltas[thread_id]->OUTPUT_NEURON);
 
 		if (loss_function == LOSS_F::AAE) {
 			deltas[thread_id]->OUTPUT_DELTA_CHANGE *= (diff > 0) ? 1.0 : -1.0;
@@ -217,7 +221,7 @@ namespace Training {
 		// Step 3. Now we can calculate the deltas for the third hidden layer
 		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
 			deltas[thread_id]->THIRD_HIDDEN_DELTAS_CHANGES[n] 
-				= static_cast<double>(THIRD_HIDDEN.weights[0][n]) * deltas[thread_id]->OUTPUT_DELTA_CHANGE * ReLU_derivate(THIRD_HIDDEN.neurons[n]);
+				= static_cast<double>(THIRD_HIDDEN.weights[0][n]) * deltas[thread_id]->OUTPUT_DELTA_CHANGE * ReLU_derivate(deltas[thread_id]->THIRD_HIDDEN_NEURONS[n]);
 			deltas[thread_id]->THIRD_HIDDEN_DELTAS[n] += deltas[thread_id]->THIRD_HIDDEN_DELTAS_CHANGES[n];
 		}
 
@@ -231,7 +235,7 @@ namespace Training {
 
 		// Step 4A. Multiply all the deltas with the activation function derivative
 		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
-			deltas[thread_id]->SECOND_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(SECOND_HIDDEN.neurons[n]);
+			deltas[thread_id]->SECOND_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(deltas[thread_id]->SECOND_HIDDEN_NEURONS[n]);
 			deltas[thread_id]->SECOND_HIDDEN_DELTAS[n] += deltas[thread_id]->SECOND_HIDDEN_DELTAS_CHANGES[n];
 		}
 
@@ -245,12 +249,61 @@ namespace Training {
 
 		// Step 5A. Multiply these deltas by the activation function derivatives and we're done :))
 		for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-			deltas[thread_id]->FIRST_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(FIRST_HIDDEN.neurons[n]);
+			deltas[thread_id]->FIRST_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(deltas[thread_id]->FIRST_HIDDEN_NEURONS[n]);
 			deltas[thread_id]->FIRST_HIDDEN_DELTAS[n] += deltas[thread_id]->FIRST_HIDDEN_DELTAS_CHANGES[n];
 		}
 
+		// Step 6. Now that we have the deltas, we can update the gradients.
+		deltas[thread_id]->increment_gradients();
 	}
 
+	/*
+	
+	Gradient update: When we're done propagating the error backwards, we'll compute the new gradients.
+	
+	*/
+	void Deltas::increment_gradients() {
+		volatile double weight_g = 0.0, bias_g = 0.0;
+
+		// Step 1. Update the gradients between the output and third hidden layer
+		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
+			weight_g = THIRD_HIDDEN_NEURONS[n] * OUTPUT_DELTA;
+			bias_g = OUTPUT_DELTA;
+
+			THIRD_HIDDEN_WEIGHT_GRADIENTS[n] += weight_g;
+			THIRD_HIDDEN_BIAS_GRADIENTS[n] += bias_g;
+		}
+
+		// Step 2. Second hidden layer
+		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
+			for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
+				weight_g = SECOND_HIDDEN_NEURONS[n] * THIRD_HIDDEN_DELTAS[m];
+				bias_g = THIRD_HIDDEN_DELTAS[m];
+
+				SECOND_HIDDEN_WEIGHT_GRADIENTS[m][n] += weight_g;
+				SECOND_HIDDEN_BIAS_GRADIENTS[n] += bias_g;
+			}
+		}
+
+		// Step 3. First hidden layer
+		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
+			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
+				weight_g = FIRST_HIDDEN_NEURONS[n] * SECOND_HIDDEN_DELTAS[m];
+				bias_g = SECOND_HIDDEN_DELTAS[m];
+
+				FIRST_HIDDEN_WEIGHT_GRADIENTS[m][n] += weight_g;
+				FIRST_HIDDEN_BIAS_GRADIENTS[n] += bias_g;
+			}
+		}
+		
+		// Step 4. Input layer.
+		for (int m = 0; m < FIRST_HIDDEN_SIZE; m++) {
+			for (int n = 0; n < INPUT_SIZE; n++) {
+				weight_g = INPUT_NEURONS[n] * FIRST_HIDDEN_DELTAS[m];
+				INPUT_WEIGHT_GRADIENTS[m][n] += weight_g;
+			}
+		}
+	}
 
 	/*
 	
@@ -259,54 +312,39 @@ namespace Training {
 	
 	*/
 	void Trainer::update_weights() {
-		volatile double weight_gradient = 0.0, bias_gradient = 0.0;
-
-		// Step 1. Update the weights between the output and the third hidden layer.
-		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
-			weight_gradient = THIRD_HIDDEN.neurons[n] * main_deltas.OUTPUT_DELTA;
-			bias_gradient = main_deltas.OUTPUT_DELTA;
-
-			// Update the weight and bias.
-			THIRD_HIDDEN.weights[0][n] -= learning_rate * weight_gradient;
-			THIRD_HIDDEN.biases[n] -= learning_rate * bias_gradient;
-		}
-
-		// Step 2. Update the weights and biases of the second hidden layer.
-		for (int m = 0; m < HIDDEN_STD_SIZE; m++) { // For each neuron in the third hidden layer
-			for (int n = 0; n < HIDDEN_STD_SIZE; n++) { // For each neuron in the second hidden layer
-				weight_gradient = SECOND_HIDDEN.neurons[n] * main_deltas.THIRD_HIDDEN_DELTAS[m];
-				bias_gradient = main_deltas.THIRD_HIDDEN_DELTAS[m];
-
-				// Update the weight and bias
-				SECOND_HIDDEN.weights[m][n] -= learning_rate * weight_gradient;
-				SECOND_HIDDEN.biases[n] -= learning_rate * bias_gradient;
+		
+		// Step 1. Update the weights from the input to the first hidden layer.
+		// Note: The input shouldn't have biases so these are excluded here.
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			for (int j = 0; j < INPUT_SIZE; j++) {
+				INPUT_LAYER.weights[i][j] -= learning_rate * main_deltas->INPUT_WEIGHT_GRADIENTS[i][j];
 			}
 		}
 
-		// Step 3. Update weights and biases for the first hidden layer
-		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
-			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-				weight_gradient = FIRST_HIDDEN.neurons[n] * main_deltas.SECOND_HIDDEN_DELTAS[m];
-				bias_gradient = main_deltas.SECOND_HIDDEN_DELTAS[m];
-
-				// Update the weight and the bias
-				FIRST_HIDDEN.weights[m][n] -= learning_rate * weight_gradient;
-				FIRST_HIDDEN.biases[n] -= learning_rate * bias_gradient;
+		// Step 2. First hidden --> second hidden
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				FIRST_HIDDEN.weights[j][i] -= learning_rate * main_deltas->FIRST_HIDDEN_WEIGHT_GRADIENTS[j][i];
 			}
+
+			FIRST_HIDDEN.biases[i] -= learning_rate * main_deltas->FIRST_HIDDEN_BIAS_GRADIENTS[i];
 		}
 
-		// Step 4. Lastly, update the weights from the input to the first hidden layer.
-		// Note: The input shouldn't have any bias, so this won't be updated.
-		for (int m = 0; m < FIRST_HIDDEN_SIZE; m++) {
-			for (int n = 0; n < INPUT_SIZE; n++) {
-				weight_gradient = INPUT_LAYER.neurons[n] * main_deltas.FIRST_HIDDEN_DELTAS[m];
-				
-				// Update the weight
-				INPUT_LAYER.weights[m][n] -= learning_rate * weight_gradient;
+		// Step 3. Second hidden --> third hidden
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				SECOND_HIDDEN.weights[i][j] -= learning_rate * main_deltas->SECOND_HIDDEN_WEIGHT_GRADIENTS[i][j];
 			}
+
+			SECOND_HIDDEN.biases[i] -= learning_rate * main_deltas->SECOND_HIDDEN_BIAS_GRADIENTS[i];
 		}
 
-
+		// Step 4. Third hidden --> output
+		// Note: the output doesn't have any bias neither, so this is excluded
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			THIRD_HIDDEN.weights[0][i] -= learning_rate * main_deltas->THIRD_HIDDEN_WEIGHT_GRADIENTS[i];
+			THIRD_HIDDEN.biases[i] -= learning_rate * main_deltas->THIRD_HIDDEN_BIAS_GRADIENTS[i];
+		}
 	}
 
 
@@ -463,8 +501,10 @@ namespace Training {
 
 			// Step 2B. Loop through the batches.
 			for (int b = 0; b < batches.size() - 1; b++) {
-				// Step 2B.1. Reset the deltas
+				// Step 2B.1. Reset the deltas and gradients
 				clear_all_deltas();
+				clear_all_gradients();
+
 				outputs.clear();
 				expected.clear();
 
@@ -542,6 +582,7 @@ namespace Training {
 
 		// Step 2. Average out all deltas
 		deltas[thread_id]->take_avg_deltas(positions.size());
+		deltas[thread_id]->take_avg_gradients(positions.size());
 	}
 
 
@@ -584,17 +625,43 @@ namespace Training {
 		for (int d = 0; d < deltas.size(); d++) {
 
 			// Add all arrays from deltas[i] to main_deltas
-			array_add<double, FIRST_HIDDEN_SIZE>(main_deltas.FIRST_HIDDEN_DELTAS, deltas[d]->FIRST_HIDDEN_DELTAS);
-			array_add<double, HIDDEN_STD_SIZE>(main_deltas.SECOND_HIDDEN_DELTAS, deltas[d]->SECOND_HIDDEN_DELTAS);
-			array_add<double, HIDDEN_STD_SIZE>(main_deltas.THIRD_HIDDEN_DELTAS, deltas[d]->THIRD_HIDDEN_DELTAS);
-			main_deltas.OUTPUT_DELTA += deltas[d]->OUTPUT_DELTA;
+			array_add<double, FIRST_HIDDEN_SIZE>(main_deltas->FIRST_HIDDEN_DELTAS, deltas[d]->FIRST_HIDDEN_DELTAS);
+			array_add<double, HIDDEN_STD_SIZE>(main_deltas->SECOND_HIDDEN_DELTAS, deltas[d]->SECOND_HIDDEN_DELTAS);
+			array_add<double, HIDDEN_STD_SIZE>(main_deltas->THIRD_HIDDEN_DELTAS, deltas[d]->THIRD_HIDDEN_DELTAS);
+			main_deltas->OUTPUT_DELTA += deltas[d]->OUTPUT_DELTA;
+
+			// Gradients
+			for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+				array_add<double, INPUT_SIZE>(main_deltas->INPUT_WEIGHT_GRADIENTS[i], deltas[d]->INPUT_WEIGHT_GRADIENTS[i]);
+			}
+			for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+				array_add<double, FIRST_HIDDEN_SIZE>(main_deltas->FIRST_HIDDEN_WEIGHT_GRADIENTS[i], deltas[d]->FIRST_HIDDEN_WEIGHT_GRADIENTS[i]);
+				array_add<double, HIDDEN_STD_SIZE>(main_deltas->SECOND_HIDDEN_WEIGHT_GRADIENTS[i], deltas[d]->SECOND_HIDDEN_WEIGHT_GRADIENTS[i]);
+			}
+			array_add<double, FIRST_HIDDEN_SIZE>(main_deltas->FIRST_HIDDEN_BIAS_GRADIENTS, deltas[d]->FIRST_HIDDEN_BIAS_GRADIENTS);
+			array_add<double, HIDDEN_STD_SIZE>(main_deltas->SECOND_HIDDEN_BIAS_GRADIENTS, deltas[d]->SECOND_HIDDEN_BIAS_GRADIENTS);
+			array_add<double, HIDDEN_STD_SIZE>(main_deltas->THIRD_HIDDEN_WEIGHT_GRADIENTS, deltas[d]->THIRD_HIDDEN_WEIGHT_GRADIENTS);
+			array_add<double, HIDDEN_STD_SIZE>(main_deltas->THIRD_HIDDEN_BIAS_GRADIENTS, deltas[d]->THIRD_HIDDEN_BIAS_GRADIENTS);
 		}
 
 		// Step 2. Now divide this by the amount of threads we're using
-		divide_array<double, FIRST_HIDDEN_SIZE>(main_deltas.FIRST_HIDDEN_DELTAS, static_cast<double>(threads));
-		divide_array<double, HIDDEN_STD_SIZE>(main_deltas.SECOND_HIDDEN_DELTAS, static_cast<double>(threads));
-		divide_array<double, HIDDEN_STD_SIZE>(main_deltas.THIRD_HIDDEN_DELTAS, static_cast<double>(threads));
-		main_deltas.OUTPUT_DELTA /= static_cast<double>(threads);
+		divide_array<double, FIRST_HIDDEN_SIZE>(main_deltas->FIRST_HIDDEN_DELTAS, static_cast<double>(threads));
+		divide_array<double, HIDDEN_STD_SIZE>(main_deltas->SECOND_HIDDEN_DELTAS, static_cast<double>(threads));
+		divide_array<double, HIDDEN_STD_SIZE>(main_deltas->THIRD_HIDDEN_DELTAS, static_cast<double>(threads));
+		main_deltas->OUTPUT_DELTA /= static_cast<double>(threads);
+
+		// Step 2A. Do the same for all the gradients
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			divide_array<double, INPUT_SIZE>(main_deltas->INPUT_WEIGHT_GRADIENTS[i], static_cast<double>(threads));
+		}
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			divide_array<double, FIRST_HIDDEN_SIZE>(main_deltas->FIRST_HIDDEN_WEIGHT_GRADIENTS[i], static_cast<double>(threads));
+			divide_array<double, HIDDEN_STD_SIZE>(main_deltas->SECOND_HIDDEN_WEIGHT_GRADIENTS[i], static_cast<double>(threads));
+		}
+		divide_array<double, FIRST_HIDDEN_SIZE>(main_deltas->FIRST_HIDDEN_BIAS_GRADIENTS, static_cast<double>(threads));
+		divide_array<double, HIDDEN_STD_SIZE>(main_deltas->SECOND_HIDDEN_BIAS_GRADIENTS, static_cast<double>(threads));
+		divide_array<double, HIDDEN_STD_SIZE>(main_deltas->THIRD_HIDDEN_WEIGHT_GRADIENTS, static_cast<double>(threads));
+		divide_array<double, HIDDEN_STD_SIZE>(main_deltas->THIRD_HIDDEN_BIAS_GRADIENTS, static_cast<double>(threads));
 	}
 
 
@@ -610,8 +677,15 @@ namespace Training {
 			deltas[i]->clear_delta_changes();
 		}
 
-		main_deltas.clear_deltas();
-		main_deltas.clear_delta_changes();
+		main_deltas->clear_deltas();
+		main_deltas->clear_delta_changes();
+	}
+
+	void Trainer::clear_all_gradients() {
+		for (int i = 0; i < deltas.size(); i++) {
+			deltas[i]->clear_gradients();
+		}
+		main_deltas->clear_gradients();
 	}
 
 	/*
@@ -626,6 +700,20 @@ namespace Training {
 		divide_array<double, HIDDEN_STD_SIZE>(THIRD_HIDDEN_DELTAS, static_cast<double>(current_batch_size));
 
 		OUTPUT_DELTA /= static_cast<double>(current_batch_size);
+	}
+
+	void Deltas::take_avg_gradients(size_t current_batch_size) {
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			divide_array<double, INPUT_SIZE>(INPUT_WEIGHT_GRADIENTS[i], static_cast<double>(current_batch_size));
+		}
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			divide_array<double, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN_WEIGHT_GRADIENTS[i], static_cast<double>(current_batch_size));
+			divide_array<double, HIDDEN_STD_SIZE>(SECOND_HIDDEN_WEIGHT_GRADIENTS[i], static_cast<double>(current_batch_size));
+		}
+		divide_array<double, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN_BIAS_GRADIENTS, static_cast<double>(current_batch_size));
+		divide_array<double, HIDDEN_STD_SIZE>(SECOND_HIDDEN_BIAS_GRADIENTS, static_cast<double>(current_batch_size));
+		divide_array<double, HIDDEN_STD_SIZE>(THIRD_HIDDEN_WEIGHT_GRADIENTS, static_cast<double>(current_batch_size));
+		divide_array<double, HIDDEN_STD_SIZE>(THIRD_HIDDEN_BIAS_GRADIENTS, static_cast<double>(current_batch_size));
 	}
 
 	/*
@@ -647,6 +735,20 @@ namespace Training {
 		OUTPUT_DELTA_CHANGE = 0.0;
 	}
 
+	void Deltas::clear_gradients() {
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			INPUT_WEIGHT_GRADIENTS[i].fill(0);
+		}
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			FIRST_HIDDEN_WEIGHT_GRADIENTS[i].fill(0);
+			SECOND_HIDDEN_WEIGHT_GRADIENTS[i].fill(0);
+		}
+		FIRST_HIDDEN_BIAS_GRADIENTS.fill(0);
+		SECOND_HIDDEN_BIAS_GRADIENTS.fill(0);
+
+		THIRD_HIDDEN_WEIGHT_GRADIENTS.fill(0);
+		THIRD_HIDDEN_BIAS_GRADIENTS.fill(0);
+	}
 
 	/*
 	

@@ -54,7 +54,7 @@ namespace Training {
 		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_DELTAS;
 		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_DELTAS;
 		double OUTPUT_DELTA;
-
+		
 		// When updating the deltas, we can't just add to the current deltas since that would ignore the neuron's activation.
 		// Therefore we use temporary changes in the deltas.
 		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_DELTAS_CHANGES;
@@ -66,6 +66,24 @@ namespace Training {
 		void clear_delta_changes();
 		void take_avg_deltas(size_t current_batch_size);
 		void clear_deltas();
+
+		// Gradient containers:
+
+		std::array<std::array<double, INPUT_SIZE>, FIRST_HIDDEN_SIZE> INPUT_WEIGHT_GRADIENTS;
+
+		std::array<std::array<double, FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> FIRST_HIDDEN_WEIGHT_GRADIENTS;
+		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_BIAS_GRADIENTS;
+
+		std::array<std::array<double, HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE> SECOND_HIDDEN_WEIGHT_GRADIENTS;
+		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_BIAS_GRADIENTS;
+
+		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_WEIGHT_GRADIENTS;
+		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_BIAS_GRADIENTS;
+
+		void clear_gradients();
+		void take_avg_gradients(size_t current_batch_size);
+		void increment_gradients();
+
 
 		// The below are all the layers which will be used to hold the neurons's activations instead of the ones in the network.
 		std::array<neuron_t, INPUT_SIZE> INPUT_NEURONS;
@@ -113,13 +131,14 @@ namespace Training {
 		std::vector<Deltas*> deltas;
 		
 		// main_deltas holds the deltas that are actually used to update the weights/biases. Its values are the average of all threads's values.
-		Deltas main_deltas;
+		Deltas* main_deltas;
 
 		// Computes the average of all the threads's deltas and inserts the values in the main_deltas object
 		void compute_main_deltas();
 
 		// Clears all deltas in "deltas" and main_deltas
 		void clear_all_deltas();
+		void clear_all_gradients();
 
 		const size_t threads;
 
