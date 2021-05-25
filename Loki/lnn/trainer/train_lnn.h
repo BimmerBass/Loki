@@ -1,6 +1,7 @@
 #ifndef TRAIN_LNN_H
 #define TRAIN_LNN_H
 #include <ctime>
+#include <thread>
 
 #include "../network.h"
 
@@ -46,10 +47,45 @@ namespace Training {
 	};
 
 
+	// Used by each thread to hold the deltas of a training epoch/batch
+	struct Deltas {
+		// The following arrays hold all deltas for the hidden layers and the output layer.
+		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_DELTAS;
+		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_DELTAS;
+		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_DELTAS;
+		double OUTPUT_DELTA;
+
+		// When updating the deltas, we can't just add to the current deltas since that would ignore the neuron's activation.
+		// Therefore we use temporary changes in the deltas.
+		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_DELTAS_CHANGES;
+		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_DELTAS_CHANGES;
+		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_DELTAS_CHANGES;
+		double OUTPUT_DELTA_CHANGE = 0;
+
+
+		void clear_delta_changes();
+		void take_avg_deltas(size_t current_batch_size);
+		void clear_deltas();
+
+		// The below are all the layers which will be used to hold the neurons's activations instead of the ones in the network.
+		std::array<neuron_t, INPUT_SIZE> INPUT_NEURONS;
+		std::array<neuron_t, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_NEURONS;
+		std::array<neuron_t, HIDDEN_STD_SIZE> SECOND_HIDDEN_NEURONS;
+		std::array<neuron_t, HIDDEN_STD_SIZE> THIRD_HIDDEN_NEURONS;
+		neuron_t OUTPUT_NEURON;
+
+		// Set up the position to the input neurons
+		void load_input(const std::array<int8_t, INPUT_SIZE>& in) {
+			for (int i = 0; i < INPUT_SIZE; i++) {
+				INPUT_NEURONS[i] = static_cast<neuron_t>(in[i]);
+			}
+		}
+	};
+
 
 	class Trainer : private LNN::Network {
 	public:
-		Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, double lRate = 0.000001, double lRate_decay = 0.00001);
+		Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, size_t _threads=1, double lRate = 0.000001, double lRate_decay = 0.00001);
 		~Trainer();
 
 		// Main method. This is responsible for running the training of the network.
@@ -59,34 +95,39 @@ namespace Training {
 		std::vector<TrainingPosition>* training_data;
 		void load_dataset(std::string filepath);
 
-		void do_backprop(double expected_value);
-		void update_weights();
+		// Divide a batc into sub-batches
+		void subdivide_batch(std::vector<std::vector<TrainingPosition>>& sub_batches, const std::vector<size_t>& batch, int current);
 
-		void take_avg_deltas(size_t current_batch_size);
-		void clear_deltas();
+		// Function that each thread will run.
+		void thread_optimizer(const std::vector<TrainingPosition>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id);
+
+		// Kind of overload of the evaluate function in Network. Just uses the thread_id for other neuron containers.
+		int thread_evaluator(int thread_id);
+
+		void do_backprop(double expected_value, int thread_id);
+		void update_weights();
 
 		void init_parameters();
 
-		// The following arrays hold all deltas for the hidden layers and the output layer.
-		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_DELTAS;
-		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_DELTAS;
-		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_DELTAS;
-		double OUTPUT_DELTA;
+		// The following delta structs will be declared on heap depending on the amount of threads available.
+		std::vector<Deltas*> deltas;
+		
+		// main_deltas holds the deltas that are actually used to update the weights/biases. Its values are the average of all threads's values.
+		Deltas main_deltas;
 
-		// To do proper backpropagation with batch gradient descent, we need to record the changes in the deltas.
-		// The below containers are used for that purpose
-		void clear_delta_changes();
+		// Computes the average of all the threads's deltas and inserts the values in the main_deltas object
+		void compute_main_deltas();
 
-		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_DELTAS_CHANGES;
-		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_DELTAS_CHANGES;
-		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_DELTAS_CHANGES;
-		double OUTPUT_DELTA_CHANGE = 0;
+		// Clears all deltas in "deltas" and main_deltas
+		void clear_all_deltas();
 
+		const size_t threads;
 
 		const int epochs;
 		const size_t batch_size;
 		const LOSS_F loss_function;
 
+		// LNN uses a decaying learning rate. The below hyperparameters are used for that purpose
 		const double initial_learning_rate;
 		const double learning_rate_decay;
 
@@ -95,6 +136,9 @@ namespace Training {
 		double calc_learning_rate(int epoch) {
 			return initial_learning_rate / (1.0 + learning_rate_decay * double(epoch));
 		}
+
+		/* The functions below are essentially the same as the ones in the Network class, but they use an additional parameter: thread_id */
+
 	};
 
 

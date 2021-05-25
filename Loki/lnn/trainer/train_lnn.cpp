@@ -43,19 +43,40 @@ namespace Training {
 	
 	*/
 
-	Trainer::Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, double lRate, double lRate_decay)
-		: epochs(_epochs), batch_size(_batch_size), loss_function(loss), initial_learning_rate(lRate), learning_rate_decay(lRate_decay) {
-		
-		// Step 1. Allocate a vector for the dataset
+	Trainer::Trainer(std::string dataset, int _epochs, size_t _batch_size, LOSS_F loss, size_t _threads, double lRate, double lRate_decay)
+		: epochs(_epochs), batch_size(_batch_size), loss_function(loss), threads(_threads), initial_learning_rate(lRate), learning_rate_decay(lRate_decay) {
+
+		// Step 1. Make sure all hyperparameters are in their proper ranges
+		try {
+			if (dataset == "") { throw("Dataset should contain the path to a CSV file."); }
+			if (_epochs <= 0) { throw("Epochs should be a positive number."); }
+			if (_batch_size <= 0) { throw("Batch size should be a positive number."); }
+			if (_threads <= 0) { throw("Threads should be a positive number."); }
+			if (lRate <= 0) { throw("Learning rate should be a positive number."); }
+			if (lRate_decay <= 0) { throw("Learning rate decay should be a positive number."); }
+		}
+		catch (const char* msg) { // If the hyperparameters aren't configured properly, abort
+			std::cout << "[!] Exception thrown by Trainer::Trainer(): " << msg << std::endl;
+			abort();
+		}
+		// Step 2. Allocate a vector for the dataset and a vector of deltas with size _threads.
 		training_data = new std::vector<TrainingPosition>;
 		
-		// Step 2. Load the dataset
+		for (int i = 0; i < threads; i++) {
+			deltas.push_back(new Deltas);
+		}
+
+		// Step 3. Load the dataset
 		load_dataset(dataset);
 	}
 
 	Trainer::~Trainer() {
 		if (training_data != nullptr) {
 			delete training_data;
+		}
+		// Delete all Deltas objects
+		for (int i = 0; i < deltas.size(); i++) {
+			if (deltas[i] != nullptr) { delete deltas[i]; }
 		}
 	}
 
@@ -110,6 +131,62 @@ namespace Training {
 	}
 
 
+	/*
+
+	Compute the dot-product between two vectors (std::array).
+	
+	*/
+	template<typename T, size_t SIZE>
+	void dot_product(const std::array<T, SIZE>& v1, const std::array<T, SIZE>& v2, T& out) {
+
+		out = 0;
+
+		// A vector dot product is just a sum of element-wise multiplications
+		for (int i = 0; i < SIZE; i++) {
+			out += v1[i] * v2[i];
+		}
+	}
+
+	// ReLU activation function
+	template<typename T>
+	T apply_ReLU(T v) {
+		return std::max(T(0), v);
+	}
+
+
+	/*
+	
+	Multithreading and forward propagation presents a problem with saving the neurons's activations. Therefore the Deltas struct has its own containers
+		for the neurons, so we'll need a forward propagation function that writes to these instead of to the real network neurons
+	
+	*/
+	int Trainer::thread_evaluator(int thread_id) {
+
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			dot_product<neuron_t, INPUT_SIZE>(deltas[thread_id]->INPUT_NEURONS, INPUT_LAYER.weights[i], deltas[thread_id]->FIRST_HIDDEN_NEURONS[i]);
+
+			deltas[thread_id]->FIRST_HIDDEN_NEURONS[i] += FIRST_HIDDEN.biases[i];
+			deltas[thread_id]->FIRST_HIDDEN_NEURONS[i] = apply_ReLU<neuron_t>(deltas[thread_id]->FIRST_HIDDEN_NEURONS[i]);
+		}
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			dot_product<neuron_t, FIRST_HIDDEN_SIZE>(deltas[thread_id]->FIRST_HIDDEN_NEURONS, FIRST_HIDDEN.weights[i], deltas[thread_id]->SECOND_HIDDEN_NEURONS[i]);
+
+			deltas[thread_id]->SECOND_HIDDEN_NEURONS[i] += SECOND_HIDDEN.biases[i];
+			deltas[thread_id]->SECOND_HIDDEN_NEURONS[i] = apply_ReLU<neuron_t>(deltas[thread_id]->SECOND_HIDDEN_NEURONS[i]);
+		}
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			dot_product<neuron_t, HIDDEN_STD_SIZE>(deltas[thread_id]->SECOND_HIDDEN_NEURONS, SECOND_HIDDEN.weights[i], deltas[thread_id]->THIRD_HIDDEN_NEURONS[i]);
+
+			deltas[thread_id]->THIRD_HIDDEN_NEURONS[i] += THIRD_HIDDEN.biases[i];
+			deltas[thread_id]->THIRD_HIDDEN_NEURONS[i] = apply_ReLU<neuron_t>(deltas[thread_id]->THIRD_HIDDEN_NEURONS[i]);
+		}
+
+		dot_product<neuron_t, HIDDEN_STD_SIZE>(deltas[thread_id]->THIRD_HIDDEN_NEURONS, THIRD_HIDDEN.weights[0], deltas[thread_id]->OUTPUT_NEURON);
+
+		return std::max(-LNN::OUTPUT_BOUND, std::min(LNN::OUTPUT_BOUND, static_cast<int>(deltas[thread_id]->OUTPUT_NEURON)));
+	}
 
 	/*
 	
@@ -118,55 +195,58 @@ namespace Training {
 	
 	*/
 
-	void Trainer::do_backprop(volatile double expected_value) {
+	void Trainer::do_backprop(volatile double expected_value, int thread_id) {
 
 		// Step 1. Reset the changes in the deltas
-		clear_delta_changes();
+		deltas[thread_id]->clear_delta_changes();
 
 		// Step 2. Compute the error for the output value.
 		// Note: Since the output doesn't use an activation function in LNN, we don't need to multiply any derivative of such function. This would normally be needed.
 		double diff = double(OUTPUT_LAYER.neurons[0]) - expected_value;
-		OUTPUT_DELTA_CHANGE = sigmoid_derivative(OUTPUT_LAYER.neurons[0]);
+		deltas[thread_id]->OUTPUT_DELTA_CHANGE = sigmoid_derivative(OUTPUT_LAYER.neurons[0]);
 
 		if (loss_function == LOSS_F::AAE) {
-			OUTPUT_DELTA_CHANGE *= (diff > 0) ? 1.0 : -1.0;
+			deltas[thread_id]->OUTPUT_DELTA_CHANGE *= (diff > 0) ? 1.0 : -1.0;
 		}
 		else {
-			OUTPUT_DELTA_CHANGE *= 2 * (diff);
+			deltas[thread_id]->OUTPUT_DELTA_CHANGE *= 2 * (diff);
 		}
 
-		OUTPUT_DELTA += OUTPUT_DELTA_CHANGE;
+		deltas[thread_id]->OUTPUT_DELTA += deltas[thread_id]->OUTPUT_DELTA_CHANGE;
 
 		// Step 3. Now we can calculate the deltas for the third hidden layer
 		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
-			THIRD_HIDDEN_DELTAS_CHANGES[n] = static_cast<double>(THIRD_HIDDEN.weights[0][n]) * OUTPUT_DELTA_CHANGE * ReLU_derivate(THIRD_HIDDEN.neurons[n]);
-			THIRD_HIDDEN_DELTAS[n] += THIRD_HIDDEN_DELTAS_CHANGES[n];
+			deltas[thread_id]->THIRD_HIDDEN_DELTAS_CHANGES[n] 
+				= static_cast<double>(THIRD_HIDDEN.weights[0][n]) * deltas[thread_id]->OUTPUT_DELTA_CHANGE * ReLU_derivate(THIRD_HIDDEN.neurons[n]);
+			deltas[thread_id]->THIRD_HIDDEN_DELTAS[n] += deltas[thread_id]->THIRD_HIDDEN_DELTAS_CHANGES[n];
 		}
 
 		// Step 4. Calculate the second hidden layer's deltas.
 		for (int m = 0; m < HIDDEN_STD_SIZE; m++) { // Each neuron in third hidden layer
 			for (int n = 0; n < HIDDEN_STD_SIZE; n++) { // Each neuron in second hidden layer
-				SECOND_HIDDEN_DELTAS_CHANGES[n] += static_cast<double>(SECOND_HIDDEN.weights[m][n]) * THIRD_HIDDEN_DELTAS_CHANGES[m];
+				deltas[thread_id]->SECOND_HIDDEN_DELTAS_CHANGES[n] 
+					+= static_cast<double>(SECOND_HIDDEN.weights[m][n]) * deltas[thread_id]->THIRD_HIDDEN_DELTAS_CHANGES[m];
 			}
 		}
 
 		// Step 4A. Multiply all the deltas with the activation function derivative
 		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
-			SECOND_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(SECOND_HIDDEN.neurons[n]);
-			SECOND_HIDDEN_DELTAS[n] += SECOND_HIDDEN_DELTAS_CHANGES[n];
+			deltas[thread_id]->SECOND_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(SECOND_HIDDEN.neurons[n]);
+			deltas[thread_id]->SECOND_HIDDEN_DELTAS[n] += deltas[thread_id]->SECOND_HIDDEN_DELTAS_CHANGES[n];
 		}
 
 		// Step 5. Lastly, calculate the first hidden layer's deltas.
 		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
 			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-				FIRST_HIDDEN_DELTAS_CHANGES[n] += static_cast<double>(FIRST_HIDDEN.weights[m][n]) * SECOND_HIDDEN_DELTAS_CHANGES[m];
+				deltas[thread_id]->FIRST_HIDDEN_DELTAS_CHANGES[n] 
+					+= static_cast<double>(FIRST_HIDDEN.weights[m][n]) * deltas[thread_id]->SECOND_HIDDEN_DELTAS_CHANGES[m];
 			}
 		}
 
 		// Step 5A. Multiply these deltas by the activation function derivatives and we're done :))
 		for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-			FIRST_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(FIRST_HIDDEN.neurons[n]);
-			FIRST_HIDDEN_DELTAS[n] += FIRST_HIDDEN_DELTAS_CHANGES[n];
+			deltas[thread_id]->FIRST_HIDDEN_DELTAS_CHANGES[n] *= ReLU_derivate(FIRST_HIDDEN.neurons[n]);
+			deltas[thread_id]->FIRST_HIDDEN_DELTAS[n] += deltas[thread_id]->FIRST_HIDDEN_DELTAS_CHANGES[n];
 		}
 
 	}
@@ -183,8 +263,8 @@ namespace Training {
 
 		// Step 1. Update the weights between the output and the third hidden layer.
 		for (int n = 0; n < HIDDEN_STD_SIZE; n++) {
-			weight_gradient = THIRD_HIDDEN.neurons[n] * OUTPUT_DELTA;
-			bias_gradient = OUTPUT_DELTA;
+			weight_gradient = THIRD_HIDDEN.neurons[n] * main_deltas.OUTPUT_DELTA;
+			bias_gradient = main_deltas.OUTPUT_DELTA;
 
 			// Update the weight and bias.
 			THIRD_HIDDEN.weights[0][n] -= learning_rate * weight_gradient;
@@ -194,8 +274,8 @@ namespace Training {
 		// Step 2. Update the weights and biases of the second hidden layer.
 		for (int m = 0; m < HIDDEN_STD_SIZE; m++) { // For each neuron in the third hidden layer
 			for (int n = 0; n < HIDDEN_STD_SIZE; n++) { // For each neuron in the second hidden layer
-				weight_gradient = SECOND_HIDDEN.neurons[n] * THIRD_HIDDEN_DELTAS[m];
-				bias_gradient = THIRD_HIDDEN_DELTAS[m];
+				weight_gradient = SECOND_HIDDEN.neurons[n] * main_deltas.THIRD_HIDDEN_DELTAS[m];
+				bias_gradient = main_deltas.THIRD_HIDDEN_DELTAS[m];
 
 				// Update the weight and bias
 				SECOND_HIDDEN.weights[m][n] -= learning_rate * weight_gradient;
@@ -206,8 +286,8 @@ namespace Training {
 		// Step 3. Update weights and biases for the first hidden layer
 		for (int m = 0; m < HIDDEN_STD_SIZE; m++) {
 			for (int n = 0; n < FIRST_HIDDEN_SIZE; n++) {
-				weight_gradient = FIRST_HIDDEN.neurons[n] * SECOND_HIDDEN_DELTAS[m];
-				bias_gradient = SECOND_HIDDEN_DELTAS[m];
+				weight_gradient = FIRST_HIDDEN.neurons[n] * main_deltas.SECOND_HIDDEN_DELTAS[m];
+				bias_gradient = main_deltas.SECOND_HIDDEN_DELTAS[m];
 
 				// Update the weight and the bias
 				FIRST_HIDDEN.weights[m][n] -= learning_rate * weight_gradient;
@@ -219,7 +299,7 @@ namespace Training {
 		// Note: The input shouldn't have any bias, so this won't be updated.
 		for (int m = 0; m < FIRST_HIDDEN_SIZE; m++) {
 			for (int n = 0; n < INPUT_SIZE; n++) {
-				weight_gradient = INPUT_LAYER.neurons[n] * FIRST_HIDDEN_DELTAS[m];
+				weight_gradient = INPUT_LAYER.neurons[n] * main_deltas.FIRST_HIDDEN_DELTAS[m];
 				
 				// Update the weight
 				INPUT_LAYER.weights[m][n] -= learning_rate * weight_gradient;
@@ -290,6 +370,23 @@ namespace Training {
 	}
 
 
+	/*
+	
+	Helper function to combine two vectors
+	
+	*/
+	template<typename T>
+	std::vector<T> combine_vectors(const std::vector<std::vector<T>>& v) {
+		std::vector<T> output;
+
+		for (int i = 0; i < v.size(); i++) {
+			for (int j = 0; j < v[i].size(); j++) {
+				output.push_back(v[i][j]);
+			}
+		}
+		
+		return output;
+	}
 
 	/*
 	
@@ -331,6 +428,20 @@ namespace Training {
 		std::vector<double> outputs;
 		std::vector<double> expected;
 
+		// The threads will write to these and they will then be combined in the outputs and expected vectors
+		std::vector<std::vector<double>> threads_outputs;
+		std::vector<std::vector<double>> threads_expected;
+
+		for (int i = 0; i < threads; i++) {
+			std::vector<double> tmp1, tmp2;
+			threads_outputs.push_back(tmp1); threads_expected.push_back(tmp2);
+		}
+
+		// Vector for holding all threads while they're working
+		std::vector<std::thread> workers;
+
+		// Vector to hold all the sub-batches used when optimizing with multiple threads
+		std::vector<std::vector<TrainingPosition>> sub_batches;
 
 		for (int e = 0; e < epochs; e++) {
 			// Calculate this epoch's learning rate
@@ -353,31 +464,42 @@ namespace Training {
 			// Step 2B. Loop through the batches.
 			for (int b = 0; b < batches.size() - 1; b++) {
 				// Step 2B.1. Reset the deltas
-				clear_deltas();
+				clear_all_deltas();
 				outputs.clear();
 				expected.clear();
 
-				// Step 2B.2. For each position in the batch, do backpropagation
-				for (int p = batches[b]; p < batches[b + 1]; p++) {
-					// Load position and forward propagate
-					load_position((*training_data)[p].network_input);
-					int forwardprop_score = evaluate(false); // We're not updating incrementally, so we should do a full forward propagation
+				// Step 2B.2. Now divide the batch into sub-batches that the different threads will run.
+				subdivide_batch(sub_batches, batches, b);
+				assert(sub_batches.size() == threads);
 
-					// Step 2B.2A. Since we're training, we'll apply the sigmoid activation function to the output
-					OUTPUT_LAYER.neurons[0] = sigmoid(OUTPUT_LAYER.neurons[0]);
+				// Step 2B.3. Start up the threads
+				workers.clear();
+				for (int i = 0; i < threads; i++) {
+					threads_outputs[i].clear();
+					threads_expected[i].clear();
 
-					outputs.push_back(static_cast<double>(forwardprop_score));
-
-					// Back-propagate
-					do_backprop(sigmoid((*training_data)[p].score));
-					expected.push_back(static_cast<double>((*training_data)[p].score));
+					workers.push_back(std::thread(&Trainer::thread_optimizer, this, 
+													std::ref(sub_batches[i]), 
+													std::ref(threads_outputs[i]),
+													std::ref(threads_expected[i]), 
+													i));
 				}
 
-				// Step 2B.3. Take the average of all the deltas and update the weights
-				take_avg_deltas(batches[b + 1] - batches[b]);
+				// Step 2B.4. Wait for the threads to join, and when they've all done that, combine their calculate the average deltas
+				for (int i = 0; i < workers.size(); i++) {
+					workers[i].join();
+				}
+				compute_main_deltas();
+
+
+				// Step 2B.5. Take the average of all the deltas and update the weights
+				//take_avg_deltas(batches[b + 1] - batches[b]);
 				update_weights();
 
-				// Step 2B.4. Output this batch's error.
+				// Step 2B.4. Combine the outputs/expected from the threads and output this batch's error.
+				outputs = combine_vectors<double>(threads_outputs);
+				expected = combine_vectors<double>(threads_expected);
+
 				int width = 30;
 				int right_padding = (double(b) / double(batches.size())) * width;
 				int left_padding = width - right_padding;
@@ -396,22 +518,112 @@ namespace Training {
 	}
 
 
+	/*
+	
+	The following method specifies what each thread should do.
+	
+	*/
+	void Trainer::thread_optimizer(const std::vector<TrainingPosition>& positions, std::vector<double>& outputs, std::vector<double>& expected, volatile int thread_id) {
+
+		// Loop through all the training points
+		for (int p = 0; p < positions.size(); p++) {
+			// Step 1. Load the position and forward-propagate
+			deltas[thread_id]->load_input(positions[p].network_input);
+			int output = thread_evaluator(thread_id);
+
+			// Take the sigmoid of the output neuron
+			deltas[thread_id]->OUTPUT_NEURON = sigmoid(deltas[thread_id]->OUTPUT_NEURON);
+			outputs.push_back(static_cast<double>(deltas[thread_id]->OUTPUT_NEURON));
+
+			// Back propagate
+			do_backprop(positions[p].score, thread_id);
+			expected.push_back(static_cast<double>(positions[p].score));
+		}
+
+		// Step 2. Average out all deltas
+		deltas[thread_id]->take_avg_deltas(positions.size());
+	}
+
+
+
+	/*
+	
+	Helper method for compute_main_deltas. Adds one array to another.
+	
+	*/
+	template<typename T, size_t SIZE>
+	void array_add(std::array<T, SIZE>& _Dst, const std::array<T, SIZE>& _Src) {
+
+		for (size_t i = 0; i < SIZE; i++) {
+			_Dst[i] += _Src[i];
+		}
+
+	}
+
+	/*
+	
+	Another helper method. Divides all elements in an array by a number
+	
+	*/
+	template<typename T, size_t SIZE>
+	void divide_array(std::array<T, SIZE>& _Dst, const T x) {
+		for (size_t i = 0; i < SIZE; i++) {
+			_Dst[i] /= x;
+		}
+	}
+
+	/*
+	
+	When we're done computing the deltas for each thread, we will take the average of these and insert the values into the main_deltas object.
+		NOTE: main_deltas should be cleared before doing this operation.
+	*/
+	void Trainer::compute_main_deltas() {
+		assert(deltas.size() == threads);
+
+		// Step 1. Add all the deltas from the vector to the main_deltas object.
+		for (int d = 0; d < deltas.size(); d++) {
+
+			// Add all arrays from deltas[i] to main_deltas
+			array_add<double, FIRST_HIDDEN_SIZE>(main_deltas.FIRST_HIDDEN_DELTAS, deltas[d]->FIRST_HIDDEN_DELTAS);
+			array_add<double, HIDDEN_STD_SIZE>(main_deltas.SECOND_HIDDEN_DELTAS, deltas[d]->SECOND_HIDDEN_DELTAS);
+			array_add<double, HIDDEN_STD_SIZE>(main_deltas.THIRD_HIDDEN_DELTAS, deltas[d]->THIRD_HIDDEN_DELTAS);
+			main_deltas.OUTPUT_DELTA += deltas[d]->OUTPUT_DELTA;
+		}
+
+		// Step 2. Now divide this by the amount of threads we're using
+		divide_array<double, FIRST_HIDDEN_SIZE>(main_deltas.FIRST_HIDDEN_DELTAS, static_cast<double>(threads));
+		divide_array<double, HIDDEN_STD_SIZE>(main_deltas.SECOND_HIDDEN_DELTAS, static_cast<double>(threads));
+		divide_array<double, HIDDEN_STD_SIZE>(main_deltas.THIRD_HIDDEN_DELTAS, static_cast<double>(threads));
+		main_deltas.OUTPUT_DELTA /= static_cast<double>(threads);
+	}
+
+
+	/*
+	
+	For more organized code, the following method is used to clear all deltas in use.
+	
+	*/
+	void Trainer::clear_all_deltas() {
+
+		for (int i = 0; i < deltas.size(); i++) {
+			deltas[i]->clear_deltas();
+			deltas[i]->clear_delta_changes();
+		}
+
+		main_deltas.clear_deltas();
+		main_deltas.clear_delta_changes();
+	}
 
 	/*
 	
 	When we compute the deltas, we calculate the sum of each individual delta from each data point. Therefore this method is used to take the average of all deltas.
 	
 	*/
-	void Trainer::take_avg_deltas(size_t current_batch_size) {
+	void Deltas::take_avg_deltas(size_t current_batch_size) {
 
-		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			FIRST_HIDDEN_DELTAS[i] /= static_cast<double>(current_batch_size);
-		}
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			SECOND_HIDDEN_DELTAS[i] /= static_cast<double>(current_batch_size);
-			THIRD_HIDDEN_DELTAS[i] /= static_cast<double>(current_batch_size);
-		}
+		divide_array<double, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN_DELTAS, static_cast<double>(current_batch_size));
+		divide_array<double, HIDDEN_STD_SIZE>(SECOND_HIDDEN_DELTAS, static_cast<double>(current_batch_size));
+		divide_array<double, HIDDEN_STD_SIZE>(THIRD_HIDDEN_DELTAS, static_cast<double>(current_batch_size));
 
 		OUTPUT_DELTA /= static_cast<double>(current_batch_size);
 	}
@@ -421,17 +633,59 @@ namespace Training {
 	Set all deltas to zero. This is done before each batch step.
 	
 	*/
-	void Trainer::clear_deltas() {
+	void Deltas::clear_deltas() {
 		FIRST_HIDDEN_DELTAS.fill(0.0);
 		SECOND_HIDDEN_DELTAS.fill(0.0);
 		THIRD_HIDDEN_DELTAS.fill(0.0);
 		OUTPUT_DELTA = 0.0;
 	}
 
-	void Trainer::clear_delta_changes() {
+	void Deltas::clear_delta_changes() {
 		FIRST_HIDDEN_DELTAS_CHANGES.fill(0.0);
 		SECOND_HIDDEN_DELTAS_CHANGES.fill(0.0);
 		THIRD_HIDDEN_DELTAS_CHANGES.fill(0.0);
 		OUTPUT_DELTA_CHANGE = 0.0;
+	}
+
+
+	/*
+	
+	Divide a batch into work for different threads
+	
+	*/
+	// Divides a batch into sub-batches for the threads
+	void Trainer::subdivide_batch(std::vector<std::vector<TrainingPosition>>& sub_batches, const std::vector<size_t>& batch, int current) {
+		// Step 1. Clear the sub batch vector and find the start/end index in the training_data vector of our current batch.
+		assert(current < batch.size() - 1);
+		sub_batches.clear();
+
+		size_t start = batch[current];
+		size_t end = batch[current + 1];
+
+
+		int remainder = (end - start) % threads;
+		int sub_batch_size = (end - start) / threads;
+
+		// Step 2. Now subdivide all training positions into the different sub_batches
+		for (int i = 0; i < threads; i++) {
+
+			std::vector<TrainingPosition> sub_batch;
+
+			// Step 2A. Add all positions to the sub_batch
+			for (int n = i * sub_batch_size; n < (i + 1) * sub_batch_size; n++) {
+				assert(start + n < training_data->size());
+
+				sub_batch.push_back((*training_data)[start + n]);
+			}
+			sub_batches.push_back(sub_batch);
+		}
+
+		// Step 3. If there is a remainder, add this to the first thread
+		if (remainder > 0) {
+			for (int n = end - 1; n > end - 1 - remainder; n--) {
+				sub_batches[0].push_back((*training_data)[n]);
+			}
+		}
+		
 	}
 }
