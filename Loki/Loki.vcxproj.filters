@@ -143,5 +143,8 @@
     <ClInclude Include="lnn\trainer\train_lnn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lnn\trainer\helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

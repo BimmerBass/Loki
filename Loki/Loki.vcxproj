@@ -182,6 +182,7 @@
     <ClInclude Include="defs.h" />
     <ClInclude Include="evaluation.h" />
     <ClInclude Include="lnn\network.h" />
+    <ClInclude Include="lnn\trainer\helpers.h" />
     <ClInclude Include="lnn\trainer\train_lnn.h" />
     <ClInclude Include="lnn\types\architecture.h" />
     <ClInclude Include="lnn\types\layer.h" />
