@@ -4,9 +4,14 @@
 #include <thread>
 
 #include "../network.h"
+#include "helpers.h" // For mathematical functions
 
 
 namespace Training {
+
+	inline double ReLU(neuron_t x) {
+		return std::max(neuron_t(0), x);
+	}
 
 	// Here we use the assumption that the ReLU function derivative at x = 0 is 1. In reality this is undefined
 	inline double ReLU_derivate(neuron_t x) {
@@ -140,7 +145,7 @@ namespace Training {
 		void back_propagation(int thread_id);
 
 		// Forward propagation
-		void forward_propagate(int thread_id);
+		int forward_propagate(int thread_id);
 
 		// Weight/bias update
 		void update_parameters();

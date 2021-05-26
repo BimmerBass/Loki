@@ -97,4 +97,48 @@ namespace Training {
 		// Step 3. Close the file, and we're done loading the data :))
 		data_file.close();
 	}
+
+
+	/*
+	
+	Forward propagation. The Network class already has evaluate(), but we need to write the weighted sums of all neurons to the ThreadData objects, which means
+		we need a new method.
+	
+	*/
+	int Trainer::forward_propagate(int thread_id) {
+
+		// Step 1. Compute the first hidden layer.
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			// Step 1A. Calculate the dot product between the input neurons and their weights to neuron "i" in the first hidden layer
+			dot_product<neuron_t, INPUT_SIZE>(thread_data[thread_id]->INPUT_NEURONS, INPUT_LAYER.weights[i], thread_data[thread_id]->FIRST_HIDDEN_NEURONS[i]);
+
+			// Step 1B. Add the bias.
+			thread_data[thread_id]->FIRST_HIDDEN_NEURONS[i] += FIRST_HIDDEN.biases[i];
+		}
+
+		// Step 2. Compute the second hidden layer.
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			// Step 2A. Calculate the dot product of the weights into the current neuron.
+			// Note: We didn't apply the activation function in the first hidden layer before, so this should be done now.
+			dot_product<neuron_t, FIRST_HIDDEN_SIZE>(apply_ReLU<neuron_t, FIRST_HIDDEN_SIZE>(thread_data[thread_id]->FIRST_HIDDEN_NEURONS),
+				FIRST_HIDDEN.weights[i], thread_data[thread_id]->SECOND_HIDDEN_NEURONS[i]);
+
+			// Step 2B. Apply the bias
+			thread_data[thread_id]->SECOND_HIDDEN_NEURONS[i] += SECOND_HIDDEN.biases[i];
+		}
+
+		// Step 3. Do the same for the third layer as in step 2.
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			dot_product<neuron_t, HIDDEN_STD_SIZE>(apply_ReLU<neuron_t, HIDDEN_STD_SIZE>(thread_data[thread_id]->SECOND_HIDDEN_NEURONS),
+				SECOND_HIDDEN.weights[i], thread_data[thread_id]->THIRD_HIDDEN_NEURONS[i]);
+			thread_data[thread_id]->THIRD_HIDDEN_NEURONS[i] += THIRD_HIDDEN.biases[i];
+		}
+
+		// Step 4. Now compute the output from the third hidden layer.
+		// Note: Apply the relu and don't add a bias to the output.
+		dot_product<neuron_t, HIDDEN_STD_SIZE>(apply_ReLU<neuron_t, HIDDEN_STD_SIZE>(thread_data[thread_id]->THIRD_HIDDEN_NEURONS),
+			THIRD_HIDDEN.weights[0], thread_data[thread_id]->OUTPUT_NEURON);
+
+		return std::max(-LNN::OUTPUT_BOUND, std::min(LNN::OUTPUT_BOUND, static_cast<int>(thread_data[thread_id]->OUTPUT_NEURON)));
+	}
 }
