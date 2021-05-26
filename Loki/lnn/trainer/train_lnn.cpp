@@ -261,6 +261,49 @@ namespace Training {
 	}
 
 
+	/*
+	
+	Calculate the average of all the threads's gradients and insert them into main_thread_data.
+	
+	*/
+	void Trainer::compute_average_gradients() {
+		// Step 1. Clear the main thread
+		main_thread_data->clear_gradients();
+		assert(thread_count == thread_data.size());
+
+		// Step 2. Add all the gradients
+		for (int t = 0; t < thread_count; t++) {
+
+			for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+				add_array<double, INPUT_SIZE>(main_thread_data->INPUT_WEIGHT_GRADIENTS[i], thread_data[t]->INPUT_WEIGHT_GRADIENTS[i]);
+			}
+
+			for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+				add_array<double, FIRST_HIDDEN_SIZE>(main_thread_data->FIRST_HIDDEN_WEIGHT_GRADIENTS[i], thread_data[t]->FIRST_HIDDEN_WEIGHT_GRADIENTS[i]);
+				add_array<double, HIDDEN_STD_SIZE>(main_thread_data->SECOND_HIDDEN_WEIGHT_GRADIENTS[i], thread_data[t]->SECOND_HIDDEN_WEIGHT_GRADIENTS[i]);
+			}
+
+			add_array<double, HIDDEN_STD_SIZE>(main_thread_data->THIRD_HIDDEN_WEIGHT_GRADIENTS, thread_data[t]->THIRD_HIDDEN_WEIGHT_GRADIENTS);
+
+			add_array<double, FIRST_HIDDEN_SIZE>(main_thread_data->FIRST_HIDDEN_BIAS_GRADIENTS, thread_data[t]->FIRST_HIDDEN_BIAS_GRADIENTS);
+			add_array<double, HIDDEN_STD_SIZE>(main_thread_data->SECOND_HIDDEN_BIAS_GRADIENTS, thread_data[t]->SECOND_HIDDEN_BIAS_GRADIENTS);
+			add_array<double, HIDDEN_STD_SIZE>(main_thread_data->THIRD_HIDDEN_BIAS_GRADIENTS, thread_data[t]->THIRD_HIDDEN_BIAS_GRADIENTS);
+		}
+
+		// Step 3. Now take the average of all gradients by dividing the elements by the number of threads
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			divide_array<double, INPUT_SIZE>(main_thread_data->INPUT_WEIGHT_GRADIENTS[i], static_cast<double>(thread_count));
+		}
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			divide_array<double, FIRST_HIDDEN_SIZE>(main_thread_data->FIRST_HIDDEN_WEIGHT_GRADIENTS[i], static_cast<double>(thread_count));
+			divide_array<double, HIDDEN_STD_SIZE>(main_thread_data->SECOND_HIDDEN_WEIGHT_GRADIENTS[i], static_cast<double>(thread_count));
+		}
+		divide_array<double, HIDDEN_STD_SIZE>(main_thread_data->THIRD_HIDDEN_WEIGHT_GRADIENTS, static_cast<double>(thread_count));
+
+		divide_array<double, FIRST_HIDDEN_SIZE>(main_thread_data->FIRST_HIDDEN_BIAS_GRADIENTS, static_cast<double>(thread_count));
+		divide_array<double, HIDDEN_STD_SIZE>(main_thread_data->SECOND_HIDDEN_BIAS_GRADIENTS, static_cast<double>(thread_count));
+		divide_array<double, HIDDEN_STD_SIZE>(main_thread_data->THIRD_HIDDEN_BIAS_GRADIENTS, static_cast<double>(thread_count));
+	}
 
 
 

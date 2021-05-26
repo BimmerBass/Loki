@@ -140,9 +140,15 @@ namespace Training {
 		std::vector<TrainingPosition>* training_data;
 		void load_dataset(std::string filepath);
 
+		// All threads will run this method. It is the primary optimization method.
+		void run_thread(std::vector<TrainingPosition>& positions, int thread_id);
+
 		// Container holding all data for the threads
 		std::vector<ThreadData*> thread_data;
 		ThreadData* main_thread_data = nullptr;
+
+		// Calculate the average of all gradients in thread_data.
+		void compute_average_gradients();
 
 		// Backpropagation.
 		void back_propagation(int thread_id, int target_output);

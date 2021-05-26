@@ -47,8 +47,17 @@ void divide_array(std::array<T, SIZE>& _Dst, T x) {
 }
 
 
+/*
 
+Add one array to another
 
+*/
+template<typename T, size_t SIZE>
+void add_array(std::array<T, SIZE>& _Dst, const std::array<T, SIZE>& v) {
+	for (int i = 0; i < SIZE; i++) {
+		_Dst[i] += v[i];
+	}
+}
 
 
 
