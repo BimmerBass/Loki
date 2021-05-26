@@ -86,6 +86,9 @@ namespace Training {
 		std::array<neuron_t, HIDDEN_STD_SIZE> SECOND_HIDDEN_BIAS_GRADIENTS;
 		std::array<neuron_t, HIDDEN_STD_SIZE> THIRD_HIDDEN_BIAS_GRADIENTS;
 
+		// Update the gradients when we find the deltas
+		void update_gradients();
+
 		// After having summed up the gradients from a batch, we need to take the average of them.
 		void average_gradients(size_t batch_size);
 		
@@ -142,7 +145,7 @@ namespace Training {
 		ThreadData* main_thread_data = nullptr;
 
 		// Backpropagation.
-		void back_propagation(int thread_id);
+		void back_propagation(int thread_id, int target_output);
 
 		// Forward propagation
 		int forward_propagate(int thread_id);

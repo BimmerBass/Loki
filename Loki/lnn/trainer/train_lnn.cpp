@@ -141,4 +141,124 @@ namespace Training {
 
 		return std::max(-LNN::OUTPUT_BOUND, std::min(LNN::OUTPUT_BOUND, static_cast<int>(thread_data[thread_id]->OUTPUT_NEURON)));
 	}
+
+
+	/*
+	
+	Backpropagation: This is the core of neural network learning. When we forward propagate, the output will probably not be equal to our
+		target. Therefore we need a way to find out how each weight influence the error we're measuring. This is what backprop is used for.
+
+		We start by finding the cost of this single training example, C = (a - y)^2 (MSE) or C = |a - y| (AAE).
+		Note: The output values of the neural network in this case use a linear activation σ(x) = x, but for training purposes
+			the sigmoid function is used, which means that a = σ(O) and y = σ(Eval) (where O is net output and Eval is Loki's evaluation).
+		For the output delta, we compute the derivatives:
+			MSE: ∂C/∂z = 2 * (a - y) * σ'(z)
+			AAE: ∂C/∂z = (|a - y|/(a - y))* σ'(z) (Note (|a - y|/(a - y)) = -1 if (a - y) < 0 and +1 if (a - y) > 0, approximated as >= here)
+		Now we can iteratively (not in this instance, but in principle) go back in the network and calculate all deltas. If we are at layer l - 1,
+		we then already know δ[l], and we want to know δ[l - 1] (assuming there is only one weight/connection).
+		From the chain rule we know that ∂C/∂z[l-1] = ∂C/∂z[l] * ∂z[l]/∂z[l-1]. Additionally we know that z[l] = sum(w[l][j] * z[l-1][j]), which
+		means that for the j'th weight the delta becomes:
+		δ[l - 1] = ∂C/∂z[l] * ∂z[l]/∂z[l-1] = δ[l] * w[l][j]. Where j is the j'th neuron in layer l - 1.
+		Note: We also have to multiply by ReLU'(z[l]) since if z[l] < 0, it shouldn't be counted as contributing to the error.
+	*/
+	void Trainer::back_propagation(int thread_id, int target_output) {
+		// Step 1. Clear all deltas.
+		thread_data[thread_id]->clear_deltas();
+
+		// Step 2. Calculate the delta for the output.
+		double diff = (sigmoid(thread_data[thread_id]->OUTPUT_NEURON) - sigmoid(target_output));
+		thread_data[thread_id]->OUTPUT_DELTA = sigmoid_derivative(thread_data[thread_id]->OUTPUT_NEURON);
+
+		if (loss_function == LOSS_F::AAE) {
+			thread_data[thread_id]->OUTPUT_DELTA *= (diff > 0 ? 1.0 : ((diff < 0) ? -1.0 : 0.0));
+		}
+		else {
+			thread_data[thread_id]->OUTPUT_DELTA *= 2 * diff;
+		}
+
+		// Step 3. Now calculate the deltas in the third hidden layer.
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			thread_data[thread_id]->THIRD_HIDDEN_DELTAS[i] = thread_data[thread_id]->OUTPUT_DELTA * THIRD_HIDDEN.weights[0][i];
+			thread_data[thread_id]->THIRD_HIDDEN_DELTAS[i] *= ReLU_derivate(thread_data[thread_id]->THIRD_HIDDEN_NEURONS[i]);
+		}
+
+		// Step 4. Calculate the deltas in the second hidden layer.
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) { // For each neuron in the next layer
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				thread_data[thread_id]->SECOND_HIDDEN_DELTAS[j] += thread_data[thread_id]->THIRD_HIDDEN_DELTAS[i] * SECOND_HIDDEN.weights[i][j];
+			}
+		}
+		// Step 4A. Apply the relu derivatives
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			thread_data[thread_id]->SECOND_HIDDEN_DELTAS[i] *= ReLU_derivate(thread_data[thread_id]->SECOND_HIDDEN_NEURONS[i]);
+		}
+
+		// Step 5. Do the same for the second hidden layer back to the first
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < FIRST_HIDDEN_SIZE; j++) {
+				thread_data[thread_id]->FIRST_HIDDEN_DELTAS[j] += thread_data[thread_id]->SECOND_HIDDEN_DELTAS[i] * FIRST_HIDDEN.weights[i][j];
+			}
+		}
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			thread_data[thread_id]->FIRST_HIDDEN_DELTAS[i] *= ReLU_derivate(thread_data[thread_id]->FIRST_HIDDEN_NEURONS[i]);
+		}
+
+		// Step 6. Update the gradients, and we're done
+		thread_data[thread_id]->update_gradients();
+	}
+
+
+	/*
+	
+	Gradient increment: When we have calculated all deltas, we need to update our gradients.
+		This is quite easy. If we are at layer l and we want to update the weight connecting the i'th neuron in l to the j'th neuron in l - 1,
+		we need to find the expression for ∂C/∂w[l -1]i,j, which, from the chain rule, can be given as:
+			∂C/∂w[l-1],i,j = ∂C/∂z[l]i * ∂z[l]i/∂w[l-1]i,j = δ[l]i * a[l-1]j
+		Additionally we want to find ∂C/∂b[l]i, which is:
+			∂C/∂b[l]i = δ[l]i
+	*/
+	void ThreadData::update_gradients() {
+
+		// Step 1. Compute the gradients of the weight from the input to the first hidden layer.
+		// Note: The inputs shouldn't have any biases, so these are left out. Additionally, the input has no activation function, so we don't need to apply that here.
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			for (int j = 0; j < INPUT_SIZE; j++) {
+				// Weight gradient
+				INPUT_WEIGHT_GRADIENTS[i][j] += FIRST_HIDDEN_DELTAS[i] * INPUT_NEURONS[j];
+			}
+		}
+
+		// Step 2. Now compute the gradients of the weights and biases from the first hidden layer to the second hidden layer.
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				// Weight gradient. 
+				// Note: We need to apply the ReLU activation to to neuron.
+				FIRST_HIDDEN_WEIGHT_GRADIENTS[j][i] += SECOND_HIDDEN_DELTAS[j] * ReLU(FIRST_HIDDEN_NEURONS[i]);
+			}
+
+			// Bias gradient
+			FIRST_HIDDEN_BIAS_GRADIENTS[i] += FIRST_HIDDEN_DELTAS[i];
+		}
+
+		// Step 3. Do the same for the gradients from the second layer to the third layer.
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				SECOND_HIDDEN_WEIGHT_GRADIENTS[j][i] += THIRD_HIDDEN_DELTAS[j] * ReLU(SECOND_HIDDEN_NEURONS[i]);
+			}
+
+			// Bias gradient
+			SECOND_HIDDEN_BIAS_GRADIENTS[i] += SECOND_HIDDEN_DELTAS[i];
+		}
+
+		// Step 4. Compute the gradients for the third layer
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			// Weight gradient
+			THIRD_HIDDEN_WEIGHT_GRADIENTS[i] += OUTPUT_DELTA * ReLU(THIRD_HIDDEN_NEURONS[i]);
+
+			// Bias gradient
+			THIRD_HIDDEN_BIAS_GRADIENTS[i] += OUTPUT_DELTA;
+		}
+	}
+
+
 }
