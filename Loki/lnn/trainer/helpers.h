@@ -34,7 +34,17 @@ std::array<T, SIZE> apply_ReLU(const std::array<T, SIZE>& v) {
 	return out;
 }
 
+/*
 
+Divide each element in an array with the same number
+
+*/
+template<typename T, size_t SIZE>
+void divide_array(std::array<T, SIZE>& _Dst, T x) {
+	for (size_t i = 0; i < SIZE; i++) {
+		_Dst[i] /= x;
+	}
+}
 
 
 

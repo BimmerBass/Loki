@@ -77,14 +77,14 @@ namespace Training {
 		void set_input(const std::array<int8_t, INPUT_SIZE>& input);
 
 		// Gradients
-		std::array<std::array<neuron_t, INPUT_SIZE>, FIRST_HIDDEN_SIZE> INPUT_WEIGHT_GRADIENTS;
-		std::array < std::array<neuron_t, FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> FIRST_HIDDEN_WEIGHT_GRADIENTS;
-		std::array<std::array<neuron_t, HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE> SECOND_HIDDEN_WEIGHT_GRADIENTS;
-		std::array<neuron_t, HIDDEN_STD_SIZE> THIRD_HIDDEN_WEIGHT_GRADIENTS;
+		std::array<std::array<double, INPUT_SIZE>, FIRST_HIDDEN_SIZE> INPUT_WEIGHT_GRADIENTS;
+		std::array <std::array<double, FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> FIRST_HIDDEN_WEIGHT_GRADIENTS;
+		std::array<std::array<double, HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE> SECOND_HIDDEN_WEIGHT_GRADIENTS;
+		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_WEIGHT_GRADIENTS;
 
-		std::array<neuron_t, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_BIAS_GRADIENTS;
-		std::array<neuron_t, HIDDEN_STD_SIZE> SECOND_HIDDEN_BIAS_GRADIENTS;
-		std::array<neuron_t, HIDDEN_STD_SIZE> THIRD_HIDDEN_BIAS_GRADIENTS;
+		std::array<double, FIRST_HIDDEN_SIZE> FIRST_HIDDEN_BIAS_GRADIENTS;
+		std::array<double, HIDDEN_STD_SIZE> SECOND_HIDDEN_BIAS_GRADIENTS;
+		std::array<double, HIDDEN_STD_SIZE> THIRD_HIDDEN_BIAS_GRADIENTS;
 
 		// Update the gradients when we find the deltas
 		void update_gradients();

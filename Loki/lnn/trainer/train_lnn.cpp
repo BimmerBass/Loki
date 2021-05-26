@@ -261,4 +261,70 @@ namespace Training {
 	}
 
 
+
+
+
+
+
+
+
+
+	/*
+	Below are non functional helper functions.
+	*/
+
+	// Set the input of the network
+	void ThreadData::set_input(const std::array<int8_t, INPUT_SIZE>& input) {
+		INPUT_NEURONS.fill(0);
+
+		for (int i = 0; i < INPUT_SIZE; i++) {
+			INPUT_NEURONS[i] = static_cast<neuron_t>(input[i]);
+		}
+	}
+
+	// When we calculate the gradients, we sum them for each data point in the batch. These need to be averaged.
+	void ThreadData::average_gradients(size_t batch_size) {
+
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			divide_array<double, INPUT_SIZE>(INPUT_WEIGHT_GRADIENTS[i], static_cast<double>(batch_size));
+		}
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			divide_array<double, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN_WEIGHT_GRADIENTS[i], static_cast<double>(batch_size));
+			divide_array<double, HIDDEN_STD_SIZE>(SECOND_HIDDEN_WEIGHT_GRADIENTS[i], static_cast<double>(batch_size));
+		}
+
+		divide_array<double, HIDDEN_STD_SIZE>(THIRD_HIDDEN_WEIGHT_GRADIENTS, static_cast<double>(batch_size));
+
+		divide_array<double, FIRST_HIDDEN_SIZE>(FIRST_HIDDEN_BIAS_GRADIENTS, static_cast<double>(batch_size));
+		divide_array<double, HIDDEN_STD_SIZE>(SECOND_HIDDEN_BIAS_GRADIENTS, static_cast<double>(batch_size));
+		divide_array<double, HIDDEN_STD_SIZE>(THIRD_HIDDEN_BIAS_GRADIENTS, static_cast<double>(batch_size));
+	}
+
+	// Set all gradients to 0.
+	void ThreadData::clear_gradients() {
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			INPUT_WEIGHT_GRADIENTS[i].fill(0);
+		}
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			FIRST_HIDDEN_WEIGHT_GRADIENTS[i].fill(0);
+			SECOND_HIDDEN_WEIGHT_GRADIENTS[i].fill(0);
+		}
+
+		THIRD_HIDDEN_WEIGHT_GRADIENTS.fill(0);
+
+		FIRST_HIDDEN_BIAS_GRADIENTS.fill(0);
+		SECOND_HIDDEN_BIAS_GRADIENTS.fill(0);
+		THIRD_HIDDEN_BIAS_GRADIENTS.fill(0);
+	}
+
+
+	// Set all deltas to zero
+	void ThreadData::clear_deltas() {
+		FIRST_HIDDEN_DELTAS.fill(0);
+		SECOND_HIDDEN_DELTAS.fill(0);
+		THIRD_HIDDEN_DELTAS.fill(0);
+		OUTPUT_DELTA = 0;
+	}
 }
