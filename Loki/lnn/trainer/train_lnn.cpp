@@ -45,4 +45,56 @@ namespace Training {
 		}
 		if (main_thread_data != nullptr) { delete main_thread_data; }
 	}
+
+
+
+	/*
+
+	Load a CSV-file dataset. This should be formatted such that for each line, the first 786 numbers are the input values and the last one is the score.
+
+	*/
+	void Trainer::load_dataset(std::string filepath) {
+		assert(filepath != "");
+		assert(training_data != nullptr);
+
+		// Step 1. Open the data file.
+		std::ifstream data_file(filepath);
+		std::vector<std::string> string_numbers;
+		std::string line = "";
+
+		if (!data_file.is_open()) {
+			std::cout << "[!] Error loading the data. Please make sure the file exists and that the right path is given" << std::endl;
+			abort();
+		}
+
+		// Step 2. Now go through all lines in the file.
+		size_t current = 0;
+		while (std::getline(data_file, line)) {
+
+			// Step 2A. Split the string
+			string_numbers.clear();
+			string_numbers = split_string(line, ';');
+			assert(string_numbers.size() == INPUT_SIZE + 1);
+
+			// Step 2B. Copy the inputs/outputs in string_numbers to a new training position object
+			TrainingPosition tp;
+			tp.set(0);
+
+			for (int i = 0; i < INPUT_SIZE; i++) {
+				tp.network_inputs[i] = std::stoi(string_numbers[i]);
+			}
+			tp.score = std::stoi(string_numbers[string_numbers.size() - 1]);
+
+			// Step 2C. Add this to the data vector and output to the user if a certain number of data-points has been loaded
+			training_data->push_back(tp);
+			current++;
+
+			if (current % 100000 == 0) {
+				std::cout << "[*] Loaded " << current << " positions" << std::endl;
+			}
+		}
+
+		// Step 3. Close the file, and we're done loading the data :))
+		data_file.close();
+	}
 }

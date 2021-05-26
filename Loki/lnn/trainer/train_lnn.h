@@ -48,6 +48,11 @@ namespace Training {
 	struct TrainingPosition {
 		std::array<int8_t, INPUT_SIZE> network_inputs;
 		int score;
+
+		void set(int val) {
+			network_inputs.fill(val);
+			score = val;
+		}
 	};
 
 
