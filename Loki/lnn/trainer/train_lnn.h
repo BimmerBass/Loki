@@ -56,11 +56,6 @@ namespace Training {
 	NOTE: It is important that ThreadData gets allocated on the heap. If multiple threads are used, it is too big to be on the stack!
 	*/
 	struct ThreadData {
-		ThreadData(LOSS_F _loss) {
-			loss_function = _loss;
-		}
-		LOSS_F loss_function;
-
 		// Neuron activations.
 		// Note: These should be the weighted sums without activation functions applied. A new forward propagation method is used to account for this.
 		std::array<neuron_t, INPUT_SIZE> INPUT_NEURONS;
@@ -111,7 +106,7 @@ namespace Training {
 	*/
 	class Trainer :private LNN::Network {
 	public:
-		Trainer(std::string datafile, size_t _epochs, size_t _batch_size, size_t _threads, 
+		Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, 
 			double eta_start = LEARNING_RATE_DEFAULT, double eta_decay = LEARNING_DECAY_DELAULT);
 		~Trainer();
 
@@ -126,6 +121,7 @@ namespace Training {
 		const size_t epochs;
 		const size_t batch_size;
 		const size_t thread_count;
+		const LOSS_F loss_function;
 
 		// Container and loading method for the training data
 		std::vector<TrainingPosition>* training_data;
