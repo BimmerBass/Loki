@@ -43,11 +43,6 @@ namespace Training {
 	constexpr double LEARNING_RATE_DEFAULT = 0.01;
 	constexpr double LEARNING_DECAY_DELAULT = 0.0001;
 
-	// Two different loss functions can be used:
-	enum class LOSS_F :int {
-		MSE = 0,	/* Mean squared error (1/n * sum((a[i] - y[i])^2))*/
-		AAE = 1		/* Average absolute error (1/n * sum(|a[i] - y[i]|))*/
-	};
 
 	// A structure for holding a training position
 	struct TrainingPosition {
@@ -57,6 +52,11 @@ namespace Training {
 		void set(int val) {
 			network_inputs.fill(val);
 			score = val;
+		}
+
+		TrainingPosition() {
+			network_inputs.fill(0);
+			score = 0;
 		}
 	};
 

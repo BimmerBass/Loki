@@ -59,6 +59,35 @@ void add_array(std::array<T, SIZE>& _Dst, const std::array<T, SIZE>& v) {
 	}
 }
 
+// Adding this here because it is needed for calculating the loss function
+// Two different loss functions can be used:
+enum class LOSS_F :int {
+	MSE = 0,	/* Mean squared error (1/n * sum((a[i] - y[i])^2))*/
+	AAE = 1		/* Average absolute error (1/n * sum(|a[i] - y[i]|))*/
+};
 
+/*
+
+Calculate the loss of a set of outputs/expected outputs.
+
+*/
+template<LOSS_F F>
+double compute_loss(const std::vector<double>& a, const std::vector<double>& y) {
+	assert(a.size() == y.size());
+	int64_t sum = 0;
+
+	for (size_t i = 0; i < a.size(); i++) {
+		
+		if constexpr (F == LOSS_F::MSE) { // Mean squared error
+			sum += std::pow(a[i] - y[i], 2.0);
+		}
+		else { // Average absolute
+			sum += abs(a[i] - y[i]);
+		}
+	}
+
+	// Divide by the amount of samples.
+	return static_cast<double>(sum) / static_cast<double>(a.size());
+}
 
 #endif
