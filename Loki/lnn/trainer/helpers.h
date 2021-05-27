@@ -2,6 +2,7 @@
 #define HELPERS_H
 #include <array>
 #include <random>
+#include <iomanip>
 
 
 
@@ -124,5 +125,26 @@ std::vector<T> combine_vectors(const std::vector<std::vector<T>>& _Src) {
 }
 
 
+/*
+
+Get the date and time, and return it in std::string format.
+
+*/
+inline std::string getDateTime()
+{
+	auto time = std::time(nullptr);
+	std::stringstream ss;
+
+#if (defined(_WIN32) || defined(_WIN64))
+	tm ltm;
+	localtime_s(&ltm, &time);
+	ss << std::put_time(&ltm, "%F_%T"); // ISO 8601 without timezone information.
+#else
+	ss << std::put_time(std::localtime(&time), "%F_%T");
+#endif
+	auto s = ss.str();
+	std::replace(s.begin(), s.end(), ':', '-');
+	return s;
+}
 
 #endif

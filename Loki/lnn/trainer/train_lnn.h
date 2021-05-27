@@ -198,7 +198,8 @@ namespace Training {
 	class Trainer :private LNN::Network {
 	public:
 		Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads,
-			double eta_start = LEARNING_RATE_DEFAULT, double eta_decay = LEARNING_DECAY_DELAULT, double _min = -DEFAULT_WEIGHT_BOUND, double _max = DEFAULT_WEIGHT_BOUND);
+			double eta_start = LEARNING_RATE_DEFAULT, double eta_decay = LEARNING_DECAY_DELAULT,
+			double _min = -DEFAULT_WEIGHT_BOUND, double _max = DEFAULT_WEIGHT_BOUND, LNN::LNN_FileType _sf = LNN::BIN, std::string _out = "");
 		~Trainer();
 
 		void run(std::string existing_network = "");
@@ -215,6 +216,10 @@ namespace Training {
 		const LOSS_F loss_function;
 		const double parameter_min_val;
 		const double parameter_max_val;
+		
+		// For saving the file
+		const LNN::LNN_FileType save_format;
+		const std::string output_filename;
 
 		// Container and loading method for the training data
 		std::vector<TrainingPosition>* training_data;
@@ -247,6 +252,9 @@ namespace Training {
 
 		// Used to hold the adam momentum parameters
 		Adam::AdamParameters* adam_momentum;
+
+		template <LNN::LNN_FileType FT>
+		void save_model();
 	};
 
 }

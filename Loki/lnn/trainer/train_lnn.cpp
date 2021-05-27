@@ -7,9 +7,10 @@ namespace Training {
 	/*
 	Constructor. Load the dataset, allocate all neccesarry objects on heap and set hyperparameters.
 	*/
-	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, double eta_start, double eta_decay, double _min, double _max)
+	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, 
+		double eta_start, double eta_decay, double _min, double _max, LNN::LNN_FileType _sf, std::string _out)
 		: epochs(_epochs), batch_size(_batch_size), loss_function(_loss), thread_count(_threads), 
-		initial_learning_rate(eta_start), learning_rate_decay(eta_decay), parameter_min_val(_min), parameter_max_val(_max) {
+		initial_learning_rate(eta_start), learning_rate_decay(eta_decay), parameter_min_val(_min), parameter_max_val(_max), save_format(_sf), output_filename(_out) {
 
 		// Step 1. Make sure all hyperparameters are in their proper ranges
 		try {
@@ -101,6 +102,70 @@ namespace Training {
 		// Step 3. Close the file, and we're done loading the data :))
 		data_file.close();
 	}
+
+
+
+	/*
+
+	Saving the model. This can be done in two ways: CSV or BIN.
+		CSV: Will write all weights and biases to a csv file in text format.
+		BIN: Will write all weights and biases to a ".lnn" file in binary format.
+	
+	*/
+	template<>
+	void Trainer::save_model<LNN::CSV>() {
+		return;
+	}
+
+	template<>
+	void Trainer::save_model<LNN::BIN>() {
+
+		// Step 1. If no output name has been given, create one based on the date and time
+		std::string output_file = output_filename;
+
+		if (output_filename == "") {
+			output_file = "LokiNet-" + getDateTime() + ".lnn";
+		}
+
+		// Step 2. Open the file.
+		FILE* bFile = nullptr;
+
+#if (defined(_WIN32) || defined(_WIN64))
+		fopen_s(&bFile, output_file.c_str(), "wb");
+#else
+		bFile = fopen(output_file.c_str(), "wb");
+#endif
+
+		// Step 3. Write the input weights.
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			fwrite(INPUT_LAYER.weights[i].data(), sizeof(neuron_t), INPUT_SIZE, bFile);
+		}
+
+		// Step 4. Write the biases of the first hidden layer and then its weights
+		fwrite(FIRST_HIDDEN.biases.data(), sizeof(neuron_t), FIRST_HIDDEN_SIZE, bFile);
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			fwrite(FIRST_HIDDEN.weights[i].data(), sizeof(neuron_t), FIRST_HIDDEN_SIZE, bFile);
+		}
+
+		// Step 5. Write all biases of the second hidden layer and then its weights
+		fwrite(SECOND_HIDDEN.biases.data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			fwrite(SECOND_HIDDEN.weights[i].data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
+		}
+
+		// Step 6. Write all biases of the third hidden layer and then its weights
+		fwrite(THIRD_HIDDEN.biases.data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
+		fwrite(THIRD_HIDDEN.weights[0].data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
+
+		// Step 7. Close the file
+		fclose(bFile);
+
+		std::cout << "Saved model at " << output_file << std::endl;
+	}
+
+
 
 
 	/*
@@ -590,6 +655,9 @@ namespace Training {
 
 			}
 		}
+
+		// Step 3. Save the network
+		save_model<LNN::BIN>();
 	}
 
 
@@ -688,4 +756,5 @@ namespace Training {
 		THIRD_HIDDEN_DELTAS.fill(0);
 		OUTPUT_DELTA = 0;
 	}
+
 }

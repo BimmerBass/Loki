@@ -16,6 +16,8 @@ class Layer{
         std::array<std::array<T, SIZE>, NEXT_SIZE> weights;
 
         size_t size() const;
+
+        void clear();
 };
 
 
@@ -39,6 +41,16 @@ Layer<SIZE, NEXT_SIZE, T>::Layer() {
 template<size_t SIZE, size_t NEXT_SIZE, typename T>
 size_t Layer<SIZE, NEXT_SIZE, T>::size() const {
     return SIZE;
+}
+
+// Clears all parameters in the layer
+template<size_t SIZE, size_t NEXT_SIZE, typename T>
+void Layer<SIZE, NEXT_SIZE, T>::clear() {
+    neurons.fill(0);
+    biases.fill(0);
+    for (int i = 0; i < NEXT_SIZE; i++) {
+        weights[i].fill(0);
+    }
 }
 
 #endif

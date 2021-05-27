@@ -21,6 +21,11 @@ namespace LNN {
     enum LNN_FileType :int { BIN = 0, CSV = 1 };
     constexpr int OUTPUT_BOUND = 20000;
 
+    constexpr size_t PARAMETER_COUNT = INPUT_SIZE * FIRST_HIDDEN_SIZE
+                                       + FIRST_HIDDEN_SIZE + FIRST_HIDDEN_SIZE * HIDDEN_STD_SIZE
+                                       + HIDDEN_STD_SIZE + HIDDEN_STD_SIZE * HIDDEN_STD_SIZE
+                                       + HIDDEN_STD_SIZE + HIDDEN_STD_SIZE;
+
     // This structure implementation is taken from Halogen's code.
     struct Update {
         struct UpdatePoint {
@@ -76,6 +81,9 @@ namespace LNN {
         // This vector holds all Update's that has been used incrementally to get to this position.
         // They are used to undo an incremental update
         std::vector<Update> changes;
+
+        // Set all values in the network to zero
+        void clear_net();
     };
 
     constexpr int piece_conversion[2][6] = {

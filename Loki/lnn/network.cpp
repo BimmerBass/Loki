@@ -219,12 +219,85 @@ namespace LNN {
 
 	/*
 	
+	Clear the network.
+	
+	*/
+	void Network::clear_net() {
+		// Step 1. Clear all layers
+		INPUT_LAYER.clear();
+		FIRST_HIDDEN.clear();
+		SECOND_HIDDEN.clear();
+		THIRD_HIDDEN.clear();
+		OUTPUT_LAYER.clear();
+
+		// Step 2. Clear Zeta and all updates that has been done.
+		Zeta.fill(0);
+		changes.clear();
+	}
+
+
+	/*
+	
 	Functions for loading a network from a file. This can be done two ways: By reading a csv (debug/development) or a binary file.
 	
 	*/
 	template<>
 	void Network::load_net<BIN>(std::string file_path) {
-		return;
+		// Step 1. Clear the network and open the file
+		clear_net();
+
+		FILE* bFile = nullptr;
+
+#if (defined(_WIN32) || defined(_WIN64))
+		fopen_s(&bFile, file_path.c_str(), "rb");
+#else
+		bFile = fopen(file_path.c_str(), "rb");
+#endif
+
+
+		// Step 1A. Find the end of the file and make sure there is the right amount of data.
+		fseek(bFile, 0, SEEK_END);
+		uint64_t pos = ftell(bFile);
+		size_t num_parameters = pos / sizeof(neuron_t);
+
+		// Step 1B. Make sure the file exists and is properly opened.
+		try {
+			if (bFile == nullptr) { throw("The path specified does not contain a network file compatible with Loki."); }
+			if (num_parameters != PARAMETER_COUNT) { throw("The file specified does not contain the right amount of data."); }
+		}
+		catch (const char* msg) {
+			std::cout << "Error encountered: " << msg << std::endl;
+			abort();
+		}
+
+		// Step 1C. Find the start of the file
+		rewind(bFile);
+
+		// Step 2. Read the input weights
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			fread(INPUT_LAYER.weights[i].data(), sizeof(neuron_t), INPUT_SIZE, bFile);
+		}
+
+		// Step 3. Read the first hidden layer's biases and then its weights
+		fread(FIRST_HIDDEN.biases.data(), sizeof(neuron_t), FIRST_HIDDEN_SIZE, bFile);
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			fread(FIRST_HIDDEN.weights[i].data(), sizeof(neuron_t), FIRST_HIDDEN_SIZE, bFile);
+		}
+
+		// Step 4. Read the second hidden layer's biases and then its weights
+		fread(SECOND_HIDDEN.biases.data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			fread(SECOND_HIDDEN.weights[i].data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
+		}
+
+		// Step 5. Read the third hidden layer's biases and then its weights
+		fread(THIRD_HIDDEN.biases.data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
+		fread(THIRD_HIDDEN.weights[0].data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
+
+		// Step 5. Close the file.
+		fclose(bFile);
 	}
 
 	// Helper function to extract all numbers in the csv file.
