@@ -430,8 +430,168 @@ namespace Training {
 
 
 	/*
+	
+	Optimizer. This is the function responsible for delivering work to the threads and updating the parameters. Additionally it should handle I/O.
+	
+	*/
+	void Trainer::run(std::string existing_network) {
+		assert(batch_size > 0 && batch_size < training_data->size());
+
+		// Step 1. Since the training data is already loaded in the constructor, we can immediately move on to setting up the network.
+		//	This can either be an existing one which we wish to train even further, or a new randomly initialized one.
+		if (existing_network != "") {
+			if (existing_network.find(".csv") != std::string::npos) {
+				load_net<LNN::CSV>(existing_network);
+			}
+			else {
+				load_net<LNN::BIN>(existing_network);
+			}
+		}
+		else {
+			initialize_random();
+		}
+
+		// Step 2. Output starting info to the user, set up some data containers and loop through the epochs.
+		std::cout << "+----------------------------------------------------------------+\n"
+			<< "|                     Loki NN tuning session                     |\n"
+			<< "+---------------------+------------------------------------------+\n"
+			<< "| Size of dataset			| " << training_data->size() << "\n"
+			<< "| Epochs					| " << epochs << "\n"
+			<< "| Batch size				| " << batch_size << "\n"
+			<< "| Loss function				| " << ((loss_function == LOSS_F::AAE) ? "Average absolute error" : "Mean squared error") << "\n"
+			<< "| Initial learning rate		| " << initial_learning_rate << "\n"
+			<< "| Learning decay rate		| " << learning_rate_decay << "\n"
+			<< "+---------------------+------------------------------------------+" << std::endl;
+
+		// Used to hold the error values for each position in a batch
+		std::vector<double> outputs;
+		std::vector<double> expected;
+
+		// Each thread gets a vector from these vectors to write errors to.
+		std::vector<std::vector<double>> thread_outputs;
+		std::vector<std::vector<double>> thread_expected;
+
+		for (int i = 0; i < thread_count; i++) {
+			std::vector<double> tmp1, tmp2;
+			thread_outputs.push_back(tmp1);
+			thread_expected.push_back(tmp2);
+		}
+
+		// Vector of positions that the batches will be divided into.
+		std::vector<std::vector<TrainingPosition>> thread_positions;
+
+		// Vector for the threads while they're working
+		std::vector<std::thread> workers;
+
+		// Step 2A. Determine starting points for each batch.
+		std::vector<size_t> batches;
+
+		int batch_count = training_data->size() / batch_size;
+		int remainder = training_data->size() % batch_size;
+
+		for (int i = 0; i < batch_count; i++) {
+			batches.push_back(i * batch_size);
+		}
+		if (remainder > 0) {
+			batches.push_back(training_data->size() - remainder);
+		}
+		batches.push_back(training_data->size());
+
+		// Step 2B. Start looping through the epochs.
+		for (size_t e = 0; e < epochs; e++) {
+
+			// Step 2B.1. Loop through the batches
+			for (size_t b = 0; b < batches.size() - 1; b++) {
+				// Step 2B.1A. Clear the gradients and data vectors
+				main_thread_data->clear_gradients();
+				outputs.clear(); thread_outputs.clear();
+				expected.clear(); thread_expected.clear();
+				thread_positions.clear();
+
+				// Step 2B.1B. Subdivide the batch into sub-batches that the threads will use.
+				subdivide_batch(thread_positions, batches, b);
+				assert(thread_positions.size() == thread_count);
+
+				// Step 2B.1C. Start up the threads and wait for them to complete their work.
+				workers.clear();
+				for (int t = 0; t < thread_count; t++) {
+					workers.push_back(std::thread(&Trainer::run_thread, this,
+																		std::ref(thread_positions[t]),
+																		std::ref(thread_outputs[t]),
+																		std::ref(thread_expected[t]),
+																		t
+																		));
+				}
+
+				for (int t = 0; t < thread_count; t++) {
+					workers[t].join();
+				}
+
+				// Step 2B.1D. Compute the average gradients and update the weights
+				compute_average_gradients();
+				update_parameters();
+
+				// Step 2B.1E. Now compute the error of the batch
+				outputs = combine_vectors<double>(thread_outputs);
+				expected = combine_vectors<double>(thread_expected);
+				assert(outputs.size() == expected.size());
+
+				int width = 30;
+				int left_padding = (double(b) / double(batches.size())) * width;
+				int right_padding = width - left_padding;
+
+				double mse_error = compute_loss<LOSS_F::MSE>(outputs, expected);
+				double aae_error = compute_loss<LOSS_F::AAE>(outputs, expected);
+
+				std::string progress(left_padding, '=');
+				std::cout << "[" << b + 1 << "/" << batches.size() << "][" << progress << ">" << std::string(right_padding, ' ') << "] "
+					<< "MSE:	" << mse_error << "	AAE:	" << aae_error << std::endl;
+
+			}
+		}
+	}
+
+
+	/*
 	Below are non-functional helper functions.
 	*/
+
+
+
+	// Batch division. This method divides a batch into work for the different threads
+	void Trainer::subdivide_batch(std::vector<std::vector<TrainingPosition>>& sub_batches, const std::vector<size_t>& batches, size_t current) {
+
+		assert(current < batches.size() - 1);
+		sub_batches.clear();
+
+		// Determine the starting and ending points in training_data.
+		size_t start = batches[current];
+		size_t end = batches[current + 1];
+
+		int remainder = (end - start) % thread_count;
+		int sub_batch_size = (end - start) / thread_count;
+
+		for (int i = 0; i < thread_count; i++) {
+			std::vector<TrainingPosition> sub_batch;
+
+			for (int n = i * sub_batch_size; n < (i + 1) * sub_batch_size; n++) {
+				assert(start + n < training_data->size());
+
+				sub_batch.push_back((*training_data)[start + n]);
+			}
+			sub_batches.push_back(sub_batch);
+		}
+
+		// If there is a remainder, add this to the last thread
+		if (remainder > 0) {
+			for (int n = end - 1; n > end - 1 - remainder; n--) {
+				assert(n < training_data->size());
+				sub_batches[sub_batches.size() - 1].push_back((*training_data)[n]);
+			}
+		}
+	}
+
+
 
 	// Set the input of the network
 	void ThreadData::set_input(const std::array<int8_t, INPUT_SIZE>& input) {

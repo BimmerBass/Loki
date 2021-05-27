@@ -149,6 +149,9 @@ namespace Training {
 		// All threads will run this method. It is the primary optimization method.
 		void run_thread(const std::vector<TrainingPosition>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id);
 
+		// Each batch will be divided into work for the different threads
+		void subdivide_batch(std::vector<std::vector<TrainingPosition>>& sub_batches, const std::vector<size_t>& batches, size_t current);
+
 		// Container holding all data for the threads
 		std::vector<ThreadData*> thread_data;
 		ThreadData* main_thread_data = nullptr;

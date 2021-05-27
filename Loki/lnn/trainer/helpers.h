@@ -104,4 +104,25 @@ inline double random_num(int min, int max) {
 	return static_cast<double>(min) + f * (static_cast<double>(max) - static_cast<double>(min));
 }
 
+
+/*
+
+Combine a vector of vectors into one vector.
+
+*/
+template<typename T>
+std::vector<T> combine_vectors(const std::vector<std::vector<T>>& _Src) {
+	std::vector<T> out;
+
+	for (size_t i = 0; i < _Src.size(); i++) {
+		for (size_t j = 0; j < _Src[i].size(); j++) {
+			out.push_back(_Src[i][j]);
+		}
+	}
+	
+	return out;
+}
+
+
+
 #endif
