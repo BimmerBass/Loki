@@ -3,6 +3,7 @@
 #include <array>
 #include <random>
 #include <iomanip>
+#include <fstream>
 
 
 
@@ -146,5 +147,37 @@ inline std::string getDateTime()
 	std::replace(s.begin(), s.end(), ':', '-');
 	return s;
 }
+
+
+
+// Write an array to a csv file object
+template<typename T, size_t SIZE>
+void write_array(std::ofstream& file, const std::array<T, SIZE>& v) {
+
+	file << std::to_string(v[0]);
+
+	for (int i = 1; i < SIZE; i++) {
+		file << ";" << std::to_string(v[i]);
+	}
+	file << "\n";
+}
+
+// Write multiple arrays to a csv file object
+template<typename T, size_t SIZE, size_t NEXT_SIZE>
+void write_multiple_arrays(std::ofstream& file, const std::array<std::array<T, SIZE>, NEXT_SIZE>& v) {
+
+	for (size_t i = 0; i < SIZE; i++) {
+		
+		file << std::to_string(v[0][i]);
+
+		for (size_t j = 1; j < NEXT_SIZE; j++) {
+			file << ";" << std::to_string(v[j][i]);
+		}
+
+		file << "\n";
+	}
+
+}
+
 
 #endif

@@ -21,6 +21,10 @@ namespace Training {
 			if (eta_start <= 0) { throw("Learning rate must be a positive number."); }
 			if (eta_decay <= 0) { throw("Learning rate decay must be a positive number."); }
 			if (_min >= _max) { throw("Minimum parameter initialization value must be smaller than maximum parameter initialization value."); }
+			if ((_sf == LNN::BIN && output_filename.find(".csv") != std::string::npos) ||
+				(_sf == LNN::CSV && output_filename.find(".lnn") != std::string::npos)) {
+				throw("Output file format must match the filename specified.");
+			}
 		}
 		catch (const char* msg) { // If the hyperparameters aren't configured properly, abort
 			std::cout << "[!] Exception thrown by Trainer::Trainer(): " << msg << std::endl;
@@ -114,7 +118,32 @@ namespace Training {
 	*/
 	template<>
 	void Trainer::save_model<LNN::CSV>() {
-		return;
+		
+		// Step 1. If no output name has been given, create one based on the date and time
+		std::string output_file = output_filename;
+
+		if (output_filename == "") {
+			output_file = "LokiNet-" + getDateTime() + ".csv";
+		}
+
+		// Step 2. Open the file.
+		std::ofstream csv_file(output_file);
+
+		// Step 3. Write all biases from the first hidden layer to the third in the first three rows.
+		write_array<neuron_t, FIRST_HIDDEN_SIZE>(csv_file, FIRST_HIDDEN.biases);
+		write_array<neuron_t, HIDDEN_STD_SIZE>(csv_file, SECOND_HIDDEN.biases);
+		write_array<neuron_t, HIDDEN_STD_SIZE>(csv_file, THIRD_HIDDEN.biases);
+
+		// Step 4. Write all weights to the file.
+		write_multiple_arrays<neuron_t, INPUT_SIZE, FIRST_HIDDEN_SIZE>(csv_file, INPUT_LAYER.weights);
+		write_multiple_arrays<neuron_t, FIRST_HIDDEN_SIZE, HIDDEN_STD_SIZE>(csv_file, FIRST_HIDDEN.weights);
+		write_multiple_arrays<neuron_t, HIDDEN_STD_SIZE, HIDDEN_STD_SIZE>(csv_file, SECOND_HIDDEN.weights);
+		write_multiple_arrays<neuron_t, HIDDEN_STD_SIZE, OUTPUT_SIZE>(csv_file, THIRD_HIDDEN.weights);
+
+		// Step 5. Close the file.
+		csv_file.close();
+
+		std::cout << "Saved model at " << output_file << std::endl;
 	}
 
 	template<>
@@ -657,7 +686,12 @@ namespace Training {
 		}
 
 		// Step 3. Save the network
-		save_model<LNN::BIN>();
+		if (save_format == LNN::BIN) {
+			save_model<LNN::BIN>();
+		}
+		else {
+			save_model<LNN::CSV>();
+		}
 	}
 
 
