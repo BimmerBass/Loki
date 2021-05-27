@@ -391,6 +391,7 @@ namespace Training {
 
 			THIRD_HIDDEN.biases[i] -= learning_rate * gradient;
 		}
+
 	}
 
 	
