@@ -21,7 +21,8 @@ int main(int argc, char* argv[]) {
 
 	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\texel-set-clean.epd", "C:\\Users\\abild\\Desktop\\training_data.csv");
 	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\quiet-labeled.epd", "C:\\Users\\abild\\Desktop\\quiet_test.csv");
-	//Training::Trainer tr()
+	Training::Trainer tr("C:\\Users\\abild\\Desktop\\quiet_test.csv", 1500, 1, LOSS_F::MSE, 1, 0.1);
+	tr.run();
 
 
 	return 0;

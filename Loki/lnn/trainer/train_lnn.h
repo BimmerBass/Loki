@@ -59,6 +59,10 @@ namespace Training {
 			network_inputs.fill(0);
 			score = 0;
 		}
+		TrainingPosition(const TrainingPosition& tp) {
+			network_inputs = tp.network_inputs;
+			score = tp.score;
+		}
 	};
 
 

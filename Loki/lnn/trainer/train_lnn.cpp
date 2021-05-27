@@ -499,13 +499,15 @@ namespace Training {
 
 		// Step 2B. Start looping through the epochs.
 		for (size_t e = 0; e < epochs; e++) {
+			// Compute the learning rate for the epoch.
+			learning_rate = initial_learning_rate / (1.0 + learning_rate_decay * double(e));
 
 			// Step 2B.1. Loop through the batches
 			for (size_t b = 0; b < batches.size() - 1; b++) {
 				// Step 2B.1A. Clear the gradients and data vectors
 				main_thread_data->clear_gradients();
-				outputs.clear(); thread_outputs.clear();
-				expected.clear(); thread_expected.clear();
+				outputs.clear();
+				expected.clear();
 				thread_positions.clear();
 
 				// Step 2B.1B. Subdivide the batch into sub-batches that the threads will use.
