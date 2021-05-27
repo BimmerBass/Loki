@@ -319,42 +319,77 @@ namespace Training {
 			p[i + 1] = p[i] - η * g[p] (gradient w.r.t. p) where η is the learning rate
 		This is what the following method is used for.
 	*/
-	void Trainer::update_parameters() {
+	void Trainer::update_parameters(int current_epoch) {
+		volatile double gradient = 0.0;
 
 		// Step 1. Update all weights from input to first hidden layer
 		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
 			for (int j = 0; j < INPUT_SIZE; j++) {
-				INPUT_LAYER.weights[i][j] -= learning_rate * main_thread_data->INPUT_WEIGHT_GRADIENTS[i][j];
+				// Update the adam parameters.
+				adam_momentum->INPUT_WEIGHTS[i].update(j, main_thread_data->INPUT_WEIGHT_GRADIENTS[i][j]);
+
+				gradient = adam_momentum->INPUT_WEIGHTS[i].m_hat(j, current_epoch) / (std::sqrt(adam_momentum->INPUT_WEIGHTS[i].v_hat(j, current_epoch)) + Adam::EPSILON);
+				
+				// Now update the parameter.
+				INPUT_LAYER.weights[i][j] -= learning_rate * gradient;
+
+				//INPUT_LAYER.weights[i][j] -= learning_rate * main_thread_data->INPUT_WEIGHT_GRADIENTS[i][j];
 			}
 		}
 
 		// Step 2. Update weights and biases of first hidden layer to second hidden layer.
 		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
 			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
-				FIRST_HIDDEN.weights[j][i] -= learning_rate * main_thread_data->FIRST_HIDDEN_WEIGHT_GRADIENTS[j][i];
+				adam_momentum->FIRST_HIDDEN_WEIGHTS[j].update(i, main_thread_data->FIRST_HIDDEN_WEIGHT_GRADIENTS[j][i]);
+				gradient = adam_momentum->FIRST_HIDDEN_WEIGHTS[j].m_hat(i, current_epoch) /
+					(std::sqrt(adam_momentum->FIRST_HIDDEN_WEIGHTS[j].v_hat(i, current_epoch)) + Adam::EPSILON);
+
+				FIRST_HIDDEN.weights[j][i] -= learning_rate * gradient;
+				//FIRST_HIDDEN.weights[j][i] -= learning_rate * main_thread_data->FIRST_HIDDEN_WEIGHT_GRADIENTS[j][i];
 			}
 
 			// Update bias
-			FIRST_HIDDEN.biases[i] -= learning_rate * main_thread_data->FIRST_HIDDEN_BIAS_GRADIENTS[i];
+			adam_momentum->FIRST_HIDDEN_BIAS.update(i, main_thread_data->FIRST_HIDDEN_BIAS_GRADIENTS[i]);
+			gradient = adam_momentum->FIRST_HIDDEN_BIAS.m_hat(i, current_epoch) / (std::sqrt(adam_momentum->FIRST_HIDDEN_BIAS.v_hat(i, current_epoch)) + Adam::EPSILON);
+			
+			FIRST_HIDDEN.biases[i] -= learning_rate * gradient;
+			//FIRST_HIDDEN.biases[i] -= learning_rate * main_thread_data->FIRST_HIDDEN_BIAS_GRADIENTS[i];
 		}
 
 		// Step 3. Update weights an biases of second hidden layer to third hidden layer
 		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
 			for (int j = 0; j < HIDDEN_STD_SIZE; j++){
-				SECOND_HIDDEN.weights[j][i] -= learning_rate * main_thread_data->SECOND_HIDDEN_WEIGHT_GRADIENTS[j][i];
+				adam_momentum->SECOND_HIDDEN_WEIGHTS[j].update(i, main_thread_data->SECOND_HIDDEN_WEIGHT_GRADIENTS[j][i]);
+				gradient = adam_momentum->SECOND_HIDDEN_WEIGHTS[j].m_hat(i, current_epoch) /
+					(std::sqrt(adam_momentum->SECOND_HIDDEN_WEIGHTS[j].v_hat(i, current_epoch)) + Adam::EPSILON);
+
+				SECOND_HIDDEN.weights[j][i] -= learning_rate * gradient;
+				//SECOND_HIDDEN.weights[j][i] -= learning_rate * main_thread_data->SECOND_HIDDEN_WEIGHT_GRADIENTS[j][i];
 			}
 
 			// Update bias
-			SECOND_HIDDEN.biases[i] -= learning_rate * main_thread_data->SECOND_HIDDEN_BIAS_GRADIENTS[i];
+			adam_momentum->SECOND_HIDDEN_BIAS.update(i, main_thread_data->SECOND_HIDDEN_BIAS_GRADIENTS[i]);
+			gradient = adam_momentum->SECOND_HIDDEN_BIAS.m_hat(i, current_epoch) / (std::sqrt(adam_momentum->SECOND_HIDDEN_BIAS.v_hat(i, current_epoch)) + Adam::EPSILON);
+			
+			SECOND_HIDDEN.biases[i] -= learning_rate * gradient;
+			//SECOND_HIDDEN.biases[i] -= learning_rate * main_thread_data->SECOND_HIDDEN_BIAS_GRADIENTS[i];
 		}
 
 		// Step 4. Update weights and biases from third hidden layer to the output, and we're done.
 		for (int i = 0; i < HIDDEN_STD_SIZE; i++){
 			// Weight update
-			THIRD_HIDDEN.weights[0][i] -= learning_rate * main_thread_data->THIRD_HIDDEN_WEIGHT_GRADIENTS[i];
+			adam_momentum->THIRD_HIDDEN_WEIGHTS.update(i, main_thread_data->THIRD_HIDDEN_WEIGHT_GRADIENTS[i]);
+			gradient = adam_momentum->THIRD_HIDDEN_WEIGHTS.m_hat(i, current_epoch) / (std::sqrt(adam_momentum->THIRD_HIDDEN_WEIGHTS.v_hat(i, current_epoch)) + Adam::EPSILON);
+			
+			THIRD_HIDDEN.weights[0][i] -= learning_rate * gradient;
+			//THIRD_HIDDEN.weights[0][i] -= learning_rate * main_thread_data->THIRD_HIDDEN_WEIGHT_GRADIENTS[i];
 
 			// Bias update
-			THIRD_HIDDEN.biases[i] -= learning_rate * main_thread_data->THIRD_HIDDEN_BIAS_GRADIENTS[i];
+			//THIRD_HIDDEN.biases[i] -= learning_rate * main_thread_data->THIRD_HIDDEN_BIAS_GRADIENTS[i];
+			adam_momentum->THIRD_HIDDEN_BIAS.update(i, main_thread_data->THIRD_HIDDEN_BIAS_GRADIENTS[i]);
+			gradient = adam_momentum->THIRD_HIDDEN_BIAS.m_hat(i, current_epoch) / (std::sqrt(adam_momentum->THIRD_HIDDEN_BIAS.v_hat(i, current_epoch)) + Adam::EPSILON);
+
+			THIRD_HIDDEN.biases[i] -= learning_rate * gradient;
 		}
 	}
 
@@ -534,7 +569,7 @@ namespace Training {
 
 				// Step 2B.1D. Compute the average gradients and update the weights
 				compute_average_gradients();
-				update_parameters();
+				update_parameters(e + 1);
 
 				// Step 2B.1E. Now compute the error of the batch
 				outputs = combine_vectors<double>(thread_outputs);

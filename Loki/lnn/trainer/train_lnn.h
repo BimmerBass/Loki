@@ -69,6 +69,10 @@ namespace Training {
 
 	// The Adam namespace holds all structures related to the optimization algorithm.
 	namespace Adam {
+		// Momentum decay values
+		constexpr double BETA_ONE = 0.9;
+		constexpr double BETA_TWO = 0.999;
+		constexpr double EPSILON = 0.000000001;
 
 		template <size_t SIZE>
 		struct AdamVector {
@@ -81,6 +85,26 @@ namespace Training {
 
 			void reset() {
 				M.fill(0.0); V.fill(0.0);
+			}
+
+			void update(size_t index, double gradient) {
+				assert(index < SIZE);
+				M[index] = BETA_ONE * M[index] + (1.0 - BETA_ONE) * gradient;
+				V[index] = BETA_TWO * V[index] + (1.0 - BETA_TWO) * std::pow(gradient, 2.0);
+			}
+
+			double m_hat(size_t index, int current_epoch) const {
+				assert(index < SIZE);
+				return M[index] / (1.0 - std::pow(BETA_ONE, current_epoch));
+			}
+			double v_hat(size_t index, int current_epoch) const {
+				assert(index < SIZE);
+				return V[index] / (1.0 - std::pow(BETA_TWO, current_epoch));
+			}
+
+			AdamVector() {
+				M.fill(0.0);
+				V.fill(0.0);
 			}
 		};
 
@@ -219,7 +243,7 @@ namespace Training {
 		int forward_propagate(int thread_id);
 
 		// Weight/bias update
-		void update_parameters();
+		void update_parameters(int current_epoch);
 
 		// Used to hold the adam momentum parameters
 		Adam::AdamParameters* adam_momentum;
