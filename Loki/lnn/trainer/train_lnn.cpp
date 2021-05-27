@@ -306,7 +306,52 @@ namespace Training {
 	}
 
 
+	/*
+	
+	Parameter updates: When we have computed the gradient of the loss function w.r.t. the parameters, we have an expression for the 
+		"direction" of highest increase. This means that we should subtract part of the gradients, which for parameter p, at
+		iteration i will be:
+			p[i + 1] = p[i] - η * g[p] (gradient w.r.t. p) where η is the learning rate
+		This is what the following method is used for.
+	*/
+	void Trainer::update_parameters() {
 
+		// Step 1. Update all weights from input to first hidden layer
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			for (int j = 0; j < INPUT_SIZE; j++) {
+				INPUT_LAYER.weights[i][j] -= learning_rate * main_thread_data->INPUT_WEIGHT_GRADIENTS[i][j];
+			}
+		}
+
+		// Step 2. Update weights and biases of first hidden layer to second hidden layer.
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				FIRST_HIDDEN.weights[j][i] -= learning_rate * main_thread_data->FIRST_HIDDEN_WEIGHT_GRADIENTS[j][i];
+			}
+
+			// Update bias
+			FIRST_HIDDEN.biases[i] -= learning_rate * main_thread_data->FIRST_HIDDEN_BIAS_GRADIENTS[i];
+		}
+
+		// Step 3. Update weights an biases of second hidden layer to third hidden layer
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++){
+				SECOND_HIDDEN.weights[j][i] -= learning_rate * main_thread_data->SECOND_HIDDEN_WEIGHT_GRADIENTS[j][i];
+			}
+
+			// Update bias
+			SECOND_HIDDEN.biases[i] -= learning_rate * main_thread_data->SECOND_HIDDEN_BIAS_GRADIENTS[i];
+		}
+
+		// Step 4. Update weights and biases from third hidden layer to the output, and we're done.
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++){
+			// Weight update
+			THIRD_HIDDEN.weights[0][i] -= learning_rate * main_thread_data->THIRD_HIDDEN_WEIGHT_GRADIENTS[i];
+
+			// Bias update
+			THIRD_HIDDEN.biases[i] -= learning_rate * main_thread_data->THIRD_HIDDEN_BIAS_GRADIENTS[i];
+		}
+	}
 
 
 
