@@ -7,6 +7,7 @@
 #include "helpers.h" // For mathematical functions
 
 
+
 namespace Training {
 
 	inline double ReLU(neuron_t x) {
@@ -64,6 +65,54 @@ namespace Training {
 			score = tp.score;
 		}
 	};
+
+
+	// The Adam namespace holds all structures related to the optimization algorithm.
+	namespace Adam {
+
+		template <size_t SIZE>
+		struct AdamVector {
+			std::array<double, SIZE> M;
+			std::array<double, SIZE> V;
+
+			size_t size() const {
+				return SIZE;
+			}
+
+			void reset() {
+				M.fill(0.0); V.fill(0.0);
+			}
+		};
+
+
+		struct AdamParameters {
+
+			std::array<AdamVector<INPUT_SIZE>, FIRST_HIDDEN_SIZE> INPUT_WEIGHTS;
+			std::array<AdamVector<FIRST_HIDDEN_SIZE>, HIDDEN_STD_SIZE> FIRST_HIDDEN_WEIGHTS;
+			std::array<AdamVector<HIDDEN_STD_SIZE>, HIDDEN_STD_SIZE> SECOND_HIDDEN_WEIGHTS;
+			AdamVector<HIDDEN_STD_SIZE> THIRD_HIDDEN_WEIGHTS;
+
+			AdamVector<FIRST_HIDDEN_SIZE> FIRST_HIDDEN_BIAS;
+			AdamVector<HIDDEN_STD_SIZE> SECOND_HIDDEN_BIAS;
+			AdamVector<HIDDEN_STD_SIZE> THIRD_HIDDEN_BIAS;
+
+			void clear() {
+				for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+					INPUT_WEIGHTS[i].reset();
+				}
+				for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+					FIRST_HIDDEN_WEIGHTS[i].reset();
+					SECOND_HIDDEN_WEIGHTS[i].reset();
+				}
+				THIRD_HIDDEN_WEIGHTS.reset();
+				FIRST_HIDDEN_BIAS.reset();
+				SECOND_HIDDEN_BIAS.reset();
+				THIRD_HIDDEN_BIAS.reset();
+			}
+		};
+
+
+	} // namespace Adam
 
 
 	/*
@@ -171,6 +220,9 @@ namespace Training {
 
 		// Weight/bias update
 		void update_parameters();
+
+		// Used to hold the adam momentum parameters
+		Adam::AdamParameters* adam_momentum;
 	};
 
 }

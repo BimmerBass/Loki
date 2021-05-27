@@ -32,6 +32,7 @@ namespace Training {
 			thread_data.push_back(new ThreadData);
 		}
 		main_thread_data = new ThreadData;
+		adam_momentum = new Adam::AdamParameters;
 
 		// Step 3. Load the dataset
 		load_dataset(datafile);
@@ -46,6 +47,7 @@ namespace Training {
 			if (thread_data[t] != nullptr) { delete thread_data[t]; }
 		}
 		if (main_thread_data != nullptr) { delete main_thread_data; }
+		if (adam_momentum != nullptr) { delete adam_momentum; }
 	}
 
 
