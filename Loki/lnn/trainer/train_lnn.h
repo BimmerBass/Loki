@@ -1,7 +1,7 @@
 #ifndef TRAIN_LNN_H
 #define TRAIN_LNN_H
-#include <ctime>
 #include <thread>
+#include <ctime>
 
 #include "../network.h"
 #include "helpers.h" // For mathematical functions
@@ -42,6 +42,7 @@ namespace Training {
 	*/
 	constexpr double LEARNING_RATE_DEFAULT = 0.01;
 	constexpr double LEARNING_DECAY_DELAULT = 0.0001;
+	constexpr double DEFAULT_WEIGHT_BOUND = 2.0;
 
 
 	// A structure for holding a training position
@@ -119,11 +120,11 @@ namespace Training {
 	*/
 	class Trainer :private LNN::Network {
 	public:
-		Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, 
-			double eta_start = LEARNING_RATE_DEFAULT, double eta_decay = LEARNING_DECAY_DELAULT);
+		Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads,
+			double eta_start = LEARNING_RATE_DEFAULT, double eta_decay = LEARNING_DECAY_DELAULT, double _min = -DEFAULT_WEIGHT_BOUND, double _max = DEFAULT_WEIGHT_BOUND);
 		~Trainer();
 
-		void run();
+		void run(std::string existing_network = "");
 
 	private:
 		// Hyperparameters for the training
@@ -135,10 +136,15 @@ namespace Training {
 		const size_t batch_size;
 		const size_t thread_count;
 		const LOSS_F loss_function;
+		const double parameter_min_val;
+		const double parameter_max_val;
 
 		// Container and loading method for the training data
 		std::vector<TrainingPosition>* training_data;
 		void load_dataset(std::string filepath);
+
+		// For backprop to work, we need to initialize a new network randomly.
+		void initialize_random();
 
 		// All threads will run this method. It is the primary optimization method.
 		void run_thread(const std::vector<TrainingPosition>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id);

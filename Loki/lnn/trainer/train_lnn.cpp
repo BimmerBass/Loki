@@ -7,17 +7,19 @@ namespace Training {
 	/*
 	Constructor. Load the dataset, allocate all neccesarry objects on heap and set hyperparameters.
 	*/
-	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, double eta_start, double eta_decay)
-		: epochs(_epochs), batch_size(_batch_size), loss_function(_loss), thread_count(_threads), initial_learning_rate(eta_start), learning_rate_decay(eta_decay) {
+	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, double eta_start, double eta_decay, double _min, double _max)
+		: epochs(_epochs), batch_size(_batch_size), loss_function(_loss), thread_count(_threads), 
+		initial_learning_rate(eta_start), learning_rate_decay(eta_decay), parameter_min_val(_min), parameter_max_val(_max) {
 
 		// Step 1. Make sure all hyperparameters are in their proper ranges
 		try {
-			if (datafile == "") { throw("Dataset should contain the path to a CSV file."); }
-			if (_epochs <= 0) { throw("Epochs should be a positive number."); }
-			if (_batch_size <= 0) { throw("Batch size should be a positive number."); }
-			if (_threads <= 0) { throw("Threads should be a positive number."); }
-			if (eta_start <= 0) { throw("Learning rate should be a positive number."); }
-			if (eta_decay <= 0) { throw("Learning rate decay should be a positive number."); }
+			if (datafile == "") { throw("Dataset must contain the path to a CSV file."); }
+			if (_epochs <= 0) { throw("Epochs must be a positive number."); }
+			if (_batch_size <= 0) { throw("Batch size must be a positive number."); }
+			if (_threads <= 0) { throw("Threads must be a positive number."); }
+			if (eta_start <= 0) { throw("Learning rate must be a positive number."); }
+			if (eta_decay <= 0) { throw("Learning rate decay must be a positive number."); }
+			if (_min >= _max) { throw("Minimum parameter initialization value must be smaller than maximum parameter initialization value."); }
 		}
 		catch (const char* msg) { // If the hyperparameters aren't configured properly, abort
 			std::cout << "[!] Exception thrown by Trainer::Trainer(): " << msg << std::endl;
@@ -383,6 +385,48 @@ namespace Training {
 		thread_data[thread_id]->average_gradients(positions.size());
 	}
 
+	/*
+	
+	Since we need to use the weights's and biases's values to compute new deltas, the network can't be zero-initialized. Therefore, this method will initialize all values 
+		(except input/output biases which will be zero) to random values within some interval
+	
+	*/
+	void Trainer::initialize_random() {
+		// Step 1. Seed the PRNG.
+		std::srand(std::time(0));
+
+		// Step 2. Initialize the input weights
+		// Note: The input biases should be zero.
+		INPUT_LAYER.biases.fill(0);
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			for (int j = 0; j < INPUT_SIZE; j++) {
+				INPUT_LAYER.weights[i][j] = random_num(parameter_min_val, parameter_max_val);
+			}
+		}
+
+		// Step 3. Initialize weights and biases of first hidden layer.
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				FIRST_HIDDEN.weights[j][i] = random_num(parameter_min_val, parameter_max_val);
+			}
+
+			FIRST_HIDDEN.biases[i] = random_num(parameter_min_val, parameter_max_val);
+		}
+
+		// Step 4. Initialize weights and biases in second and third layer.
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			for (int j = 0; j < HIDDEN_STD_SIZE; j++) {
+				SECOND_HIDDEN.weights[j][i] = random_num(parameter_min_val, parameter_max_val);
+			}
+			SECOND_HIDDEN.biases[i] = random_num(parameter_min_val, parameter_max_val);
+
+			THIRD_HIDDEN.weights[0][i] = random_num(parameter_min_val, parameter_max_val);
+			THIRD_HIDDEN.biases[i] = random_num(parameter_min_val, parameter_max_val);
+		}
+
+		// Step 5. Make the output bias zero.
+		OUTPUT_LAYER.biases[0] = 0;
+	}
 
 
 	/*

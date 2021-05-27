@@ -1,6 +1,7 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 #include <array>
+#include <random>
 
 
 
@@ -88,6 +89,19 @@ double compute_loss(const std::vector<double>& a, const std::vector<double>& y) 
 
 	// Divide by the amount of samples.
 	return static_cast<double>(sum) / static_cast<double>(a.size());
+}
+
+
+/*
+
+Generate a random number in the interval [min; max]
+NOTE: A random seed should be made before running this method in order to assure "true" randomness
+
+*/
+inline double random_num(int min, int max) {
+	double f = static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX);
+
+	return static_cast<double>(min) + f * (static_cast<double>(max) - static_cast<double>(min));
 }
 
 #endif
