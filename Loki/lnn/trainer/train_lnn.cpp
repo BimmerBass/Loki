@@ -353,12 +353,40 @@ namespace Training {
 		}
 	}
 
+	
+	/*
+	
+	Thread optimizer. This function is what each thread will run on its portion of the batch.
+	
+	*/
+	void Trainer::run_thread(const std::vector<TrainingPosition>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id) {
+		// Step 1. Clear the data vectors and the gradients.
+		outputs.clear();
+		expected.clear();
+		thread_data[thread_id]->clear_gradients();
 
+		// Step 2. Loop through all positions
+		for (int i = 0; i < positions.size(); i++) {
+			// Step 2A. Load the position and forward propagate. Save the network's output in the outputs vector
+			thread_data[thread_id]->set_input(positions[i].network_inputs);
+			forward_propagate(thread_id);
+			outputs.push_back(static_cast<double>(thread_data[thread_id]->OUTPUT_NEURON));
+
+			// Step 2B. Backpropagate and save the expected score in the "expected" vector.
+			// Note: The gradients will be updated together with the deltas in the back_propagation function.
+			back_propagation(thread_id, positions[i].score);
+			expected.push_back(static_cast<double>(positions[i].score));
+
+		}
+
+		// Step 3. After having calculated all the accumulated gradients, take the average over the training positions
+		thread_data[thread_id]->average_gradients(positions.size());
+	}
 
 
 
 	/*
-	Below are non functional helper functions.
+	Below are non-functional helper functions.
 	*/
 
 	// Set the input of the network

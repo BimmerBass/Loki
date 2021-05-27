@@ -141,7 +141,7 @@ namespace Training {
 		void load_dataset(std::string filepath);
 
 		// All threads will run this method. It is the primary optimization method.
-		void run_thread(std::vector<TrainingPosition>& positions, int thread_id);
+		void run_thread(const std::vector<TrainingPosition>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id);
 
 		// Container holding all data for the threads
 		std::vector<ThreadData*> thread_data;
