@@ -435,7 +435,7 @@ namespace Training {
 	
 	*/
 	void Trainer::run(std::string existing_network) {
-		assert(batch_size > 0 && batch_size < training_data->size());
+		assert(batch_size > 0 && batch_size <= training_data->size());
 
 		// Step 1. Since the training data is already loaded in the constructor, we can immediately move on to setting up the network.
 		//	This can either be an existing one which we wish to train even further, or a new randomly initialized one.
