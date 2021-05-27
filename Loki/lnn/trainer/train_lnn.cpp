@@ -141,7 +141,8 @@ namespace Training {
 		dot_product<neuron_t, HIDDEN_STD_SIZE>(apply_ReLU<neuron_t, HIDDEN_STD_SIZE>(thread_data[thread_id]->THIRD_HIDDEN_NEURONS),
 			THIRD_HIDDEN.weights[0], thread_data[thread_id]->OUTPUT_NEURON);
 
-		return std::max(-LNN::OUTPUT_BOUND, std::min(LNN::OUTPUT_BOUND, static_cast<int>(thread_data[thread_id]->OUTPUT_NEURON)));
+
+		return static_cast<double>(thread_data[thread_id]->OUTPUT_NEURON);
 	}
 
 
