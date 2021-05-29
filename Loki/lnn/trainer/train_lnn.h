@@ -257,6 +257,9 @@ namespace Training {
 		void save_model();
 	};
 
+
+	// This method will recieve a UCI-command and set up a trainer with that.
+	void parse_learn(std::string cmd);
 }
 
 

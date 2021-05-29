@@ -791,4 +791,60 @@ namespace Training {
 		OUTPUT_DELTA = 0;
 	}
 
+
+
+	/*
+	
+	The below method is responsible for setting up a Trainer instance from a command given to Loki.
+		Command format: "learn ...":
+		Obligatory hyperparameters (in this order):
+			- dataset: string
+				The csv file containing all the training data.
+			- epoch: int [1;+∞]
+				Amount of iterations to run the optimization algorithm for.
+			- batchsize: int [1;size of dataset]
+				The amount of datapoints in a single gradient estimation.
+			- loss: string, mse or aae.
+				The loss function to use. Either mean squared error or absolute average. Note: This should be rather easy to expand upon.
+			- threads: int [1;+∞]. Note: A lot of threads will take up a big portion of memory, so one is adviced to be conservative with this number.
+				Threads to use.
+		Optional hyperparameters:
+			- eta: float [> 0.0], default = 0.01
+				initial learning rate
+			- eta_decay: float [>= 0.0], default = 0.0001
+				Decay of the learning rate after each iteration (for example, eta_decay 0.5 will halve eta each iteration).
+				Helpful to avoid passing over a minimum.
+			- min_param: float [-∞;+∞], default = -2.0
+				Minimum value of parameters if a new net should be trained (randomly initialized).
+				Note: If a min_param is passed, a max_param should also be.
+			- max_param: float [> min_param], default = 2.0
+				Maximum value of parameters if a new net should be trained (randomly initialized).
+				Note: If a max_param is passed, a min_param should also be.
+			- format: CSV or BIN, default = BIN.
+				The format, that the network should be saved as. Either a .csv file or a .lnn binary file.
+			- output: string, default = "LokiNet-<Date and time>.lnn/.csv"
+				The output file that the saved network should be saved to.
+				Note: This needs to match the output format if one is given.
+			- net: string, default = ""
+				An existing network to train further. If this isn't passed, the algorithm will randomly initialize a new network and train that.
+		Example of command:
+			learn dataset C:\\Users\\username\\trainingset.csv epoch 1000 batchsize 14500 loss mse threads 4 eta 0.001 eta_decay 0.1 output C:\\Users\\username\\output.lnn
+
+			This will train a new network for 1000 epochs, with a batchsize and loss function of 14500 and mean squared error respectively. It will use 4 threads, a learning
+			rate of 0.001, a learning decay of 0.1, and save the network to C:\\Users\\username\\output.lnn.
+			The training set used will be C:\\Users\\username\\trainingset.csv
+	*/
+	void parse_learn(std::string cmd) {
+		// Step 1. Initialize all hyperparameters.
+		std::string dataset = "", loss_str = "";
+		size_t epoch = -1, batch_size = -1;
+		LOSS_F loss = LOSS_F::MSE;
+		size_t threads = -1;
+
+		double eta = LEARNING_RATE_DEFAULT, eta_decay = LEARNING_DECAY_DELAULT, min_param = -DEFAULT_WEIGHT_BOUND, max_param = DEFAULT_WEIGHT_BOUND;
+		LNN::LNN_FileType format = LNN::BIN;
+		std::string output_file = "", existing_net = "";
+		
+
+	}
 }

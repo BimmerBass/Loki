@@ -38,6 +38,8 @@ namespace UCI {
 
 	// Helper function for debugging the transposition table. It prints info about the position stored in the tt.
 	void printHashEntry(GameState_t* pos);
+
+	
 }
 
 
