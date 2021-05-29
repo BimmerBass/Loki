@@ -9,7 +9,11 @@ std::vector<std::string> split_string(std::string s, char delimiter) {
 	std::vector<std::string> out;
 
 	// Remove all spaces in the string
+#ifdef _MSC_VER
 	s.erase(std::remove_if(s.begin(), s.end(), std::isspace), s.end());
+#else
+	s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
+#endif
 
 	std::string curr_string = "";
 

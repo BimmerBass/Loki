@@ -844,9 +844,9 @@ namespace Training {
 		double eta = LEARNING_RATE_DEFAULT, eta_decay = LEARNING_DECAY_DELAULT, min_param = -DEFAULT_WEIGHT_BOUND, max_param = DEFAULT_WEIGHT_BOUND;
 		LNN::LNN_FileType format = LNN::BIN;
 		std::string output_file = "", existing_net = "";
-		
+
 		// Step 2. Parse all the obligatory parameters, and return if some of them are missing.
-		size_t index = 0;
+		volatile size_t index = 0;
 
 		try {
 
@@ -994,14 +994,38 @@ namespace Training {
 			index = cmd.find("output");
 
 			if (index != std::string::npos) {
+				output_file = cmd.substr(index + 7);
 
+				// If there are more parameters after this, we need to split dataset and use the part before the next space
+				// Note if the path has been given inside quotation marks, use this instead of space.
+				size_t last_index = std::string::npos;
+				if (output_file[0] == '"') {
+					last_index = (output_file.substr(1)).find_first_of('"');
+					output_file = output_file.substr(1, last_index);
+				}
+				else {
+					last_index = output_file.find_first_of(" ");
+					output_file = output_file.substr(0, last_index);
+				}
 			}
 
 			// Step 3G. Existing file.
-			index = cmd.find("net");
+			index = cmd.find("net ");
 
 			if (index != std::string::npos) {
+				existing_net = cmd.substr(index + 4);
 
+				// If there are more parameters after this, we need to split dataset and use the part before the next space
+				// Note if the path has been given inside quotation marks, use this instead of space.
+				size_t last_index = std::string::npos;
+				if (existing_net[0] == '"') {
+					last_index = (existing_net.substr(1)).find_first_of('"');
+					existing_net = existing_net.substr(1, last_index);
+				}
+				else {
+					existing_net = existing_net.find_first_of(" ");
+					existing_net = existing_net.substr(0, last_index);
+				}
 			}
 		}
 		catch (const char* msg) {
@@ -1009,6 +1033,22 @@ namespace Training {
 			return false;
 		}
 
+		// Step 4. Now set up a new trainer.
+		// Note: Due to the big size, this is declared on heap.
+		Trainer* trainer = new Trainer(dataset, 
+										epoch, 
+										batch_size, 
+										loss, 
+										threads, 
+										eta, 
+										eta_decay, 
+										min_param, 
+										max_param, 
+										format, 
+										output_file);
+
+		// Step 5. Run the trainer.
+		trainer->run(existing_net);
 
 		return true;
 	}
