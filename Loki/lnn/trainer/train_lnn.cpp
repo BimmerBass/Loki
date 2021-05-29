@@ -902,7 +902,14 @@ namespace Training {
 			index = cmd.find("loss");
 
 			if (index != std::string::npos) {
-
+				if (to_lower(cmd.substr(index + 5)).find("mse") != std::string::npos) {
+					loss = LOSS_F::MSE;
+				}
+				else if (to_lower(cmd.substr(index + 5).c_str()).find("aae") != std::string::npos) {
+					loss = LOSS_F::AAE;
+				}
+				// Throw an error if the loss function has been incorrectly configured
+				else { throw("Loss function must be either aae or mse."); }
 			}
 			else { throw("A loss function must be specified."); }
 

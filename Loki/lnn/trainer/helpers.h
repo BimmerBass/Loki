@@ -4,6 +4,7 @@
 #include <random>
 #include <iomanip>
 #include <fstream>
+#include <locale>
 
 
 
@@ -179,5 +180,12 @@ void write_multiple_arrays(std::ofstream& file, const std::array<std::array<T, S
 
 }
 
+
+// Convert a string to lowercase
+inline std::string to_lower(std::string s) {
+	for (char& c : s)
+		c = tolower(c);
+	return s;
+}
 
 #endif
