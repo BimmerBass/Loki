@@ -839,7 +839,7 @@ namespace Training {
 		std::string dataset = "", loss_str = "";
 		int epoch = -1, batch_size = -1;
 		LOSS_F loss = LOSS_F::MSE;
-		size_t threads = -1;
+		int threads = -1;
 
 		double eta = LEARNING_RATE_DEFAULT, eta_decay = LEARNING_DECAY_DELAULT, min_param = -DEFAULT_WEIGHT_BOUND, max_param = DEFAULT_WEIGHT_BOUND;
 		LNN::LNN_FileType format = LNN::BIN;
@@ -917,7 +917,12 @@ namespace Training {
 			index = cmd.find("threads");
 
 			if (index != std::string::npos) {
+				threads = std::stoi(cmd.substr(index + 8));
 
+				if (threads <= 0) {
+					std::string err = "Thread count must be a positive number. Got " + std::to_string(threads);
+					throw(err.c_str());
+				}
 			}
 			else { throw("A thread count must be specified."); }
 		}
