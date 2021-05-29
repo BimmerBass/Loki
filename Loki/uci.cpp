@@ -1,4 +1,5 @@
 #include "uci.h"
+#include "lnn/trainer/train_lnn.h"
 
 int UCI::num_threads = THREADS_DEFAULT_NUM;
 
@@ -153,6 +154,21 @@ void UCI::loop() {
 		else if (input.find("bench") != std::string::npos) {
 			Bench::run_benchmark();
 			continue;
+		}
+
+		// Step 3K. If we receive the non-UCI "learn" command, start a training session.
+		// Note: If the training is succesful, quit afterwards. Otherwise notify the user that there is an error and continue.
+		else if (input.find("learn") != std::string::npos) {
+			bool success = Training::parse_learn(input);
+
+			if (success) {
+				std::cout << "[+] Training session completed successfully.\nQuitting" << std::endl;
+				break;
+			}
+			else {
+				std::cout << "[!] An error was encountered while training." << std::endl;
+				continue;
+			}
 		}
 
 		// If we've been told to quit, do it.

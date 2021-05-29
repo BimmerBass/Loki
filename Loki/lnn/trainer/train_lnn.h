@@ -259,7 +259,8 @@ namespace Training {
 
 
 	// This method will recieve a UCI-command and set up a trainer with that.
-	void parse_learn(std::string cmd);
+	// It will return true if the training setup/run was successful, otherwise false.
+	bool parse_learn(std::string cmd);
 }
 
 

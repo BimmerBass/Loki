@@ -834,7 +834,7 @@ namespace Training {
 			rate of 0.001, a learning decay of 0.1, and save the network to C:\\Users\\username\\output.lnn.
 			The training set used will be C:\\Users\\username\\trainingset.csv
 	*/
-	void parse_learn(std::string cmd) {
+	bool parse_learn(std::string cmd) {
 		// Step 1. Initialize all hyperparameters.
 		std::string dataset = "", loss_str = "";
 		size_t epoch = -1, batch_size = -1;
@@ -845,6 +845,69 @@ namespace Training {
 		LNN::LNN_FileType format = LNN::BIN;
 		std::string output_file = "", existing_net = "";
 		
+		// Step 2. Parse all the obligatory parameters, and return if some of them are missing.
+		int index = 0;
 
+		try {
+
+			// Step 2A. Dataset.
+			index = cmd.find("dataset");
+
+			if (index != std::string::npos) {
+				dataset = cmd.substr(index + 8);
+
+				// If there are more parameters after this, we need to split dataset and use the part before the next space
+				// Note if the path has been given inside quotation marks, use this instead of space.
+				size_t last_index = std::string::npos;
+				if (dataset[0] == '"') {
+					last_index = (dataset.substr(1)).find_first_of('"');
+					dataset = dataset.substr(1, last_index);
+				}
+				else {
+					last_index = dataset.find_first_of(" ");
+					dataset = dataset.substr(0, last_index);
+				}
+			}
+			else { throw("A path to the data-file must be specified."); }
+
+			// Step 2B. Number of epochs
+			index = cmd.find("epoch");
+
+			if (index != std::string::npos) {
+
+			}
+			else { throw("An epoch count must be specified."); }
+
+			// Step 2C. Batch size
+			index = cmd.find("batchsize");
+
+			if (index != std::string::npos) {
+
+			}
+			else { throw("A batch size must be specified."); }
+
+			// Step 2D. Loss function
+			index = cmd.find("loss");
+
+			if (index != std::string::npos) {
+
+			}
+			else { throw("A loss function must be specified."); }
+
+			// Step 2E. Thread count
+			index = cmd.find("threads");
+
+			if (index != std::string::npos) {
+
+			}
+			else { throw("A thread count must be specified."); }
+		}
+		catch (const char* msg) {
+			std::cout << "[!] Training session setup encountered an error: " << msg << std::endl;
+			return false;
+		}
+
+
+		return true;
 	}
 }
