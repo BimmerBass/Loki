@@ -837,7 +837,7 @@ namespace Training {
 	bool parse_learn(std::string cmd) {
 		// Step 1. Initialize all hyperparameters.
 		std::string dataset = "", loss_str = "";
-		size_t epoch = -1, batch_size = -1;
+		int epoch = -1, batch_size = -1;
 		LOSS_F loss = LOSS_F::MSE;
 		size_t threads = -1;
 
@@ -874,7 +874,14 @@ namespace Training {
 			index = cmd.find("epoch");
 
 			if (index != std::string::npos) {
+				epoch = std::stoi(cmd.substr(index + 6).c_str());
 
+				// Throw an error if the epoch number is wrongly configured.
+				if (epoch <= 0) { 
+					std::string err = "Epoch number must be a positive number. Got " + std::to_string(epoch);
+					throw(err.c_str());
+				}
+				std::cout << epoch << std::endl;
 			}
 			else { throw("An epoch count must be specified."); }
 
