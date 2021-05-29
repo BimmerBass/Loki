@@ -846,7 +846,7 @@ namespace Training {
 		std::string output_file = "", existing_net = "";
 		
 		// Step 2. Parse all the obligatory parameters, and return if some of them are missing.
-		int index = 0;
+		size_t index = 0;
 
 		try {
 
@@ -925,6 +925,76 @@ namespace Training {
 				}
 			}
 			else { throw("A thread count must be specified."); }
+
+			/*
+			Step 3. Parse all optional hyperparameters.
+			*/
+
+			// Step 3A. Learning rate
+			index = cmd.find("eta");
+
+			if (index != std::string::npos) {
+				eta = std::stod(cmd.substr(index + 4));
+
+				if (eta <= 0.0){
+					std::string err = "Learning rate must be a positive number. Got " + std::to_string(eta);
+					throw(err.c_str());
+				}
+			}
+
+			// Step 3B. Learning rate decay
+			index = cmd.find("eta_decay");
+
+			if (index != std::string::npos) {
+				eta_decay = std::stod(cmd.substr(index + 10));
+
+				if (eta_decay <= 0.0) {
+					std::string err = "Learning rate decay must be a positive number. Got " + std::to_string(eta_decay);
+					throw(err.c_str());
+				}
+			}
+
+			// Step 3C. Minimum parameters.
+			index = cmd.find("min_param");
+
+			if (index != std::string::npos) {
+				min_param = std::stod(cmd.substr(index + 10));
+			}
+
+			// Step 3D. Maximum parameters.
+			index = cmd.find("max_param");
+
+			if (index != std::string::npos) {
+				max_param = std::stod(cmd.substr(index + 10));
+			}
+
+			// If the maximum parameter value is less than or equal to the minimum value, throw an error.
+			if (max_param <= min_param) {
+				std::string err = "Maximum parameter value must be more than minimum parameter value. Got max_param: " + std::to_string(max_param)
+					+ " and min_param: " + std::to_string(min_param);
+				throw(err.c_str());
+			}
+
+			// Step 3E. File format.
+			index = cmd.find("format");
+
+			if (index != std::string::npos) {
+
+			}
+
+			// Step 3F. Output file.
+			index = cmd.find("output");
+
+			if (index != std::string::npos) {
+
+			}
+
+			// Step 3G. Existing file.
+			index = cmd.find("net");
+
+			if (index != std::string::npos) {
+
+			}
 		}
 		catch (const char* msg) {
 			std::cout << "[!] Training session setup encountered an error: " << msg << std::endl;
