@@ -979,7 +979,15 @@ namespace Training {
 			index = cmd.find("format");
 
 			if (index != std::string::npos) {
-
+				if (to_lower(cmd.substr(index + 7)).find("bin") != std::string::npos) {
+					format = LNN::BIN;
+				}
+				else if (to_lower(cmd.substr(index + 7)).find("csv") != std::string::npos) {
+					format = LNN::CSV;
+				}
+				else {
+					throw("Output file format must be either bin or csv.");
+				}
 			}
 
 			// Step 3F. Output file.
