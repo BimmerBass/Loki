@@ -878,10 +878,9 @@ namespace Training {
 
 				// Throw an error if the epoch number is wrongly configured.
 				if (epoch <= 0) { 
-					std::string err = "Epoch number must be a positive number. Got " + std::to_string(epoch);
+					std::string err = "Epoch count must be a positive number. Got " + std::to_string(epoch);
 					throw(err.c_str());
 				}
-				std::cout << epoch << std::endl;
 			}
 			else { throw("An epoch count must be specified."); }
 
@@ -889,7 +888,13 @@ namespace Training {
 			index = cmd.find("batchsize");
 
 			if (index != std::string::npos) {
+				batch_size = std::stoi(cmd.substr(index + 10));
 
+				// Throw an error if the batch size is not a positive number
+				if (batch_size <= 0){
+					std::string err = "Batch size must be a positive number. Got " + std::to_string(batch_size);
+					throw(err.c_str());
+				}
 			}
 			else { throw("A batch size must be specified."); }
 
