@@ -39,8 +39,13 @@ namespace Training {
 		main_thread_data = new ThreadData;
 		adam_momentum = new Adam::AdamParameters;
 
-		// Step 3. Load the dataset
-		load_dataset(datafile);
+		// Step 3. Load the dataset if the filepath contains ".lgd", load it as a binary instead of CSV
+		if (datafile.find(".lgd") != std::string::npos) {
+			load_dataset<LNN::BIN>(datafile);
+		}
+		else {
+			load_dataset<LNN::CSV>(datafile);
+		}
 	}
 
 	/*
@@ -59,10 +64,13 @@ namespace Training {
 
 	/*
 
-	Load a CSV-file dataset. This should be formatted such that for each line, the first 786 numbers are the input values and the last one is the score.
+	Load a dataset. This can be done in one of two ways:
+		1) A ".lgd" (Loki-game-data) binary file.
+		2) A CSV file.
 
 	*/
-	void Trainer::load_dataset(std::string filepath) {
+	template<>
+	void Trainer::load_dataset<LNN::CSV>(std::string filepath) {
 		assert(filepath != "");
 		assert(training_data != nullptr);
 
@@ -107,6 +115,62 @@ namespace Training {
 		data_file.close();
 	}
 
+
+	/*
+	LGD file.
+	*/
+	template<>
+	void Trainer::load_dataset<LNN::BIN>(std::string filepath) {
+		assert(filepath != "");
+		assert(training_data != nullptr);
+
+		// Step 1. Open the file.
+		FILE* pFile = nullptr;
+
+#if (defined(_WIN32) || defined(_WIN64))
+		fopen_s(&pFile, filepath.c_str(), "rb");
+#else
+		bFile = fopen(filepath.c_str(), "rb");
+#endif
+
+		// Step 1A. Make sure the file is open
+		try {
+			if (pFile == nullptr) { throw("The path specified does not contain a datafile compatible with Loki"); }
+		}
+		catch (const char* msg) {
+			std::cout << "[!] An error was encountered while reading the dataset at " << filepath << ": " << msg << std::endl;
+			abort();
+		}
+
+		// Step 2. Find the end of the file and determine the number
+		fseek(pFile, 0, SEEK_END);
+		size_t pos = ftell(pFile);
+		size_t num_points = pos / sizeof(TrainingPosition);
+
+		std::cout << "[*] Found " << num_points << " data points in the file" << std::endl;
+		rewind(pFile);
+
+		// Step 3. Now extract all the data
+		for (int i = 0; i < num_points; i++) {
+			// Step 3A. Create a new datapoint
+			TrainingPosition tp;
+			tp.set(0);
+
+			// Step 3B. Read the inputs to the network firstly, and then the outputs.
+			fread(tp.network_inputs.data(), sizeof(int8_t), INPUT_SIZE, pFile);
+			fread(&tp.score, sizeof(int8_t), 1, pFile);
+
+			// Step 3C. Push back the datapoint to the training data vector
+			training_data->push_back(tp);
+
+			if (i % 100000 == 0) {
+				std::cout << "[*] Loaded " << i << "/" << num_points << " positions" << std::endl;
+			}
+		}
+
+		// Step 4. Close the file
+		fclose(pFile);
+	}
 
 
 	/*

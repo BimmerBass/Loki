@@ -223,6 +223,8 @@ namespace Training {
 
 		// Container and loading method for the training data
 		std::vector<TrainingPosition>* training_data;
+
+		template<LNN::LNN_FileType T>
 		void load_dataset(std::string filepath);
 
 		// For backprop to work, we need to initialize a new network randomly.

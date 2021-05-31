@@ -10,7 +10,6 @@ int main(int argc, char* argv[]) {
 	Eval::INIT();
 	PSQT::INIT();
 
-
 	// If "bench" has been added as an argument, just run this and quit
 	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
 		Bench::run_benchmark();
