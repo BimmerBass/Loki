@@ -5,6 +5,7 @@
 
 #include "../network.h"
 #include "helpers.h" // For mathematical functions
+#include "data.h" // For incremental data loading.
 
 
 
@@ -45,26 +46,6 @@ namespace Training {
 	constexpr double LEARNING_DECAY_DELAULT = 0.0001;
 	constexpr double DEFAULT_WEIGHT_BOUND = 2.0;
 
-
-	// A structure for holding a training position
-	struct TrainingPosition {
-		std::array<int8_t, INPUT_SIZE> network_inputs;
-		int score;
-
-		void set(int val) {
-			network_inputs.fill(val);
-			score = val;
-		}
-
-		TrainingPosition() {
-			network_inputs.fill(0);
-			score = 0;
-		}
-		TrainingPosition(const TrainingPosition& tp) {
-			network_inputs = tp.network_inputs;
-			score = tp.score;
-		}
-	};
 
 
 	// The Adam namespace holds all structures related to the optimization algorithm.
@@ -152,7 +133,7 @@ namespace Training {
 		std::array<neuron_t, HIDDEN_STD_SIZE> THIRD_HIDDEN_NEURONS;
 		neuron_t OUTPUT_NEURON;
 
-		void set_input(const std::array<int8_t, INPUT_SIZE>& input);
+		void set_input(const int8_t* input);
 
 		// Gradients
 		std::array<std::array<double, INPUT_SIZE>, FIRST_HIDDEN_SIZE> INPUT_WEIGHT_GRADIENTS;
@@ -199,7 +180,7 @@ namespace Training {
 	public:
 		Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads,
 			double eta_start = LEARNING_RATE_DEFAULT, double eta_decay = LEARNING_DECAY_DELAULT,
-			double _min = -DEFAULT_WEIGHT_BOUND, double _max = DEFAULT_WEIGHT_BOUND, LNN::LNN_FileType _sf = LNN::BIN, std::string _out = "");
+			double _min = -DEFAULT_WEIGHT_BOUND, double _max = DEFAULT_WEIGHT_BOUND, std::string _out = "");
 		~Trainer();
 
 		void run(std::string existing_network = "");
@@ -217,14 +198,12 @@ namespace Training {
 		const double parameter_min_val;
 		const double parameter_max_val;
 		
-		// For saving the file
-		const LNN::LNN_FileType save_format;
+		// For saving the model
 		const std::string output_filename;
 
 		// Container and loading method for the training data
 		std::vector<TrainingPosition>* training_data;
 
-		template<LNN::LNN_FileType T>
 		void load_dataset(std::string filepath);
 
 		// For backprop to work, we need to initialize a new network randomly.
@@ -255,7 +234,7 @@ namespace Training {
 		// Used to hold the adam momentum parameters
 		Adam::AdamParameters* adam_momentum;
 
-		template <LNN::LNN_FileType FT>
+		// Saving the trained model.
 		void save_model();
 	};
 

@@ -19,7 +19,7 @@ extern std::vector<std::string> split_string(std::string s, char delimiter = ';'
 
 namespace LNN {
 
-    enum LNN_FileType :int { BIN = 0, CSV = 1 };
+
     constexpr int OUTPUT_BOUND = 20000;
 
     constexpr size_t PARAMETER_COUNT = INPUT_SIZE * FIRST_HIDDEN_SIZE
@@ -54,7 +54,6 @@ namespace LNN {
         void load_position(std::array<int8_t, INPUT_SIZE>& pos);
 
         // Method for loading a network from a file. This should always be used at startup.
-        template<LNN_FileType T>
         void load_net(std::string file_path);
 
         std::array<neuron_t, INPUT_SIZE> get_input() {

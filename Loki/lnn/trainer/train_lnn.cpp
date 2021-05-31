@@ -6,63 +6,11 @@ namespace Training {
 
 	/*
 
-	Load a dataset. This can be done in one of two ways:
-		1) A ".lgd" (Loki-game-data) binary file.
-		2) A CSV file.
+	Load a dataset. This is loaded from a .lgd binary file (loki-game-data)
 	
 	*/
-	template<>
-	void Trainer::load_dataset<LNN::CSV>(std::string filepath) {
-		assert(filepath != "");
-		assert(training_data != nullptr);
 
-		// Step 1. Open the data file.
-		std::ifstream data_file(filepath);
-		std::vector<std::string> string_numbers;
-		std::string line = "";
-
-		if (!data_file.is_open()) {
-			std::cout << "[!] Error loading the data. Please make sure the file exists and that the right path is given" << std::endl;
-			abort();
-		}
-
-		// Step 2. Now go through all lines in the file.
-		size_t current = 0;
-		while (std::getline(data_file, line)) {
-
-			// Step 2A. Split the string
-			string_numbers.clear();
-			string_numbers = split_string(line, ';');
-			assert(string_numbers.size() == INPUT_SIZE + 1);
-
-			// Step 2B. Copy the inputs/outputs in string_numbers to a new training position object
-			TrainingPosition tp;
-			tp.set(0);
-
-			for (int i = 0; i < INPUT_SIZE; i++) {
-				tp.network_inputs[i] = std::stoi(string_numbers[i]);
-			}
-			tp.score = std::stoi(string_numbers[string_numbers.size() - 1]);
-
-			// Step 2C. Add this to the data vector and output to the user if a certain number of data-points has been loaded
-			training_data->push_back(tp);
-			current++;
-
-			if (current % 100000 == 0) {
-				std::cout << "[*] Loaded " << current << " positions" << std::endl;
-			}
-		}
-
-		// Step 3. Close the file, and we're done loading the data :))
-		data_file.close();
-	}
-
-
-	/*
-	LGD file.
-	*/
-	template<>
-	void Trainer::load_dataset<LNN::BIN>(std::string filepath) {
+	void Trainer::load_dataset(std::string filepath) {
 		assert(filepath != "");
 		assert(training_data != nullptr);
 
@@ -100,7 +48,7 @@ namespace Training {
 			tp.set(0);
 
 			// Step 3B. Read the inputs to the network firstly, and then the outputs.
-			fread(tp.network_inputs.data(), sizeof(int8_t), INPUT_SIZE, pFile);
+			fread(tp.network_inputs, sizeof(int8_t), INPUT_SIZE, pFile);
 			fread(&tp.score, sizeof(int8_t), 1, pFile);
 
 			// Step 3C. Push back the datapoint to the training data vector
@@ -120,9 +68,9 @@ namespace Training {
 	Constructor. Load the dataset, allocate all neccesarry objects on heap and set hyperparameters.
 	*/
 	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, 
-		double eta_start, double eta_decay, double _min, double _max, LNN::LNN_FileType _sf, std::string _out)
+		double eta_start, double eta_decay, double _min, double _max, std::string _out)
 		: epochs(_epochs), batch_size(_batch_size), loss_function(_loss), thread_count(_threads), 
-		initial_learning_rate(eta_start), learning_rate_decay(eta_decay), parameter_min_val(_min), parameter_max_val(_max), save_format(_sf), output_filename(_out) {
+		initial_learning_rate(eta_start), learning_rate_decay(eta_decay), parameter_min_val(_min), parameter_max_val(_max), output_filename(_out) {
 
 		// Step 1. Make sure all hyperparameters are in their proper ranges
 		try {
@@ -133,10 +81,6 @@ namespace Training {
 			if (eta_start <= 0) { throw("Learning rate must be a positive number."); }
 			if (eta_decay <= 0) { throw("Learning rate decay must be a positive number."); }
 			if (_min >= _max) { throw("Minimum parameter initialization value must be smaller than maximum parameter initialization value."); }
-			if ((_sf == LNN::BIN && output_filename.find(".csv") != std::string::npos) ||
-				(_sf == LNN::CSV && output_filename.find(".lnn") != std::string::npos)) {
-				throw("Output file format must match the filename specified.");
-			}
 		}
 		catch (const char* msg) { // If the hyperparameters aren't configured properly, abort
 			std::cout << "[!] Exception thrown by Trainer::Trainer(): " << msg << std::endl;
@@ -152,12 +96,7 @@ namespace Training {
 		adam_momentum = new Adam::AdamParameters;
 
 		// Step 3. Load the dataset if the filepath contains ".lgd", load it as a binary instead of CSV
-		if (datafile.find(".lgd") != std::string::npos) {
-			load_dataset<LNN::BIN>(datafile);
-		}
-		else {
-			load_dataset<LNN::CSV>(datafile);
-		}
+		load_dataset(datafile);
 	}
 
 	/*
@@ -180,38 +119,8 @@ namespace Training {
 		BIN: Will write all weights and biases to a ".lnn" file in binary format.
 	
 	*/
-	template<>
-	void Trainer::save_model<LNN::CSV>() {
-		
-		// Step 1. If no output name has been given, create one based on the date and time
-		std::string output_file = output_filename;
 
-		if (output_filename == "") {
-			output_file = "LokiNet-" + getDateTime() + ".csv";
-		}
-
-		// Step 2. Open the file.
-		std::ofstream csv_file(output_file);
-
-		// Step 3. Write all biases from the first hidden layer to the third in the first three rows.
-		write_array<neuron_t, FIRST_HIDDEN_SIZE>(csv_file, FIRST_HIDDEN.biases);
-		write_array<neuron_t, HIDDEN_STD_SIZE>(csv_file, SECOND_HIDDEN.biases);
-		write_array<neuron_t, HIDDEN_STD_SIZE>(csv_file, THIRD_HIDDEN.biases);
-
-		// Step 4. Write all weights to the file.
-		write_multiple_arrays<neuron_t, INPUT_SIZE, FIRST_HIDDEN_SIZE>(csv_file, INPUT_LAYER.weights);
-		write_multiple_arrays<neuron_t, FIRST_HIDDEN_SIZE, HIDDEN_STD_SIZE>(csv_file, FIRST_HIDDEN.weights);
-		write_multiple_arrays<neuron_t, HIDDEN_STD_SIZE, HIDDEN_STD_SIZE>(csv_file, SECOND_HIDDEN.weights);
-		write_multiple_arrays<neuron_t, HIDDEN_STD_SIZE, OUTPUT_SIZE>(csv_file, THIRD_HIDDEN.weights);
-
-		// Step 5. Close the file.
-		csv_file.close();
-
-		std::cout << "Saved model at " << output_file << std::endl;
-	}
-
-	template<>
-	void Trainer::save_model<LNN::BIN>() {
+	void Trainer::save_model() {
 
 		// Step 1. If no output name has been given, create one based on the date and time
 		std::string output_file = output_filename;
@@ -637,12 +546,7 @@ namespace Training {
 		// Step 1. Since the training data is already loaded in the constructor, we can immediately move on to setting up the network.
 		//	This can either be an existing one which we wish to train even further, or a new randomly initialized one.
 		if (existing_network != "") {
-			if (existing_network.find(".csv") != std::string::npos) {
-				load_net<LNN::CSV>(existing_network);
-			}
-			else {
-				load_net<LNN::BIN>(existing_network);
-			}
+			load_net(existing_network);
 		}
 		else {
 			initialize_random();
@@ -750,12 +654,7 @@ namespace Training {
 		}
 
 		// Step 3. Save the network
-		if (save_format == LNN::BIN) {
-			save_model<LNN::BIN>();
-		}
-		else {
-			save_model<LNN::CSV>();
-		}
+		save_model();
 	}
 
 
@@ -801,7 +700,7 @@ namespace Training {
 
 
 	// Set the input of the network
-	void ThreadData::set_input(const std::array<int8_t, INPUT_SIZE>& input) {
+	void ThreadData::set_input(const int8_t* input) {
 		INPUT_NEURONS.fill(0);
 
 		for (int i = 0; i < INPUT_SIZE; i++) {
@@ -906,7 +805,6 @@ namespace Training {
 		int threads = -1;
 
 		double eta = LEARNING_RATE_DEFAULT, eta_decay = LEARNING_DECAY_DELAULT, min_param = -DEFAULT_WEIGHT_BOUND, max_param = DEFAULT_WEIGHT_BOUND;
-		LNN::LNN_FileType format = LNN::BIN;
 		std::string output_file = "", existing_net = "";
 
 		// Step 2. Parse all the obligatory parameters, and return if some of them are missing.
@@ -1039,22 +937,7 @@ namespace Training {
 				throw(err.c_str());
 			}
 
-			// Step 3E. File format.
-			index = cmd.find("format");
-
-			if (index != std::string::npos) {
-				if (to_lower(cmd.substr(index + 7)).find("bin") != std::string::npos) {
-					format = LNN::BIN;
-				}
-				else if (to_lower(cmd.substr(index + 7)).find("csv") != std::string::npos) {
-					format = LNN::CSV;
-				}
-				else {
-					throw("Output file format must be either bin or csv.");
-				}
-			}
-
-			// Step 3F. Output file.
+			// Step 3E. Output file.
 			index = cmd.find("output");
 
 			if (index != std::string::npos) {
@@ -1073,7 +956,7 @@ namespace Training {
 				}
 			}
 
-			// Step 3G. Existing file.
+			// Step 3F. Existing file.
 			index = cmd.find("net ");
 
 			if (index != std::string::npos) {
@@ -1108,7 +991,6 @@ namespace Training {
 										eta_decay, 
 										min_param, 
 										max_param, 
-										format, 
 										output_file);
 
 		// Step 5. Run the trainer.

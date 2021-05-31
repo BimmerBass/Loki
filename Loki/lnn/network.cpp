@@ -242,11 +242,10 @@ namespace LNN {
 
 	/*
 	
-	Functions for loading a network from a file. This can be done two ways: By reading a csv (debug/development) or a binary file.
+	Method for loading a network file. This will be loaded form a .lnn (loki-neural-network) binary file.
 	
 	*/
-	template<>
-	void Network::load_net<BIN>(std::string file_path) {
+	void Network::load_net(std::string file_path) {
 		// Step 1. Clear the network and open the file
 		clear_net();
 
@@ -331,52 +330,4 @@ namespace LNN {
 	}
 
 
-
-	template<>
-	void Network::load_net<CSV>(std::string file_path) {
-
-		// Step 1. Open the csv file and extract the numbers
-		std::vector<std::vector<neuron_t>> data = read_csv(file_path);
-
-		int current_row = 0;
-
-		// Step 2. Load the biases. These are ordered by layer in the csv.
-		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			FIRST_HIDDEN.biases[i] = data[current_row][i];
-		}
-		current_row++;
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			SECOND_HIDDEN.biases[i] = data[current_row][i];
-		}
-		current_row++;
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			THIRD_HIDDEN.biases[i] = data[current_row][i];
-		}
-		current_row++;
-
-
-		// Step 3. Now we can move on to the weights. These are indexed by weight[prevLayer][nextLayer] in the csv file.
-		for (size_t i = 0; i < INPUT_SIZE; i++) {
-			for (size_t j = 0; j < FIRST_HIDDEN_SIZE; j++) {
-				INPUT_LAYER.weights[j][i] = data[current_row][j];
-			}
-			current_row++;
-		}
-		for (size_t i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			for (size_t j = 0; j < HIDDEN_STD_SIZE; j++) {
-				FIRST_HIDDEN.weights[j][i] = data[current_row][j];
-			}
-			current_row++;
-		}
-		for (size_t i = 0; i < HIDDEN_STD_SIZE; i++) {
-			for (size_t j = 0; j < HIDDEN_STD_SIZE; j++) {
-				SECOND_HIDDEN.weights[j][i] = data[current_row][j];
-			}
-			current_row++;
-		}
-		for (size_t i = 0; i < HIDDEN_STD_SIZE; i++) {
-			THIRD_HIDDEN.weights[0][i] = data[current_row][0];
-			current_row++;
-		}
-	}
 }
