@@ -8,6 +8,8 @@ namespace DataGeneration {
         // Step 1. Clear the data vector, declare a position object and an array for holding the network input.
         data->clear();
         GameState_t* pos = new GameState_t;
+        //SearchThread_t* ss = new SearchThread_t;
+        //SearchInfo_t* s_info = new SearchInfo_t;
         int current_filerow = 0;
 
         // Step 2. Loop through all the positions
@@ -36,6 +38,12 @@ namespace DataGeneration {
             //else{
             //    score = Eval::evaluate(pos);
             //}
+            //score = Eval::evaluate(pos);
+            //pos->use_lnn = false;
+            //*(ss->pos) = *pos;
+            //*(ss->info) = *s_info;
+            //
+            //score = Search::quiescence(ss, -INF, INF);
             score = Eval::evaluate(pos);
 
             if (pos->side_to_move == BLACK) { score *= -1; }
@@ -75,6 +83,7 @@ namespace DataGeneration {
 
         // Step 3. Delete pos and return
         delete pos;
+        //delete ss, s_info;
     }
 
 
@@ -90,11 +99,18 @@ namespace DataGeneration {
         info.search_depth = depth;
 
         // Step 2. Extract the FENS from the epd file.
+        int fen_count = 0;
         while (std::getline(epd_file, epd)){
             auto fen_end = epd.find_first_of('"');
 
             fen = epd.substr(0, fen_end);
             FENS.push_back(fen);
+
+            fen_count++;
+
+            if (fen_count % 10000 == 0) {
+                std::cout << "Extracted " << fen_count << " fens" << std::endl;
+            }
         }
         epd_file.close();
 
@@ -136,11 +152,46 @@ namespace DataGeneration {
             thread_list[t].join();
         }*/
 
-        std::ofstream csv_file(csv_out);
+        FILE* pFile = nullptr;
+
+#if (defined(_WIN32) || defined(_WIN64))
+        fopen_s(&pFile, csv_out.c_str(), "wb");
+#else
+        pFile = fopen(csv_out.c_str(), "wb");
+#endif
+
+        
 
         std::vector<DataPoint>* combined_data = new std::vector<DataPoint>;
-        combined_data->reserve(FENS.size());
-        generate_batch(combined_data, FENS, info, true);
+        const size_t batch_size = 10000000;
+
+        for (int i = 0; i < (FENS.size() / batch_size) - 1; i++) {
+            combined_data->clear();
+            combined_data->reserve(batch_size);
+            std::vector<std::string> new_fens;
+
+            for (int j = i * batch_size; j < (i + 1) * batch_size; j++) {
+                new_fens.push_back(FENS[j]);
+            }
+
+            generate_batch(combined_data, new_fens, info, true);
+
+            for (int p = 0; p < combined_data->size(); p++) {
+                // Write the input array and then the score.
+                fwrite((*combined_data)[i].network_input, sizeof(int8_t), INPUT_SIZE, pFile);
+                fwrite(&(*combined_data)[i].score, sizeof(int), 1, pFile);
+
+                if (p % 100000 == 0) {
+                    std::cout << "Wrote " << (i * batch_size) + p << "/" << FENS.size() << " to output binary file" << std::endl;
+                }
+            }
+        }
+
+
+
+        fclose(pFile);
+        //combined_data->reserve(FENS.size());
+        /*generate_batch(combined_data, FENS, info, true);
 
         //for (int t = 0; t < THREADS; t++) {
         //    for (int i = 0; i < data[t].size(); i++) {
@@ -169,7 +220,7 @@ namespace DataGeneration {
             }
         }
         // Close the csv file.
-        csv_file.close();
+        csv_file.close();*/
     }
 
 }
