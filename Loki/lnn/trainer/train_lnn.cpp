@@ -5,69 +5,11 @@
 namespace Training {
 
 	/*
-	Constructor. Load the dataset, allocate all neccesarry objects on heap and set hyperparameters.
-	*/
-	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, 
-		double eta_start, double eta_decay, double _min, double _max, LNN::LNN_FileType _sf, std::string _out)
-		: epochs(_epochs), batch_size(_batch_size), loss_function(_loss), thread_count(_threads), 
-		initial_learning_rate(eta_start), learning_rate_decay(eta_decay), parameter_min_val(_min), parameter_max_val(_max), save_format(_sf), output_filename(_out) {
-
-		// Step 1. Make sure all hyperparameters are in their proper ranges
-		try {
-			if (datafile == "") { throw("Dataset must contain the path to a CSV file."); }
-			if (_epochs <= 0) { throw("Epochs must be a positive number."); }
-			if (_batch_size <= 0) { throw("Batch size must be a positive number."); }
-			if (_threads <= 0) { throw("Threads must be a positive number."); }
-			if (eta_start <= 0) { throw("Learning rate must be a positive number."); }
-			if (eta_decay <= 0) { throw("Learning rate decay must be a positive number."); }
-			if (_min >= _max) { throw("Minimum parameter initialization value must be smaller than maximum parameter initialization value."); }
-			if ((_sf == LNN::BIN && output_filename.find(".csv") != std::string::npos) ||
-				(_sf == LNN::CSV && output_filename.find(".lnn") != std::string::npos)) {
-				throw("Output file format must match the filename specified.");
-			}
-		}
-		catch (const char* msg) { // If the hyperparameters aren't configured properly, abort
-			std::cout << "[!] Exception thrown by Trainer::Trainer(): " << msg << std::endl;
-			abort();
-		}
-		// Step 2. Allocate a vector for the dataset and a vector of deltas with size _threads.
-		training_data = new std::vector<TrainingPosition>;
-
-		for (size_t t = 0; t < thread_count; t++) {
-			thread_data.push_back(new ThreadData);
-		}
-		main_thread_data = new ThreadData;
-		adam_momentum = new Adam::AdamParameters;
-
-		// Step 3. Load the dataset if the filepath contains ".lgd", load it as a binary instead of CSV
-		if (datafile.find(".lgd") != std::string::npos) {
-			load_dataset<LNN::BIN>(datafile);
-		}
-		else {
-			load_dataset<LNN::CSV>(datafile);
-		}
-	}
-
-	/*
-	Destructor. De-allocate all objects from heap
-	*/
-	Trainer::~Trainer() {
-		if (training_data != nullptr) { delete training_data; }
-		for (size_t t = 0; t < thread_data.size(); t++) {
-			if (thread_data[t] != nullptr) { delete thread_data[t]; }
-		}
-		if (main_thread_data != nullptr) { delete main_thread_data; }
-		if (adam_momentum != nullptr) { delete adam_momentum; }
-	}
-
-
-
-	/*
 
 	Load a dataset. This can be done in one of two ways:
 		1) A ".lgd" (Loki-game-data) binary file.
 		2) A CSV file.
-
+	
 	*/
 	template<>
 	void Trainer::load_dataset<LNN::CSV>(std::string filepath) {
@@ -144,11 +86,12 @@ namespace Training {
 
 		// Step 2. Find the end of the file and determine the number
 		fseek(pFile, 0, SEEK_END);
-		size_t pos = ftell(pFile);
-		size_t num_points = pos / sizeof(TrainingPosition);
+		volatile uint64_t pos = ftell(pFile);
+		volatile size_t num_points = pos / (sizeof(int8_t) * INPUT_SIZE + sizeof(int));
 
 		std::cout << "[*] Found " << num_points << " data points in the file" << std::endl;
 		rewind(pFile);
+		training_data->reserve(75000000);
 
 		// Step 3. Now extract all the data
 		for (int i = 0; i < num_points; i++) {
@@ -170,6 +113,63 @@ namespace Training {
 
 		// Step 4. Close the file
 		fclose(pFile);
+	}
+
+
+	/*
+	Constructor. Load the dataset, allocate all neccesarry objects on heap and set hyperparameters.
+	*/
+	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, 
+		double eta_start, double eta_decay, double _min, double _max, LNN::LNN_FileType _sf, std::string _out)
+		: epochs(_epochs), batch_size(_batch_size), loss_function(_loss), thread_count(_threads), 
+		initial_learning_rate(eta_start), learning_rate_decay(eta_decay), parameter_min_val(_min), parameter_max_val(_max), save_format(_sf), output_filename(_out) {
+
+		// Step 1. Make sure all hyperparameters are in their proper ranges
+		try {
+			if (datafile == "") { throw("Dataset must contain the path to a CSV file."); }
+			if (_epochs <= 0) { throw("Epochs must be a positive number."); }
+			if (_batch_size <= 0) { throw("Batch size must be a positive number."); }
+			if (_threads <= 0) { throw("Threads must be a positive number."); }
+			if (eta_start <= 0) { throw("Learning rate must be a positive number."); }
+			if (eta_decay <= 0) { throw("Learning rate decay must be a positive number."); }
+			if (_min >= _max) { throw("Minimum parameter initialization value must be smaller than maximum parameter initialization value."); }
+			if ((_sf == LNN::BIN && output_filename.find(".csv") != std::string::npos) ||
+				(_sf == LNN::CSV && output_filename.find(".lnn") != std::string::npos)) {
+				throw("Output file format must match the filename specified.");
+			}
+		}
+		catch (const char* msg) { // If the hyperparameters aren't configured properly, abort
+			std::cout << "[!] Exception thrown by Trainer::Trainer(): " << msg << std::endl;
+			abort();
+		}
+		// Step 2. Allocate a vector for the dataset and a vector of deltas with size _threads.
+		training_data = new std::vector<TrainingPosition>;
+
+		for (size_t t = 0; t < thread_count; t++) {
+			thread_data.push_back(new ThreadData);
+		}
+		main_thread_data = new ThreadData;
+		adam_momentum = new Adam::AdamParameters;
+
+		// Step 3. Load the dataset if the filepath contains ".lgd", load it as a binary instead of CSV
+		if (datafile.find(".lgd") != std::string::npos) {
+			load_dataset<LNN::BIN>(datafile);
+		}
+		else {
+			load_dataset<LNN::CSV>(datafile);
+		}
+	}
+
+	/*
+	Destructor. De-allocate all objects from heap
+	*/
+	Trainer::~Trainer() {
+		if (training_data != nullptr) { delete training_data; }
+		for (size_t t = 0; t < thread_data.size(); t++) {
+			if (thread_data[t] != nullptr) { delete thread_data[t]; }
+		}
+		if (main_thread_data != nullptr) { delete main_thread_data; }
+		if (adam_momentum != nullptr) { delete adam_momentum; }
 	}
 
 

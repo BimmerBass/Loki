@@ -75,6 +75,9 @@
     <ClCompile Include="lnn\trainer\train_lnn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="lnn\trainer\data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitboard.h">
@@ -144,6 +147,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lnn\trainer\helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lnn\trainer\data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
