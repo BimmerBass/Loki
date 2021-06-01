@@ -159,36 +159,42 @@ namespace DataGeneration {
 #else
         pFile = fopen(csv_out.c_str(), "wb");
 #endif
-
-        
-
         std::vector<DataPoint>* combined_data = new std::vector<DataPoint>;
-        const size_t batch_size = 10000000;
+        combined_data->reserve(FENS.size());
 
-        for (int i = 0; i < (FENS.size() / batch_size) - 1; i++) {
-            combined_data->clear();
-            combined_data->reserve(batch_size);
-            std::vector<std::string> new_fens;
+        generate_batch(combined_data, FENS, info, true);
 
-            for (int j = i * batch_size; j < (i + 1) * batch_size; j++) {
-                new_fens.push_back(FENS[j]);
-            }
-
-            generate_batch(combined_data, new_fens, info, true);
-
-            for (int p = 0; p < combined_data->size(); p++) {
-                // Write the input array and then the score.
-                fwrite(&(*combined_data)[p], sizeof(DataPoint), 1, pFile);
-
-                if (p % 100000 == 0) {
-                    std::cout << "Wrote " << (i * batch_size) + p << "/" << FENS.size() << " to output binary file" << std::endl;
-                }
-            }
-        }
-
-
-
+        fwrite(combined_data->data(), sizeof(DataPoint), combined_data->size(), pFile);
+        
+        delete combined_data;
         fclose(pFile);
+        //std::vector<DataPoint>* combined_data = new std::vector<DataPoint>;
+        ////const size_t batch_size = 10000000;
+        //const size_t batch_size = 322500;
+        //
+        //for (int i = 0; i < (FENS.size() / batch_size) - 1; i++) {
+        //    combined_data->clear();
+        //    combined_data->reserve(batch_size);
+        //    std::vector<std::string> new_fens;
+        //
+        //    for (int j = i * batch_size; j < (i + 1) * batch_size; j++) {
+        //        new_fens.push_back(FENS[j]);
+        //    }
+        //
+        //    generate_batch(combined_data, new_fens, info, true);
+        //
+        //    for (int p = 0; p < combined_data->size(); p++) {
+        //        // Write the input array and then the score.
+        //        fwrite(&(*combined_data)[p], sizeof(DataPoint), 1, pFile);
+        //
+        //        if (p % 100000 == 0) {
+        //            std::cout << "Wrote " << (i * batch_size) + p << "/" << FENS.size() << " to output binary file" << std::endl;
+        //        }
+        //    }
+        //}
+
+
+
         //combined_data->reserve(FENS.size());
         /*generate_batch(combined_data, FENS, info, true);
 

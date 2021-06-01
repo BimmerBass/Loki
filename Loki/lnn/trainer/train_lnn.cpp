@@ -33,13 +33,14 @@ namespace Training {
 		}
 
 		// Step 2. Find the end of the file and determine the number
-		fseek(pFile, 0, SEEK_END);
-		volatile uint64_t pos = ftell(pFile);
-		volatile size_t num_points = pos / (sizeof(int8_t) * INPUT_SIZE + sizeof(int));
+		//fseek(pFile, 0, SEEK_END);
+		//volatile uint64_t pos = ftell(pFile);
+		volatile uint64_t pos = fsize(pFile);
+		volatile size_t num_points = pos / (sizeof(struct TrainingPosition));
 
 		std::cout << "[*] Found " << num_points << " data points in the file" << std::endl;
 		rewind(pFile);
-		training_data->reserve(75000000);
+		training_data->reserve(3500000);
 
 		// Step 3. Now extract all the data
 		for (int i = 0; i < num_points; i++) {
@@ -48,8 +49,9 @@ namespace Training {
 			tp.set(0);
 
 			// Step 3B. Read the inputs to the network firstly, and then the outputs.
-			fread(tp.network_inputs, sizeof(int8_t), INPUT_SIZE, pFile);
-			fread(&tp.score, sizeof(int8_t), 1, pFile);
+			//fread(tp.network_inputs, sizeof(int8_t), INPUT_SIZE, pFile);
+			//fread(&tp.score, sizeof(int8_t), 1, pFile);
+			fread(&tp, sizeof(struct TrainingPosition), 1, pFile);
 
 			// Step 3C. Push back the datapoint to the training data vector
 			training_data->push_back(tp);

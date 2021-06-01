@@ -10,12 +10,6 @@ namespace DataGeneration {
     constexpr int THREADS = 8;
     static_assert(THREADS >= 1);
 
-    // Struct for holding the position to give the network and the evaluation score
-    struct DataPoint{
-        int8_t network_input[INPUT_SIZE] = { 0 };
-        int score = 0;
-    };
-
     struct GenerationInfo {
         bool search_scores = false;
 

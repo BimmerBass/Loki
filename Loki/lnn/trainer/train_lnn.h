@@ -201,10 +201,7 @@ namespace Training {
 		// For saving the model
 		const std::string output_filename;
 
-		// Container and loading method for the training data
-		std::vector<TrainingPosition>* training_data;
-
-		void load_dataset(std::string filepath);
+		// Loader for the dataset.
 
 		// For backprop to work, we need to initialize a new network randomly.
 		void initialize_random();

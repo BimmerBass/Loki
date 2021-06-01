@@ -1,7 +1,7 @@
 //#include "uci.h"
 #include "texel.h"
 #include "lnn/trainer/train_lnn.h"
-
+#include "data/generate.h"
 
 int main(int argc, char* argv[]) {
 	BBS::INIT();
@@ -18,6 +18,7 @@ int main(int argc, char* argv[]) {
 	
 	UCI::loop();
 	
+	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\texel-set-clean.epd", "C:\\Users\\abild\\Desktop\\texel_data.lgd");
 
 	return 0;
 }
