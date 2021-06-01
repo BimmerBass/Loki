@@ -8,9 +8,10 @@ namespace Training {
 	Constructor. Load the dataset, allocate all neccesarry objects on heap and set hyperparameters.
 	*/
 	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, 
-		double eta_start, double eta_decay, double _min, double _max, std::string _out)
+		double eta_start, double eta_decay, size_t _bl, double _min, double _max, size_t _sf, std::string _out)
 		: epochs(_epochs), batch_size(_batch_size), loss_function(_loss), thread_count(_threads), 
-		initial_learning_rate(eta_start), learning_rate_decay(eta_decay), parameter_min_val(_min), parameter_max_val(_max), output_filename(_out) {
+		initial_learning_rate(eta_start), learning_rate_decay(eta_decay),
+		batches_loaded(_bl), parameter_min_val(_min), parameter_max_val(_max), save_frequency(_sf), output_filename(_out) {
 
 		// Step 1. Make sure all hyperparameters are in their proper ranges
 		try {
@@ -35,7 +36,7 @@ namespace Training {
 		adam_momentum = new Adam::AdamParameters;
 
 		// Step 3. Initialize the data loader.
-		loader = new Data::DataLoader(datafile, batch_size);
+		loader = new Data::DataLoader(datafile, batch_size, batches_loaded);
 	}
 
 	/*
@@ -523,76 +524,90 @@ namespace Training {
 		// Vector for the threads while they're working
 		std::vector<std::thread> workers;
 
-		// Step 2A. Determine starting points for each batch.
-		std::vector<size_t> batches;
+		// Step 3. Start the algorithm
+		for (size_t epoch = 0; epoch < epochs; epoch++) {
 
-		int batch_count = training_data->size() / batch_size;
-		int remainder = training_data->size() % batch_size;
+			// Step 3A. Calculate the epoch's learning rate and loop until we reach EOF.
+			learning_rate = initial_learning_rate / (1.0 + learning_rate_decay * double(epoch));
+			bool one_batch_eof = loader->fetch_data(data);
 
-		for (int i = 0; i < batch_count; i++) {
-			batches.push_back(i * batch_size);
-		}
-		if (remainder > 0) {
-			batches.push_back(training_data->size() - remainder);
-		}
-		batches.push_back(training_data->size());
+			do {
+				// Step 3B. Subdivide the data into batches
+				std::vector<size_t> batches;
 
-		// Step 2B. Start looping through the epochs.
-		for (size_t e = 0; e < epochs; e++) {
-			// Compute the learning rate for the epoch.
-			learning_rate = initial_learning_rate / (1.0 + learning_rate_decay * double(e));
+				int batch_count = data.size() / batch_size;
+				int remainder = data.size() % batch_size;
 
-			// Step 2B.1. Loop through the batches
-			for (size_t b = 0; b < batches.size() - 1; b++) {
-				// Step 2B.1A. Clear the gradients and data vectors
-				main_thread_data->clear_gradients();
-				outputs.clear();
-				expected.clear();
-				thread_positions.clear();
+				for (int i = 0; i < batch_count; i++) {
+					batches.push_back(i * batch_size);
+				}
+				if (remainder > 0) {
+					batches.push_back(batches.back() + batch_size);
+				}
+				assert(batches.back() < data.size());
 
-				// Step 2B.1B. Subdivide the batch into sub-batches that the threads will use.
-				subdivide_batch(thread_positions, batches, b);
-				assert(thread_positions.size() == thread_count);
+				batches.push_back(data.size());
 
-				// Step 2B.1C. Start up the threads and wait for them to complete their work.
-				workers.clear();
-				for (int t = 0; t < thread_count; t++) {
-					workers.push_back(std::thread(&Trainer::run_thread, this,
-																		std::ref(thread_positions[t]),
-																		std::ref(thread_outputs[t]),
-																		std::ref(thread_expected[t]),
-																		t
-																		));
+				// Step 3C. Now loop through the batches.
+				for (size_t b = 0; b < batches.size() - 1; b++) {
+					// Step 3C.1A. Clear the gradients and data vectors
+					main_thread_data->clear_gradients();
+					outputs.clear();
+					expected.clear();
+					thread_positions.clear();
+
+					// Step 3C.1B. Subdivide the batch into sub-batches that the threads will use.
+					subdivide_batch(thread_positions, batches, b);
+					assert(thread_positions.size() == thread_count);
+
+					// Step 3C.1C. Start up the threads and wait for them to complete their work.
+					workers.clear();
+					for (int t = 0; t < thread_count; t++) {
+						workers.push_back(std::thread(&Trainer::run_thread, this,
+																			std::ref(thread_positions[t]),
+																			std::ref(thread_outputs[t]),
+																			std::ref(thread_expected[t]),
+																			t
+																			));
+					}
+
+					for (int t = 0; t < thread_count; t++) {
+						workers[t].join();
+					}
+
+					// Step 3C.1D. Compute the average gradients and update the weights
+					compute_average_gradients();
+					update_parameters(epoch + 1);
+
+					// Step 3C.1E. Now compute the error of the batch
+					outputs = combine_vectors<double>(thread_outputs);
+					expected = combine_vectors<double>(thread_expected);
+					assert(outputs.size() == expected.size());
+
+					int width = 30;
+					int left_padding = (double(b) / double(batches.size())) * width;
+					int right_padding = width - left_padding;
+
+					double mse_error = compute_loss<LOSS_F::MSE>(outputs, expected);
+					double aae_error = compute_loss<LOSS_F::AAE>(outputs, expected);
+
+					std::string progress(left_padding, '=');
+					std::cout << "[" << b + 1 << "/" << loader->size() / batch_size << "][" << progress << ">" << std::string(right_padding, ' ') << "] "
+						<< "MSE:	" << mse_error << "	AAE:	" << aae_error << std::endl;
+
 				}
 
-				for (int t = 0; t < thread_count; t++) {
-					workers[t].join();
-				}
+				// If we reached eof by loading the first set of batches, break.
+				if (!one_batch_eof) { break; }
+			} while (loader->fetch_data(data));
 
-				// Step 2B.1D. Compute the average gradients and update the weights
-				compute_average_gradients();
-				update_parameters(e + 1);
-
-				// Step 2B.1E. Now compute the error of the batch
-				outputs = combine_vectors<double>(thread_outputs);
-				expected = combine_vectors<double>(thread_expected);
-				assert(outputs.size() == expected.size());
-
-				int width = 30;
-				int left_padding = (double(b) / double(batches.size())) * width;
-				int right_padding = width - left_padding;
-
-				double mse_error = compute_loss<LOSS_F::MSE>(outputs, expected);
-				double aae_error = compute_loss<LOSS_F::AAE>(outputs, expected);
-
-				std::string progress(left_padding, '=');
-				std::cout << "[" << b + 1 << "/" << batches.size() << "][" << progress << ">" << std::string(right_padding, ' ') << "] "
-					<< "MSE:	" << mse_error << "	AAE:	" << aae_error << std::endl;
-
+			// Step 3D. If we should save after this epoch, do it.
+			if (epoch % save_frequency == 0){
+				save_model();
 			}
 		}
 
-		// Step 3. Save the network
+		// Step 4. Save the network
 		save_model();
 	}
 
@@ -604,7 +619,7 @@ namespace Training {
 
 
 	// Batch division. This method divides a batch into work for the different threads
-	void Trainer::subdivide_batch(std::vector<std::vector<TrainingPosition>>& sub_batches, const std::vector<size_t>& batches, size_t current) {
+	void Trainer::subdivide_batch(std::vector<std::vector<Data::DataEntry>>& sub_batches, const std::vector<size_t>& batches, size_t current) {
 
 		assert(current < batches.size() - 1);
 		sub_batches.clear();
@@ -617,12 +632,12 @@ namespace Training {
 		int sub_batch_size = (end - start) / thread_count;
 
 		for (int i = 0; i < thread_count; i++) {
-			std::vector<TrainingPosition> sub_batch;
+			std::vector<Data::DataEntry> sub_batch;
 
 			for (int n = i * sub_batch_size; n < (i + 1) * sub_batch_size; n++) {
-				assert(start + n < training_data->size());
+				assert(start + n < data.size());
 
-				sub_batch.push_back((*training_data)[start + n]);
+				sub_batch.push_back(data[start + n]);
 			}
 			sub_batches.push_back(sub_batch);
 		}
@@ -630,8 +645,8 @@ namespace Training {
 		// If there is a remainder, add this to the last thread
 		if (remainder > 0) {
 			for (int n = end - 1; n > end - 1 - remainder; n--) {
-				assert(n < training_data->size());
-				sub_batches[sub_batches.size() - 1].push_back((*training_data)[n]);
+				assert(n < data.size());
+				sub_batches[sub_batches.size() - 1].push_back(data[n]);
 			}
 		}
 	}
@@ -716,14 +731,16 @@ namespace Training {
 			- eta_decay: float [>= 0.0], default = 0.0001
 				Decay of the learning rate after each iteration (for example, eta_decay 0.5 will halve eta each iteration).
 				Helpful to avoid passing over a minimum.
+			- batch_load: int [1:+∞], default = 200
+				Amount of batches to load at once. This is useful for big datasets that doesn't fit into memory.
 			- min_param: float [-∞;+∞], default = -2.0
 				Minimum value of parameters if a new net should be trained (randomly initialized).
 				Note: If a min_param is passed, a max_param should also be.
 			- max_param: float [> min_param], default = 2.0
 				Maximum value of parameters if a new net should be trained (randomly initialized).
 				Note: If a max_param is passed, a min_param should also be.
-			- format: CSV or BIN, default = BIN.
-				The format, that the network should be saved as. Either a .csv file or a .lnn binary file.
+			- save_frequency: int [1:+∞]
+				Amount of epochs between saving the model.
 			- output: string, default = "LokiNet-<Date and time>.lnn/.csv"
 				The output file that the saved network should be saved to.
 				Note: This needs to match the output format if one is given.
@@ -745,6 +762,7 @@ namespace Training {
 
 		double eta = LEARNING_RATE_DEFAULT, eta_decay = LEARNING_DECAY_DELAULT, min_param = -DEFAULT_WEIGHT_BOUND, max_param = DEFAULT_WEIGHT_BOUND;
 		std::string output_file = "", existing_net = "";
+		int batches_to_load = Data::DEFAULT_BATCH_COUNT, save_freq = DEFAULT_SAVING_FREQUENCY;
 
 		// Step 2. Parse all the obligatory parameters, and return if some of them are missing.
 		volatile size_t index = 0;
@@ -855,14 +873,23 @@ namespace Training {
 				}
 			}
 
-			// Step 3C. Minimum parameters.
+			// Step 3C. Batches to load.
+			index = cmd.find("batch_load");
+
+			if (index != std::string::npos) {
+				batches_to_load = std::stoi(cmd.substr(index + 11));
+
+				if (batches_to_load <= 0) { throw("Batches to load must be a positive number."); }
+			}
+
+			// Step 3D. Minimum parameters.
 			index = cmd.find("min_param");
 
 			if (index != std::string::npos) {
 				min_param = std::stod(cmd.substr(index + 10));
 			}
 
-			// Step 3D. Maximum parameters.
+			// Step 3E. Maximum parameters.
 			index = cmd.find("max_param");
 
 			if (index != std::string::npos) {
@@ -876,7 +903,16 @@ namespace Training {
 				throw(err.c_str());
 			}
 
-			// Step 3E. Output file.
+			// Step 3F. Saving frequency.
+			index = cmd.find("save_frequency");
+
+			if (index != std::string::npos) {
+				save_freq = std::stoi(cmd.substr(index + 15));
+
+				if (save_freq <= 0) { throw("Save frequency must be a positive number."); }
+			}
+
+			// Step 3G. Output file.
 			index = cmd.find("output");
 
 			if (index != std::string::npos) {
@@ -895,7 +931,7 @@ namespace Training {
 				}
 			}
 
-			// Step 3F. Existing file.
+			// Step 3H. Existing file.
 			index = cmd.find("net ");
 
 			if (index != std::string::npos) {
@@ -927,9 +963,11 @@ namespace Training {
 										loss, 
 										threads, 
 										eta, 
-										eta_decay, 
+										eta_decay,
+										batches_to_load,
 										min_param, 
-										max_param, 
+										max_param,
+										save_freq,
 										output_file);
 
 		// Step 5. Run the trainer.

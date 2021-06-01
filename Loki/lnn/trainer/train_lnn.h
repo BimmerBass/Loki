@@ -45,6 +45,7 @@ namespace Training {
 	constexpr double LEARNING_RATE_DEFAULT = 0.01;
 	constexpr double LEARNING_DECAY_DELAULT = 0.0001;
 	constexpr double DEFAULT_WEIGHT_BOUND = 2.0;
+	constexpr size_t DEFAULT_SAVING_FREQUENCY = 4; // Save after this many epochs.
 
 
 
@@ -179,8 +180,8 @@ namespace Training {
 	class Trainer :private LNN::Network {
 	public:
 		Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads,
-			double eta_start = LEARNING_RATE_DEFAULT, double eta_decay = LEARNING_DECAY_DELAULT,
-			double _min = -DEFAULT_WEIGHT_BOUND, double _max = DEFAULT_WEIGHT_BOUND, std::string _out = "");
+			double eta_start = LEARNING_RATE_DEFAULT, double eta_decay = LEARNING_DECAY_DELAULT, size_t _bl = Data::DEFAULT_BATCH_COUNT,
+			double _min = -DEFAULT_WEIGHT_BOUND, double _max = DEFAULT_WEIGHT_BOUND, size_t _sf = DEFAULT_SAVING_FREQUENCY, std::string _out = "");
 		~Trainer();
 
 		void run(std::string existing_network = "");
@@ -192,9 +193,15 @@ namespace Training {
 		const double learning_rate_decay;
 
 		const size_t epochs;
+		const size_t save_frequency;
+
 		const size_t batch_size;
+		const size_t batches_loaded;
+		
 		const size_t thread_count;
+		
 		const LOSS_F loss_function;
+
 		const double parameter_min_val;
 		const double parameter_max_val;
 		

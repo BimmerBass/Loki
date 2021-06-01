@@ -108,7 +108,7 @@ Data::DataLoader::~DataLoader() {
 Fetch a new amount of batches.
 
 */
-void Data::DataLoader::fetch_data(std::vector<DataEntry>& data) {
+bool Data::DataLoader::fetch_data(std::vector<DataEntry>& data) {
 	// Step 1. Clear the data and reserve the - estimated - required memory.
 	data.clear();
 	data.reserve(entry_fetch_count);
@@ -145,4 +145,8 @@ void Data::DataLoader::fetch_data(std::vector<DataEntry>& data) {
 		current_entry = 0;
 		rewind(file);
 	}
+
+	// Step 4. Return true if there is more data left, otherwise return false.
+	// This will signal to start a new epoch.
+	return !reached_end;
 }

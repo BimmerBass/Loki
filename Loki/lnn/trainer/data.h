@@ -67,7 +67,7 @@ namespace Data {
 		DataLoader(std::string filepath, size_t _bs, size_t bfc = DEFAULT_BATCH_COUNT);
 		~DataLoader();
 
-		void fetch_data(std::vector<DataEntry>& data);
+		bool fetch_data(std::vector<DataEntry>& data);
 
 		size_t size() const { return entry_count; }
 	private:
