@@ -113,5 +113,36 @@ void Data::DataLoader::fetch_data(std::vector<DataEntry>& data) {
 	data.clear();
 	data.reserve(entry_fetch_count);
 
-	// Step 2. 
+	// Step 2. Now fetch the desired amount of batches, and break if we reach EOF
+	bool reached_end = false;
+
+	for (int f = 0; f < batch_fetch_count; f++) {
+
+		// Step 2A. Now load entries until we either reach EOF or have filled an entire batch
+		for (int i = 0; i < batch_size; i++) {
+			DataEntry entry;
+
+			fread(&entry, sizeof(DataEntry), 1, file);
+			current_entry++;
+
+			data.push_back(entry);
+
+			// Step 2A.1. Handle EOF
+			if (current_entry > entry_count) {
+				reached_end = true;
+				break;
+			}
+		}
+
+		// Step 2B. Handle EOF.
+		if (reached_end) {
+			break;
+		}
+	}
+
+	// Step 3. If we reached EOF, go back to the start of the file.
+	if (reached_end) {
+		current_entry = 0;
+		rewind(file);
+	}
 }
