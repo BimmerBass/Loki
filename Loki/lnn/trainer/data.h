@@ -13,6 +13,26 @@ namespace Data {
 	// Constants
 	constexpr size_t DEFAULT_BATCH_COUNT = 2000;
 
+
+	// Gets the size of a file.
+	// Note: At the moment this only works for large files on MSVC since there hasn't been implemented any other fseek and ftell
+	//	functions for bigger datatypes. The latter is needed for large files (probably >1-2GB). This should be easy to implement by consulting
+	//	the specific compiler's documentation thuough.
+	inline size_t read_file_size(FILE* f) {
+		// Step 1. Find the file size.
+		size_t bytes = 0;
+#ifdef _MSC_VER
+		_fseeki64(f, 0, SEEK_END);
+		bytes = _ftelli64(f);
+#else
+		fseek(f, 0, SEEK_END);
+		bytes = ftell(f);
+#endif
+		// Step 2. Go to the start of the file.
+		rewind(f);
+
+		return bytes;
+	}
 	
 	// Structure for holding a single training example
 	struct DataEntry {

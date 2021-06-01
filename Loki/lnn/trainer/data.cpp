@@ -84,9 +84,7 @@ Data::DataLoader::DataLoader(std::string filepath, size_t _bs, size_t bfc) : bat
 
 	// Step 3. Now read the amount of training data entries in the file.
 	current_entry = 0;
-	fseek(file, 0, SEEK_END);
-	size_t bytes = ftell(file);
-	//entry_count = bytes / sizeof(DataEntry);
+	size_t bytes = read_file_size(file); /* This method will automatically revert the file position to the start. */
 	entry_count = bytes / (sizeof(int8_t) * INPUT_SIZE + sizeof(int));
 
 	try {
@@ -98,9 +96,6 @@ Data::DataLoader::DataLoader(std::string filepath, size_t _bs, size_t bfc) : bat
 	}
 
 	std::cout << "Loaded file with " << entry_count << " entries" << std::endl;
-
-	// Step 4. Go back to the beginning of the file.
-	rewind(file);
 }
 
 Data::DataLoader::~DataLoader() {
