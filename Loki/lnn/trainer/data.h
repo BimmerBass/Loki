@@ -11,7 +11,7 @@
 namespace Data {
 
 	// Constants
-	constexpr size_t DEFAULT_BATCH_COUNT = 2000000;
+	constexpr size_t DEFAULT_BATCH_COUNT = 2000;
 
 	
 	// Structure for holding a single training example
@@ -68,6 +68,8 @@ namespace Data {
 		~DataLoader();
 
 		void fetch_data(std::vector<DataEntry>& data);
+
+		size_t size() const { return entry_count; }
 	private:
 		// File stream handling
 		FILE* file = nullptr;

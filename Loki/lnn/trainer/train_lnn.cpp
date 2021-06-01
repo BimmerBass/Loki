@@ -5,68 +5,6 @@
 namespace Training {
 
 	/*
-
-	Load a dataset. This is loaded from a .lgd binary file (loki-game-data)
-	
-	*/
-
-	void Trainer::load_dataset(std::string filepath) {
-		assert(filepath != "");
-		assert(training_data != nullptr);
-
-		// Step 1. Open the file.
-		FILE* pFile = nullptr;
-
-#if (defined(_WIN32) || defined(_WIN64))
-		fopen_s(&pFile, filepath.c_str(), "rb");
-#else
-		bFile = fopen(filepath.c_str(), "rb");
-#endif
-
-		// Step 1A. Make sure the file is open
-		try {
-			if (pFile == nullptr) { throw("The path specified does not contain a datafile compatible with Loki"); }
-		}
-		catch (const char* msg) {
-			std::cout << "[!] An error was encountered while reading the dataset at " << filepath << ": " << msg << std::endl;
-			abort();
-		}
-
-		// Step 2. Find the end of the file and determine the number
-		//fseek(pFile, 0, SEEK_END);
-		//volatile uint64_t pos = ftell(pFile);
-		volatile uint64_t pos = fsize(pFile);
-		volatile size_t num_points = pos / (sizeof(struct TrainingPosition));
-
-		std::cout << "[*] Found " << num_points << " data points in the file" << std::endl;
-		rewind(pFile);
-		training_data->reserve(3500000);
-
-		// Step 3. Now extract all the data
-		for (int i = 0; i < num_points; i++) {
-			// Step 3A. Create a new datapoint
-			TrainingPosition tp;
-			tp.set(0);
-
-			// Step 3B. Read the inputs to the network firstly, and then the outputs.
-			//fread(tp.network_inputs, sizeof(int8_t), INPUT_SIZE, pFile);
-			//fread(&tp.score, sizeof(int8_t), 1, pFile);
-			fread(&tp, sizeof(struct TrainingPosition), 1, pFile);
-
-			// Step 3C. Push back the datapoint to the training data vector
-			training_data->push_back(tp);
-
-			if (i % 100000 == 0) {
-				std::cout << "[*] Loaded " << i << "/" << num_points << " positions" << std::endl;
-			}
-		}
-
-		// Step 4. Close the file
-		fclose(pFile);
-	}
-
-
-	/*
 	Constructor. Load the dataset, allocate all neccesarry objects on heap and set hyperparameters.
 	*/
 	Trainer::Trainer(std::string datafile, size_t _epochs, size_t _batch_size, LOSS_F _loss, size_t _threads, 
@@ -88,8 +26,7 @@ namespace Training {
 			std::cout << "[!] Exception thrown by Trainer::Trainer(): " << msg << std::endl;
 			abort();
 		}
-		// Step 2. Allocate a vector for the dataset and a vector of deltas with size _threads.
-		training_data = new std::vector<TrainingPosition>;
+		// Step 2. Allocate the deltas and the Adam momentum container.
 
 		for (size_t t = 0; t < thread_count; t++) {
 			thread_data.push_back(new ThreadData);
@@ -97,15 +34,15 @@ namespace Training {
 		main_thread_data = new ThreadData;
 		adam_momentum = new Adam::AdamParameters;
 
-		// Step 3. Load the dataset if the filepath contains ".lgd", load it as a binary instead of CSV
-		load_dataset(datafile);
+		// Step 3. Initialize the data loader.
+		loader = new Data::DataLoader(datafile, batch_size);
 	}
 
 	/*
 	Destructor. De-allocate all objects from heap
 	*/
 	Trainer::~Trainer() {
-		if (training_data != nullptr) { delete training_data; }
+		if (loader != nullptr) { delete loader; }
 		for (size_t t = 0; t < thread_data.size(); t++) {
 			if (thread_data[t] != nullptr) { delete thread_data[t]; }
 		}
@@ -469,7 +406,7 @@ namespace Training {
 	Thread optimizer. This function is what each thread will run on its portion of the batch.
 	
 	*/
-	void Trainer::run_thread(const std::vector<TrainingPosition>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id) {
+	void Trainer::run_thread(const std::vector<Data::DataEntry>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id) {
 		// Step 1. Clear the data vectors and the gradients.
 		outputs.clear();
 		expected.clear();
@@ -478,7 +415,7 @@ namespace Training {
 		// Step 2. Loop through all positions
 		for (int i = 0; i < positions.size(); i++) {
 			// Step 2A. Load the position and forward propagate. Save the network's output in the outputs vector
-			thread_data[thread_id]->set_input(positions[i].network_inputs);
+			thread_data[thread_id]->set_input(positions[i].network_input);
 			forward_propagate(thread_id);
 			outputs.push_back(static_cast<double>(thread_data[thread_id]->OUTPUT_NEURON));
 
@@ -543,7 +480,7 @@ namespace Training {
 	
 	*/
 	void Trainer::run(std::string existing_network) {
-		assert(batch_size > 0 && batch_size <= training_data->size());
+		assert(batch_size > 0 && batch_size <= loader->size());
 
 		// Step 1. Since the training data is already loaded in the constructor, we can immediately move on to setting up the network.
 		//	This can either be an existing one which we wish to train even further, or a new randomly initialized one.
@@ -558,7 +495,7 @@ namespace Training {
 		std::cout << "+----------------------------------------------------------------+\n"
 			<< "|                     Loki NN tuning session                     |\n"
 			<< "+---------------------+------------------------------------------+\n"
-			<< "| Size of dataset			| " << training_data->size() << "\n"
+			<< "| Size of dataset			| " << loader->size() << "\n"
 			<< "| Epochs					| " << epochs << "\n"
 			<< "| Batch size				| " << batch_size << "\n"
 			<< "| Loss function				| " << ((loss_function == LOSS_F::AAE) ? "Average absolute error" : "Mean squared error") << "\n"
@@ -581,7 +518,7 @@ namespace Training {
 		}
 
 		// Vector of positions that the batches will be divided into.
-		std::vector<std::vector<TrainingPosition>> thread_positions;
+		std::vector<std::vector<Data::DataEntry>> thread_positions;
 
 		// Vector for the threads while they're working
 		std::vector<std::thread> workers;

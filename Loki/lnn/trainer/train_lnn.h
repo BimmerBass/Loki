@@ -202,15 +202,17 @@ namespace Training {
 		const std::string output_filename;
 
 		// Loader for the dataset.
+		Data::DataLoader* loader;
+		std::vector<Data::DataEntry> data;
 
 		// For backprop to work, we need to initialize a new network randomly.
 		void initialize_random();
 
 		// All threads will run this method. It is the primary optimization method.
-		void run_thread(const std::vector<TrainingPosition>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id);
+		void run_thread(const std::vector<Data::DataEntry>& positions, std::vector<double>& outputs, std::vector<double>& expected, int thread_id);
 
 		// Each batch will be divided into work for the different threads
-		void subdivide_batch(std::vector<std::vector<TrainingPosition>>& sub_batches, const std::vector<size_t>& batches, size_t current);
+		void subdivide_batch(std::vector<std::vector<Data::DataEntry>>& sub_batches, const std::vector<size_t>& batches, size_t current);
 
 		// Container holding all data for the threads
 		std::vector<ThreadData*> thread_data;
