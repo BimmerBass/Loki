@@ -42,3 +42,76 @@ void Data::DataWriter::save_data(const std::vector<DataEntry>& data) {
 	// Step 1. Write all data from the vector.
 	fwrite(data.data(), sizeof(DataEntry), data.size(), file);
 }
+
+
+
+
+/*
+
+Data loader class.
+
+*/
+Data::DataLoader::DataLoader(std::string filepath, size_t _bs, size_t bfc) : batch_size(_bs), batch_fetch_count(bfc), entry_fetch_count(_bs* bfc) {
+	// Step 1. Make sure all inputs are properly configured.
+	try {
+		if (filepath == "") { throw("No file path specified"); }
+		if (_bs < 1) { throw("Incorrect batch size specified. This must be a positive number."); }
+		if (bfc < 1) { throw("Incorrect batch fetch count specified. This must be a positive number."); }
+	}
+	catch (const char* msg) {
+		std::cout << "[!] An error was encountered in the DataLoader constructor: " << msg << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	// Step 2. Attempt to open the file and throw an error if this fails.
+#ifdef _MSC_VER
+	fopen_s(&file, filepath.c_str(), "wb");
+#else
+	file = fopen(filepath.c_str(), "wb");
+#endif
+
+	try {
+		if (file == nullptr) { throw("Couldn't open data file"); }
+	}
+	catch (const char* msg) {
+		std::cout << "[!] Error while opening file: " << msg << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	// Step 3. Now read the amount of training data entries in the file.
+	current_entry = 0;
+	fseek(file, 0, SEEK_END);
+	size_t bytes = ftell(file);
+	entry_count = bytes / sizeof(DataEntry);
+
+	try {
+		if (entry_count < 1) { throw("An empty file was loaded."); }
+	}
+	catch (const char* msg) {
+		std::cout << "[!] Error encountered reading file: " << msg << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	std::cout << "Loaded file with " << entry_count << " entries" << std::endl;
+
+}
+
+Data::DataLoader::~DataLoader() {
+	if (file != nullptr) {
+		fclose(file);
+	}
+}
+
+
+/*
+
+Fetch a new amount of batches.
+
+*/
+void Data::DataLoader::fetch_data(std::vector<DataEntry>& data) {
+	// Step 1. Clear the data and reserve the - estimated - required memory.
+	data.clear();
+	data.reserve(entry_fetch_count);
+
+	// Step 2. 
+}

@@ -11,7 +11,7 @@
 namespace Data {
 
 	// Constants
-	constexpr size_t DEFAULT_FETCH_COUNT = 2000000;
+	constexpr size_t DEFAULT_BATCH_COUNT = 2000000;
 
 	
 	// Structure for holding a single training example
@@ -43,12 +43,6 @@ namespace Data {
 	};
 
 
-
-	/*
-	Used for loading the data during training.
-	*/
-
-
 	/*
 	Used for saving the data during generation.
 	*/
@@ -62,6 +56,30 @@ namespace Data {
 		// File stream handling
 		FILE* file = nullptr;
 		
+	};
+
+
+	/*
+	Used for loading a file during training.
+	*/
+	class DataLoader {
+	public:
+		DataLoader(std::string filepath, size_t _bs, size_t bfc = DEFAULT_BATCH_COUNT);
+		~DataLoader();
+
+		void fetch_data(std::vector<DataEntry>& data);
+	private:
+		// File stream handling
+		FILE* file = nullptr;
+
+		// Data.
+		size_t entry_count;
+		size_t current_entry;
+
+		// Fetching parameters
+		const size_t batch_size;
+		const size_t batch_fetch_count;
+		const size_t entry_fetch_count;
 	};
 }
 
