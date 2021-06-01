@@ -65,9 +65,9 @@ Data::DataLoader::DataLoader(std::string filepath, size_t _bs, size_t bfc) : bat
 
 	// Step 2. Attempt to open the file and throw an error if this fails.
 #ifdef _MSC_VER
-	fopen_s(&file, filepath.c_str(), "wb");
+	fopen_s(&file, filepath.c_str(), "rb");
 #else
-	file = fopen(filepath.c_str(), "wb");
+	file = fopen(filepath.c_str(), "rb");
 #endif
 
 	try {
