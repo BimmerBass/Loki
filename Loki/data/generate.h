@@ -3,12 +3,17 @@
 
 #include "../search.h"
 #include "../lnn/network.h"
+#include "../lnn/trainer/data.h"
 
 
 namespace DataGeneration {
     // The number of threads to use.
     constexpr int THREADS = 8;
     static_assert(THREADS >= 1);
+
+    // The maximal batch size to use for writing incrementally.
+    constexpr size_t MAX_BATCH_SIZE = 5000000;
+    static_assert(MAX_BATCH_SIZE > 0);
 
     struct GenerationInfo {
         bool search_scores = false;
@@ -17,10 +22,10 @@ namespace DataGeneration {
     };
 
     // This function will be run by a thread and generate data.
-    void generate_batch(std::vector<DataPoint>* data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread = false);
+    void generate_batch(std::vector<Data::DataEntry>& data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread = false);
     
     // Will spin up threads and generate the training data. Writes out to a CSV file afterwards
-    void generate_training_data(std::string epd_in, std::string csv_out, bool use_search=false, int depth=0);
+    void generate_training_data(std::string epd_in, std::string lgd_out, bool use_search=false, int depth=0);
 }
 
 

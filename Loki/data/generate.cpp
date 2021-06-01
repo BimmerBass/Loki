@@ -3,10 +3,10 @@
 
 namespace DataGeneration {
 
-    void generate_batch(std::vector<DataPoint>* data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread){
+    void generate_batch(std::vector<Data::DataEntry>& data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread){
 
         // Step 1. Clear the data vector, declare a position object and an array for holding the network input.
-        data->clear();
+        data.clear();
         GameState_t* pos = new GameState_t;
         //SearchThread_t* ss = new SearchThread_t;
         //SearchInfo_t* s_info = new SearchInfo_t;
@@ -14,7 +14,7 @@ namespace DataGeneration {
 
         // Step 2. Loop through all the positions
         for (int p = 0; p < FENS.size(); p++){
-            DataPoint dp;
+            Data::DataEntry dp;
             // Step 2A. Parse the FEN
             pos->parseFen(FENS[p]);
             int score = 0;
@@ -74,7 +74,7 @@ namespace DataGeneration {
             // Step 2D. Now we can set up a DataPoint and push it to the vector.
             dp.score = score;
 
-            data->push_back(dp);
+            data.push_back(dp);
 
             if (main_thread && p % 10000 == 0) {
                 std::cout << "Generated " << p << "/" << FENS.size() << " positions" << std::endl;
@@ -88,7 +88,7 @@ namespace DataGeneration {
 
 
     // Main method.
-    void generate_training_data(std::string epd_in, std::string csv_out, bool use_search, int depth){
+    void generate_training_data(std::string epd_in, std::string lgd_out, bool use_search, int depth){
         // Step 1. Open the epd file, parse all the FENS and set up a generation data object.
         std::vector<std::string> FENS;
         std::string fen, epd;
@@ -116,116 +116,65 @@ namespace DataGeneration {
 
         std::cout << "Extracted " << FENS.size() << " fens" << std::endl;
 
-        // Step 3. Set up the requested number of threads and subdivide the fen list depending on that.
-        /*std::vector<std::thread> thread_list;
-        std::vector<std::vector<std::string>> divided_fens;
-        //std::vector<std::vector<DataPoint>> data;
 
-        //size_t batch_size = FENS.size() / THREADS;
+        // Step 3. Now set up a data writer object which will create our output file.
+        Data::DataWriter writer(lgd_out);
 
+        // Step 4. Determine whether the file should be written to in batches or at once.
+        bool incremental_writing = true;
 
-        std::vector<DataPoint> data[THREADS];
-        std::vector<std::string> thread_fens[THREADS];
-        size_t batch_size = FENS.size() / THREADS;
-        int current = 0;
-
-        for (int t = 0; t < THREADS; t++) {
-            int i = 0;
-
-            while (i <= batch_size && (i + current) < FENS.size()) {
-                thread_fens[t].push_back(FENS[current + i]);
-                i++;
-            }
-            current += i;
+        if (FENS.size() <= MAX_BATCH_SIZE) {
+            incremental_writing = false;
         }
 
-        for (int t = 0; t < THREADS; t++) {
-            thread_list.push_back(std::thread(generate_batch,
-                std::ref(data[t]),
-                std::ref(thread_fens[t]),
-                info,
-                (t == 0) ? true : false
-            ));
-        }
+        // Step 5. We can now generate the data.
+        // If we're using incremental writing we also need to determine the batches.
+        std::vector<Data::DataEntry> generated_data;
 
-        for (int t = 0; t < THREADS; t++) {
-            thread_list[t].join();
-        }*/
+        if (incremental_writing) {
 
-        FILE* pFile = nullptr;
+            // Step 5A. Partition the FENS.
+            std::vector<size_t> batches;
 
-#if (defined(_WIN32) || defined(_WIN64))
-        fopen_s(&pFile, csv_out.c_str(), "wb");
-#else
-        pFile = fopen(csv_out.c_str(), "wb");
-#endif
-        std::vector<DataPoint>* combined_data = new std::vector<DataPoint>;
-        combined_data->reserve(FENS.size());
+            size_t batch_count = FENS.size() / MAX_BATCH_SIZE;
+            size_t remainder = FENS.size() % MAX_BATCH_SIZE;
 
-        generate_batch(combined_data, FENS, info, true);
-
-        fwrite(combined_data->data(), sizeof(DataPoint), combined_data->size(), pFile);
-        
-        delete combined_data;
-        fclose(pFile);
-        //std::vector<DataPoint>* combined_data = new std::vector<DataPoint>;
-        ////const size_t batch_size = 10000000;
-        //const size_t batch_size = 322500;
-        //
-        //for (int i = 0; i < (FENS.size() / batch_size) - 1; i++) {
-        //    combined_data->clear();
-        //    combined_data->reserve(batch_size);
-        //    std::vector<std::string> new_fens;
-        //
-        //    for (int j = i * batch_size; j < (i + 1) * batch_size; j++) {
-        //        new_fens.push_back(FENS[j]);
-        //    }
-        //
-        //    generate_batch(combined_data, new_fens, info, true);
-        //
-        //    for (int p = 0; p < combined_data->size(); p++) {
-        //        // Write the input array and then the score.
-        //        fwrite(&(*combined_data)[p], sizeof(DataPoint), 1, pFile);
-        //
-        //        if (p % 100000 == 0) {
-        //            std::cout << "Wrote " << (i * batch_size) + p << "/" << FENS.size() << " to output binary file" << std::endl;
-        //        }
-        //    }
-        //}
-
-
-
-        //combined_data->reserve(FENS.size());
-        /*generate_batch(combined_data, FENS, info, true);
-
-        //for (int t = 0; t < THREADS; t++) {
-        //    for (int i = 0; i < data[t].size(); i++) {
-        //        combined_data.push_back(data[t][i]);
-        //    }
-        //}
-
-        // Lastly, open the csv file and write the data.
-        //std::ofstream csv_file(csv_out);
-
-        for (int i = 0; i < combined_data->size(); i++){
-            int8_t* net_inp = (*combined_data)[i].network_input;
-        
-            csv_file << std::to_string(net_inp[0]);
-        
-            for (int j = 1; j < INPUT_SIZE; j++){
-                csv_file << ";" << std::to_string(net_inp[j]);
+            for (int i = 0; i < batch_count; i++) {
+                batches.push_back(i * MAX_BATCH_SIZE);
             }
-        
-            csv_file << ";" << std::to_string((*combined_data)[i].score);
-        
-            csv_file << "\n";
+            if (remainder > 0) {
+                batches.push_back(batches.back() + MAX_BATCH_SIZE);
+            }
+            assert(batches.back() < FENS.size());
 
-            if (i % 100000 == 0) {
-                std::cout << "Wrote " << i << "/" << FENS.size() << " positions to the CSV file" << std::endl;
+            batches.push_back(FENS.size());
+
+            std::vector<std::string> fen_batch;
+            // 5B. Now we can generate and load the divided data.
+            for (int b = 0; b < batches.size() - 1; b++) {
+
+                // Step 5B.1. Copy all the FENS we're going to use.
+                fen_batch.clear(); fen_batch.reserve(MAX_BATCH_SIZE);
+                for (int i = batches[b]; i < batches[b + 1]; i++) {
+                    fen_batch.push_back(FENS[i]);
+                }
+
+                // Step 5B.2. Generate data for the batch.
+                generated_data.clear(); generated_data.reserve(MAX_BATCH_SIZE);
+                generate_batch(generated_data, fen_batch, info, true);
+
+                // Step 5B.3. Now write this data to the file.
+                writer.save_data(generated_data);
             }
         }
-        // Close the csv file.
-        csv_file.close();*/
+        else {
+            // Step 5A. Generate all data at once.
+            generated_data.reserve(FENS.size());
+            generate_batch(generated_data, FENS, info, true);
+
+            // Step 5B. Now make the writer object write this to a file.
+            writer.save_data(generated_data);
+        }
     }
 
 }
