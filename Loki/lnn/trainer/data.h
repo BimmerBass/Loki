@@ -16,25 +16,8 @@ namespace Data {
 	
 	// Structure for holding a single training example
 	struct DataEntry {
-		int8_t* network_input = nullptr; /* Declared on heap due to size concerns */
+		int8_t network_input[INPUT_SIZE] = { 0 };
 		int score = 0;
-
-		DataEntry() {
-			network_input = new int8_t[INPUT_SIZE];
-			score = 0;
-		}
-		~DataEntry() {
-			if (network_input != nullptr) {
-				delete[] network_input;
-			}
-		}
-
-		// Copy constructor.
-		DataEntry(const DataEntry& de) {
-			network_input = new int8_t[INPUT_SIZE];
-			memcpy(network_input, de.network_input, sizeof(int8_t) * INPUT_SIZE);
-			score = de.score;
-		}
 
 		void clear(){
 			memset(network_input, int8_t(0), sizeof(int8_t) * INPUT_SIZE);

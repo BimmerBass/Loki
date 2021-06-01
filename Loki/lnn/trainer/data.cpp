@@ -40,7 +40,11 @@ Data writing.
 */
 void Data::DataWriter::save_data(const std::vector<DataEntry>& data) {
 	// Step 1. Write all data from the vector.
-	fwrite(data.data(), sizeof(DataEntry), data.size(), file);
+	//fwrite(data.data(), sizeof(DataEntry), data.size(), file);
+	for (int i = 0; i < data.size(); i++) {
+		fwrite(data[i].network_input, sizeof(int8_t), INPUT_SIZE, file);
+		fwrite(&data[i].score, sizeof(int), 1, file);
+	}
 }
 
 
@@ -82,7 +86,8 @@ Data::DataLoader::DataLoader(std::string filepath, size_t _bs, size_t bfc) : bat
 	current_entry = 0;
 	fseek(file, 0, SEEK_END);
 	size_t bytes = ftell(file);
-	entry_count = bytes / sizeof(DataEntry);
+	//entry_count = bytes / sizeof(DataEntry);
+	entry_count = bytes / (sizeof(int8_t) * INPUT_SIZE + sizeof(int));
 
 	try {
 		if (entry_count < 1) { throw("An empty file was loaded."); }
@@ -124,8 +129,10 @@ bool Data::DataLoader::fetch_data(std::vector<DataEntry>& data) {
 		for (int i = 0; i < batch_size; i++) {
 			DataEntry entry;
 
-			size_t read = fread(&entry, sizeof(DataEntry), 1, file);
-			if (read != 1) { std::cout << "Error reading file. Quitting." << std::endl; exit(EXIT_FAILURE); }
+			//size_t read = fread(&entry, sizeof(DataEntry), 1, file);
+			//if (read != 1) { std::cout << "Error reading file. Quitting." << std::endl; exit(EXIT_FAILURE); }
+			fread(entry.network_input, sizeof(int8_t), INPUT_SIZE, file);
+			fread(&entry.score, sizeof(int), 1, file);
 
 			current_entry++;
 
