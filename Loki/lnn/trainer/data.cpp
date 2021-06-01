@@ -94,6 +94,8 @@ Data::DataLoader::DataLoader(std::string filepath, size_t _bs, size_t bfc) : bat
 
 	std::cout << "Loaded file with " << entry_count << " entries" << std::endl;
 
+	// Step 4. Go back to the beginning of the file.
+	rewind(file);
 }
 
 Data::DataLoader::~DataLoader() {
@@ -122,7 +124,9 @@ bool Data::DataLoader::fetch_data(std::vector<DataEntry>& data) {
 		for (int i = 0; i < batch_size; i++) {
 			DataEntry entry;
 
-			fread(&entry, sizeof(DataEntry), 1, file);
+			size_t read = fread(&entry, sizeof(DataEntry), 1, file);
+			if (read != 1) { std::cout << "Error reading file. Quitting." << std::endl; exit(EXIT_FAILURE); }
+
 			current_entry++;
 
 			data.push_back(entry);
