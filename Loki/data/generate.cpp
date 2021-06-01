@@ -178,8 +178,7 @@ namespace DataGeneration {
 
             for (int p = 0; p < combined_data->size(); p++) {
                 // Write the input array and then the score.
-                fwrite((*combined_data)[i].network_input, sizeof(int8_t), INPUT_SIZE, pFile);
-                fwrite(&(*combined_data)[i].score, sizeof(int), 1, pFile);
+                fwrite(&(*combined_data)[p], sizeof(DataPoint), 1, pFile);
 
                 if (p % 100000 == 0) {
                     std::cout << "Wrote " << (i * batch_size) + p << "/" << FENS.size() << " to output binary file" << std::endl;
