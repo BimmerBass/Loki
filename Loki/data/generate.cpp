@@ -28,4 +28,235 @@ namespace DataGeneration {
 		// Step 2. Save the score
 		score = evaluation;
 	}
+
+
+
+	/*
+	
+	The Arbiter class will be managed by each thread. It will be the one playing the games and saving the positions.
+	
+	*/
+	Arbiter::Arbiter(int _depth, size_t _positions, bool _draws, int _eval_limit, bool _random, int _first_random, bool _vb) : depth(_depth), position_count(_positions),
+		use_draws(_draws), eval_limit(_eval_limit), random_mover(_random), first_random_moves(_first_random), verbose(_vb) {
+
+		// Step 1. Allocate memory for the search object
+		searcher = new SearchThread_t;
+
+		// Step 2. Make sure all paramters are correctly set. Abort if there are errors.
+		try {
+			if (depth < 0) { throw("Depth must be greater than or equal to zero."); }
+			if (position_count <= 0) { throw("Positions to generate must be a positive number."); }
+			if (eval_limit <= 0) { throw("Evaluation score limit must be a positive number."); }
+		}
+		catch (const char* msg) {
+			std::cout << "[!] Encountered an error while setting up Arbiter object: " << msg << std::endl;
+			exit(EXIT_FAILURE);
+		}
+
+	}
+
+	Arbiter::~Arbiter() {
+		if (searcher != nullptr) { delete searcher; }
+	}
+
+
+	/*
+	
+	When searching, we need to prepare our SearchThread_t object.
+	
+	*/
+	void Arbiter::prepare_search() {
+		// Step 1. Clear the info.
+		searcher->info->clear();
+
+		// Step 2. Set the parameters.
+		searcher->info->depth = depth;
+		searcher->info->nodes = 0;
+		searcher->info->stopped = false;
+		searcher->info->quit = false;
+		searcher->info->timeset = false;
+		searcher->info->seldepth = 0;
+	}
+
+
+	/*
+	
+	Get all legal moves for the position.
+	
+	*/
+	std::vector<Move_t> Arbiter::legal_moves() {
+		std::vector<Move_t> output;
+		int original_ply = searcher->pos->ply;
+
+		// Step 1. Get all pseudo-legal moves.
+		MoveList ml;
+		moveGen::generate<ALL>(searcher->pos, &ml);
+		
+
+		// Step 2. Go through all pseudo-legal moves and save the ones that are legal.
+		for (int i = 0; i < ml.size(); i++) {
+			if (!searcher->pos->make_move(ml[i])) {
+				continue;
+			}
+			// If the move was legal, append it and undo it.
+			Move_t m; m.move = ml[i]->move; m.score = ml[i]->score;
+			output.push_back(m);
+
+			searcher->pos->undo_move();
+		}
+
+		// Step 3. Return the list of legal moves.
+		assert(searcher->pos->ply == original_ply); // We don't want to accidentally modify the position object.
+		return output;
+	}
+
+	/*
+	
+	Helper method to check if the game has ended. The game can end for the following reasons:
+		- White checkmates black --> White wins.
+		- Black checkmates white --> Black wins.
+		- Draw due to either 3-fold repetition, 50 move rule or stalemate.
+	*/
+	G_RESULT Arbiter::game_ended() {
+		// Step 1. Check for draw due to either 3-fold repetition, 50 move rule or stalemate.
+		if (searcher->pos->three_fold_draw() || searcher->pos->fiftyMove >= 100) { return DRAW; }
+
+		// Step 2. Generate all legal moves. They are used to check for checkmate and stalemate.
+		std::vector<Move_t> moves = legal_moves();
+
+		// Step 3. Check for stalemate. This happens if no moves are possible irregardless of the side to move.
+		if (moves.size() <= 0) { return DRAW; }
+
+		// Step 4. Check for checkmates
+		if (searcher->pos->side_to_move == WHITE) {
+			if (moves.size() <= 0 && searcher->pos->in_check()) { return BLACK_WIN; }
+		}
+		else {
+			if (moves.size() <= 0 && searcher->pos->in_check()) { return WHITE_WIN; }
+		}
+
+		// Return not done if the position didn't meet the above criteria
+		return NOT_DONE;
+	}
+
+
+
+	/*
+	
+	This is the most important method in the Arbiter class. This is responsible for playing each game.
+		Note: We will not stop a game in case we exceed the required number of positions since that wouldn't allow us to get a 
+				game result. This has to be handled in the run() method.
+	
+	*/
+	void Arbiter::play_game() {
+
+		// Step 1. Load the starting position and initialize a new vector of positions.
+		searcher->pos->parseFen(START_FEN);
+		std::vector<SavedBoard> game_positions;
+
+		int move_count = 0; // Half-moves played.
+		G_RESULT game_result = NOT_DONE;
+
+		// Step 2. Start the game.
+		while (true) {
+
+			// Step 2A. Get a list of the legal moves.
+			std::vector<Move_t> valid_moves = legal_moves();
+			assert(valid_moves.size() > 0);
+
+			// Step 2B. If we are in the early opening, play random moves.
+			if (move_count < first_random_moves) {
+				int index = rng() % valid_moves.size();
+				assert(index < valid_moves.size());
+
+				// Step 2B.1. Make the move and check if it's game-ending (unlikely)
+				searcher->pos->make_move(&valid_moves[index]);
+				move_count++;
+				
+				game_result = game_ended();
+
+				if (game_result != NOT_DONE) { return; } // We return since we wont be using the very early positions anyways.
+			}
+
+			// Step 2C. Set up a search and run it.
+			prepare_search();
+			SearchPv pvLine;
+
+			int score = Search::alphabeta(searcher, depth, -INF, INF, true, &pvLine);
+			assert(pvLine.pv[0] != NOMOVE);
+
+			// Step 2C.1. All scores should be relative to white, so if we're black, reverse it.
+			if (searcher->pos->side_to_move == BLACK) {
+				score *= -1;
+			}
+
+			// Step 2D. If we're playing randomly, play a random move. Otherwise, play the best move.
+			if (random_mover) {
+				int index = rng() & valid_moves.size();
+				assert(index < valid_moves.size());
+				
+				searcher->pos->make_move(&valid_moves[index]);
+			}
+			else {
+				Move_t bm; bm.move = pvLine.pv[0]; bm.score = 0;
+				searcher->pos->make_move(&bm);
+			}
+			move_count++;
+
+			// Step 2E. Check if the game has ended. If it has, break.
+			game_result = game_ended();
+			if (game_result != NOT_DONE) {
+				break;
+			}
+
+			// Step 2F. Append the current position.
+			// Note: Remember to see if the position satisfies the required criteria.
+			if (score <= eval_limit && score >= -eval_limit) {
+				SavedBoard sb;
+
+				sb.setup(searcher->pos, score);
+
+				// Save this board.
+				game_positions.push_back(sb);
+			}
+		}
+
+		// Step 3. Now that the game is done, save the result to all positions in the game vector.
+		assert(game_result != NOT_DONE);
+		double numerical_result = (game_result == WHITE_WIN) ? 1.0 : ((game_result == BLACK_WIN) ? 0.0 : 0.5);
+
+		for (int i = 0; i < game_positions.size(); i++) {
+			game_positions[i].game_result = numerical_result;
+		}
+
+		// Step 4. Now append all game positions to the total positions.
+		vector_append<SavedBoard>(positions, game_positions);
+
+		if (verbose) {
+			std::cout << "Generated " << game_positions.size() << " positions." << std::endl;
+		}
+	}
+
+
+	/*
+	
+	This method will run games as the Arbiter until we have reached the desired amount of positions.
+	
+	*/
+	void Arbiter::run() {
+
+		// Step 1. Play games until we have generated the desired amount of positions.
+		positions.clear();
+
+		while (positions.size() <= position_count) {
+			play_game();
+		}
+
+		// Step 2. If we have too many positions, erase the ones in the back.
+		if (positions.size() > position_count) {
+			positions.erase(positions.begin() + position_count, positions.end());
+		}
+
+		assert(positions.size() == position_count);
+	}
 }

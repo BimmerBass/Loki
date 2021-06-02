@@ -93,6 +93,9 @@ public:
 	// Returns true if we are repeating moves or have reached the fifty-move rule limit.
 	bool is_draw() const;
 
+	// Returns true for three fold repetitions.
+	bool three_fold_draw() const;
+
 	/*
 	SEE functions - the SEE algorithm itself will be implemented later
 	*/

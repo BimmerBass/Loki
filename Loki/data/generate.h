@@ -1,9 +1,21 @@
 #ifndef GENERATE_H
 #define GENERATE_H
+#include <random>
 
 #include "../search.h"
 #include "../lnn/network.h"
 #include "../lnn/trainer/data.h"
+
+
+// Append one vector to another
+template<typename T>
+void vector_append(std::vector<T>& v1, const std::vector<T>& v2) {
+
+    v1.reserve(v1.size() + v2.size());
+    for (size_t i = 0; i < v2.size(); i++) {
+        v1.push_back(v2[i]);
+    }
+}
 
 
 namespace DataGeneration {
@@ -15,7 +27,20 @@ namespace DataGeneration {
     constexpr size_t MAX_BATCH_SIZE = 5000000;
     static_assert(MAX_BATCH_SIZE > 0);
 
-    
+    // Defaults for data generation games
+    constexpr int DEFAULT_DEPTH = 5;
+    constexpr size_t DEFAULT_POSITION_COUNT = 100000000; // 100M
+    constexpr bool USE_DRAWS_DEFAULT = true;
+    constexpr int DEFAULT_EVAL_LIMIT = MATE - 1;
+    constexpr bool RANDOM_MOVER_DEFAULT = false;
+    constexpr int FIRST_RANDOM_MOVES_DEFAULT = 4;
+
+    // Random number generator.
+    static std::mt19937_64 rng(0x1234);
+
+    // Different game results.
+    enum G_RESULT :int { NOT_DONE = 0, WHITE_WIN = 1, BLACK_WIN = 2, DRAW = 3 };
+
     // This struct holds all data that represents one position.
     struct SavedBoard {
         // Board state
@@ -28,6 +53,9 @@ namespace DataGeneration {
         // Score
         int score = 0;
 
+        // Game result. 1: White win, 0.5: draw, 0: black win.
+        double game_result = 0;
+
         void setup(const GameState_t* pos, int evaluation);
     };
 
@@ -37,25 +65,42 @@ namespace DataGeneration {
     // Each thread will get their own
     class Arbiter {
     public:
-        Arbiter(size_t _count, SearchInfo_t* _settings, bool play_random = false);
+        Arbiter(int _depth = DEFAULT_DEPTH, size_t _positions = DEFAULT_POSITION_COUNT,
+            bool _draws = USE_DRAWS_DEFAULT, int _eval_limit = DEFAULT_EVAL_LIMIT, 
+            bool _random = RANDOM_MOVER_DEFAULT, int _first_random = FIRST_RANDOM_MOVES_DEFAULT, bool _vb = false);
         ~Arbiter();
 
         // Runs the specified number of games.
         void run();
 
     private:
-        // Used for random position generation.
-        const bool random_play;
+        // Hyper-parameters for the generation of the data
+        const int depth;
+        const size_t position_count;
+        const bool use_draws;
+        const int eval_limit;
+        const bool random_mover;
+        const int first_random_moves;
+        const bool verbose; // For output in play_game
 
-        GameState_t* board;
         SearchThread_t* searcher;
 
         // Play one game.
         void play_game();
 
+        // Prepare the searcher object to do a search.
+        void prepare_search();
+
+        // Gets all legal moves for the position.
+        std::vector<Move_t> legal_moves();
+
+        // Check if the game has ended.
+        G_RESULT game_ended();
+
         // Holds all positions that we have reached.
         // Note: Ealy opening (<= move 3) and checkmate/stalemate positions are left out.
         std::vector<SavedBoard> positions;
+
     };
 }
 

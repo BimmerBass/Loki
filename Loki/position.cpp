@@ -947,6 +947,19 @@ bool GameState_t::is_draw() const {
 }
 
 
+bool GameState_t::three_fold_draw() const {
+	if (history_ply <= 1) { return false; }
+
+	int repetitions = 1; // The current position will count as a repetition.
+
+	for (int i = 0; i < history_ply - 1; i++) {
+		if (history[i].posKey == posKey) { repetitions++; }
+	}
+	
+	return (repetitions >= 3) ? true : false;
+}
+
+
 void GameState_t::mirror_board() {
 	int temp_pieces[2][64] = { {0} };
 
