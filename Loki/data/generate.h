@@ -15,17 +15,7 @@ namespace DataGeneration {
     constexpr size_t MAX_BATCH_SIZE = 5000000;
     static_assert(MAX_BATCH_SIZE > 0);
 
-    struct GenerationInfo {
-        bool search_scores = false;
 
-        int search_depth = 0;
-    };
-
-    // This function will be run by a thread and generate data.
-    void generate_batch(std::vector<Data::DataEntry>& data, const std::vector<std::string>& FENS, GenerationInfo info, bool main_thread = false);
-    
-    // Will spin up threads and generate the training data. Writes out to a CSV file afterwards
-    void generate_training_data(std::string epd_in, std::string lgd_out, bool use_search=false, int depth=0);
 }
 
 
