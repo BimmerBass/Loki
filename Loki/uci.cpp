@@ -16,6 +16,7 @@ void UCI::print_info() {
 	// Step 3C.1. Output all ajustible options for Loki.
 	std::cout << "option name Hash type spin default " << TT_DEFAULT_SIZE << " min " << TT_MIN_SIZE << " max " << TT_MAX_SIZE << std::endl;
 	std::cout << "option name Threads type spin default " << THREADS_DEFAULT_NUM << " min " << THREADS_MIN_NUM << " max " << THREADS_MAX_NUM << std::endl;
+	std::cout << "option name Use LNN type check default " << DEFAULT_LNN_USAGE << std::endl;
 	std::cout << "uciok" << std::endl;
 }
 
@@ -31,9 +32,9 @@ void UCI::loop() {
 	GameState_t* pos = new GameState_t();
 	SearchInfo_t* info = new SearchInfo_t();
 
-	// Step 1A. Make sure to set LNN to disabled until we have loaded a net.
+	// Step 1A. Load the network, but disable use of it by default.
+	pos->net.load_net(NETWORK_FILE_PATH);
 	pos->use_lnn = false;
-	bool net_loaded = false;
 
 	// Step 1B. Set up the starting position on the board. This is done to prevent Loki from crashing if a "go" is given before a "position ..."
 	pos->parseFen(START_FEN);
@@ -108,13 +109,33 @@ void UCI::loop() {
 			continue;
 		}
 
-		// Step 3G. If we get the "position" command, parse it.
+		// Step 3G. If we are told to use lnn, do so.
+		else if (input.find("setoption name Use LNN value ") != std::string::npos) {
+			// Step 3G.1. Extract the flag.
+			std::stringstream strm(input);
+			std::string tokens[6];
+			strm >> tokens[0] >> tokens[1] >> tokens[2] >> tokens[3] >> tokens[4] >> tokens[5];
+
+			// Step 3G.2. Set the lnn flag to the requested one.
+			if (tokens[5] == "true") {
+				pos->use_lnn = true;
+
+				// Make sure to load the current position.
+				pos->setup_network();
+			}
+			else {
+				pos->use_lnn = false;
+			}
+		}
+
+
+		// Step 3H. If we get the "position" command, parse it.
 		else if (input.find(std::string("position")) != std::string::npos) {
 			parse_position(input, pos);
 			continue;
 		}
 
-		// Step 3H. If we get the "go" command, parse its parameters and begin searching
+		// Step 3I. If we get the "go" command, parse its parameters and begin searching
 		else if (input.find(std::string("go")) != std::string::npos) {
 			parse_go(input, pos, info);
 
@@ -125,40 +146,9 @@ void UCI::loop() {
 			continue;
 		}
 
-		// Step 3I. If we get told to quit, set the info->quit flag, but don't continue. Continuing would wait for a last instruction.
+		// Step 3J. If we get told to quit, set the info->quit flag, but don't continue. Continuing would wait for a last instruction.
 		else if (input.find(std::string("quit")) != std::string::npos) {
 			info->quit = true;
-		}
-
-		// Step 3J. If we're told to load a network from a file, do so.
-		else if (input.find("setoption name LNN Path value ") != std::string::npos) {
-			// Step 3J.1. Extract the filepath and load it in the network.
-			std::stringstream strm(input);
-			std::string words[6];
-
-			strm >> words[0] >> words[1] >> words[2] >> words[3] >> words[4] >> words[5];
-
-			pos->net.load_net(words[5]);
-
-			net_loaded = true;
-
-			std::cout << "Loaded LNN from " << words[5] << std::endl;
-		}
-
-		// Step 3K. If we're told to use LNN, do so if a net has been loaded
-		else if (input.find("setoption name Use LNN value ") != std::string::npos) {
-			// Step 3J.1. Extract the value to set.
-			std::stringstream strm(input);
-			std::string words[6];
-
-			strm >> words[0] >> words[1] >> words[2] >> words[3] >> words[4] >> words[5];
-
-			if (net_loaded) {
-				pos->use_lnn = (words[5] == "true") ? true : false;
-				std::cout << "Now using LNN" << std::endl;
-
-				pos->setup_network();
-			}
 		}
 
 		// Below are some helper functions that can be used for debugging.

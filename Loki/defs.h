@@ -69,6 +69,10 @@ constexpr int VALUE_NONE = 50000;
 // Default eval table size.
 #define DEFAULT_EVAL_TABLE_SIZE 200
 
+// Default LNN options
+#define DEFAULT_LNN_USAGE "false"
+#define NETWORK_FILE_PATH "lnn/768x256x32x32x1.lnn"
+
 typedef uint64_t Bitboard;
 
 
