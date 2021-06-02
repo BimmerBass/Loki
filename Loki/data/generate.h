@@ -57,6 +57,28 @@ namespace DataGeneration {
         double game_result = 0;
 
         void setup(const GameState_t* pos, int evaluation);
+
+        SavedBoard() {
+
+        }
+        SavedBoard(const SavedBoard& sb) {
+            // Step 1. Copy the gamestate
+            pieces[PAWN][WHITE] = sb.pieces[PAWN][WHITE];
+            pieces[KNIGHT][WHITE] = sb.pieces[KNIGHT][WHITE];
+            pieces[BISHOP][WHITE] = sb.pieces[BISHOP][WHITE];
+            pieces[ROOK][WHITE] = sb.pieces[ROOK][WHITE];
+            pieces[QUEEN][WHITE] = sb.pieces[QUEEN][WHITE];
+            pieces[KING][WHITE] = sb.pieces[KING][WHITE];
+
+            pieces[PAWN][BLACK] = sb.pieces[PAWN][BLACK];
+            pieces[KNIGHT][BLACK] = sb.pieces[KNIGHT][BLACK];
+            pieces[BISHOP][BLACK] = sb.pieces[BISHOP][BLACK];
+            pieces[ROOK][BLACK] = sb.pieces[ROOK][BLACK];
+            pieces[QUEEN][BLACK] = sb.pieces[QUEEN][BLACK];
+            pieces[KING][BLACK] = sb.pieces[KING][BLACK];
+
+            stm = sb.stm; en_passant = sb.en_passant; castling_rights = sb.castling_rights; move50 = sb.move50; score = sb.score; game_result = sb.game_result;
+        }
     };
 
 

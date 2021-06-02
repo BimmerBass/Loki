@@ -182,7 +182,7 @@ namespace DataGeneration {
 			prepare_search();
 			SearchPv pvLine;
 
-			int score = Search::alphabeta(searcher, depth, -INF, INF, true, &pvLine);
+			int score = Search::search_root(searcher, depth, -INF, INF, &pvLine);
 			assert(pvLine.pv[0] != NOMOVE);
 
 			// Step 2C.1. All scores should be relative to white, so if we're black, reverse it.
@@ -230,7 +230,9 @@ namespace DataGeneration {
 		}
 
 		// Step 4. Now append all game positions to the total positions.
-		vector_append<SavedBoard>(positions, game_positions);
+		for (int i = 0; i < game_positions.size(); i++) {
+			positions.push_back(game_positions[i]);
+		}
 
 		if (verbose) {
 			std::cout << "Generated " << game_positions.size() << " positions." << std::endl;
