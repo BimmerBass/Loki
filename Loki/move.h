@@ -28,6 +28,9 @@ enum SpecialMoves :int { PROMOTION = 0, ENPASSANT = 1, CASTLING = 2, NOT_SPECIAL
 struct Move_t {
 	unsigned int move = NOMOVE;
 	int score = 0;
+
+	Move_t() { move = NOMOVE; score = 0; }
+	Move_t(const Move_t& m) { move = m.move; score = m.score; }
 };
 
 // The moveList class is inspired a lot by Stockfish

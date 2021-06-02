@@ -30,6 +30,44 @@ namespace DataGeneration {
 	}
 
 
+	// Constructors for SavedBoard
+	SavedBoard::SavedBoard() {
+		pieces[PAWN][WHITE] = 0;
+		pieces[KNIGHT][WHITE] = 0;
+		pieces[BISHOP][WHITE] = 0;
+		pieces[ROOK][WHITE] = 0;
+		pieces[QUEEN][WHITE] = 0;
+		pieces[KING][WHITE] = 0;
+
+		pieces[PAWN][BLACK] = 0;
+		pieces[KNIGHT][BLACK] = 0;
+		pieces[BISHOP][BLACK] = 0;
+		pieces[ROOK][BLACK] = 0;
+		pieces[QUEEN][BLACK] = 0;
+		pieces[KING][BLACK] = 0;
+
+		stm = WHITE; en_passant = NO_SQ; castling_rights = 0; move50 = 0; score = 0; game_result = 0.5;
+	}
+
+	SavedBoard::SavedBoard(const SavedBoard& sb) {
+		// Step 1. Copy the gamestate
+		pieces[PAWN][WHITE] = sb.pieces[PAWN][WHITE];
+		pieces[KNIGHT][WHITE] = sb.pieces[KNIGHT][WHITE];
+		pieces[BISHOP][WHITE] = sb.pieces[BISHOP][WHITE];
+		pieces[ROOK][WHITE] = sb.pieces[ROOK][WHITE];
+		pieces[QUEEN][WHITE] = sb.pieces[QUEEN][WHITE];
+		pieces[KING][WHITE] = sb.pieces[KING][WHITE];
+
+		pieces[PAWN][BLACK] = sb.pieces[PAWN][BLACK];
+		pieces[KNIGHT][BLACK] = sb.pieces[KNIGHT][BLACK];
+		pieces[BISHOP][BLACK] = sb.pieces[BISHOP][BLACK];
+		pieces[ROOK][BLACK] = sb.pieces[ROOK][BLACK];
+		pieces[QUEEN][BLACK] = sb.pieces[QUEEN][BLACK];
+		pieces[KING][BLACK] = sb.pieces[KING][BLACK];
+
+		stm = sb.stm; en_passant = sb.en_passant; castling_rights = sb.castling_rights; move50 = sb.move50; score = sb.score; game_result = sb.game_result;
+	}
+
 
 	/*
 	
@@ -84,8 +122,8 @@ namespace DataGeneration {
 	Get all legal moves for the position.
 	
 	*/
-	std::vector<Move_t> Arbiter::legal_moves() {
-		std::vector<Move_t> output;
+	void Arbiter::legal_moves(std::vector<Move_t>& moves) {
+		moves.clear();
 		int original_ply = searcher->pos->ply;
 
 		// Step 1. Get all pseudo-legal moves.
@@ -99,15 +137,11 @@ namespace DataGeneration {
 				continue;
 			}
 			// If the move was legal, append it and undo it.
-			Move_t m; m.move = ml[i]->move; m.score = ml[i]->score;
-			output.push_back(m);
+			moves.push_back(*ml[i]);
 
 			searcher->pos->undo_move();
 		}
-
-		// Step 3. Return the list of legal moves.
 		assert(searcher->pos->ply == original_ply); // We don't want to accidentally modify the position object.
-		return output;
 	}
 
 	/*
@@ -122,7 +156,8 @@ namespace DataGeneration {
 		if (searcher->pos->three_fold_draw() || searcher->pos->fiftyMove >= 100) { return DRAW; }
 
 		// Step 2. Generate all legal moves. They are used to check for checkmate and stalemate.
-		std::vector<Move_t> moves = legal_moves();
+		std::vector<Move_t> moves; 
+		legal_moves(moves);
 
 		// Step 3. Check for stalemate. This happens if no moves are possible irregardless of the side to move.
 		if (moves.size() <= 0) { return DRAW; }
@@ -161,7 +196,8 @@ namespace DataGeneration {
 		while (true) {
 
 			// Step 2A. Get a list of the legal moves.
-			std::vector<Move_t> valid_moves = legal_moves();
+			std::vector<Move_t> valid_moves;
+			legal_moves(valid_moves);
 			assert(valid_moves.size() > 0);
 
 			// Step 2B. If we are in the early opening, play random moves.

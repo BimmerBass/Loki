@@ -1,6 +1,7 @@
 #ifndef GENERATE_H
 #define GENERATE_H
 #include <random>
+#include <vector>
 
 #include "../search.h"
 #include "../lnn/network.h"
@@ -58,27 +59,8 @@ namespace DataGeneration {
 
         void setup(const GameState_t* pos, int evaluation);
 
-        SavedBoard() {
-
-        }
-        SavedBoard(const SavedBoard& sb) {
-            // Step 1. Copy the gamestate
-            pieces[PAWN][WHITE] = sb.pieces[PAWN][WHITE];
-            pieces[KNIGHT][WHITE] = sb.pieces[KNIGHT][WHITE];
-            pieces[BISHOP][WHITE] = sb.pieces[BISHOP][WHITE];
-            pieces[ROOK][WHITE] = sb.pieces[ROOK][WHITE];
-            pieces[QUEEN][WHITE] = sb.pieces[QUEEN][WHITE];
-            pieces[KING][WHITE] = sb.pieces[KING][WHITE];
-
-            pieces[PAWN][BLACK] = sb.pieces[PAWN][BLACK];
-            pieces[KNIGHT][BLACK] = sb.pieces[KNIGHT][BLACK];
-            pieces[BISHOP][BLACK] = sb.pieces[BISHOP][BLACK];
-            pieces[ROOK][BLACK] = sb.pieces[ROOK][BLACK];
-            pieces[QUEEN][BLACK] = sb.pieces[QUEEN][BLACK];
-            pieces[KING][BLACK] = sb.pieces[KING][BLACK];
-
-            stm = sb.stm; en_passant = sb.en_passant; castling_rights = sb.castling_rights; move50 = sb.move50; score = sb.score; game_result = sb.game_result;
-        }
+        SavedBoard();
+        SavedBoard(const SavedBoard& sb);
     };
 
 
@@ -114,7 +96,7 @@ namespace DataGeneration {
         void prepare_search();
 
         // Gets all legal moves for the position.
-        std::vector<Move_t> legal_moves();
+        void legal_moves(std::vector<Move_t>& moves);
 
         // Check if the game has ended.
         G_RESULT game_ended();
