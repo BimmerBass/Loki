@@ -95,3 +95,5 @@ It is also possible to change the amount of optimizations with both compilers by
 - The [Computer Chess Club](http://www.talkchess.com/forum3/viewforum.php?f=7) which has provided a lot of knowledge and tips.
 - The creator of [chess_programming](https://github.com/maksimKorzh/chess_programming) from whom I've found Tord Romstad's implementation of magic bitboards.
 - [Cute Chess](https://cutechess.com/) the tool used for testing changes and additions.
+- Marcel Vanthoor, the author of the chess engine [Rustic](https://github.com/mvanthoor/rustic). Between Loki 2.0.0 and Loki 3.0.0, he contacted me saying that Loki was underperforming, its feature set taken into account. If he hadn't told me that, Loki would very likely still be at ~1900-2000 elo.
+- Jay Honnold, the creator of the chess engine [Berserk](https://github.com/jhonnold/berserk), who generously let me set up an OpenBench client on his server, which is the tool used for testing changes in Loki currently.

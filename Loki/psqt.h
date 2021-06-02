@@ -27,7 +27,7 @@ namespace PSQT {
 	Piece square table
 	*/
 
-	extern const Score PawnTable[64];
+	/*extern const Score PawnTable[64];
 
 	extern const Score KnightTable[64];
 
@@ -38,7 +38,18 @@ namespace PSQT {
 	extern const Score QueenTable[64];
 
 	extern const Score KingTable[64];
+	*/
+	extern Score PawnTable[64];
 
+	extern Score KnightTable[64];
+
+	extern Score BishopTable[64];
+
+	extern Score RookTable[64];
+
+	extern Score QueenTable[64];
+
+	extern Score KingTable[64];
 
 	/*
 	Pawn-specific tables
