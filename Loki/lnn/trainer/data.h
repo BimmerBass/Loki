@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <cstring>
 
 #include "../types/architecture.h"
 
