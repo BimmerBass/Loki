@@ -31,10 +31,11 @@ void UCI::loop() {
 	GameState_t* pos = new GameState_t();
 	SearchInfo_t* info = new SearchInfo_t();
 
-	//pos->use_lnn = true;
-	//pos->net.load_net<LNN::CSV>("C:\\Users\\abild\\Desktop\\trained_csv.csv");
+	// Step 1A. Make sure to set LNN to disabled until we have loaded a net.
+	pos->use_lnn = false;
+	bool net_loaded = false;
 
-	// Step 1A. Set up the starting position on the board. This is done to prevent Loki from crashing if a "go" is given before a "position ..."
+	// Step 1B. Set up the starting position on the board. This is done to prevent Loki from crashing if a "go" is given before a "position ..."
 	pos->parseFen(START_FEN);
 
 	// Step 2. Make sure the transposition table is the default size
@@ -127,6 +128,37 @@ void UCI::loop() {
 		// Step 3I. If we get told to quit, set the info->quit flag, but don't continue. Continuing would wait for a last instruction.
 		else if (input.find(std::string("quit")) != std::string::npos) {
 			info->quit = true;
+		}
+
+		// Step 3J. If we're told to load a network from a file, do so.
+		else if (input.find("setoption name LNN Path value ") != std::string::npos) {
+			// Step 3J.1. Extract the filepath and load it in the network.
+			std::stringstream strm(input);
+			std::string words[6];
+
+			strm >> words[0] >> words[1] >> words[2] >> words[3] >> words[4] >> words[5];
+
+			pos->net.load_net(words[5]);
+
+			net_loaded = true;
+
+			std::cout << "Loaded LNN from " << words[5] << std::endl;
+		}
+
+		// Step 3K. If we're told to use LNN, do so if a net has been loaded
+		else if (input.find("setoption name Use LNN value ") != std::string::npos) {
+			// Step 3J.1. Extract the value to set.
+			std::stringstream strm(input);
+			std::string words[6];
+
+			strm >> words[0] >> words[1] >> words[2] >> words[3] >> words[4] >> words[5];
+
+			if (net_loaded) {
+				pos->use_lnn = (words[5] == "true") ? true : false;
+				std::cout << "Now using LNN" << std::endl;
+
+				pos->setup_network();
+			}
 		}
 
 		// Below are some helper functions that can be used for debugging.

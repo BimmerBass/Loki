@@ -531,7 +531,9 @@ namespace Training {
 			learning_rate = initial_learning_rate / (1.0 + learning_rate_decay * double(epoch));
 			bool one_batch_eof = loader->fetch_data(data);
 
-			do {
+			size_t current_batch = 0;
+
+			while (true) {
 				// Step 3B. Subdivide the data into batches
 				std::vector<size_t> batches;
 
@@ -551,6 +553,7 @@ namespace Training {
 				// Step 3C. Now loop through the batches.
 				for (size_t b = 0; b < batches.size() - 1; b++) {
 					// Step 3C.1A. Clear the gradients and data vectors
+					current_batch++;
 					main_thread_data->clear_gradients();
 					outputs.clear();
 					expected.clear();
@@ -592,14 +595,16 @@ namespace Training {
 					double aae_error = compute_loss<LOSS_F::AAE>(outputs, expected);
 
 					std::string progress(left_padding, '=');
-					std::cout << "[" << b + 1 << "/" << loader->size() / batch_size << "][" << progress << ">" << std::string(right_padding, ' ') << "] "
+					std::cout << "[" << current_batch << "/" << loader->size() / batch_size << "][" << progress << ">" << std::string(right_padding, ' ') << "] "
 						<< "MSE:	" << mse_error << "	AAE:	" << aae_error << std::endl;
 
 				}
 
 				// If we reached eof by loading the first set of batches, break.
 				if (!one_batch_eof) { break; }
-			} while (loader->fetch_data(data));
+
+				one_batch_eof = loader->fetch_data(data);
+			}
 
 			// Step 3D. If we should save after this epoch, do it.
 			if (epoch % save_frequency == 0){
@@ -945,7 +950,7 @@ namespace Training {
 					existing_net = existing_net.substr(1, last_index);
 				}
 				else {
-					existing_net = existing_net.find_first_of(" ");
+					last_index = existing_net.find_first_of(" ");
 					existing_net = existing_net.substr(0, last_index);
 				}
 			}

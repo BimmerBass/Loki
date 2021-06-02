@@ -17,8 +17,10 @@ int main(int argc, char* argv[]) {
 	}
 	
 	UCI::loop();
-	// learn dataset C:\\Users\\abild\\Desktop\\texel_data.lgd epoch 5 batchsize 14500 loss aae threads 8 eta 0.001 save_frequency 1 batch_load 100 output C:\\Users\\abild\\Desktop\\eval.lnn
-	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\texel-set-clean.epd", "C:\\Users\\abild\\Desktop\\texel_data.lgd");
+	// learn dataset C:\\Users\\abild\\Desktop\\lichess_data.lgd epoch 5 batchsize 14500 loss aae threads 8 eta 0.001 save_frequency 1 batch_load 100 output C:\\Users\\abild\\Desktop\\eval_lichess.lnn
+	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\lichess_more_data\\trainingSet.epd", "C:\\Users\\abild\\Desktop\\lichess_data.lgd");
+
+	// learn dataset C:\\Users\\abild\\Desktop\\lichess_data.lgd epoch 4 batchsize 14500 loss aae threads 8 eta 0.001 save_frequency 1 batch_load 100 output C:\\Users\\abild\\Desktop\\new_eval.lnn net C:\\Users\\abild\\Desktop\\eval_lichess.lnn
 
 	return 0;
 }
