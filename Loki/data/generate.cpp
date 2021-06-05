@@ -391,6 +391,111 @@ namespace DataGeneration {
 				}
 			}
 		}
+
+
+		/*
+		
+		Clear the object.
+		
+		*/
+		void ThreadAnalyzer::clear() {
+			output_entries.clear();
+			my_fens.clear();
+		}
+
+		/*
+		
+		Update the FEN list.
+		
+		*/
+		void ThreadAnalyzer::update(const std::vector<std::string>& all_fens, size_t start, size_t end) {
+			// Step 1. Clear the object.
+			assert(start < end);
+			clear();
+
+			// Step 2. Copy the fens that should be analyzed.
+			for (size_t i = start; i < end; i++) {
+				my_fens.push_back(all_fens[i]);
+			}
+		}
+
+
+		/*
+		
+		Constructor for the main analyzer class.
+		
+		*/
+		MainAnalyzer::MainAnalyzer(std::string epd_path, std::string output_lgd, unsigned int depth, int th_count, int score_bound, size_t _bs)
+			: thread_count(th_count), eval_limit(score_bound), batch_size(_bs) {
+
+			// Step 1. Set up the writer.
+			writer = new Data::DataWriter(output_lgd);
+			
+			// Step 2. Read the epd file.
+			read_epd(epd_path);
+			std::cout << "Extracted " << fens.size() << " positions" << std::endl;
+		}
+
+		MainAnalyzer::~MainAnalyzer() {
+			if (writer != nullptr) { delete writer; }
+		}
+
+
+		/*
+		
+		Read an EPD file and extract all fens
+		
+		*/
+		void MainAnalyzer::read_epd(std::string file) {
+			// Step 1. Open the file and clear the fen vector
+			fens.clear();
+			std::ifstream input_file(file);
+			std::string epd = "", fen = "";
+
+			// Step 2. Extract all fens
+			while (std::getline(input_file, epd)) {
+				auto fen_end = epd.find_first_of('"');
+
+				fen = epd.substr(0, fen_end);
+
+				fens.push_back(fen);
+			}
+		}
+
+
+		/*
+		
+		The generate data method is responsible for administering work for the threads and making the writer write data to the output file.
+		
+		*/
+		void MainAnalyzer::generate_data() {
+			// Step 1. Subdivide the fen list into batches.
+			// This is done for memory-overflow protection since big datasets can easily take up so much space that there's not enough physical memory for them.
+			std::vector<size_t> batches_startpoints;
+			int batch_count = fens.size() / batch_size;
+			int remainder = fens.size() % batch_size;
+
+			for (int i = 0; i < batch_count; i++) {
+				batches_startpoints.push_back(i * batch_count);
+			}
+			if (remainder > 0) { batches_startpoints.push_back(batches_startpoints.back() + batch_size); }
+			batches_startpoints.push_back(fens.size());
+			assert(batches_startpoints[batches_startpoints.size() - 2] < fens.size());
+
+			// Step 2. We need to initialize the thread objects differently the first time, so we'll do it here.
+			size_t start = batches_startpoints[0], end = batches_startpoints[1];
+			int thread_batches = batch_size / thread_count;
+			
+
+			// Step 2. We can now loop through all the batches
+			for (int b = 0; b < batches_startpoints.size() - 1; b++) {
+				size_t start = batches_startpoints[b];
+				size_t end = batches_startpoints[b + 1];
+
+
+			}
+		}
+
 	}
 
 

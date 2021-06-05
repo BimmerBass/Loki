@@ -126,6 +126,12 @@ namespace DataGeneration {
             // Will analyze all positions that it has gotten in the constructor.
             void run();
 
+            // Will clear everything.
+            void clear();
+
+            // Updates the fens.
+            void update(const std::vector<std::string>& all_fens, size_t start, size_t end);
+
 
             // This vector will hold the formatted output. The main thread will access this when we're done analyzing.
             std::vector<Data::DataEntry> output_entries;
@@ -137,6 +143,32 @@ namespace DataGeneration {
             void generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input);
         };
 
+
+        class MainAnalyzer {
+        public:
+            MainAnalyzer(std::string epd_path, std::string output_lgd, unsigned int depth, int th_count, 
+                int score_bound = DEFAULT_EVAL_LIMIT, size_t _bs = MAX_BATCH_SIZE);
+            ~MainAnalyzer();
+
+            void generate_data();
+
+        private:
+            const size_t thread_count;
+            const int eval_limit;
+            const size_t batch_size;
+
+            // All ThreadAnalyzer objects. Each thread will work on each one.
+            std::vector<ThreadAnalyzer> thread_objects;
+
+            // Fens that is to be anlyzed.
+            std::vector<std::string> fens;
+
+            // The data writer object. This will be responsible for writing out all datapoints.
+            Data::DataWriter* writer;
+
+            // Reads an epd file and extracts all fens.
+            void read_epd(std::string file);
+        };
 
     }
 }
