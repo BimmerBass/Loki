@@ -9,6 +9,16 @@ Move_t* MoveList::operator[](int index) {
 }
 
 
+MoveList::MoveList() {
+	last = moveList;
+}
+
+
+MoveList::MoveList(const MoveList& ml) {
+	std::copy(std::begin(ml.moveList), std::end(ml.moveList), std::begin(moveList));
+	last = &moveList[ml.last - ml.moveList];
+}
+
 /*
 MOVE REPRESENTATION IS INSPIRED BY STOCKFISH
 A move can be stored in a 16 bit unsigned integer.
@@ -25,6 +35,11 @@ void MoveList::add_move(int toSq, int fromSq, int promPce, int spc) {
 	last = &moveList[size() + 1];
 }
 
+
+void MoveList::append(unsigned int move) {
+	moveList[size()].move = move;
+	last = &moveList[size() + 1];
+}
 
 std::string printMove(int move) {
 	std::string moveStr = "";

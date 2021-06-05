@@ -39,73 +39,106 @@ namespace DataGeneration {
     // Random number generator.
     static std::mt19937_64 rng(0x1234);
 
-    // Different game results.
-    enum G_RESULT :int { NOT_DONE = 0, WHITE_WIN = 1, BLACK_WIN = 2, DRAW = 3 };
 
-    // This struct holds all data that represents one position.
-    struct SavedBoard {
-        // Board state
-        Bitboard pieces[6][2] = { {0} };
-        SIDE stm = WHITE;
-        int en_passant = NO_SQ;
-        int castling_rights = 0;
-        int move50 = 0;
+    // The selfplay namespace uses self-play to generate positions.
+    // Note: It is currently suffering from some run-time memory corruption issues.
+    namespace SelfPlay {
 
-        // Score
-        int score = 0;
+        // Different game results.
+        enum G_RESULT :int { NOT_DONE = 0, WHITE_WIN = 1, BLACK_WIN = 2, DRAW = 3 };
 
-        // Game result. 1: White win, 0.5: draw, 0: black win.
-        double game_result = 0;
+        // This struct holds all data that represents one position.
+        struct SavedBoard {
+            // Board state
+            Bitboard pieces[6][2] = { {0} };
+            SIDE stm = WHITE;
+            int en_passant = NO_SQ;
+            int castling_rights = 0;
+            int move50 = 0;
 
-        void setup(const GameState_t* pos, int evaluation);
+            // Score
+            int score = 0;
 
-        SavedBoard();
-        SavedBoard(const SavedBoard& sb);
-    };
+            // Game result. 1: White win, 0.5: draw, 0: black win.
+            double game_result = 0;
+
+            void setup(const GameState_t* pos, int evaluation);
+
+            SavedBoard();
+            SavedBoard(const SavedBoard& sb);
+        };
 
 
 
-    // This class is responsible for playing a predetermined number of games on one thread.
-    // Each thread will get their own
-    class Arbiter {
-    public:
-        Arbiter(int _depth = DEFAULT_DEPTH, size_t _positions = DEFAULT_POSITION_COUNT,
-            bool _draws = USE_DRAWS_DEFAULT, int _eval_limit = DEFAULT_EVAL_LIMIT, 
-            bool _random = RANDOM_MOVER_DEFAULT, int _first_random = FIRST_RANDOM_MOVES_DEFAULT, bool _vb = false);
-        ~Arbiter();
+        // This class is responsible for playing a predetermined number of games on one thread.
+        // Each thread will get their own
+        class Arbiter {
+        public:
+            Arbiter(int _depth = DEFAULT_DEPTH, size_t _positions = DEFAULT_POSITION_COUNT,
+                bool _draws = USE_DRAWS_DEFAULT, int _eval_limit = DEFAULT_EVAL_LIMIT,
+                bool _random = RANDOM_MOVER_DEFAULT, int _first_random = FIRST_RANDOM_MOVES_DEFAULT, bool _vb = false);
+            ~Arbiter();
 
-        // Runs the specified number of games.
-        void run();
+            // Runs the specified number of games.
+            void run();
 
-    private:
-        // Hyper-parameters for the generation of the data
-        const int depth;
-        const size_t position_count;
-        const bool use_draws;
-        const int eval_limit;
-        const bool random_mover;
-        const int first_random_moves;
-        const bool verbose; // For output in play_game
+        private:
+            // Hyper-parameters for the generation of the data
+            const int depth;
+            const size_t position_count;
+            const bool use_draws;
+            const int eval_limit;
+            const bool random_mover;
+            const int first_random_moves;
+            const bool verbose; // For output in play_game
 
-        SearchThread_t* searcher;
+            SearchThread_t* searcher;
 
-        // Play one game.
-        void play_game();
+            // Play one game.
+            void play_game();
 
-        // Prepare the searcher object to do a search.
-        void prepare_search();
+            // Prepare the searcher object to do a search.
+            void prepare_search();
 
-        // Gets all legal moves for the position.
-        void legal_moves(std::vector<Move_t>& moves);
+            // Gets all legal moves for the position.
+            MoveList legal_moves();
 
-        // Check if the game has ended.
-        G_RESULT game_ended();
+            // Check if the game has ended.
+            G_RESULT game_ended();
 
-        // Holds all positions that we have reached.
-        // Note: Ealy opening (<= move 3) and checkmate/stalemate positions are left out.
-        std::vector<SavedBoard> positions;
+            // Holds all positions that we have reached.
+            // Note: Ealy opening (<= move 3) and checkmate/stalemate positions are left out.
+            std::vector<SavedBoard> positions;
+            std::vector<SavedBoard> game_positions;
 
-    };
+        };
+    }
+
+
+    // The analysis namespace analyzes positions that has already been played.
+    // It takes an epd file as input.
+    namespace Analysis {
+
+        class ThreadAnalyzer {
+        public:
+            ThreadAnalyzer(const std::vector<std::string>& all_fens, size_t start, size_t end, unsigned int _d);
+            ~ThreadAnalyzer();
+
+            // Will analyze all positions that it has gotten in the constructor.
+            void run();
+
+
+            // This vector will hold the formatted output. The main thread will access this when we're done analyzing.
+            std::vector<Data::DataEntry> output_entries;
+        private:
+            const int search_depth;
+
+            std::vector<std::string> my_fens;
+            
+        };
+
+
+    }
 }
 
 

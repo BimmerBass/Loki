@@ -51,6 +51,11 @@ public:
 	void reset() {
 		last = moveList;
 	}
+
+	void append(unsigned int move);
+
+	MoveList();
+	MoveList(const MoveList& ml);
 private:
 	Move_t moveList[MAXPOSITIONMOVES];
 	Move_t* last = moveList;
