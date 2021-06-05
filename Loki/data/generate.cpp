@@ -325,8 +325,9 @@ namespace DataGeneration {
 		*/
 		void ThreadAnalyzer::run() {
 
-			// Step 1. Set up a searchthread object.
+			// Step 1. Set up a searchthread object and a network input array.
 			SearchThread_t* searcher = new SearchThread_t;
+			std::array<int8_t, INPUT_SIZE> network_input;
 
 			// Step 2. Loop through all positions.
 			for (int p = 0; p < my_fens.size(); p++) {
@@ -343,7 +344,51 @@ namespace DataGeneration {
 				// If we're black, inverse the score.
 				if (searcher->pos->side_to_move == BLACK) { score *= -1; }
 
+				// Step 2C. Generate the network input and set up a dataentry.
+				generate_network_input(searcher->pos, network_input);
 
+				Data::DataEntry new_entry;
+				memcpy(new_entry.network_input, network_input.data(), INPUT_SIZE * sizeof(int8_t));
+				new_entry.score = score;
+
+				// Step 2D. Push this to the output vector.
+				output_entries.push_back(new_entry);
+			}
+		}
+
+
+		/*
+		
+		Generate an input array for the network
+		
+		*/
+		void ThreadAnalyzer::generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input) {
+			// Step 1. Set up an array to pass to LNN
+			input.fill(0);
+
+			Bitboard piece_board = 0;
+			int sq = NO_SQ;
+
+			// Step 2. Add all white pieces
+			for (int pce = PAWN; pce <= KING; pce++) {
+				piece_board = pos->pieceBBS[pce][WHITE];
+
+				while (piece_board) {
+					sq = PopBit(&piece_board);
+
+					input[LNN::calculate_input_index(pce, true, sq)] = 1;
+				}
+			}
+
+			// Step 3. Now do the same for the black pieces
+			for (int pce = PAWN; pce <= KING; pce++) {
+				piece_board = pos->pieceBBS[pce][BLACK];
+
+				while (piece_board) {
+					sq = PopBit(&piece_board);
+
+					input[LNN::calculate_input_index(pce, false, sq)] = 1;
+				}
 			}
 		}
 	}

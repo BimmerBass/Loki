@@ -18,16 +18,31 @@ int main(int argc, char* argv[]) {
 	//
 	//UCI::loop();
 
-	std::cout << sizeof(DataGeneration::SavedBoard) << std::endl;
+	//std::cout << sizeof(DataGeneration::SavedBoard) << std::endl;
+	//
+	//DataGeneration::Arbiter arbit(1, 500, true, MATE, false, 4, true);
+	//
+	//std::cout << "Starting games" << std::endl;
+	//
+	//arbit.run();
+	//
+	//std::cout << "Ended all games" << std::endl;
+	
+	std::vector<std::string> vec;
 
-	DataGeneration::Arbiter arbit(1, 500, true, MATE, false, 4, true);
-	
-	std::cout << "Starting games" << std::endl;
-	
-	arbit.run();
-	
-	std::cout << "Ended all games" << std::endl;
-	
+	Texel::tuning_positions* tps = Texel::load_epd("C:\\Users\\abild\\Desktop\\quiet-labeled.epd");
+	std::cout << "Locked and loaded" << std::endl;
+
+	for (int i = 0; i < tps->size(); i++) {
+		vec.push_back((*tps)[i].fen);
+	}
+
+	DataGeneration::Analysis::ThreadAnalyzer ta(vec, 0, 10, 1);
+
+	ta.run();
+
+	std::cout << "DOne" << std::endl;
+
 	// learn dataset C:\\Users\\abild\\Desktop\\lichess_data.lgd epoch 5 batchsize 14500 loss aae threads 8 eta 0.001 save_frequency 1 batch_load 100 output C:\\Users\\abild\\Desktop\\eval_lichess.lnn
 	//DataGeneration::generate_training_data("C:\\Users\\abild\\Desktop\\lichess_more_data\\trainingSet.epd", "C:\\Users\\abild\\Desktop\\lichess_data.lgd");
 

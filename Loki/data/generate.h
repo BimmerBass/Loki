@@ -122,8 +122,7 @@ namespace DataGeneration {
         class ThreadAnalyzer {
         public:
             ThreadAnalyzer(const std::vector<std::string>& all_fens, size_t start, size_t end, unsigned int _d);
-            ~ThreadAnalyzer();
-
+            
             // Will analyze all positions that it has gotten in the constructor.
             void run();
 
@@ -135,6 +134,7 @@ namespace DataGeneration {
 
             std::vector<std::string> my_fens;
             
+            void generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input);
         };
 
 
