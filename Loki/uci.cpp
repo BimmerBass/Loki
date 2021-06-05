@@ -16,7 +16,8 @@ void UCI::print_info() {
 	// Step 3C.1. Output all ajustible options for Loki.
 	std::cout << "option name Hash type spin default " << TT_DEFAULT_SIZE << " min " << TT_MIN_SIZE << " max " << TT_MAX_SIZE << std::endl;
 	std::cout << "option name Threads type spin default " << THREADS_DEFAULT_NUM << " min " << THREADS_MIN_NUM << " max " << THREADS_MAX_NUM << std::endl;
-	std::cout << "option name Use LNN type check default " << DEFAULT_LNN_USAGE << std::endl;
+	std::cout << "option name Eval file type string default " << std::endl;
+	std::cout << "option name Use LNN type check default false" << std::endl;
 	std::cout << "uciok" << std::endl;
 }
 
@@ -33,8 +34,11 @@ void UCI::loop() {
 	SearchInfo_t* info = new SearchInfo_t();
 
 	// Step 1A. Load the network, but disable use of it by default.
-	pos->net.load_net(NETWORK_FILE_PATH);
-	pos->use_lnn = false;
+	// Note: Only load the embedded network if we're not using MSVC
+	assert(!pos->use_lnn && !pos->net.net_loaded());
+#ifndef _MSC_VER
+	pos->net.load_embedded();
+#endif
 
 	// Step 1B. Set up the starting position on the board. This is done to prevent Loki from crashing if a "go" is given before a "position ..."
 	pos->parseFen(START_FEN);
@@ -109,23 +113,39 @@ void UCI::loop() {
 			continue;
 		}
 
-		// Step 3G. If we are told to use lnn, do so.
-		else if (input.find("setoption name Use LNN value ") != std::string::npos) {
-			// Step 3G.1. Extract the flag.
+		// Step 3G. Load a network from a file if specified.
+		else if (input.find("setoption name Eval file value ") != std::string::npos) {
 			std::stringstream strm(input);
+
 			std::string tokens[6];
 			strm >> tokens[0] >> tokens[1] >> tokens[2] >> tokens[3] >> tokens[4] >> tokens[5];
 
-			// Step 3G.2. Set the lnn flag to the requested one.
-			if (tokens[5] == "true") {
-				pos->use_lnn = true;
+			// Load the file.
+			pos->net.load_net(tokens[5]);
+		}
 
-				// Make sure to load the current position.
-				pos->setup_network();
+		// Step 3H. If we are told to use lnn, do so.
+		else if (input.find("setoption name Use LNN value ") != std::string::npos) {
+			// Step 3H.1. If a net isn't loaded beforehand, send an error message.
+			if (pos->net.net_loaded()) {
+
+				// Step 3G.1. Extract the flag.
+				std::stringstream strm(input);
+				std::string tokens[6];
+				strm >> tokens[0] >> tokens[1] >> tokens[2] >> tokens[3] >> tokens[4] >> tokens[5];
+
+				// Step 3G.2. Set the lnn flag to the requested one.
+				if (tokens[5] == "true") {
+					pos->use_lnn = true;
+
+					// Make sure to load the current position.
+					pos->setup_network();
+				}
+				else {
+					pos->use_lnn = false;
+				}
 			}
-			else {
-				pos->use_lnn = false;
-			}
+			else { std::cout << "info string error cannot use LNN before any file is loaded." << std::endl; }
 		}
 
 

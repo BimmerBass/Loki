@@ -18,7 +18,8 @@
 extern std::vector<std::string> split_string(std::string s, char delimiter = ';');
 
 namespace LNN {
-
+    // Default path to the evaluation file.
+    //const std::string default_filepath = "768x256x32x32x1.lnn";
 
     constexpr int OUTPUT_BOUND = 20000;
 
@@ -56,6 +57,11 @@ namespace LNN {
         // Method for loading a network from a file. This should always be used at startup.
         void load_net(std::string file_path);
 
+        // If we're not using MSVC, we will load the embedded binary.
+        void load_embedded();
+
+
+        bool net_loaded() const { return loaded; }
         std::array<neuron_t, INPUT_SIZE> get_input() {
             return INPUT_LAYER.neurons;
         }
@@ -84,6 +90,9 @@ namespace LNN {
 
         // Set all values in the network to zero
         void clear_net();
+
+        // Flag for knowing if a net has been loaded.
+        bool loaded = false;
     };
 
     constexpr int piece_conversion[2][6] = {

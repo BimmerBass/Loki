@@ -1,5 +1,32 @@
 #include "network.h"
 
+
+/*
+
+Embedded LNN. This macro will embed an LNN binary into the executable.
+Note: This does not work for MSVC builds, so in these, the user will need to specify a net path manually when using LNN.
+
+This macro invocation will declare the following three variables
+    const unsigned char        gEmbeddedNNUEData[];  // a pointer to the embedded data
+    const unsigned char *const gEmbeddedNNUEEnd;     // a marker to the end
+    const unsigned int         gEmbeddedNNUESize;    // the size of the embedded file
+
+*/
+#include "incbin/incbin.h"
+
+//#ifndef default_filepath
+//#define default_filepath "../768x256x32x32x1.lnn" // The path to the file from the incbin.h file
+//#endif
+
+#if  (!defined(_MSC_VER) && defined(default_filepath))
+INCBIN(EmbeddedLNNchars, default_filepath);
+#else
+const unsigned char gEmbeddedLNNcharsData[1] = { 0x0 };
+const unsigned char* const gEmbeddedLNNcharsEnd = &gEmbeddedLNNcharsData[0];
+const unsigned int gEmbeddedLNNcharsSize = 1;
+#endif
+
+
 /*
 
 Split a string
@@ -257,13 +284,18 @@ namespace LNN {
 		bFile = fopen(file_path.c_str(), "rb");
 #endif
 
+		// Step 1A. If the file isn't open, return and give an error message
+		if (bFile == nullptr) {
+			std::cout << "info string error failed to open the file. Please make sure the right path is specified." << std::endl;
+			return;
+		}
 
-		// Step 1A. Find the end of the file and make sure there is the right amount of data.
+		// Step 1B. Find the end of the file and make sure there is the right amount of data.
 		fseek(bFile, 0, SEEK_END);
 		uint64_t pos = ftell(bFile);
 		size_t num_parameters = pos / sizeof(neuron_t);
 
-		// Step 1B. Make sure the file exists and is properly opened.
+		// Step 1C. Make sure the file exists and is properly opened.
 		try {
 			if (bFile == nullptr) { throw("The path specified does not contain a network file compatible with Loki."); }
 			if (num_parameters != PARAMETER_COUNT) { throw("The file specified does not contain the right amount of data."); }
@@ -299,35 +331,74 @@ namespace LNN {
 		fread(THIRD_HIDDEN.biases.data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
 		fread(THIRD_HIDDEN.weights[0].data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
 
-		// Step 5. Close the file.
+		// Step 5. Close the file and set the loaded flag to signal that we have a net.
 		fclose(bFile);
+		loaded = true;
 	}
 
-	// Helper function to extract all numbers in the csv file.
-	std::vector<std::vector<neuron_t>> read_csv(std::string fp) {
-		// Step 1. Initialize the data matrix and open the file
-		std::vector<std::vector<neuron_t>> data;
-		std::ifstream csv_file(fp);
 
-		std::string line = "";
-		int n = 0;
+	/*
+	
+	Load an embedded net. This only works for MSVC.
+	
+	*/
+	void Network::load_embedded() {
+		// Step 1. From the filesize given by incbin, we can find out how many paramters the file contains. Throw an error if this isn't the correct number.
+		size_t num_parameters = gEmbeddedLNNcharsSize / sizeof(neuron_t);
 
-		// Step 2. Read the file line-by-line
-		while (std::getline(csv_file, line)) {
-			
-			// Step 2A. Split the line such that we get all numbers in std::string format.
-			std::vector<std::string> number_strings = split_string(line);
-
-			std::vector<neuron_t> number_types;
-
-			for (int i = 0; i < number_strings.size(); i++) {
-				number_types.push_back(static_cast<neuron_t>(std::stod(number_strings[i])));
-			}
-			data.push_back(number_types); n++;
+		try {
+			if (num_parameters != PARAMETER_COUNT) { throw("The embedded binary does not contain the right amount of data."); }
+		}
+		catch (const char* msg) {
+			std::cout << "Error encountered while loading embedded file: " << msg << std::endl;
+			exit(EXIT_FAILURE);
 		}
 
-		return data;
-	}
+		// Step 2. Firstly, we need to concatenate all the chars in the arrays from incbin.h to neuron_t, which we do here.
+		neuron_t gEmbeddedLNNData[PARAMETER_COUNT] = { 0 };
 
+		for (int i = 0; i < PARAMETER_COUNT; i++) {
+			memcpy(gEmbeddedLNNData + i, gEmbeddedLNNcharsData + i * (sizeof(neuron_t)), sizeof(neuron_t));
+		}
+
+		// Step 3. Copy the input weights.
+		size_t current = 0;
+
+		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+			memcpy(INPUT_LAYER.weights[i].data(), gEmbeddedLNNData + i * INPUT_SIZE, INPUT_SIZE * sizeof(neuron_t));
+			current += INPUT_SIZE;
+		}
+
+		// Step 4. For all the hidden layers we will copy their biases first and then their weights.
+
+		// Step 4A. First hidden
+		memcpy(FIRST_HIDDEN.biases.data(), gEmbeddedLNNData + current, FIRST_HIDDEN_SIZE * sizeof(neuron_t));
+		current += FIRST_HIDDEN_SIZE;
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			memcpy(FIRST_HIDDEN.weights[i].data(), gEmbeddedLNNData + current, FIRST_HIDDEN_SIZE * sizeof(neuron_t));
+			current += FIRST_HIDDEN_SIZE;
+		}
+
+		// Step 4B. Second hidden
+		memcpy(SECOND_HIDDEN.biases.data(), gEmbeddedLNNData + current, HIDDEN_STD_SIZE * sizeof(neuron_t));
+		current += HIDDEN_STD_SIZE;
+
+		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+			memcpy(SECOND_HIDDEN.weights[i].data(), gEmbeddedLNNData + current, HIDDEN_STD_SIZE * sizeof(neuron_t));
+			current += HIDDEN_STD_SIZE;
+		}
+
+		// Step 4C. Third hidden
+		memcpy(THIRD_HIDDEN.biases.data(), gEmbeddedLNNData + current, HIDDEN_STD_SIZE * sizeof(neuron_t));
+		current += HIDDEN_STD_SIZE;
+		memcpy(THIRD_HIDDEN.weights[0].data(), gEmbeddedLNNData + current, HIDDEN_STD_SIZE * sizeof(neuron_t));
+		
+		current += HIDDEN_STD_SIZE;
+		assert(current == PARAMETER_COUNT);
+
+		// Step 5. Set the flag signalling that we have loaded the net successfully.
+		loaded = true;
+	}
 
 }
