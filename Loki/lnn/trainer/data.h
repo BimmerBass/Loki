@@ -4,9 +4,9 @@
 #include <vector>
 #include <iostream>
 #include <cstring>
+#include <fstream>
 
 #include "../types/architecture.h"
-
 
 
 namespace Data {

@@ -307,6 +307,43 @@ namespace DataGeneration {
 
 
 	namespace Analysis {
+
+		/*
+
+		Generate an input array for the network
+
+		*/
+		void generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input) {
+			// Step 1. Set up an array to pass to LNN
+			input.fill(0);
+
+			Bitboard piece_board = 0;
+			int sq = NO_SQ;
+
+			// Step 2. Add all white pieces
+			for (int pce = PAWN; pce <= KING; pce++) {
+				piece_board = pos->pieceBBS[pce][WHITE];
+
+				while (piece_board) {
+					sq = PopBit(&piece_board);
+
+					input[LNN::calculate_input_index(pce, true, sq)] = 1;
+				}
+			}
+
+			// Step 3. Now do the same for the black pieces
+			for (int pce = PAWN; pce <= KING; pce++) {
+				piece_board = pos->pieceBBS[pce][BLACK];
+
+				while (piece_board) {
+					sq = PopBit(&piece_board);
+
+					input[LNN::calculate_input_index(pce, false, sq)] = 1;
+				}
+			}
+		}
+
+
 		// Constructor for the thread analyzer
 		ThreadAnalyzer::ThreadAnalyzer(const std::vector<std::string>& all_fens, size_t start, size_t end, unsigned int _d) : search_depth(_d) {
 			assert(start < end);
@@ -353,42 +390,6 @@ namespace DataGeneration {
 
 				// Step 2D. Push this to the output vector.
 				output_entries.push_back(new_entry);
-			}
-		}
-
-
-		/*
-		
-		Generate an input array for the network
-		
-		*/
-		void ThreadAnalyzer::generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input) const {
-			// Step 1. Set up an array to pass to LNN
-			input.fill(0);
-
-			Bitboard piece_board = 0;
-			int sq = NO_SQ;
-
-			// Step 2. Add all white pieces
-			for (int pce = PAWN; pce <= KING; pce++) {
-				piece_board = pos->pieceBBS[pce][WHITE];
-
-				while (piece_board) {
-					sq = PopBit(&piece_board);
-
-					input[LNN::calculate_input_index(pce, true, sq)] = 1;
-				}
-			}
-
-			// Step 3. Now do the same for the black pieces
-			for (int pce = PAWN; pce <= KING; pce++) {
-				piece_board = pos->pieceBBS[pce][BLACK];
-
-				while (piece_board) {
-					sq = PopBit(&piece_board);
-
-					input[LNN::calculate_input_index(pce, false, sq)] = 1;
-				}
 			}
 		}
 
@@ -534,6 +535,104 @@ namespace DataGeneration {
 			std::cout << "A generation type must be specified" << std::endl;
 			return;
 		}
+	}
+
+
+
+
+
+
+	/*
+
+Parsing c-chess-cli (by lucasart) output. This is formatted in a csv file like fen|eval|result.
+	Note: At the moment, we don't use the result for anything, so it isn't parsed.
+
+*/
+
+	struct cChessDataPoint {
+		std::string fen;
+		int eval;
+
+		cChessDataPoint() { fen = ""; eval = 0; }
+		cChessDataPoint(std::string f, int e) { fen = f; eval = e; }
+		cChessDataPoint(const cChessDataPoint& ccdp) {
+			fen = ccdp.fen; eval = ccdp.eval;
+		}
+	};
+
+	void parse_c_chess(std::string filepath, std::string output, size_t batch_size) {
+		// Step 1. Open the CSV file and set up a writer object to the output.
+		std::ifstream epd_file(filepath);
+		Data::DataWriter writer(output);
+
+		// Step 2. Set up a vector for all data points and load these.
+		std::vector<cChessDataPoint> data;
+
+		std::string line = "";
+		while (std::getline(epd_file, line)) {
+			std::vector<std::string> points = split_string(line, ',');
+			data.push_back(cChessDataPoint(points[0], std::stoi(points[1])));
+		}
+
+		std::cout << "Loaded " << data.size() << " positions from the data file" << std::endl;
+
+		// Step 3. Partition the data in batches.
+		// Note: The batch-size should be smaller for machines with less available memory.
+		std::vector<size_t> startpoints;
+
+		if (data.size() >= batch_size) {
+			startpoints.push_back(0);
+			startpoints.push_back(data.size());
+		}
+		else {
+			int batch_count = data.size() / batch_size;
+			int remainder = data.size() % batch_size;
+
+			for (int i = 0; i < batch_count; i++) {
+				startpoints.push_back(i * batch_size);
+			}
+			if (remainder > 0) {
+				startpoints.push_back(startpoints.back() + batch_size);
+			}
+			assert(startpoints.back() < data.size());
+
+			startpoints.push_back(data.size());
+		}
+
+		// Step 4. Loop through the batches and generate the positions.
+		GameState_t* pos = new GameState_t;
+		for (int b = 0; b < startpoints.size() - 1; b++) {
+
+			std::vector<Data::DataEntry> batch_entries;
+			std::array<int8_t, INPUT_SIZE> network_input;
+
+			// Step 4A. Load all the FENS and convert that to network inputs.
+			for (int i = startpoints[b]; i < startpoints[b + 1]; i++) {
+				Data::DataEntry new_entry;
+
+				pos->parseFen(data[i].fen);
+
+				// If we're black in the position, reverse the sign of the eval.
+				int score = data[i].eval;
+
+				if (pos->side_to_move == BLACK) { score *= -1; }
+
+				// Generate the network input, add this and the score to the entry and add this to the vector.
+				Analysis::generate_network_input(pos, network_input);
+
+				memcpy(new_entry.network_input, network_input.data(), INPUT_SIZE * sizeof(int8_t));
+				new_entry.score = score;
+				
+				batch_entries.push_back(new_entry);
+			}
+
+			// Step 4B. Write the current batch to the output file.
+			writer.save_data(batch_entries);
+
+			std::cout << "Wrote " << startpoints[b + 1] << " data points to the output file." << std::endl;
+		}
+
+		delete pos;
 	}
 
 }
