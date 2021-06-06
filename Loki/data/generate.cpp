@@ -362,7 +362,7 @@ namespace DataGeneration {
 		Generate an input array for the network
 		
 		*/
-		void ThreadAnalyzer::generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input) {
+		void ThreadAnalyzer::generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input) const {
 			// Step 1. Set up an array to pass to LNN
 			input.fill(0);
 
@@ -395,38 +395,11 @@ namespace DataGeneration {
 
 		/*
 		
-		Clear the object.
-		
-		*/
-		void ThreadAnalyzer::clear() {
-			output_entries.clear();
-			my_fens.clear();
-		}
-
-		/*
-		
-		Update the FEN list.
-		
-		*/
-		void ThreadAnalyzer::update(const std::vector<std::string>& all_fens, size_t start, size_t end) {
-			// Step 1. Clear the object.
-			assert(start < end);
-			clear();
-
-			// Step 2. Copy the fens that should be analyzed.
-			for (size_t i = start; i < end; i++) {
-				my_fens.push_back(all_fens[i]);
-			}
-		}
-
-
-		/*
-		
 		Constructor for the main analyzer class.
 		
 		*/
-		MainAnalyzer::MainAnalyzer(std::string epd_path, std::string output_lgd, unsigned int depth, int th_count, int score_bound, size_t _bs)
-			: thread_count(th_count), eval_limit(score_bound), batch_size(_bs) {
+		MainAnalyzer::MainAnalyzer(std::string epd_path, std::string output_lgd, unsigned int _d, int th_count, int score_bound, size_t _bs)
+			: depth(_d), thread_count(th_count), eval_limit(score_bound), batch_size(_bs) {
 
 			// Step 1. Set up the writer.
 			writer = new Data::DataWriter(output_lgd);
@@ -469,30 +442,48 @@ namespace DataGeneration {
 		
 		*/
 		void MainAnalyzer::generate_data() {
+			assert(fens.size() >= batch_size);
 			// Step 1. Subdivide the fen list into batches.
 			// This is done for memory-overflow protection since big datasets can easily take up so much space that there's not enough physical memory for them.
-			std::vector<size_t> batches_startpoints;
 			int batch_count = fens.size() / batch_size;
-			int remainder = fens.size() % batch_size;
+			std::vector<size_t> batches_startpoints = subdivide_array<std::string>(fens, 0, fens.size(), batch_count);
 
-			for (int i = 0; i < batch_count; i++) {
-				batches_startpoints.push_back(i * batch_count);
-			}
-			if (remainder > 0) { batches_startpoints.push_back(batches_startpoints.back() + batch_size); }
-			batches_startpoints.push_back(fens.size());
 			assert(batches_startpoints[batches_startpoints.size() - 2] < fens.size());
-
-			// Step 2. We need to initialize the thread objects differently the first time, so we'll do it here.
-			size_t start = batches_startpoints[0], end = batches_startpoints[1];
-			int thread_batches = batch_size / thread_count;
 			
+			// Step 2. Loop through the batches.
+			std::vector<std::thread> workers;
 
-			// Step 2. We can now loop through all the batches
 			for (int b = 0; b < batches_startpoints.size() - 1; b++) {
-				size_t start = batches_startpoints[b];
-				size_t end = batches_startpoints[b + 1];
+				// Step 2A. We will subdivide the batch into sub-batches for each thread.
+				thread_objects.clear();
 
+				std::vector<size_t> thread_startpoints = subdivide_array<std::string>(fens, batches_startpoints[b], batches_startpoints[b + 1], thread_count);
+				assert(thread_startpoints.size() == thread_count + 1);
 
+				// Step 2B. Now initialize the thread objects and launch worker threads.
+				workers.clear();
+				for (int t = 0; t < thread_count; t++) {
+					thread_objects.push_back(ThreadAnalyzer(fens, thread_startpoints[t], thread_startpoints[t + 1], depth));
+
+					//workers.push_back(std::thread(&ThreadAnalyzer::run, thread_objects[t]));
+					workers.emplace_back(&ThreadAnalyzer::run, std::ref(thread_objects[t]));
+				}
+
+				// Step 2C. Wait for the threads to join, get their results and write those to the output file.
+				for (int t = 0; t < thread_count; t++) {
+					workers[t].join();
+				}
+	
+				std::vector<Data::DataEntry> entries;
+				for (int t = 0; t < thread_count; t++) {
+					for (int i = 0; i < thread_objects[t].output_entries.size(); i++) {
+						entries.push_back(thread_objects[t].output_entries[i]);
+					}
+				}
+
+				writer->save_data(entries);
+
+				std::cout << "Generated " << batches_startpoints[b + 1] << " positions" << std::endl;
 			}
 		}
 
@@ -500,5 +491,49 @@ namespace DataGeneration {
 
 
 
+	/*
+	
+	Parse a string entered in UCI and set up a data generation session.
+	
+	The first parameter to be passed should be "type" which can be either "selfplay" or "analysis".
+
+	Global parameters:
+		- As said type.
+		- output
+			Output file. This will be a .lgd binary file and the ending should be in the input.
+		- threads
+			Amount of threads to use.
+		- evalbound
+			A limit on the evaluations. This will default to MATE - 1.
+		- depth
+			A maximum depth to search to.
+
+	Self-play parameters:
+		- positions
+			Amount of positions to generate.
+		- random
+			Can be 1 or 0 (default = 0). Whether the games should be played with random moves (good to get unbalanced positions).
+		- draw
+			Can be 1 or 0 (default = 1). Whether or not to use draws.
+		- firstrandom
+			The amount of moves to be played randomly in the opening. A bigger value secures more game diversity (default = 4).
+	Analysis parameters:
+		- epd
+			A path to an epd file to load.
+		- batchsize
+			Individual batches of the file to analyze at a time (memory overflow protection).
+	*/
+	void parse_uci_generate(std::string input) {
+		// Step 1. Determine if we're using self-play or analysis.
+		size_t index = input.find("type");
+
+		if (index != std::string::npos) {
+
+		}
+		else {
+			std::cout << "A generation type must be specified" << std::endl;
+			return;
+		}
+	}
 
 }

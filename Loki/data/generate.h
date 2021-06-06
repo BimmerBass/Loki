@@ -126,13 +126,6 @@ namespace DataGeneration {
             // Will analyze all positions that it has gotten in the constructor.
             void run();
 
-            // Will clear everything.
-            void clear();
-
-            // Updates the fens.
-            void update(const std::vector<std::string>& all_fens, size_t start, size_t end);
-
-
             // This vector will hold the formatted output. The main thread will access this when we're done analyzing.
             std::vector<Data::DataEntry> output_entries;
         private:
@@ -140,13 +133,13 @@ namespace DataGeneration {
 
             std::vector<std::string> my_fens;
             
-            void generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input);
+            void generate_network_input(const GameState_t* pos, std::array<int8_t, INPUT_SIZE>& input) const;
         };
 
 
         class MainAnalyzer {
         public:
-            MainAnalyzer(std::string epd_path, std::string output_lgd, unsigned int depth, int th_count, 
+            MainAnalyzer(std::string epd_path, std::string output_lgd, unsigned int _d, int th_count, 
                 int score_bound = DEFAULT_EVAL_LIMIT, size_t _bs = MAX_BATCH_SIZE);
             ~MainAnalyzer();
 
@@ -155,6 +148,7 @@ namespace DataGeneration {
         private:
             const size_t thread_count;
             const int eval_limit;
+            const int depth;
             const size_t batch_size;
 
             // All ThreadAnalyzer objects. Each thread will work on each one.
@@ -171,6 +165,30 @@ namespace DataGeneration {
         };
 
     }
+
+    // Subdivide an array into work for different threads
+    template<typename T>
+    std::vector<size_t> subdivide_array(const std::vector<T>& v, size_t start_index, size_t end_index, size_t workers) {
+        assert(end_index > start_index);
+        assert(v.size() >= end_index);
+        std::vector<size_t> out;
+
+        size_t total_work = end_index - start_index;
+        size_t work_per_worker = total_work / workers;
+
+        for (int i = 0; i < workers; i++) {
+            out.push_back(start_index + i * work_per_worker);
+        }
+        // The possible remainder will be appended to the last element.
+        out.push_back(end_index);
+        assert(out[out.size() - 2] < out[out.size() - 1]);
+
+        return out;
+    }
+
+
+    // This method is for using the data generation framework from UCI.
+    void parse_uci_generate(std::string input);
 }
 
 
