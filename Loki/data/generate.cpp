@@ -570,8 +570,12 @@ Parsing c-chess-cli (by lucasart) output. This is formatted in a csv file like f
 
 		std::string line = "";
 		while (std::getline(epd_file, line)) {
-			std::vector<std::string> points = split_string(line, ',');
-			data.push_back(cChessDataPoint(points[0], std::stoi(points[1])));
+			//std::vector<std::string> points = split_string(line, ',');
+			//data.push_back(cChessDataPoint(points[0], std::stoi(points[1])));
+			std::string fen = line.substr(0, line.find_first_of(","));
+			int ev = std::stoi(line.substr(line.find_first_of(",") + 1, line.size()));
+
+			data.push_back(cChessDataPoint(fen, ev));
 		}
 
 		std::cout << "Loaded " << data.size() << " positions from the data file" << std::endl;
@@ -580,7 +584,7 @@ Parsing c-chess-cli (by lucasart) output. This is formatted in a csv file like f
 		// Note: The batch-size should be smaller for machines with less available memory.
 		std::vector<size_t> startpoints;
 
-		if (data.size() >= batch_size) {
+		if (batch_size >= data.size()) {
 			startpoints.push_back(0);
 			startpoints.push_back(data.size());
 		}
