@@ -62,7 +62,8 @@ struct MoveStats_t {
 
 
 // SearchThread_t is a structure that holds all information local to a thread. This includes static evaluations, move ordering etc..
-struct SearchThread_t {
+class SearchThread_t {
+public:
 	GameState_t* pos = new GameState_t;
 	SearchInfo_t* info = new SearchInfo_t;
 
