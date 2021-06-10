@@ -25,7 +25,7 @@ namespace DataGeneration {
     static_assert(THREADS >= 1);
 
     // The maximal batch size to use for writing incrementally.
-    constexpr size_t DEFAULT_BATCH_SIZE = 2000000;
+    constexpr size_t DEFAULT_BATCH_SIZE = 100000;
     static_assert(DEFAULT_BATCH_SIZE > 0);
 
     // Defaults for data generation games

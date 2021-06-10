@@ -315,17 +315,43 @@ namespace DataGeneration {
 				std::cout << "[+] Generated " << batch.size() << " more positions" << std::endl;
 			}
 		}
+	}
 
 
+	/*
+	
+	Parsing a UCI command.
 
+	Mandatory parameters:
+		- type: string [either "analysis" or "selfplay"]
+			The type of data generation. Analysis takes an epd file and analyses it to a certain depth. Self-play plays games against Loki HCE with a fixed depth.
+			Note: The latter is not yet supported.
+		- threads: int [1:+∞]
+			Threads to use.
+		- depth: int [0:+∞]
+			Depth to search each position to.
+		- output: string
+			The output filepath.
 
+	Mandatory analysis parameters:
+		- epd: string
+			The epd file to load positions from.
 
+	Optional analysis parameters:
+		- bound: int [1:+∞] => default: mate values.
+			The maximum/minimum scores of positions to accept.
+		- batchsize: int [1:+∞] => default: 100k
+			The batch size of positions to generate at a time. This makes the generator more memory efficient.
+	*/
+	void parse_uci_command(std::string cmd) {
+		// Step 1. Parse all mandatory parameters.
+		std::string generation_type = "", output = "";
+		size_t threads, index;
+		int depth;
 
 
 
 	}
-
-
 
 
 
