@@ -411,6 +411,39 @@ namespace DataGeneration {
 		}
 
 
+		/*
+		
+		This is the main method of the ThreadAnalyzer class. It is responsible for searching all positions.
+		
+		*/
+		void ThreadAnalyzer::run() {
+			// Step 1. Initialize an array of input values for the network. This will be modified after searching a position
+			std::array<int8_t, INPUT_SIZE> network_input = { 0 };
+			int score = 0;
+			generated_entries.clear(); generated_entries.reserve(fens.size());
+
+			// Step 2. Loop through all the fens
+			for (const std::string& fen : fens) {
+				// Step 2A. Search the position.
+				bool pos_is_good = search(fen, score);
+
+				// Step 2B. If the score is inside our desired bounds, setup a network input from the position.
+				// Note: The FEN has already been loaded in the search function.
+				if (pos_is_good) {
+					generate_network_input(searcher->pos, network_input);
+
+					// Step 2B.1. Now initialize a new data entry and save it to our generated entries.
+					Data::DataEntry new_entry;
+					memcpy(new_entry.network_input, network_input.data(), INPUT_SIZE * sizeof(int8_t));
+					new_entry.score = score;
+
+					generated_entries.push_back(new_entry);
+				}
+			}
+
+			// Step 3. Shrink the generated_entries vector. This was allocated to hold all FENS but some of them might've had higher scores than what we want.
+			generated_entries.shrink_to_fit();
+		}
 
 		
 
