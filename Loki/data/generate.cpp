@@ -140,8 +140,9 @@ namespace DataGeneration {
 			// Step 1. Clear it.
 			searcher->info->clear();
 
-			// Step 2. Set the depth
+			// Step 2. Set the depth. Since we don't want to listen for GUI interaction, set the thread_id to a non-zero value.
 			searcher->info->depth = depth;
+			searcher->thread_id = 1;
 		}
 
 
