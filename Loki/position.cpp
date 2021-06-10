@@ -218,7 +218,7 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 	n += 2;
 
 	for (int i = 0; i < 4; i++) {
-		if (FEN_STR[n] == ' ') {
+		if (FEN_STR[n] == ' ' || n >= FEN_STR.size()) {
 			break;
 		}
 		else if (FEN_STR[n] == 'K') {
@@ -238,7 +238,7 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 	}
 	n++;
 
-	if (FEN_STR[n] != '-' && FEN_STR.length() >= n + 1) {
+	if (FEN_STR.length() >= n + 1 && FEN_STR[n] != '-') {
 		f = FEN_STR[n + 0] - 'a';
 		r = FEN_STR[n + 1] - '1';
 
@@ -247,6 +247,7 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 
 		enPasSq = 8 * r + f;
 	}
+
 
 	for (int pce = PAWN; pce <= KING; pce++) {
 
@@ -274,9 +275,9 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 		return;
 	}
 
-	all_pieces[WHITE] = (pieceBBS[PAWN][WHITE] | pieceBBS[KNIGHT][WHITE] | pieceBBS[BISHOP][WHITE] | pieceBBS[ROOK][WHITE] 
+	all_pieces[WHITE] = (pieceBBS[PAWN][WHITE] | pieceBBS[KNIGHT][WHITE] | pieceBBS[BISHOP][WHITE] | pieceBBS[ROOK][WHITE]
 		| pieceBBS[QUEEN][WHITE] | pieceBBS[KING][WHITE]);
-	all_pieces[BLACK] = (pieceBBS[PAWN][BLACK] | pieceBBS[KNIGHT][BLACK] | pieceBBS[BISHOP][BLACK] | pieceBBS[ROOK][BLACK] 
+	all_pieces[BLACK] = (pieceBBS[PAWN][BLACK] | pieceBBS[KNIGHT][BLACK] | pieceBBS[BISHOP][BLACK] | pieceBBS[ROOK][BLACK]
 		| pieceBBS[QUEEN][BLACK] | pieceBBS[KING][BLACK]);
 
 
@@ -284,7 +285,7 @@ void GameState_t::parseFen(const std::string FEN_STR) {
 	generate_poskey();
 
 	// If we are to use the neural network, load the current position into it.
-	if (use_lnn){
+	if (use_lnn) {
 		setup_network();
 	}
 }
