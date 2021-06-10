@@ -27,11 +27,11 @@ int main(int argc, char* argv[]) {
 		fens.push_back((*ps)[i].fen);
 	}
 
-	DataGeneration::Analysis::ThreadAnalyzer ta(fens, 1, 800);
+	DataGeneration::Analysis::ThreadAnalyzer ta(1, 800);
 
 	std::cout << "Loaded " << fens.size() << " fens." << std::endl;
 
-	ta.run();
+	ta.run(fens);
 
 	std::cout << "Generated " << ta.generated_entries.size() << " positions" << std::endl;
 

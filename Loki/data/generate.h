@@ -25,8 +25,8 @@ namespace DataGeneration {
     static_assert(THREADS >= 1);
 
     // The maximal batch size to use for writing incrementally.
-    constexpr size_t MAX_BATCH_SIZE = 5000000;
-    static_assert(MAX_BATCH_SIZE > 0);
+    constexpr size_t DEFAULT_BATCH_SIZE = 2000000;
+    static_assert(DEFAULT_BATCH_SIZE > 0);
 
     // Defaults for data generation games
     constexpr int DEFAULT_DEPTH = 5;
@@ -51,11 +51,11 @@ namespace DataGeneration {
         */
         class ThreadAnalyzer {
         public:
-            ThreadAnalyzer(const std::vector<std::string>& _fens, int _depth, int _bound = DEFAULT_EVAL_LIMIT);
+            ThreadAnalyzer(int _depth, int _bound = DEFAULT_EVAL_LIMIT);
             ~ThreadAnalyzer();
 
             // Will analyze all positions.
-            void run();
+            void run(const std::vector<std::string>& _fens);
 
             std::vector<Data::DataEntry> generated_entries;
 
@@ -74,6 +74,25 @@ namespace DataGeneration {
             // Note: Will return true if the score is inside the designated bound. Otherwise it'll return false.
             bool search(std::string fen, int& score);
         };
+
+
+
+        /*
+        The Analyzer class distributes the work to the different threads and writes the generated data to the output file incrementally
+        */
+        class Analyzer {
+        public:
+            Analyzer(std::string epd_file, std::string output_file, int _depth, size_t _threads, int _bound = DEFAULT_EVAL_LIMIT, size_t _batch = DEFAULT_BATCH_SIZE);
+            ~Analyzer();
+
+
+        private:
+            const int depth, eval_limit;
+            const size_t thread_count, batch_size;
+            
+            std::vector<ThreadAnalyzer> thread_analyzers;
+        };
+
 
     }
 
