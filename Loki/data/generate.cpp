@@ -235,6 +235,33 @@ namespace DataGeneration {
 		Analyzer::~Analyzer() {
 			if (writer != nullptr) { delete writer; }
 		}
+
+
+		/*
+		
+		Divide a batch into sub-batches for all the threads.
+		
+		*/
+		std::vector<std::vector<std::string>> Analyzer::divide_batch(const std::vector<std::string>& batch) {
+			// Step 1. Determine the batch size for each thread.
+			size_t thread_batch_size = batch.size() / thread_count;
+			size_t remainder = batch.size() - thread_batch_size * thread_count;
+
+			// Step 2. Add the sub-batches to the output.
+			std::vector<std::vector<std::string>> thread_batches;
+
+			for (int i = 0; i < thread_count; i++) {
+				thread_batches.push_back(slice_vector<std::string>(batch, i * thread_batch_size, (i + 1) * thread_batch_size - 1));
+			}
+			// Step 2A. If there is a remainder, append this to the last thread's work.
+			if (remainder > 0) {
+				std::vector<std::string> remaining = slice_vector<std::string>(batch, batch.size() - remainder, batch.size() - 1);
+
+				(thread_batches.back()).insert(std::end(thread_batches.back()), std::begin(remaining), std::end(remaining));
+			}
+
+			return thread_batches;
+		}
 	}
 
 

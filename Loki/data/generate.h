@@ -103,6 +103,9 @@ namespace DataGeneration {
 
             // This vector holds all batches.
             std::vector<std::vector<std::string>> fen_batches;
+
+            // This will divide a batch into sub-batches for each thread.
+            std::vector<std::vector<std::string>> divide_batch(const std::vector<std::string>& batch);
         };
 
 
