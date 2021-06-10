@@ -195,7 +195,7 @@ namespace DataGeneration {
 		Constructor for the Analyzer class.
 
 		*/
-		Analyzer::Analyzer(std::string epd_file, std::string output_file, int _depth, size_t _threads, int _bound, size_t _batch)
+		Analyzer::Analyzer(std::string epd_file, std::string output_file, int _depth, size_t _threads, int _bound, size_t _batch, size_t hash)
 			: depth(_depth), eval_limit(_bound), thread_count(_threads), batch_size(_batch) {
 
 			// Step 1. Make sure all parameters has been passed properly.
@@ -205,6 +205,7 @@ namespace DataGeneration {
 				if (thread_count < 1) { throw("Thread count must be a positive number"); }
 				if (batch_size < 1) { throw("Batch size must be a positive number"); }
 				if (epd_file == "") { throw("A path must be specified to an EPD file"); }
+				if (hash < TT_MIN_SIZE || hash > TT_MAX_SIZE) { throw("Hash table size must be more than 1MB and less than 1000MB"); }
 			}
 			catch (const char* msg) {
 				std::cout << "[!] Error encountered while initializing Analyzer object: " << msg << std::endl;
@@ -231,6 +232,8 @@ namespace DataGeneration {
 			for (int i = 0; i < thread_count; i++) { thread_analyzers.push_back(ThreadAnalyzer(depth, eval_limit)); }
 			writer = new Data::DataWriter(output_file);
 
+			// Step 4. Resize the hash table to the desired size.
+			tt->resize(hash);
 		}
 
 		Analyzer::~Analyzer() {
@@ -286,12 +289,13 @@ namespace DataGeneration {
 		Run the analysis with all the threads.
 
 		*/
-		void Analyzer::run_analysis() {
+		size_t Analyzer::run_analysis() {
 
 			// Step 1. Initialize some variables and containers.
 			std::vector<std::thread> workers;
 			std::vector<std::vector<std::string>> thread_batches;
 			std::vector<Data::DataEntry> entries;
+			size_t accumulated_positions = 0;
 
 			// Step 2. Loop through the batches.
 			for (const std::vector<std::string>& batch : fen_batches) {
@@ -309,49 +313,160 @@ namespace DataGeneration {
 
 				// Step 2C. Extract the entries that the threads have written and write these to the output file.
 				entries = extract_thread_results();
+				accumulated_positions += entries.size();
 
 				writer->save_data(entries);
 
 				std::cout << "[+] Generated " << batch.size() << " more positions" << std::endl;
 			}
+
+			return accumulated_positions;
 		}
+
+
+
+		/*
+		
+		Parse an analysis data generation command.
+		Note: All parameters below are case sensitive.
+
+		Mandatory parameters:
+			data: string
+				- The epd file to get all FEN's from.
+			output: string
+				- The output file path. This should end with .lgd.
+			depth: int [0;+∞]
+				- The depth to analyze each position to.
+			threads: int [1;+∞]
+				- The amount of threads to use for simultaneous analysis.
+		Optional parameters:
+			limit: int [1;+∞]
+				- The max/min scores to include in the output file.
+				Default: mate scores.
+			batchsize: int [1;+∞]
+				- The batchsize to use. This helps prevent memory overflows since it only analyzes a part of the positions at a time.
+				Default: 100000
+			hash: int [1;1000]
+				- The size of the hashtable to use in megabytes.
+				Default: 16
+		*/
+		void parse_analyze_command(std::string cmd) {
+
+			// Step 1. Initialize parameters.
+			std::string epd = "", output = "";
+			int depth = -1, threads = -1, limit = DEFAULT_EVAL_LIMIT, batch_size = DEFAULT_BATCH_SIZE, hash = TT_DEFAULT_SIZE;
+			size_t index = 0;
+
+			try {
+				// Step 2. Parse the mandatory parameters and throw an error if any are missing.
+				index = cmd.find("data");
+
+				if (index != std::string::npos) {
+					std::string str = cmd.substr(index + 5);
+
+					// We need to separate this from the rest of the string, so find the next space.
+					epd = str.substr(0, str.find_first_of(" "));
+				}
+				else {
+					throw("A path to an EPD file must be specified.");
+				}
+
+				// Step 2A. The output.
+				index = cmd.find("output");
+
+				if (index != std::string::npos) {
+					std::string str = cmd.substr(index + 7);
+
+					output = str.substr(0, str.find_first_of(" "));
+				}
+				else {
+					throw("An output file must be specified.");
+				}
+
+				// Step 2B. Depth.
+				index = cmd.find("depth");
+
+				if (index != std::string::npos) {
+					depth = std::stoi(cmd.substr(index + 6));
+				}
+				else {
+					throw("A depth must be specified.");
+				}
+
+				// Step 2C. Threads.
+				index = cmd.find("threads");
+
+				if (index != std::string::npos) {
+					threads = std::stoi(cmd.substr(index + 8));
+				}
+				else {
+					throw("A thread count must be specified");
+				}
+
+				// Step 3. Parse all optional parameters.
+				index = cmd.find("limit");
+
+				if (index != std::string::npos) {
+					limit = std::stoi(cmd.substr(index + 6));
+				}
+
+				// Step 3A. Batch size.
+				index = cmd.find("batchsize");
+
+				if (index != std::string::npos) {
+					batch_size = std::stoi(cmd.substr(index + 10));
+				}
+
+				// Step 3B. Hash size.
+				index = cmd.find("hash");
+
+				if (index != std::string::npos) {
+					hash = std::stoi(cmd.substr(index + 5));
+				}
+			}
+			catch (const char* msg) {
+				std::cout << "Error parsing data generation command: " << msg << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			
+			// Step 4. Set up an Analyzer object, print some information and run the data generation.
+			Analyzer* analyzer = new Analyzer(epd, output, depth, threads, limit, batch_size, hash);
+
+			std::cout <<
+				"+-------------------------------------------------------------------+\n" <<
+				"|                   Loki Analysis Data Generation                   |\n" <<
+				"+----------------------+--------------------------------------------+\n" <<
+				"| EPD datafile			| " << epd << "\n" <<
+				"| Output filepath		| " << output << "\n" <<
+				"| Analysis depth		| " << depth << "\n" <<
+				"| Threads				| " << threads << "\n" <<
+				"| Evaluation limit		| " << limit << "\n" <<
+				"| Batch size			| " << batch_size << "\n" <<
+				"| Hash size (MB)		| " << hash << "\n" <<
+				"+-------------------------------------------------------------------+" << std::endl;
+			
+			size_t positions_generated = analyzer->run_analysis();
+
+			std::cout <<
+				"+-------------------------------------------------------------------+\n" <<
+				"|               Loki Analysis Data Generation Results               |\n" <<
+				"+----------------------+--------------------------------------------+\n" <<
+				"| EPD datafile			| " << epd << "\n"
+				"| Output filepath		| " << output << "\n"
+				"| Analysis depth		| " << depth << "\n"
+				"| Threads				| " << threads << "\n"
+				"| Evaluation limit		| " << limit << "\n"
+				"| Batch size			| " << batch_size << "\n"
+				"| Hash size (MB)		| " << hash << "\n"
+				"+----------------------+--------------------------------------------+\n" <<
+				"| Positions generated	| " << positions_generated << "\n" <<
+				"+----------------------+--------------------------------------------+" << std::endl;
+		}
+
 	}
 
 
-	/*
 	
-	Parsing a UCI command.
-
-	Mandatory parameters:
-		- type: string [either "analysis" or "selfplay"]
-			The type of data generation. Analysis takes an epd file and analyses it to a certain depth. Self-play plays games against Loki HCE with a fixed depth.
-			Note: The latter is not yet supported.
-		- threads: int [1:+∞]
-			Threads to use.
-		- depth: int [0:+∞]
-			Depth to search each position to.
-		- output: string
-			The output filepath.
-
-	Mandatory analysis parameters:
-		- epd: string
-			The epd file to load positions from.
-
-	Optional analysis parameters:
-		- bound: int [1:+∞] => default: mate values.
-			The maximum/minimum scores of positions to accept.
-		- batchsize: int [1:+∞] => default: 100k
-			The batch size of positions to generate at a time. This makes the generator more memory efficient.
-	*/
-	void parse_uci_command(std::string cmd) {
-		// Step 1. Parse all mandatory parameters.
-		std::string generation_type = "", output = "";
-		size_t threads, index;
-		int depth;
-
-
-
-	}
 
 
 

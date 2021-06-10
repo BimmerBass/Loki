@@ -1,5 +1,6 @@
 #include "uci.h"
 #include "lnn/trainer/train_lnn.h"
+#include "data/generate.h"
 
 int UCI::num_threads = THREADS_DEFAULT_NUM;
 
@@ -211,6 +212,19 @@ void UCI::loop() {
 				std::cout << "[!] An error was encountered while training." << std::endl;
 				continue;
 			}
+		}
+
+		// Step 3L. If we receive the non-UCI "generate" command, begin a data generation session.
+		else if (input.find("generate") != std::string::npos) {
+			// Step 3L.1. There are two types of training, selfplay and analysis.
+			if (input.find("analysis")) {
+				DataGeneration::Analysis::parse_analyze_command(input);
+			}
+			else if (input.find("selfplay")) {
+				std::cout << "Loki doesn't support self-play data generation yet" << std::endl;
+				continue;
+			}
+			else { std::cout << "Error: neither selfplay nor analysis were passed." << std::endl; continue; }
 		}
 
 		// If we've been told to quit, do it.
