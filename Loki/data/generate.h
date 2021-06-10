@@ -126,7 +126,28 @@ namespace DataGeneration {
         */
         class ThreadAnalyzer {
         public:
-            ThreadAnalyzer(const std::vector<std::string>& _fens, int depth);
+            ThreadAnalyzer(const std::vector<std::string>& _fens, int _depth, int _bound = DEFAULT_EVAL_LIMIT);
+            ~ThreadAnalyzer();
+
+            // Will analyze all positions.
+            void run();
+
+            std::vector<Data::DataEntry> generated_entries;
+
+        private:
+            std::vector<std::string> fens;
+            const int depth;
+            const int score_bound;
+
+            // Used to search with the alphabeta function.
+            SearchThread_t* searcher;
+
+            // Will clear the SearchInfo and set the correct depth.
+            void setup_info();
+
+            // Will search the position and give a white-relative score.
+            // Note: Will return true if the score is inside the designated bound. Otherwise it'll return false.
+            bool search(std::string fen, int& score);
         };
 
     }

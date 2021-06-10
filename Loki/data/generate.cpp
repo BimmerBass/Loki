@@ -345,7 +345,32 @@ namespace DataGeneration {
 
 
 
+		/*
+		
+		Constructor for the threadAnalyzer class.
+		
+		*/
+		ThreadAnalyzer::ThreadAnalyzer(const std::vector<std::string>& _fens, int _depth, int _bound) : depth(_depth), score_bound(_bound) {
+			
+			// Step 1. Make sure all parameters are properly passed.
+			try {
+				if (_fens.size() < 1) { throw("A valid list of FEN's must be passed."); }
+				if (_depth < 0) { throw("Depth must be zero or above"); }
+				if (_bound < 1) { throw("Score bound must be a positive number."); }
+			}
+			catch (const char* msg) {
+				std::cout << "[!] Error encountered while initializing ThreadAnalyzer object: " << msg << std::endl;
+				exit(EXIT_FAILURE);
+			}
 
+			// Step 2. Copy all the fens and allocate a SearchThread_t object.
+			fens = _fens;
+			searcher = new SearchThread_t;
+		}
+
+		ThreadAnalyzer::~ThreadAnalyzer() {
+			if (searcher != nullptr) { delete searcher; }
+		}
 
 
 
