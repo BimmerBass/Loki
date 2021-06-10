@@ -374,6 +374,44 @@ namespace DataGeneration {
 
 
 
+		/*
+		
+		Search a position.
+		
+		*/
+		bool ThreadAnalyzer::search(std::string fen, int& score) {
+			// Step 1. Zero the score, setup the searchinfo and parse the FEN.
+			score = 0;
+			setup_info();
+			searcher->pos->parseFen(fen);
+
+			// Step 2. Now search the position
+			// Note: If it is black to move, the score should be inversed.
+			SearchPv pv;
+			score = Search::search_root(searcher, depth, -INF, INF, &pv);
+			if (searcher->pos->side_to_move == BLACK) { score *= -1; }
+
+			// Step 3. Return true if the score is inside the designated bounds.
+			return (score >= -score_bound && score <= score_bound);
+		}
+
+
+		/*
+		
+		Setup the SearchInfo_t object in the searcher object.
+		
+		*/
+		void ThreadAnalyzer::setup_info() {
+		
+			// Step 1. Clear it.
+			searcher->info->clear();
+		
+			// Step 2. Set the depth
+			searcher->info->depth = depth;
+		}
+
+
+
 		
 
 
