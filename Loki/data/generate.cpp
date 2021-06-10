@@ -117,6 +117,8 @@ namespace DataGeneration {
 			fens.clear();
 			fens = _fens;
 
+			assert(fens.size() > 0);
+
 			// Step 2. Initialize an array of input values for the network. This will be modified after searching a position
 			std::array<int8_t, INPUT_SIZE> network_input = { 0 };
 			int score = 0;
