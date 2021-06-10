@@ -262,6 +262,66 @@ namespace DataGeneration {
 
 			return thread_batches;
 		}
+
+
+		/*
+		
+		Extract the results from the different threads.
+		
+		*/
+		std::vector<Data::DataEntry> Analyzer::extract_thread_results() {
+			std::vector<Data::DataEntry> entries;
+
+			for (int i = 0; i < thread_analyzers.size(); i++) {
+				entries.insert(entries.end(), std::begin(thread_analyzers[i].generated_entries), std::end(thread_analyzers[i].generated_entries));
+			}
+
+			return entries;
+		}
+
+
+		/*
+		
+		Run the analysis with all the threads.
+
+		*/
+		void Analyzer::run_analysis() {
+
+			// Step 1. Initialize some variables and containers.
+			std::vector<std::thread> workers;
+			std::vector<std::vector<std::string>> thread_batches;
+			std::vector<Data::DataEntry> entries;
+
+			// Step 2. Loop through the batches.
+			for (const std::vector<std::string>& batch : fen_batches) {
+				// Step 2A. Sub-divide the current batch into work for the different threads.
+				thread_batches = divide_batch(batch);
+
+				// Step 2B. Run all the threads and wait for them to join.
+				workers.clear();
+				for (int t = 0; t < thread_count; t++) {
+					workers.emplace_back(&ThreadAnalyzer::run, std::ref(thread_analyzers[t]), thread_batches[t]);
+				}
+				for (int t = 0; t < thread_count; t++) {
+					workers[t].join();
+				}
+
+				// Step 2C. Extract the entries that the threads have written and write these to the output file.
+				entries = extract_thread_results();
+
+				writer->save_data(entries);
+
+				std::cout << "[+] Generated " << batch.size() << " more positions" << std::endl;
+			}
+		}
+
+
+
+
+
+
+
+
 	}
 
 

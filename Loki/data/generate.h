@@ -106,6 +106,9 @@ namespace DataGeneration {
 
             // This will divide a batch into sub-batches for each thread.
             std::vector<std::vector<std::string>> divide_batch(const std::vector<std::string>& batch);
+
+            // Will combine results from all threads.
+            std::vector<Data::DataEntry> extract_thread_results();
         };
 
 
