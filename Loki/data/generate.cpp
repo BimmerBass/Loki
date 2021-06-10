@@ -7,6 +7,36 @@ namespace DataGeneration {
 	namespace Analysis {
 
 		/*
+		
+		Read an EPD file and extract the FENS.
+		
+		*/
+		std::vector<std::string> load_fens(std::string filepath) {
+			// Step 1. Open the file and give an error if it can't be opened.
+			std::ifstream file(filepath);
+
+			try { if (!file.is_open()) { throw("Couldn't open the file"); } }
+			catch (const char* msg) { std::cout << msg << std::endl; exit(EXIT_FAILURE); }
+
+			// Step 2. Initialize the required variables and read the file line by line.
+			std::vector<std::string> fens;
+			std::string epd;
+			int i = 0;
+			while (std::getline(file, epd)) {
+				auto fen_end = epd.find_first_of('"');
+
+				fens.push_back(epd.substr(0, fen_end));
+				i++;
+
+				if (i % 100000 == 0) { std::cout << "Read " << i << " FENS" << std::endl; }
+			}
+
+			return fens;
+		}
+
+
+
+		/*
 
 		Generate an input array for the network
 
@@ -69,6 +99,14 @@ namespace DataGeneration {
 		}
 
 
+		/*
+		Copy-constructor. This is needed since objects will be pushed back to a vector.
+		*/
+		ThreadAnalyzer::ThreadAnalyzer(const ThreadAnalyzer& rhs) : depth(rhs.depth), score_bound(rhs.score_bound) {
+			generated_entries = rhs.generated_entries;
+			fens = rhs.fens;
+			searcher = new SearchThread_t;
+		}
 
 		/*
 
@@ -148,7 +186,57 @@ namespace DataGeneration {
 			generated_entries.shrink_to_fit();
 		}
 
+
+
+
+		/*
+
+		Constructor for the Analyzer class.
+
+		*/
+		Analyzer::Analyzer(std::string epd_file, std::string output_file, int _depth, size_t _threads, int _bound, size_t _batch)
+			: depth(_depth), eval_limit(_bound), thread_count(_threads), batch_size(_batch) {
+
+			// Step 1. Make sure all parameters has been passed properly.
+			try {
+				if (depth < 0) { throw("Depth must be zero or above."); }
+				if (eval_limit < 1) { throw("The score limit must be a positive number"); }
+				if (thread_count < 1) { throw("Thread count must be a positive number"); }
+				if (batch_size < 1) { throw("Batch size must be a positive number"); }
+				if (epd_file == "") { throw("A path must be specified to an EPD file"); }
+			}
+			catch (const char* msg) {
+				std::cout << "[!] Error encountered while initializing Analyzer object: " << msg << std::endl;
+				exit(EXIT_FAILURE);
+			}
+
+			// Step 2. Parse the epd file and distribute the FENs into batches.
+			std::vector<std::string> fens = load_fens(epd_file);
+			
+			if (batch_size >= fens.size()) {
+				fen_batches.push_back(fens);
+			}
+			else {
+				int batch_count = fens.size() / batch_size;
+				int remainder = fens.size() % batch_size;
+				int j = 0;
+				for (int b = 0; b < batch_count; b++) {
+					fen_batches.push_back(slice_vector<std::string>(fens, b * batch_size, (b + 1) * batch_size - 1));
+				}
+				if (remainder > 0) { fen_batches.push_back(slice_vector<std::string>(fens, fens.size() - remainder, fens.size() - 1)); }
+			}
+
+			// Step 3. Initialize the thread analyzer vector and writer object
+			for (int i = 0; i < thread_count; i++) { thread_analyzers.push_back(ThreadAnalyzer(depth, eval_limit)); }
+			writer = new Data::DataWriter(output_file);
+
+		}
+
+		Analyzer::~Analyzer() {
+			if (writer != nullptr) { delete writer; }
+		}
 	}
+
 
 
 
