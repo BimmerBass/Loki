@@ -8,6 +8,12 @@
 
 #include "../types/architecture.h"
 
+/*
+Byte to GB conversion
+*/
+inline size_t byte_to_gb(size_t bytes) {
+	return bytes >> 30;
+}
 
 namespace Data {
 
@@ -22,7 +28,7 @@ namespace Data {
 	inline size_t read_file_size(FILE* f) {
 		// Step 1. Find the file size.
 		size_t bytes = 0;
-#ifdef _MSC_VER
+#if (defined(_MSC_VER) || defined(__GNUC__))
 		_fseeki64(f, 0, SEEK_END);
 		bytes = _ftelli64(f);
 #else

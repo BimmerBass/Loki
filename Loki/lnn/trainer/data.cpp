@@ -85,7 +85,7 @@ Data::DataLoader::DataLoader(std::string filepath, size_t _bs, size_t bfc) : bat
 	// Step 3. Now read the amount of training data entries in the file.
 	current_entry = 0;
 	size_t bytes = read_file_size(file); /* This method will automatically revert the file position to the start. */
-	entry_count = bytes / (sizeof(int8_t) * INPUT_SIZE + sizeof(int));
+	entry_count = bytes / (sizeof(DataEntry));
 
 	try {
 		if (entry_count < 1) { throw("An empty file was loaded."); }
@@ -95,7 +95,7 @@ Data::DataLoader::DataLoader(std::string filepath, size_t _bs, size_t bfc) : bat
 		exit(EXIT_FAILURE);
 	}
 
-	std::cout << "Loaded file with " << entry_count << " entries" << std::endl;
+	std::cout << "Loaded file with " << entry_count << " entries (" << byte_to_gb(bytes) << "GB)" << std::endl;
 }
 
 Data::DataLoader::~DataLoader() {
