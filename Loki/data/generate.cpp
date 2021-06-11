@@ -121,8 +121,14 @@ namespace DataGeneration {
 
 			// Step 2. Now search the position
 			// Note: If it is black to move, the score should be inversed.
+			// Note 2: search_root doesn't go into quiescence, so this should be handled for depth = 0.
 			SearchPv pv;
-			score = Search::search_root(searcher, depth, -INF, INF, &pv);
+			if (depth != 0) {
+				score = Search::search_root(searcher, depth, -INF, INF, &pv);
+			}
+			else {
+				score = Search::quiescence(searcher, -INF, INF);
+			}
 			if (searcher->pos->side_to_move == BLACK) { score *= -1; }
 
 			// Step 3. Return true if the score is inside the designated bounds.
