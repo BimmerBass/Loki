@@ -84,7 +84,7 @@ It is also possible to change the amount of optimizations with both compilers by
 Loki now features a new kind of evaluation function consisting of a neural network. This has, in contrast to the previous hand-crafted evaluation, been trained using millions of chess positions analyzed by Loki. It was initialized randomly in the beginning, but this does not make the engine Loki0, since the training data generation consisted of previous knowledge.
 The difference between the network and HCE (hand-crafted evalution) is that the former has been trained using search scores which more accurately reflects the true value of a position.
 
-The feature has been inspired by the new developments in neural networks on CPUs, as pioneered by the Stockfish team. Note that this in **no way** means that Loki uses Stockfish-NNUE's code (or any other engine's code). The only inspiration has been Halogen (see Special Thanks to), but Loki's LNN implementation is nearly completely original.
+The feature has been inspired by the new developments in neural networks on CPUs, as pioneered by the Stockfish team. Note that this in **no way** means that Loki's LNN implementation is a copy of any other engine's or that Loki is a derivative of any other engine. LNN is an original work.
 
 LNN (Loki-neural-network) is disabled by default, but it can be turned on in the engine options.
 
