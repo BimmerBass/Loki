@@ -28,9 +28,12 @@ namespace Data {
 	inline size_t read_file_size(FILE* f) {
 		// Step 1. Find the file size.
 		size_t bytes = 0;
-#if (defined(_MSC_VER) || defined(__GNUC__))
+#if (defined(_MSC_VER) || defined(_WIN32))
 		_fseeki64(f, 0, SEEK_END);
 		bytes = _ftelli64(f);
+#elif (defined(unix) || defined(__unix__) || defined(__unix))
+		fseeko(f, 0, SEEK_END);
+		bytes = ftello(f);
 #else
 		fseek(f, 0, SEEK_END);
 		bytes = ftell(f);
