@@ -76,9 +76,11 @@ With all the above mentioned move ordering techniques, Loki achieves a cutoff on
 ## Building Loki
 Loki has been tested to build without errors on both MSVC and GCC (with some warnings by the former). If Loki should be compiled to a non-native popcount version one will have to either:
 1. If compiling on MSVC, the global preprocessor variable USE_POPCNT should be removed in the project properties.
-2. If compiling on GCC, the variable use_popcount in makefile should be set to "no".
+2. If compiling on GCC, ```use_popcount=no``` should be added when running make.
 
-It is also possible to change the amount of optimizations with both compilers by (if MSVC) going to the project properties or (if GCC) setting optimize to "no" in the makefile.
+Additionally, a 32-bit compilation in GCC needs ```Bit=32``` when running make.
+
+It is also possible to change the amount of optimizations with both compilers by (if MSVC) going to the project properties or (if GCC) using ```optimize=no``` when running make.
 
 ## Loki's neural network evaluation (LNN)
 Loki now features a new kind of evaluation function consisting of a neural network. This has, in contrast to the previous hand-crafted evaluation, been trained using millions of chess positions analyzed by Loki. It was initialized randomly in the beginning, but this does not make the engine Loki0, since the training data generation consisted of previous knowledge.
@@ -141,19 +143,15 @@ learn dataset C:\\Users\\user\\Desktop\\data.lgd epoch 5 batchsize 1000000 loss 
 ##### TO-DO
 - Try the following additions:
     - Singular extensions.
-    - AEL-pruning.
-    - Enhanced forward pruning.
-    - Multi-Cut.
     - ProbCut.
-    - Fail-High reductions.
     - Null move reductions.
     - Null move threat extensions.
 - Port the tuning framework to python, and make it work with search tuning.
 - Make the evaluation term for pieces work.
-- I am very amazed of Stockfish's NNUE evaluation, and if I ever get Loki to play descent chess on CCRL, I will look into creating a new evaluation with some sort of Machine Learning.
+- Make LNN more efficient by using quantization and vectorization.
 - Create my own magic bitboard implementation. Early in the development of Loki, I didn't want to spend too much time with move generation since my primary goal was to get it to play chess. Therefore, I took the easy way, which is unsatisfactory now... 
 
-#### Special thanks to
+### Special thanks to
 - The [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) which has been used extensively throughout the creation of Loki.
 - [BlueFeverSoft](https://github.com/bluefeversoft), the creator of the Vice chess engine. Some of the code in Loki have been inspired from Vice. Additionally, Vice was an excellent resource to use while still getting acquainted with chess programming.
 - The Stockfish source code and community, which has been used where the wiki fell short.
