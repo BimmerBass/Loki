@@ -107,7 +107,7 @@ This method reads and EPD file (which contains FENs for all positions) and analy
 - hash: The size of the transposition table in megabytes.
 
 #### Example of a data generation command
-```shell
+```
 generate type analysis data C:\\Users\\user\\Desktop\\data_epds.epd output C:\\Users\\user\\Desktop\\dataset.lgd depth 4 threads 8 limit 900 batchsize 1000000 hash 256
 ```
 
