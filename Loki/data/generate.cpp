@@ -260,7 +260,7 @@ namespace DataGeneration {
 			}
 
 			// Step 3. Initialize the thread analyzer vector and writer object
-			for (int i = 0; i < thread_count; i++) { thread_analyzers.push_back(ThreadAnalyzer(depth, eval_limit, rs)); }
+			for (int i = 0; i < thread_count; i++) { thread_analyzers.push_back(ThreadAnalyzer(depth, rs, eval_limit)); }
 			writer = new Data::DataWriter(output_file);
 
 			// Step 4. Resize the hash table to the desired size.
@@ -329,8 +329,10 @@ namespace DataGeneration {
 			size_t accumulated_positions = 0;
 
 			// Step 2. Loop through the batches.
+			int batch_count = 0;
 			for (const std::vector<std::string>& batch : fen_batches) {
 				// Step 2A. Sub-divide the current batch into work for the different threads.
+				batch_count++;
 				thread_batches = divide_batch(batch);
 
 				// Step 2B. Run all the threads and wait for them to join.
@@ -348,7 +350,7 @@ namespace DataGeneration {
 
 				writer->save_data(entries);
 
-				std::cout << "[+] Generated " << batch.size() << " more positions" << std::endl;
+				std::cout << "[" << batch_count << "/" << fen_batches.size() << "] Generated " << batch.size() << " more positions" << std::endl;
 			}
 
 			return accumulated_positions;
