@@ -131,7 +131,12 @@ namespace DataGeneration {
 			}
 			if (searcher->pos->side_to_move == BLACK) { score *= -1; }
 
-			// Step 3. Return true if the score is inside the designated bounds.
+			// Step 3. If we should resolve the position, walk the PV.
+			if (resolve_tactics) {
+				walk_pv(pv);
+			}
+
+			// Step 4. Return true if the score is inside the designated bounds.
 			return (score >= -score_bound && score <= score_bound);
 		}
 
@@ -149,6 +154,26 @@ namespace DataGeneration {
 			// Step 2. Set the depth. Since we don't want to listen for GUI interaction, set the thread_id to a non-zero value.
 			searcher->info->depth = depth;
 			searcher->thread_id = 1;
+		}
+
+
+		/*
+		
+		Step down the PV in order to get a quiet position.
+		
+		*/
+		void ThreadAnalyzer::walk_pv(SearchPv& line) {
+			Move_t move;
+
+			for (int i = 0; i < line.length; i++) {
+				move.move = line.pv[i];
+				move.score = 0;
+
+				// If the move is illegal, just break out.
+				if (!searcher->pos->make_move(&move)) {
+					break;
+				}
+			}
 		}
 
 

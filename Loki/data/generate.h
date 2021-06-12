@@ -80,6 +80,9 @@ namespace DataGeneration {
             // Will search the position and give a white-relative score.
             // Note: Will return true if the score is inside the designated bound. Otherwise it'll return false.
             bool search(std::string fen, int& score);
+
+            // Will walk the PV to the leaf.
+            void walk_pv(SearchPv& pv);
         };
 
 
