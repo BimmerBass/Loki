@@ -107,6 +107,7 @@ This method reads and EPD file (which contains FENs for all positions) and analy
 - limit: This value will exclude all positions with scores outside the interval [-limit, +limit]. By default checkmate scores are excluded.
 - batchsize: While the threads analyze positions, they save said positions in LNN's internal input format and the scores. For a big dataset this can exceed the machine's memory. Therefore, the batch size command is used to write a certain number of positions to the output file at a time. The default batch size is 100k.
 - hash: The size of the transposition table in megabytes.
+- resolve: Whether or not to step down the PV of a position to get a quiet one. If ```resolve``` is typed, it will be set to true. To set it to false, leave it out.
 
 #### Example of a data generation command
 ```

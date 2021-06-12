@@ -56,7 +56,7 @@ namespace DataGeneration {
         */
         class ThreadAnalyzer {
         public:
-            ThreadAnalyzer(int _depth, int _bound = DEFAULT_EVAL_LIMIT);
+            ThreadAnalyzer(int _depth, bool resolve, int _bound = DEFAULT_EVAL_LIMIT);
             ~ThreadAnalyzer();
             ThreadAnalyzer(const ThreadAnalyzer& rhs);
 
@@ -69,6 +69,7 @@ namespace DataGeneration {
             std::vector<std::string> fens;
             const int depth;
             const int score_bound;
+            const bool resolve_tactics;
 
             // Used to search with the alphabeta function.
             SearchThread_t* searcher;
@@ -88,7 +89,7 @@ namespace DataGeneration {
         */
         class Analyzer {
         public:
-            Analyzer(std::string epd_file, std::string output_file, int _depth, size_t _threads, 
+            Analyzer(std::string epd_file, std::string output_file, int _depth, size_t _threads, bool rs,
                 int _bound = DEFAULT_EVAL_LIMIT, size_t _batch = DEFAULT_BATCH_SIZE, size_t hash = TT_DEFAULT_SIZE);
             ~Analyzer();
 

@@ -78,7 +78,7 @@ namespace DataGeneration {
 		Constructor for the threadAnalyzer class.
 
 		*/
-		ThreadAnalyzer::ThreadAnalyzer(int _depth, int _bound) : depth(_depth), score_bound(_bound) {
+		ThreadAnalyzer::ThreadAnalyzer(int _depth, bool resolve, int _bound) : depth(_depth), score_bound(_bound), resolve_tactics(resolve) {
 
 			// Step 1. Make sure all parameters are properly passed.
 			try {
@@ -102,7 +102,7 @@ namespace DataGeneration {
 		/*
 		Copy-constructor. This is needed since objects will be pushed back to a vector.
 		*/
-		ThreadAnalyzer::ThreadAnalyzer(const ThreadAnalyzer& rhs) : depth(rhs.depth), score_bound(rhs.score_bound) {
+		ThreadAnalyzer::ThreadAnalyzer(const ThreadAnalyzer& rhs) : depth(rhs.depth), score_bound(rhs.score_bound), resolve_tactics(rhs.resolve_tactics) {
 			generated_entries = rhs.generated_entries;
 			fens = rhs.fens;
 			searcher = new SearchThread_t;
@@ -201,7 +201,7 @@ namespace DataGeneration {
 		Constructor for the Analyzer class.
 
 		*/
-		Analyzer::Analyzer(std::string epd_file, std::string output_file, int _depth, size_t _threads, int _bound, size_t _batch, size_t hash)
+		Analyzer::Analyzer(std::string epd_file, std::string output_file, int _depth, size_t _threads, bool rs, int _bound, size_t _batch, size_t hash)
 			: depth(_depth), eval_limit(_bound), thread_count(_threads), batch_size(_batch) {
 
 			// Step 1. Make sure all parameters has been passed properly.
@@ -235,7 +235,7 @@ namespace DataGeneration {
 			}
 
 			// Step 3. Initialize the thread analyzer vector and writer object
-			for (int i = 0; i < thread_count; i++) { thread_analyzers.push_back(ThreadAnalyzer(depth, eval_limit)); }
+			for (int i = 0; i < thread_count; i++) { thread_analyzers.push_back(ThreadAnalyzer(depth, eval_limit, rs)); }
 			writer = new Data::DataWriter(output_file);
 
 			// Step 4. Resize the hash table to the desired size.
@@ -355,6 +355,8 @@ namespace DataGeneration {
 			hash: int [1;1000]
 				- The size of the hashtable to use in megabytes.
 				Default: 16
+			resolve: boolean
+				- Whether or not to resolve tactics.
 		*/
 		void parse_analyze_command(std::string cmd) {
 
@@ -362,6 +364,7 @@ namespace DataGeneration {
 			std::string epd = "", output = "";
 			int depth = -1, threads = -1, limit = DEFAULT_EVAL_LIMIT, batch_size = DEFAULT_BATCH_SIZE, hash = TT_DEFAULT_SIZE;
 			size_t index = 0;
+			bool resolve;
 
 			try {
 				// Step 2. Parse the mandatory parameters and throw an error if any are missing.
@@ -429,6 +432,16 @@ namespace DataGeneration {
 				if (index != std::string::npos) {
 					hash = std::stoi(cmd.substr(index + 5));
 				}
+
+				// Step 3C. Resolve
+				index = cmd.find("resolve");
+
+				if (index != std::string::npos) {
+					resolve = true;
+				}
+				else {
+					resolve = false;
+				}
 			}
 			catch (const char* msg) {
 				std::cout << "Error parsing data generation command: " << msg << std::endl;
@@ -449,6 +462,7 @@ namespace DataGeneration {
 				"| Evaluation limit		| " << limit << "\n" <<
 				"| Batch size			| " << batch_size << "\n" <<
 				"| Hash size (MB)		| " << hash << "\n" <<
+				"| Resolve tactics		| " << ((resolve) ? "yes\n" : "no\n") <<
 				"+-------------------------------------------------------------------+" << std::endl;
 			
 			size_t positions_generated = analyzer->run_analysis();
@@ -464,6 +478,7 @@ namespace DataGeneration {
 				"| Evaluation limit		| " << limit << "\n"
 				"| Batch size			| " << batch_size << "\n"
 				"| Hash size (MB)		| " << hash << "\n"
+				"| Resolve tactics		| " << ((resolve) ? "yes\n" : "no\n") <<
 				"+----------------------+--------------------------------------------+\n" <<
 				"| Positions generated	| " << positions_generated << "\n" <<
 				"+----------------------+--------------------------------------------+" << std::endl;
