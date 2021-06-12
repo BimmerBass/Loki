@@ -46,7 +46,7 @@ namespace Search {
 
 	int alphabeta(SearchThread_t* ss, int depth, int alpha, int beta, bool can_null, SearchPv* pvLine);
 
-	int quiescence(SearchThread_t* ss, int alpha, int beta);
+	int quiescence(SearchThread_t* ss, int alpha, int beta, SearchPv* pvLine);
 
 	namespace Debug {
 		// MTDF is useful for debugging the transposition table as suggested by Tord Romstad on the WinBoard forum.

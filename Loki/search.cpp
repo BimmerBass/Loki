@@ -540,7 +540,7 @@ namespace Search {
 
 		// Step 1. Dive into quiescence search (~382 elo)
 		if (depth <= 0) {
-			return quiescence(ss, alpha, beta);
+			return quiescence(ss, alpha, beta, pvLine);
 		}
 
 		// Update nodes
@@ -742,12 +742,12 @@ namespace Search {
 			&& !in_check && abs(beta) < MATE && abs(alpha) < MATE && ss->pos->non_pawn_material()) {
 
 			if (depth == 1) {
-				return quiescence(ss, alpha, beta);
+				return quiescence(ss, alpha, beta, pvLine);
 			}
 		
 			int razor_window = alpha - razoring_margin(depth, improving);
 		
-			score = quiescence(ss, razor_window, razor_window + 1);
+			score = quiescence(ss, razor_window, razor_window + 1, pvLine);
 		
 			// If we couldn't raise the score over alpha - margin, this node is very likely to be an ALL-node
 			if (score <= razor_window) {
@@ -939,10 +939,11 @@ namespace Search {
 
 	const int delta_piece_value[5] = { 100, 310, 350, 560, 1000 };
 
-	int quiescence(SearchThread_t* ss, int alpha, int beta) {
+	int quiescence(SearchThread_t* ss, int alpha, int beta, SearchPv* pvLine) {
 		assert(beta > alpha);
 		
 		ss->info->nodes++;
+		pvLine->length = 0;
 
 		if ((ss->info->nodes & 2047) == 0) {
 			check_stopped_search(ss);
@@ -1001,6 +1002,9 @@ namespace Search {
 			ss->generate_moves(&ml);
 		}
 
+		// Set up a pv container in case we raise alpha.
+		SearchPv line;
+
 		int legal = 0;
 		int move = NOMOVE;
 		for (int m = 0; m < ml.size(); m++) {
@@ -1029,7 +1033,7 @@ namespace Search {
 			legal++;
 
 
-			score = -quiescence(ss, -beta, -alpha);
+			score = -quiescence(ss, -beta, -alpha, &line);
 
 			ss->pos->undo_move();
 
@@ -1049,6 +1053,9 @@ namespace Search {
 
 			if (score > alpha) {
 				alpha = score;
+
+				// Update the PV
+				ChangePV(ml[m]->move, pvLine, &line);
 			}
 		}
 

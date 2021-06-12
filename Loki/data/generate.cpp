@@ -127,7 +127,7 @@ namespace DataGeneration {
 				score = Search::search_root(searcher, depth, -INF, INF, &pv);
 			}
 			else {
-				score = Search::quiescence(searcher, -INF, INF);
+				score = Search::quiescence(searcher, -INF, INF, &pv);
 			}
 			if (searcher->pos->side_to_move == BLACK) { score *= -1; }
 
