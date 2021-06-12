@@ -474,7 +474,7 @@ namespace DataGeneration {
 			}
 			
 			// Step 4. Set up an Analyzer object, print some information and run the data generation.
-			Analyzer* analyzer = new Analyzer(epd, output, depth, threads, limit, batch_size, hash);
+			Analyzer* analyzer = new Analyzer(epd, output, depth, threads, resolve, limit, batch_size, hash);
 
 			std::cout <<
 				"+-------------------------------------------------------------------+\n" <<
