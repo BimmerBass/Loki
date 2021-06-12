@@ -238,7 +238,8 @@ namespace Search {
 
 				// We need to only display the PV containing the mate, if abs(score) > MATE.
 				// Otherwise we'd get weird lines from previous PV's Loki has found before seeing the mate.
-				for (int n = 0; n < pvLine.length; n++) {
+				// Note: Don't output the PV from quiescence.
+				for (int n = 0; n < pvLine.length, n < currDepth; n++) {
 					assert(pvLine.pv[n] != NOMOVE);
 					std::cout << printMove(pvLine.pv[n]) << " ";
 				}
