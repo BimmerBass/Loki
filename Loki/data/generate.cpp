@@ -129,12 +129,12 @@ namespace DataGeneration {
 			else {
 				score = Search::quiescence(searcher, -INF, INF, &pv);
 			}
-			if (searcher->pos->side_to_move == BLACK) { score *= -1; }
 
 			// Step 3. If we should resolve the position, walk the PV.
 			if (resolve_tactics) {
 				walk_pv(pv);
 			}
+			if (searcher->pos->side_to_move == BLACK) { score *= -1; }
 
 			// Step 4. Return true if the score is inside the designated bounds.
 			return (score >= -score_bound && score <= score_bound);
