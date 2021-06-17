@@ -18,8 +18,6 @@
 extern std::vector<std::string> split_string(std::string s, char delimiter = ';');
 
 namespace LNN {
-    // Default path to the evaluation file.
-    //const std::string default_filepath = "768x256x32x32x1.lnn";
 
     constexpr int OUTPUT_BOUND = 20000;
 

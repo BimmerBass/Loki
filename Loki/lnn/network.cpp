@@ -14,10 +14,8 @@ This macro invocation will declare the following three variables
 */
 #include "incbin/incbin.h"
 
-//#ifndef default_filepath
-//#define default_filepath "../768x256x32x32x1.lnn" // The path to the file from the incbin.h file
-//#endif
 
+// Note: For GCC builds, default_filepath is defined in the makefile since it needs to be relative to the location, that the compiler is called at.
 #if  (!defined(_MSC_VER) && defined(default_filepath))
 INCBIN(EmbeddedLNNchars, default_filepath);
 #else
