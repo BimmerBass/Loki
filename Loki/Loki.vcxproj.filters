@@ -72,10 +72,7 @@
     <ClCompile Include="data\generate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lnn\trainer\train_lnn.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="lnn\trainer\data.cpp">
+    <ClCompile Include="data\data.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -143,13 +140,7 @@
     <ClInclude Include="data\generate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lnn\trainer\train_lnn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lnn\trainer\helpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lnn\trainer\data.h">
+    <ClInclude Include="data\data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -5,7 +5,7 @@
 
 #include "../search.h"
 #include "../lnn/network.h"
-#include "../lnn/trainer/data.h"
+#include "data.h"
 
 
 // Append one vector to another

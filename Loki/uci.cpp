@@ -1,5 +1,4 @@
 #include "uci.h"
-#include "lnn/trainer/train_lnn.h"
 #include "data/generate.h"
 
 int UCI::num_threads = THREADS_DEFAULT_NUM;
@@ -199,24 +198,9 @@ void UCI::loop() {
 			continue;
 		}
 
-		// Step 3K. If we receive the non-UCI "learn" command, start a training session.
-		// Note: If the training is succesful, quit afterwards. Otherwise notify the user that there is an error and continue.
-		else if (input.find("learn") != std::string::npos) {
-			bool success = Training::parse_learn(input);
-
-			if (success) {
-				std::cout << "[+] Training session completed successfully.\nQuitting" << std::endl;
-				break;
-			}
-			else {
-				std::cout << "[!] An error was encountered while training." << std::endl;
-				continue;
-			}
-		}
-
-		// Step 3L. If we receive the non-UCI "generate" command, begin a data generation session.
+		// Step 3K. If we receive the non-UCI "generate" command, begin a data generation session.
 		else if (input.find("generate") != std::string::npos) {
-			// Step 3L.1. There are two types of training, selfplay and analysis.
+			// Step 3K.1. There are two types of training, selfplay and analysis.
 			if (input.find("analysis")) {
 				DataGeneration::Analysis::parse_analyze_command(input);
 			}

@@ -151,11 +151,10 @@
   <ItemGroup>
     <ClCompile Include="bench.cpp" />
     <ClCompile Include="bitboard.cpp" />
+    <ClCompile Include="data\data.cpp" />
     <ClCompile Include="data\generate.cpp" />
     <ClCompile Include="evaluation.cpp" />
     <ClCompile Include="lnn\network.cpp" />
-    <ClCompile Include="lnn\trainer\data.cpp" />
-    <ClCompile Include="lnn\trainer\train_lnn.cpp" />
     <ClCompile Include="magics.cpp" />
     <ClCompile Include="main.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">USE_POPCNT</PreprocessorDefinitions>
@@ -179,13 +178,11 @@
   <ItemGroup>
     <ClInclude Include="bench.h" />
     <ClInclude Include="bitboard.h" />
+    <ClInclude Include="data\data.h" />
     <ClInclude Include="data\generate.h" />
     <ClInclude Include="defs.h" />
     <ClInclude Include="evaluation.h" />
     <ClInclude Include="lnn\network.h" />
-    <ClInclude Include="lnn\trainer\data.h" />
-    <ClInclude Include="lnn\trainer\helpers.h" />
-    <ClInclude Include="lnn\trainer\train_lnn.h" />
     <ClInclude Include="lnn\types\architecture.h" />
     <ClInclude Include="lnn\types\layer.h" />
     <ClInclude Include="misc.h" />
