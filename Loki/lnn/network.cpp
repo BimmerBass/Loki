@@ -284,63 +284,37 @@ namespace LNN {
 	Load an embedded net. This only works for MSVC.
 	
 	*/
-	/*void Network::load_embedded() {
-		// Step 1. From the filesize given by incbin, we can find out how many paramters the file contains. Throw an error if this isn't the correct number.
-		size_t num_parameters = gEmbeddedLNNcharsSize / sizeof(neuron_t);
+	void Network::load_embedded() {
+//#ifndef _MSC_VER
+		// Step 1. Try to load the embedded data.
+		std::unique_ptr<NetLoading::WeightData> data = NetLoading::load_embedded();
 
-		try {
-			if (num_parameters != PARAMETER_COUNT) { throw("The embedded binary does not contain the right amount of data."); }
+		// Step 2. Only apply the changes if the read was successful
+		if (data->success) {
+			// Step 3. Clear the current weights and biases.
+			clear_net();
+
+			// Step 4. Now write all the weights and biases from the file.
+			for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+				memcpy(INPUT_LAYER.weights[i].data(), data->INPUT_WEIGHTS[i].data(), sizeof(float) * INPUT_SIZE);
+			}
+
+			memcpy(FIRST_HIDDEN.biases.data(), data->FH_BIAS.data(), sizeof(float) * FIRST_HIDDEN_SIZE);
+			for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+				memcpy(FIRST_HIDDEN.weights[i].data(), data->FH_WEIGHTS[i].data(), sizeof(float) * FIRST_HIDDEN_SIZE);
+			}
+
+			memcpy(SECOND_HIDDEN.biases.data(), data->SH_BIAS.data(), sizeof(float) * HIDDEN_STD_SIZE);
+			for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+				memcpy(SECOND_HIDDEN.weights[i].data(), data->SH_WEIGHTS[i].data(), sizeof(float) * HIDDEN_STD_SIZE);
+			}
+
+			memcpy(THIRD_HIDDEN.biases.data(), data->TH_BIAS.data(), sizeof(float) * HIDDEN_STD_SIZE);
+			memcpy(THIRD_HIDDEN.weights[0].data(), data->TH_WEIGHTS.data(), sizeof(float) * HIDDEN_STD_SIZE);
+
+			// Step 5. Set the flag to indicate we have loaded a net.
+			loaded = true;
 		}
-		catch (const char* msg) {
-			std::cout << "Error encountered while loading embedded file: " << msg << std::endl;
-			exit(EXIT_FAILURE);
-		}
-
-		// Step 2. Firstly, we need to concatenate all the chars in the arrays from incbin.h to neuron_t, which we do here.
-		neuron_t gEmbeddedLNNData[PARAMETER_COUNT] = { 0 };
-
-		for (int i = 0; i < PARAMETER_COUNT; i++) {
-			memcpy(gEmbeddedLNNData + i, gEmbeddedLNNcharsData + i * (sizeof(neuron_t)), sizeof(neuron_t));
-		}
-
-		// Step 3. Copy the input weights.
-		size_t current = 0;
-
-		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			memcpy(INPUT_LAYER.weights[i].data(), gEmbeddedLNNData + i * INPUT_SIZE, INPUT_SIZE * sizeof(neuron_t));
-			current += INPUT_SIZE;
-		}
-
-		// Step 4. For all the hidden layers we will copy their biases first and then their weights.
-
-		// Step 4A. First hidden
-		memcpy(FIRST_HIDDEN.biases.data(), gEmbeddedLNNData + current, FIRST_HIDDEN_SIZE * sizeof(neuron_t));
-		current += FIRST_HIDDEN_SIZE;
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			memcpy(FIRST_HIDDEN.weights[i].data(), gEmbeddedLNNData + current, FIRST_HIDDEN_SIZE * sizeof(neuron_t));
-			current += FIRST_HIDDEN_SIZE;
-		}
-
-		// Step 4B. Second hidden
-		memcpy(SECOND_HIDDEN.biases.data(), gEmbeddedLNNData + current, HIDDEN_STD_SIZE * sizeof(neuron_t));
-		current += HIDDEN_STD_SIZE;
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			memcpy(SECOND_HIDDEN.weights[i].data(), gEmbeddedLNNData + current, HIDDEN_STD_SIZE * sizeof(neuron_t));
-			current += HIDDEN_STD_SIZE;
-		}
-
-		// Step 4C. Third hidden
-		memcpy(THIRD_HIDDEN.biases.data(), gEmbeddedLNNData + current, HIDDEN_STD_SIZE * sizeof(neuron_t));
-		current += HIDDEN_STD_SIZE;
-		memcpy(THIRD_HIDDEN.weights[0].data(), gEmbeddedLNNData + current, HIDDEN_STD_SIZE * sizeof(neuron_t));
-		
-		current += HIDDEN_STD_SIZE;
-		assert(current == PARAMETER_COUNT);
-
-		// Step 5. Set the flag signalling that we have loaded the net successfully.
-		loaded = true;
+//#endif
 	}
-	*/
 }

@@ -2,6 +2,7 @@
 #define LOADER_H
 #include <iostream>
 #include <array>
+#include <assert.h>
 
 #include "types/architecture.h"
 /*
@@ -46,7 +47,7 @@ namespace NetLoading {
 	std::unique_ptr<WeightData> load_from_file(std::string path);
 
 	// Function for loading an embedded net
-	//std::unique_ptr<WeightData> load_embedded();
+	std::unique_ptr<WeightData> load_embedded();
 
 }
 

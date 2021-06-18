@@ -46,7 +46,7 @@ namespace LNN {
         void load_net(std::string file_path);
 
         // If we're not using MSVC, we will load the embedded binary.
-        //void load_embedded();
+        void load_embedded();
 
 
         bool net_loaded() const { return loaded; }
