@@ -3,6 +3,7 @@
 #include <iostream>
 #include <array>
 #include <assert.h>
+#include <memory>
 
 #include "types/architecture.h"
 /*
