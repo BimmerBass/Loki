@@ -1,15 +1,9 @@
 #ifndef NETWORK_H
 #define NETWORK_H
-#include <array>
 #include <vector>
-#include <cstdint>
-#include <assert.h>
 #include <string>
+#include <assert.h>
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-#include <cctype>
 
 #include "types/layer.h"
 #include "types/architecture.h"
