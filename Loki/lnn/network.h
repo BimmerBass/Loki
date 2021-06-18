@@ -7,6 +7,7 @@
 
 #include "types/layer.h"
 #include "types/architecture.h"
+#include "loader.h"
 
 // Helper function to split a string by a certain delimiter.
 extern std::vector<std::string> split_string(std::string s, char delimiter = ';');
@@ -14,11 +15,6 @@ extern std::vector<std::string> split_string(std::string s, char delimiter = ';'
 namespace LNN {
 
     constexpr int OUTPUT_BOUND = 20000;
-
-    constexpr size_t PARAMETER_COUNT = INPUT_SIZE * FIRST_HIDDEN_SIZE
-                                       + FIRST_HIDDEN_SIZE + FIRST_HIDDEN_SIZE * HIDDEN_STD_SIZE
-                                       + HIDDEN_STD_SIZE + HIDDEN_STD_SIZE * HIDDEN_STD_SIZE
-                                       + HIDDEN_STD_SIZE + HIDDEN_STD_SIZE;
 
     // This structure implementation is taken from Halogen's code.
     struct Update {
@@ -50,7 +46,7 @@ namespace LNN {
         void load_net(std::string file_path);
 
         // If we're not using MSVC, we will load the embedded binary.
-        void load_embedded();
+        //void load_embedded();
 
 
         bool net_loaded() const { return loaded; }

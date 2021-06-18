@@ -3,30 +3,6 @@
 
 /*
 
-Embedded LNN. This macro will embed an LNN binary into the executable.
-Note: This does not work for MSVC builds, so in these, the user will need to specify a net path manually when using LNN.
-
-This macro invocation will declare the following three variables
-    const unsigned char        gEmbeddedNNUEData[];  // a pointer to the embedded data
-    const unsigned char *const gEmbeddedNNUEEnd;     // a marker to the end
-    const unsigned int         gEmbeddedNNUESize;    // the size of the embedded file
-
-*/
-#include "incbin/incbin.h"
-
-
-// Note: For GCC builds, default_filepath is defined in the makefile since it needs to be relative to the location, that the compiler is called at.
-#if  (!defined(_MSC_VER) && defined(default_filepath))
-INCBIN(EmbeddedLNNchars, default_filepath);
-#else
-const unsigned char gEmbeddedLNNcharsData[1] = { 0x0 };
-const unsigned char* const gEmbeddedLNNcharsEnd = &gEmbeddedLNNcharsData[0];
-const unsigned int gEmbeddedLNNcharsSize = 1;
-#endif
-
-
-/*
-
 Split a string
 
 */
@@ -271,67 +247,35 @@ namespace LNN {
 	
 	*/
 	void Network::load_net(std::string file_path) {
-		// Step 1. Clear the network and open the file
-		clear_net();
+		// Step 1. Attempt to load the file.
+		std::unique_ptr<NetLoading::WeightData> data = NetLoading::load_from_file(file_path);
 
-		FILE* bFile = nullptr;
+		// Step 2A. Only apply the changes if the read was successful
+		if (data->success) {
+			// Step 3. Clear the current weights and biases.
+			clear_net();
 
-#if (defined(_WIN32) || defined(_WIN64))
-		fopen_s(&bFile, file_path.c_str(), "rb");
-#else
-		bFile = fopen(file_path.c_str(), "rb");
-#endif
+			// Step 4. Now write all the weights and biases from the file.
+			for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
+				memcpy(INPUT_LAYER.weights[i].data(), data->INPUT_WEIGHTS[i].data(), sizeof(float) * INPUT_SIZE);
+			}
 
-		// Step 1A. If the file isn't open, return and give an error message
-		if (bFile == nullptr) {
-			std::cout << "info string error failed to open the file. Please make sure the right path is specified." << std::endl;
-			return;
+			memcpy(FIRST_HIDDEN.biases.data(), data->FH_BIAS.data(), sizeof(float) * FIRST_HIDDEN_SIZE);
+			for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+				memcpy(FIRST_HIDDEN.weights[i].data(), data->FH_WEIGHTS[i].data(), sizeof(float) * FIRST_HIDDEN_SIZE);
+			}
+
+			memcpy(SECOND_HIDDEN.biases.data(), data->SH_BIAS.data(), sizeof(float) * HIDDEN_STD_SIZE);
+			for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
+				memcpy(SECOND_HIDDEN.weights[i].data(), data->SH_WEIGHTS[i].data(), sizeof(float) * HIDDEN_STD_SIZE);
+			}
+
+			memcpy(THIRD_HIDDEN.biases.data(), data->TH_BIAS.data(), sizeof(float) * HIDDEN_STD_SIZE);
+			memcpy(THIRD_HIDDEN.weights[0].data(), data->TH_WEIGHTS.data(), sizeof(float) * HIDDEN_STD_SIZE);
+
+			// Step 5. Set the flag to indicate we have loaded a net.
+			loaded = true;
 		}
-
-		// Step 1B. Find the end of the file and make sure there is the right amount of data.
-		fseek(bFile, 0, SEEK_END);
-		uint64_t pos = ftell(bFile);
-		size_t num_parameters = pos / sizeof(neuron_t);
-
-		// Step 1C. Make sure the file exists and is properly opened.
-		try {
-			if (bFile == nullptr) { throw("The path specified does not contain a network file compatible with Loki."); }
-			if (num_parameters != PARAMETER_COUNT) { throw("The file specified does not contain the right amount of data."); }
-		}
-		catch (const char* msg) {
-			std::cout << "Error encountered: " << msg << std::endl;
-			abort();
-		}
-
-		// Step 1C. Find the start of the file
-		rewind(bFile);
-
-		// Step 2. Read the input weights
-		for (int i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-			fread(INPUT_LAYER.weights[i].data(), sizeof(neuron_t), INPUT_SIZE, bFile);
-		}
-
-		// Step 3. Read the first hidden layer's biases and then its weights
-		fread(FIRST_HIDDEN.biases.data(), sizeof(neuron_t), FIRST_HIDDEN_SIZE, bFile);
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			fread(FIRST_HIDDEN.weights[i].data(), sizeof(neuron_t), FIRST_HIDDEN_SIZE, bFile);
-		}
-
-		// Step 4. Read the second hidden layer's biases and then its weights
-		fread(SECOND_HIDDEN.biases.data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
-
-		for (int i = 0; i < HIDDEN_STD_SIZE; i++) {
-			fread(SECOND_HIDDEN.weights[i].data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
-		}
-
-		// Step 5. Read the third hidden layer's biases and then its weights
-		fread(THIRD_HIDDEN.biases.data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
-		fread(THIRD_HIDDEN.weights[0].data(), sizeof(neuron_t), HIDDEN_STD_SIZE, bFile);
-
-		// Step 5. Close the file and set the loaded flag to signal that we have a net.
-		fclose(bFile);
-		loaded = true;
 	}
 
 
@@ -340,7 +284,7 @@ namespace LNN {
 	Load an embedded net. This only works for MSVC.
 	
 	*/
-	void Network::load_embedded() {
+	/*void Network::load_embedded() {
 		// Step 1. From the filesize given by incbin, we can find out how many paramters the file contains. Throw an error if this isn't the correct number.
 		size_t num_parameters = gEmbeddedLNNcharsSize / sizeof(neuron_t);
 
@@ -398,5 +342,5 @@ namespace LNN {
 		// Step 5. Set the flag signalling that we have loaded the net successfully.
 		loaded = true;
 	}
-
+	*/
 }
