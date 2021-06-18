@@ -9,8 +9,6 @@
 #include "types/architecture.h"
 #include "loader.h"
 
-// Helper function to split a string by a certain delimiter.
-extern std::vector<std::string> split_string(std::string s, char delimiter = ';');
 
 namespace LNN {
 

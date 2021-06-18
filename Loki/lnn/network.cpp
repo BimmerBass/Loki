@@ -1,46 +1,6 @@
 #include "network.h"
 
 
-/*
-
-Split a string
-
-*/
-std::vector<std::string> split_string(std::string s, char delimiter) {
-	std::vector<std::string> out;
-
-	// Remove all spaces in the string
-#ifdef _MSC_VER
-	s.erase(std::remove_if(s.begin(), s.end(), std::isspace), s.end());
-#else
-	s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
-#endif
-
-	std::string curr_string = "";
-
-	for (int i = 0; i < s.length(); i++) {
-		// If we're at the last character, add it to the current string (if it's not the delimeter) and then to the output vector
-		if (i == s.length() - 1) {
-			if (s[i] != delimiter) {
-				curr_string += s[i];
-			}
-
-			out.push_back(curr_string);
-			continue;
-		}
-		// If we hit the delimeter, continue
-		else if (s[i] == delimiter) {
-			out.push_back(curr_string);
-			curr_string = "";
-			continue;
-		}
-
-		curr_string += s[i];
-	}
-
-	return out;
-}
-
 
 /*
 
