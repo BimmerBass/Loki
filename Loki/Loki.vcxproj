@@ -154,6 +154,7 @@
     <ClCompile Include="data\data.cpp" />
     <ClCompile Include="data\generate.cpp" />
     <ClCompile Include="evaluation.cpp" />
+    <ClCompile Include="lnn\loader.cpp" />
     <ClCompile Include="lnn\network.cpp" />
     <ClCompile Include="magics.cpp" />
     <ClCompile Include="main.cpp">
@@ -182,6 +183,7 @@
     <ClInclude Include="data\generate.h" />
     <ClInclude Include="defs.h" />
     <ClInclude Include="evaluation.h" />
+    <ClInclude Include="lnn\loader.h" />
     <ClInclude Include="lnn\network.h" />
     <ClInclude Include="lnn\types\architecture.h" />
     <ClInclude Include="lnn\types\layer.h" />
