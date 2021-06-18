@@ -245,7 +245,6 @@ namespace LNN {
 	
 	*/
 	void Network::load_embedded() {
-#ifndef _MSC_VER
 		// Step 1. Try to load the embedded data.
 		std::unique_ptr<NetLoading::WeightData> data = NetLoading::load_embedded();
 
@@ -275,6 +274,5 @@ namespace LNN {
 			// Step 5. Set the flag to indicate we have loaded a net.
 			loaded = true;
 		}
-#endif
 	}
 }

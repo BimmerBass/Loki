@@ -110,7 +110,7 @@ namespace NetLoading {
 	*/
 	std::unique_ptr<WeightData> load_embedded() {
 		// Step 1. Setup a WeightData object and set the default success flag to false.
-		std::unique_ptr<WeightData> data;
+		std::unique_ptr<WeightData> data(new WeightData);
 		data->success = false;
 		
 		try {
@@ -119,7 +119,7 @@ namespace NetLoading {
 			if (num_params != PARAMETER_COUNT) { throw("The embedded binary does not have the right amount of data."); }
 
 			// Step 2. Before setting up the data object, we need to concatenate all the chars into floats.
-			float embedded_data[PARAMETER_COUNT] = { 0.0 };
+			float* embedded_data = new float[PARAMETER_COUNT];
 
 			for (int i = 0; i < PARAMETER_COUNT; i++) {
 				memcpy(embedded_data + i, gEmbeddedLNNcharsData + i * (sizeof(float)), sizeof(float));
@@ -158,6 +158,7 @@ namespace NetLoading {
 
 			// Step 4. If we loaded the data successfully set the flag to true.
 			data->success = true;
+			delete[] embedded_data;
 		}
 		catch (const char* msg) {
 			std::cout << msg << std::endl;
