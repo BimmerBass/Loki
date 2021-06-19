@@ -119,47 +119,41 @@ namespace NetLoading {
 			if (num_params != PARAMETER_COUNT) { throw("The embedded binary does not have the right amount of data."); }
 
 			// Step 2. Before setting up the data object, we need to concatenate all the chars into floats.
-			float* embedded_data = new float[PARAMETER_COUNT];
-			memset(embedded_data, 0.0, PARAMETER_COUNT); // Zero the array for good measure.
-
-			for (int i = 0; i < PARAMETER_COUNT; i++) {
-				memcpy(embedded_data + i, gEmbeddedLNNcharsData + i * (sizeof(float)), sizeof(float));
-			}
+			const float* embedded_data = reinterpret_cast<const float*>(gEmbeddedLNNcharsData);
 
 			// Step 3. Now we can insert the data into the WeightData object.
 			size_t current = 0;
 
 			for (size_t i = 0; i < FIRST_HIDDEN_SIZE; i++) {
-				memcpy(data->INPUT_WEIGHTS[i].data(), gEmbeddedLNNcharsData + i * INPUT_SIZE, sizeof(float) * INPUT_SIZE);
+				memcpy(data->INPUT_WEIGHTS[i].data(), embedded_data + i * INPUT_SIZE, sizeof(float) * INPUT_SIZE);
 				current += INPUT_SIZE;
 			}
 
-			memcpy(data->FH_BIAS.data(), gEmbeddedLNNcharsData + current, sizeof(float) * FIRST_HIDDEN_SIZE);
+			memcpy(data->FH_BIAS.data(), embedded_data + current, sizeof(float) * FIRST_HIDDEN_SIZE);
 			current += FIRST_HIDDEN_SIZE;
 
 			for (size_t i = 0; i < HIDDEN_STD_SIZE; i++) {
-				memcpy(data->FH_WEIGHTS[i].data(), gEmbeddedLNNcharsData + current, sizeof(float) * FIRST_HIDDEN_SIZE);
+				memcpy(data->FH_WEIGHTS[i].data(), embedded_data + current, sizeof(float) * FIRST_HIDDEN_SIZE);
 				current += FIRST_HIDDEN_SIZE;
 			}
 
-			memcpy(data->SH_BIAS.data(), gEmbeddedLNNcharsData + current, sizeof(float) * HIDDEN_STD_SIZE);
+			memcpy(data->SH_BIAS.data(), embedded_data + current, sizeof(float) * HIDDEN_STD_SIZE);
 			current += HIDDEN_STD_SIZE;
 
 			for (size_t i = 0; i < HIDDEN_STD_SIZE; i++) {
-				memcpy(data->SH_WEIGHTS[i].data(), gEmbeddedLNNcharsData + current, sizeof(float) * HIDDEN_STD_SIZE);
+				memcpy(data->SH_WEIGHTS[i].data(), embedded_data + current, sizeof(float) * HIDDEN_STD_SIZE);
 				current += HIDDEN_STD_SIZE;
 			}
 
-			memcpy(data->TH_BIAS.data(), gEmbeddedLNNcharsData + current, sizeof(float) * HIDDEN_STD_SIZE);
+			memcpy(data->TH_BIAS.data(), embedded_data + current, sizeof(float) * HIDDEN_STD_SIZE);
 			current += HIDDEN_STD_SIZE;
-			memcpy(data->TH_WEIGHTS.data(), gEmbeddedLNNcharsData + current, sizeof(float) * HIDDEN_STD_SIZE);
+			memcpy(data->TH_WEIGHTS.data(), embedded_data + current, sizeof(float) * HIDDEN_STD_SIZE);
 			current += HIDDEN_STD_SIZE;
 
 			assert(current == PARAMETER_COUNT);
 
 			// Step 4. If we loaded the data successfully set the flag to true.
 			data->success = true;
-			delete[] embedded_data;
 		}
 		catch (const char* msg) {
 			std::cout << msg << std::endl;
