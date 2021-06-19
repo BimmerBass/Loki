@@ -120,6 +120,7 @@ namespace NetLoading {
 
 			// Step 2. Before setting up the data object, we need to concatenate all the chars into floats.
 			float* embedded_data = new float[PARAMETER_COUNT];
+			memset(embedded_data, 0.0, PARAMETER_COUNT); // Zero the array for good measure.
 
 			for (int i = 0; i < PARAMETER_COUNT; i++) {
 				memcpy(embedded_data + i, gEmbeddedLNNcharsData + i * (sizeof(float)), sizeof(float));

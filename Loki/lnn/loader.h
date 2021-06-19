@@ -4,6 +4,7 @@
 #include <array>
 #include <assert.h>
 #include <memory>
+#include <cstring>
 
 #include "types/architecture.h"
 /*
