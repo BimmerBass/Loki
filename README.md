@@ -9,9 +9,9 @@ was the nordic god, Loki. After elementary school - where we learned about the n
 | Version   | Elo   | TC   |
 |-----------|-------|------|
 | 1.0.2    | 1766  | 2'+1"|
-| 1.2.0     | 1820  | 2'+1"|
+| 1.2.0     | 1821  | 2'+1"|
 | 2.0.0     | 2036  | 2'+1"|
-| 3.0.0     | 2453  | 2'+1"|
+| 3.0.0     | 2466  | 2'+1"|
 | 3.5.0     | 2490  | 40/15|
 
 ## Implementation
