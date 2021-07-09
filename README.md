@@ -1,5 +1,5 @@
 # Loki
-Loki is a UCI-compliant chess engine written in C++. At the moment it has been tested to have a strength of 2453 (version 3.0.0 on CCRL blitz) elo.
+Loki is a UCI-compliant chess engine written in C++. At the moment it has been tested to have a strength of 2490 (version 3.5.0 on CCRL 40/15) elo.
 
 ## Why the name?
 After a bit of googling I found someone who recommended that one uses a name that describes what the program does (duh..). Then, I thought that a chess engine is cold, calculating and cunning, so naturally the first name to come to mind
