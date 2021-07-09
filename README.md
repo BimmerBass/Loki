@@ -12,8 +12,7 @@ was the nordic god, Loki. After elementary school - where we learned about the n
 | 1.2.0     | 1820  | 2'+1"|
 | 2.0.0     | 2036  | 2'+1"|
 | 3.0.0     | 2453  | 2'+1"|
-
-Loki 3.0.0 is currently being tested with a time control of 40 moves in 15 minutes on [CCRL](https://ccrl.chessdom.com/ccrl/4040/cgi/engine_details.cgi?print=Details&each_game=1&eng=Loki%203.0.0%2064-bit#Loki_3_0_0_64-bit).
+| 3.5.0     | 2490  | 40/15|
 
 ## Implementation
 Loki uses bitboards as its main board representation
