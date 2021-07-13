@@ -34,19 +34,23 @@ namespace Texel {
 
 			fen = epd.substr(0, fen_end + 1);
 
+			if (fen == "") {
+				continue;
+			}
+
 			// Now we need to resolve the game result
 
 			auto result_start = epd.find_first_of('"');
 
 			std::string res = epd.substr(result_start + 1, epd.length() - result_start - 3);
 
-			if (res == "1/2-1/2") {
+			if (res == "1/2-1/2" || res == "0.500") {
 				result = 0.5;
 			}
-			else if (res == "1-0") {
+			else if (res == "1-0" || res == "1.000") {
 				result = 1.0;
 			}
-			else if (res == "0-1") {
+			else if (res == "0-1" || res == "0.000") {
 				result = 0.0;
 			}
 			else { // Throw an error if no result is given.
