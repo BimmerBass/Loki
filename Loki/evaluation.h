@@ -137,15 +137,16 @@ Piece evaluation constants
 
 */
 
-const Score outpost(31, 13);
-const Score reachable_outpost(18, -2);
+const Score outpost(54, 6);
+const Score reachable_outpost(18, 4);
 
-const Score knight_on_kingring(8, -13);
-const Score defended_knight(0, 10);
+const Score knight_on_kingring(11, -6);
+const Score defended_knight(-5, 9);
 
-const Score bishop_on_kingring(11, 4);
-const Score bishop_on_queen(32, 24);
-const Score bad_bishop_coeff(0, 5);
+const Score bishop_on_kingring(10, -3);
+const Score bishop_on_queen(37, -69);
+const Score bad_bishop_coeff(10, 1);
+
 
 const Score doubled_rooks(31, 9);
 const Score rook_on_queen(6, 49);

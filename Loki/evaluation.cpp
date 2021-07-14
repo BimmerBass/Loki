@@ -1,6 +1,5 @@
 #include "evaluation.h"
 
-
 namespace Eval {
 
 
@@ -843,8 +842,8 @@ namespace Eval {
 		king_safety<WHITE>(pos, eval); king_safety<BLACK>(pos, eval);
 
 		// Step 10. Piece evaluations --> loses elo (~-23) at the moment
-		//pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
-		//pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
+		pieces<WHITE, KNIGHT>(pos, eval);	pieces<BLACK, KNIGHT>(pos, eval);
+		pieces<WHITE, BISHOP>(pos, eval);	pieces<BLACK, BISHOP>(pos, eval);
 		//pieces<WHITE, ROOK>(pos, eval);		pieces<BLACK, ROOK>(pos, eval);
 		//pieces<WHITE, QUEEN>(pos, eval);	pieces<BLACK, QUEEN>(pos, eval);
 

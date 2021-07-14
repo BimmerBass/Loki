@@ -65,6 +65,7 @@ namespace Texel {
 	*/
 	struct Value {
 		Value(double m, double e) { mg = m; eg = e; }
+		Value(double b) { mg = b; eg = b; }
 		Value() { mg = 0.0; eg = 0.0; }
 		double mg;
 		double eg;

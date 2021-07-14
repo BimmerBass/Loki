@@ -11,37 +11,13 @@ int main(int argc, char* argv[]) {
 
 
 	// If "bench" has been added as an argument, just run this and quit
-	//if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
-	//	Bench::run_benchmark();
-	//	return 0;
-	//}
-	//
-	//UCI::loop();
+	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
+		Bench::run_benchmark();
+		return 0;
+	}
+	
+	UCI::loop();
 
-	Texel::Parameters tuning_params;
-
-	using namespace Texel;
-
-	for (int i = 0; i < 64; i++) {
-		tuning_params.push_back(Parameter(&PSQT::PawnTable[i], Value(0.002, 0.002), Value(3.0, 3.0), Score(200, 200), Score(-200, -200)));
-	}
-	for (int i = 0; i < 64; i++) {
-		tuning_params.push_back(Parameter(&PSQT::KnightTable[i], Value(0.002, 0.002), Value(3.0, 3.0), Score(200, 200), Score(-200, -200)));
-	}
-	for (int i = 0; i < 64; i++) {
-		tuning_params.push_back(Parameter(&PSQT::BishopTable[i], Value(0.002, 0.002), Value(3.0, 3.0), Score(200, 200), Score(-200, -200)));
-	}
-	for (int i = 0; i < 64; i++) {
-		tuning_params.push_back(Parameter(&PSQT::RookTable[i], Value(0.002, 0.002), Value(3.0, 3.0), Score(200, 200), Score(-200, -200)));
-	}
-	for (int i = 0; i < 64; i++) {
-		tuning_params.push_back(Parameter(&PSQT::QueenTable[i], Value(0.002, 0.002), Value(3.0, 3.0), Score(200, 200), Score(-200, -200)));
-	}
-	for (int i = 0; i < 64; i++) {
-		tuning_params.push_back(Parameter(&PSQT::KingTable[i], Value(0.002, 0.002), Value(3.0, 3.0), Score(200, 200), Score(-200, -200)));
-	}
-
-	Texel::Tune(tuning_params, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 10000);
 	//Texel::Parameters tuning_variables;
 	//
 	//using namespace Texel;
@@ -52,6 +28,16 @@ int main(int argc, char* argv[]) {
 	//
 	//
 	//Texel::Tune(tuning_variables, "C:\\Users\\abild\\Desktop\\quiet-labeled.epd", 1000);
+
+	//Texel::Parameters vars;
+	//
+	//using namespace Texel;
+	//
+	//
+	//
+	//
+	//
+	//Texel::Tune(vars, "C:\\Users\\abild\\Desktop\\data\\text\\100MB\\texel-set-clean.epd", 500);
 
 	return 0;
 }
