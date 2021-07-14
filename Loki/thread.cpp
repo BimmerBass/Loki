@@ -4,7 +4,7 @@
 
 /*
 
-Helper function to clear a searchinfo instance
+Helper function to clear a searchinfo instance.
 
 */
 
