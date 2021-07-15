@@ -532,3 +532,16 @@ void moveGen::generate<CAPTURES>(GameState_t* pos, MoveList* move_list) {
 		generate_all<CAPTURES, BLACK>(pos, move_list);
 	}
 }
+
+
+template<>
+void moveGen::generate<QUIET>(GameState_t* pos, MoveList* move_list) {
+	SIDE me = pos->side_to_move;
+
+	if (me == WHITE) {
+		generate_all<QUIET, WHITE>(pos, move_list);
+	}
+	else {
+		generate_all<QUIET, BLACK>(pos, move_list);
+	}
+}
