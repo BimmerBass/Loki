@@ -758,8 +758,8 @@ namespace Search {
 
 		moves_loop:
 
-		MoveList moves;
-		ss->generate_moves(&moves);
+		// Initialize a movestager object.
+		MoveStager stager(ss->pos, &ss->stats, (ttHit) ? ttMove : NOMOVE);
 
 		// Step 10. Internal Iterative Deepening (IID) (~21 elo): If the transposition table didn't return a move, we'll search the position to a shallower
 		//		depth in the hopes of finding the PV.
@@ -791,26 +791,14 @@ namespace Search {
 		//
 		//	line.clear();
 		//}
-		
-		// If the transposition table returned a move, this is probably the best, so we'll score it highest.
-		if (ttHit && ttMove != NOMOVE) {
-			for (int i = 0; i < moves.size(); i++) {
-				if (moves[i]->move == ttMove) {
-					moves[i]->score = hash_move_sort;
-					break;
-				}
-			}
-		}
 
+		Move_t current_move;
 		int move = NOMOVE;
 		int legal = 0;
 		int moves_searched = 0;
 
-		for (int m = 0; m < moves.size(); m++) {
-			ss->pickNextMove(m, &moves);
-
-			move = moves[m]->move;
-
+		while(stager.next_move(current_move)) {
+			move = current_move.move;
 			
 			// Most of the below will first be used when adding proper LMR and LMP, and thus they're commented out.
 			bool capture = (ss->pos->piece_list[Them][TOSQ(move)] != NO_TYPE) ? true : false;
@@ -835,7 +823,7 @@ namespace Search {
 			}
 
 
-			if (!ss->pos->make_move(moves[m])) {
+			if (!ss->pos->make_move(&current_move)) {
 				continue;
 			}
 			
@@ -852,7 +840,7 @@ namespace Search {
 			// Step 12. If we are allowed to use futility pruning, and this move is not tactically significant, prune it.
 			//			We just need to make sure that at least one legal move has been searched since we'd risk getting false mate scores else.
 			if (futility_pruning && 
-				(!is_tactical || (depth <= 1 && moves[m]->score < 0)) // If we're at a pre-frontier node, we'll also prune moves that are deemed to be bad.
+				(!is_tactical || (depth <= 1 && current_move.score < 0)) // If we're at a pre-frontier node, we'll also prune moves that are deemed to be bad.
 				&& legal > 0) {
 				ss->pos->undo_move();
 				continue;
@@ -889,7 +877,7 @@ namespace Search {
 
 				// Step 13A. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
-					ss->update_move_heuristics(move, depth, &moves);
+					ss->update_move_heuristics(move, depth, stager.get_moves());
 				}
 				
 				
@@ -990,26 +978,19 @@ namespace Search {
 
 
 		// Step 4. Generation of moves
-
-		MoveList ml;
-
-		if (!in_check) {
-			ss->generate_moves(&ml, true);
-		}
-		else {
-			ss->generate_moves(&ml);
-		}
+		MoveStager stager(ss->pos);
 
 		int legal = 0;
 		int move = NOMOVE;
-		for (int m = 0; m < ml.size(); m++) {
-			ss->pickNextMove(m, &ml);
+		Move_t current_move;
+
+		while(stager.next_move(current_move, true)) {
 			
-			move = ml[m]->move;
+			move = current_move.move;
 			int piece_captured = ss->pos->piece_list[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][TOSQ(move)];
 
 			// Step 5. SEE pruning (~56 elo). If the move is a capture and SEE(move) < 0 (we know this if move->score < 0 for captures), just prune it.
-			if (piece_captured != NO_TYPE && ml[m]->score < 0) {
+			if (piece_captured != NO_TYPE && current_move.score < 0) {
 				continue;
 			}
 			
@@ -1022,7 +1003,7 @@ namespace Search {
 			//}
 
 
-			if (!ss->pos->make_move(ml[m])) {
+			if (!ss->pos->make_move(&current_move)) {
 				continue;
 			}
 			legal++;

@@ -17,11 +17,12 @@ enum STAGE_T :int {
 // The MoveStager class is the one responsible for keeping track of which moves to search.
 class MoveStager {
 public:
-	MoveStager(GameState_t* _pos, const MoveStats_t* stats, unsigned int ttMove); // For main search
-	MoveStager(const GameState_t* _pos); // For quiescence search.
+	MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove); // For main search
+	MoveStager(GameState_t* _pos); // For quiescence search.
 	
-	bool next_move(Move_t& move, bool skip_quiets = true);
+	bool next_move(Move_t& move, bool skip_quiets = false);
 
+	MoveList* get_moves();
 private:
 	MoveList ml;
 	int stage = TT_STAGE;
@@ -45,8 +46,7 @@ void MoveStager::score() {
 	SIDE Them = (pos->side_to_move == WHITE) ? BLACK : WHITE;
 
 	if constexpr (T == QUIET) {
-		// Step 1. Clear the movelist and generate all quiet moves.
-		ml.reset();
+		// Step 1. Generate all quiet moves.
 		moveGen::generate<QUIET>(pos, &ml);
 
 		// Step 2. Loop through the moves while scoring them.
