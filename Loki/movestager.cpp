@@ -73,7 +73,7 @@ top:
 			goto top;
 		}
 
-		// Set the new flag and fallthrough
+		// Set the new flag and fallthrough.
 		stage++;
 		[[fallthrough]];
 
