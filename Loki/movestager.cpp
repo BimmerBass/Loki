@@ -6,7 +6,7 @@
 /// Alpha/Beta constructor for the MoveStager class.
 /// </summary>
 /// <param name="_pos">A position object that we'll store in order to generate the moves.</param>
-/// <param name="stats">The previously generated stats on different kinds of (mostly quiet) moves</param>
+/// <param name="stats">The previously generated stats on different kinds of (mostly quiet) moves.</param>
 /// <param name="ttMove">A move from the transposition table.</param>
 /// <param name="in_check">A flag signalling if we're in check or not.</param>
 MoveStager::MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove, bool in_check) {
