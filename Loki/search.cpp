@@ -759,7 +759,7 @@ namespace Search {
 		moves_loop:
 
 		// Initialize a movestager object.
-		MoveStager stager(ss->pos, &ss->stats, (ttHit) ? ttMove : NOMOVE);
+		MoveStager stager(ss->pos, &ss->stats, (ttHit) ? ttMove : NOMOVE, in_check);
 
 		// Step 10. Internal Iterative Deepening (IID) (~21 elo): If the transposition table didn't return a move, we'll search the position to a shallower
 		//		depth in the hopes of finding the PV.

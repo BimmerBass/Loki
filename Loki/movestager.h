@@ -20,7 +20,7 @@ bool is_pseudo_legal(GameState_t* pos, unsigned int move, bool in_check);
 // The MoveStager class is the one responsible for keeping track of which moves to search.
 class MoveStager {
 public:
-	MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove); // For main search
+	MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove, bool in_check); // For main search
 	MoveStager(GameState_t* _pos); // For quiescence search.
 	
 	bool next_move(Move_t& move, bool skip_quiets = false);

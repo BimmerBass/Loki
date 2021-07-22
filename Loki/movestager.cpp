@@ -8,7 +8,8 @@
 /// <param name="_pos">A position object that we'll store in order to generate the moves.</param>
 /// <param name="stats">The previously generated stats on different kinds of (mostly quiet) moves</param>
 /// <param name="ttMove">A move from the transposition table.</param>
-MoveStager::MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove) {
+/// <param name="in_check">A flag signalling if we're in check or not.</param>
+MoveStager::MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove, bool in_check) {
 	pos = _pos;
 	stats = _stats;
 
@@ -17,10 +18,11 @@ MoveStager::MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMo
 	if (ttMove != NOMOVE) {
 		stage = TT_STAGE;
 
-		// Since we're using quite small hash keys, we need to check that we're not capturing friendly pieces or moving opponent ones with the tt move.
-		if (pos->piece_list[pos->side_to_move][FROMSQ(tt_move)] == NO_TYPE || pos->piece_list[pos->side_to_move][TOSQ(tt_move)] != NO_TYPE
-			|| pos->piece_list[(pos->side_to_move == WHITE) ? BLACK : WHITE][FROMSQ(tt_move)] != NO_TYPE) {
+		// Since there is a risk of key collisions, we need to check that the tt move is at least pseudo-legal.
+		// If the move isn't pseudo-legal set a new stage.
+		if (!is_pseudo_legal(pos, tt_move, in_check)) {
 			stage = CAPTURE_SCORE_STAGE;
+			tt_move = NOMOVE;
 		}
 	}
 	else {
