@@ -48,6 +48,8 @@ public:
 	void reset() {
 		last = moveList;
 	}
+
+	bool contains(unsigned int move);
 private:
 	Move_t moveList[MAXPOSITIONMOVES];
 	Move_t* last = moveList;

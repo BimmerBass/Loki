@@ -13,6 +13,9 @@ enum STAGE_T :int {
 };
 
 
+// Function for determining whether a move is pseudo-legal or not
+bool is_pseudo_legal(GameState_t* pos, unsigned int move, bool in_check);
+
 
 // The MoveStager class is the one responsible for keeping track of which moves to search.
 class MoveStager {

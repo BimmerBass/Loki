@@ -184,3 +184,107 @@ void MoveStager::pi_sort() {
 MoveList* MoveStager::get_moves() {
 	return &ml;
 }
+
+
+/// <summary>
+/// Determine whether a move is pseudo-legal or not. This method is used to check the TT move in MoveStager since some illegal moves may cause a crash.
+/// It can also be used for killers at a later point.
+/// </summary>
+/// <param name="pos">: The position object.</param>
+/// <param name="move">: The encoded move.</param>
+/// <param name="in_check">: A flag for signalling whether we're in check or not.</param>
+/// <returns>True if the move is pseudo-legal and false if not.</returns>
+bool is_pseudo_legal(GameState_t* pos, unsigned int move, bool in_check) {
+
+	// Step 1. Initialize some variables and extract move info.
+	SIDE Them = (pos->side_to_move == WHITE) ? BLACK : WHITE;
+	SIDE Us = pos->side_to_move;
+	int from_sq = FROMSQ(move);
+	int to_sq = TOSQ(move);
+	int special = SPECIAL(move);
+	int promotion_piece = PROMTO(move);
+
+	// Step 2. If we're moving an empty square or an enemy piece, the move is illegal.
+	if (pos->piece_list[Us][from_sq] == NO_TYPE || pos->piece_list[Them][from_sq] != NO_TYPE) {
+		return false;
+	}
+
+	// Step 3. We can't capture our own pieces.
+	if (pos->piece_list[Us][to_sq] != NO_TYPE) {
+		return false;
+	}
+
+	// Step 4. For special moves (promotion, en-passant or castling), we will just generate all moves and see if the list contains the move we're checking.
+	// Note: This is slow, but since special moves are so rare, it won't be too much of a problem.
+	if (special != NOT_SPECIAL) {
+		MoveList moves;
+		moveGen::generate<ALL>(pos, &moves);
+
+		return moves.contains(move);
+	}
+
+	// Step 5. Since we have checked that we're moving and capturing the correct piece types, we can extract this info.
+	int piece_moved = pos->piece_list[Us][from_sq];
+	int piece_captured = pos->piece_list[Them][to_sq];
+	Bitboard attackBB = 0;
+	Bitboard occupied = (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]);
+
+	bool is_capture, single_push, double_push;
+
+	// Step 6. Handle the different pieces.
+	switch (piece_moved) {
+	case PAWN:
+		// Step 6A. Since promotions are handled in step 4, make sure the destination square on the 8'th or 1'st rank.
+		if (((BBS::RankMasks8[RANK_8] | BBS::RankMasks8[RANK_1]) & (uint64_t(1) << to_sq)) != 0) {
+			return false;
+		}
+
+		// Step 6B. Since the move isn't a promotion, it needs to be either a capture, single push or double push.
+		is_capture = ((Us == WHITE) ? (to_sq == from_sq + 9 || to_sq == from_sq + 7) : (to_sq == from_sq - 9 || to_sq == from_sq - 7))
+			&& (pos->all_pieces[Them] & (uint64_t(1) << to_sq)) != 0;
+
+		single_push = (Us == WHITE) ? to_sq == from_sq + 8 : to_sq == from_sq - 8;
+
+		double_push = ((Us == WHITE) ? (to_sq == from_sq + 16 && (BBS::RankMasks8[RANK_2] & (uint64_t(1) << from_sq)) != 0)
+			: (to_sq == from_sq - 16 && (BBS::RankMasks8[RANK_7] & (uint64_t(1) << from_sq)) != 0))
+			&& ((pos->all_pieces[WHITE] | pos->all_pieces[BLACK]) & (uint64_t(1) << (Us == WHITE ? from_sq + 8 : from_sq - 8))) == 0;
+
+		if (!(is_capture || single_push || double_push)) {
+			return false;
+		}
+
+		break;
+	
+	/*
+	For the sliding pieces, we need to make sure their paths aren't blocked.
+	*/
+	case BISHOP:
+		attackBB = Magics::attacks_bb<BISHOP>(from_sq, occupied);
+
+		if ((attackBB & (uint64_t(1) << to_sq)) == 0) {
+			return false;
+		}
+		break;
+
+	case ROOK:
+		attackBB = Magics::attacks_bb<ROOK>(from_sq, occupied);
+
+		if ((attackBB & (uint64_t(1) << to_sq)) == 0) {
+			return false;
+		}
+		break;
+
+	case QUEEN:
+		attackBB = Magics::attacks_bb<QUEEN>(from_sq, occupied);
+		
+		if ((attackBB & (uint64_t(1) << to_sq)) == 0) {
+			return false;
+		}
+		break;
+
+	default:	/* There are no special considerations for kings or knights. */
+		break;
+	}
+
+	return true;
+}
