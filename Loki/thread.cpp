@@ -147,7 +147,7 @@ void SearchThread_t::pickNextMove(int index, MoveList* ml) {
 
 	for (int m = index; m < ml->size(); m++) {
 
-		// If the score for (*ml)[m] is higher than the maximum score we've found, this is the new best move.
+		// If the score for (*ml)[m] is higher than the maximum score we've found, this is the new best move
 		if ((*ml)[m]->score > best_score) {
 			best_index = m;
 
