@@ -71,23 +71,17 @@ public:
 
 
 	void setKillers(int ply, int move);
-	void pickNextMove(int index, MoveList* ml);
-		
 	
 	// All move ordering and pruning statistics is held in stats
 	MoveStats_t stats;
 
-	void generate_moves(MoveList* moves, bool qsearch = false);
-
 	void update_move_heuristics(int best_move, int depth, MoveList* ml);
 	void clear_move_heuristics();
+	
 	~SearchThread_t() {
 		delete pos;
 		delete info;
 	}
-
-private:
-	void score_moves(MoveList* ml);
 };
 
 
