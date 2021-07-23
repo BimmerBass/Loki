@@ -111,7 +111,7 @@ top:
 		// If there are no quiets, return false.
 		if (current_move >= ml.size()) { return false; }
 
-		// Increment stage and fallthrough
+		// Increment stage and fallthrough.
 		stage++;
 		[[fallthrough]];
 
