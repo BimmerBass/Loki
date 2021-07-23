@@ -1,31 +1,6 @@
 #include "movestager.h"
 
 
-/// <summary>
-/// Overloaded constructor for the root node in alpha/beta.
-/// </summary>
-/// <param name="_pos"A position object that we'll use to generate the moves.</param>
-/// <param name="_stats">The previously generated stats on different kinds of (mostly quiet) moves.</param>
-/// <param name="ttMove">The move from the transposition table.</param>
-MoveStager::MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove) {
-	pos = _pos;
-	stats = _stats;
-	current_move = 0;
-
-	tt_move = ttMove;
-
-	// For the root node, time is not that important since it's called so rarely. Therefore we generate the moves immediately.
-	score<CAPTURES>(true);
-	score<QUIET>(true);
-
-	// If the movelist contains the tt-move, score it accordingly.
-	if (tt_move != NOMOVE) {
-		for (int i = 0; i < ml.size(); i++) {
-			if (ml[i]->move == tt_move) { ml[i]->score = hash_move_sort; break; }
-		}
-	}
-}
-
 
 /// <summary>
 /// Alpha/Beta constructor for the MoveStager class.
@@ -66,6 +41,45 @@ MoveStager::MoveStager(GameState_t* _pos) {
 	stage = CAPTURE_SCORE_STAGE;
 }
 
+
+/// <summary>
+/// Default constructor. This should never be used and is only here in order to make the derived class, RootMoveStager, possible.
+/// </summary>
+MoveStager::MoveStager() {
+	stage = TT_STAGE;
+	current_move = 0;
+
+	pos = nullptr;
+	stats = nullptr;
+
+	tt_move = NOMOVE;
+}
+
+
+/// <summary>
+/// Constructor for the sub-class RootMoveStager which is used in root_search.
+/// </summary>
+/// <param name="_pos">The position object.</param>
+/// <param name="_stats">The previously generated stats for (mostly quiet) moves.</param>
+/// <param name="ttMove">The move from the transposition table.</param>
+RootMoveStager::RootMoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove) {
+	pos = _pos;
+	stats = _stats;
+	current_move = 0;
+
+	tt_move = ttMove;
+
+	// For the root node, time is not that important since it's called so rarely. Therefore we generate the moves immediately.
+	score<CAPTURES>(true);
+	score<QUIET>(true);
+
+	// If the movelist contains the tt-move, score it accordingly.
+	if (tt_move != NOMOVE) {
+		for (int i = 0; i < ml.size(); i++) {
+			if (ml[i]->move == tt_move) { ml[i]->score = hash_move_sort; break; }
+		}
+	}
+}
 
 
 
@@ -179,11 +193,11 @@ top:
 
 
 /// <summary>
-/// A method for fetching moves in the root node.
+/// Overloaded next_move for the root move stager. It simply loops through the movelist.
 /// </summary>
-/// <param name="move">A reference to the move that the search will use.</param>
-/// <returns>A boolean signalling whether we found a move or not.</returns>
-bool MoveStager::next_root(Move_t& move) {
+/// <param name="move">A reference to the Move_t object that the search function uses.</param>
+/// <returns>True if a valid move is found and false otherwise.</returns>
+bool RootMoveStager::next_move(Move_t& move) {
 	if (current_move >= ml.size()) {
 		return false;
 	}
@@ -196,6 +210,7 @@ bool MoveStager::next_root(Move_t& move) {
 
 	return true;
 }
+
 
 
 /// <summary>

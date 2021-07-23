@@ -20,16 +20,14 @@ bool is_pseudo_legal(GameState_t* pos, unsigned int move, bool in_check);
 // The MoveStager class is the one responsible for keeping track of which moves to search.
 class MoveStager {
 public:
-	MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove); // For root node in main search.
+	MoveStager();
 	MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove, bool in_check); // For main search
 	MoveStager(GameState_t* _pos); // For quiescence search.
 	
 	bool next_move(Move_t& move, bool skip_quiets = false);
 
-	bool next_root(Move_t& move);
-
 	MoveList* get_moves();
-private:
+protected:
 	MoveList ml;
 	int stage = TT_STAGE;
 	int current_move = 0;
@@ -44,6 +42,17 @@ private:
 
 	void pi_sort();
 };
+
+
+
+class RootMoveStager : public MoveStager {
+public:
+	RootMoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove);
+
+	bool next_move(Move_t& move);
+};
+
+
 
 
 /// <summary>
@@ -109,7 +118,6 @@ void MoveStager::score(bool raise_captures) {
 		}
 	}
 }
-
 
 
 #endif

@@ -393,9 +393,6 @@ namespace Search {
 		bool raised_alpha = false;
 		int legal = 0;
 
-		//MoveList moves; 
-		//ss->generate_moves(&moves);
-
 
 		// Step 1. In-check extensions.
 		bool in_check = ss->pos->in_check();
@@ -418,36 +415,30 @@ namespace Search {
 		unsigned int pvMove = (ttHit) ? entry->move : NOMOVE;
 
 
-		MoveStager stager(ss->pos, &ss->stats, pvMove);
-
 		if (ss->pos->ply >= ss->info->seldepth) {
 			ss->info->seldepth = ss->pos->ply;
 		}
 
+		// Step 4. Initialize a staged move generation object and loop through all moves.
+		RootMoveStager stager(ss->pos, &ss->stats, pvMove);
 
-		// Now we'll loop through the move list.
-		//for (int m = 0; m < moves.size(); m++) {
-		Move_t mv;
-		while(stager.next_root(mv)){
+		Move_t move;
+
+		while (stager.next_move(move)) {
 			line.clear();
 
-			
-			
-			unsigned int move = mv.move;
-			
-
-			if (!ss->pos->make_move(&mv)) {
+			if (!ss->pos->make_move(&move)) {
 				continue;
 			}
-			
+
 			legal++;
 
-			
-			// Set the previous move such that we can use the countermove heuristic.
-			ss->stats.moves_path[ss->pos->ply] = move;
 
-			
-			// Step 4. Principal Variation search. We search all moves with the full window until one raises alpha. Afterwards we'll search with a null window
+			// Set the previous move such that we can use the countermove heuristic.
+			ss->stats.moves_path[ss->pos->ply] = move.move;
+
+
+			// Step 5. Principal Variation search. We search all moves with the full window until one raises alpha. Afterwards we'll search with a null window
 			// If this is the first legal move
 			if (legal == 1) {
 				score = -alphabeta(ss, new_depth - 1, -beta, -alpha, true, &line);
@@ -471,15 +462,15 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				tt->store_entry(ss->pos, move, beta, depth, ttFlag::BETA);
+				tt->store_entry(ss->pos, move.move, beta, depth, ttFlag::BETA);
 
 
 				return beta;
 			}
 
-			if (score > best_score){
+			if (score > best_score) {
 				best_score = score;
-				best_move = move;
+				best_move = move.move;
 
 				if (score > alpha) {
 					alpha = score;
