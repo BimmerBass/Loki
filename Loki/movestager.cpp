@@ -1,6 +1,31 @@
 #include "movestager.h"
 
 
+/// <summary>
+/// Overloaded constructor for the root node in alpha/beta.
+/// </summary>
+/// <param name="_pos"A position object that we'll use to generate the moves.</param>
+/// <param name="_stats">The previously generated stats on different kinds of (mostly quiet) moves.</param>
+/// <param name="ttMove">The move from the transposition table.</param>
+MoveStager::MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove) {
+	pos = _pos;
+	stats = _stats;
+	current_move = 0;
+
+	tt_move = ttMove;
+
+	// For the root node, time is not that important since it's called so rarely. Therefore we generate the moves immediately.
+	score<CAPTURES>(true);
+	score<QUIET>(true);
+
+	// If the movelist contains the tt-move, score it accordingly.
+	if (tt_move != NOMOVE) {
+		for (int i = 0; i < ml.size(); i++) {
+			if (ml[i]->move == tt_move) { ml[i]->score = hash_move_sort; break; }
+		}
+	}
+}
+
 
 /// <summary>
 /// Alpha/Beta constructor for the MoveStager class.
@@ -149,6 +174,27 @@ top:
 	}
 
 	return false;
+}
+
+
+
+/// <summary>
+/// A method for fetching moves in the root node.
+/// </summary>
+/// <param name="move">A reference to the move that the search will use.</param>
+/// <returns>A boolean signalling whether we found a move or not.</returns>
+bool MoveStager::next_root(Move_t& move) {
+	if (current_move >= ml.size()) {
+		return false;
+	}
+
+	// Step 1. Find the highest sorted move and set it.
+	pi_sort();
+	move.move = ml[current_move]->move;
+	move.score = ml[current_move]->score;
+	current_move++;
+
+	return true;
 }
 
 

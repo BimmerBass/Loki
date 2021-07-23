@@ -20,10 +20,13 @@ bool is_pseudo_legal(GameState_t* pos, unsigned int move, bool in_check);
 // The MoveStager class is the one responsible for keeping track of which moves to search.
 class MoveStager {
 public:
+	MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove); // For root node in main search.
 	MoveStager(GameState_t* _pos, MoveStats_t* _stats, unsigned int ttMove, bool in_check); // For main search
 	MoveStager(GameState_t* _pos); // For quiescence search.
 	
 	bool next_move(Move_t& move, bool skip_quiets = false);
+
+	bool next_root(Move_t& move);
 
 	MoveList* get_moves();
 private:
@@ -32,7 +35,7 @@ private:
 	int current_move = 0;
 
 	template<MoveType T>
-	void score();
+	void score(bool raise_captures = false);
 
 	GameState_t* pos = nullptr;
 	MoveStats_t* stats = nullptr;
@@ -43,9 +46,12 @@ private:
 };
 
 
-// Note: The below method is placed in the header since it is templated.
+/// <summary>
+/// Method for generating and scoring all moves. The two templates are for captures and quiets separately.
+/// </summary>
+/// <param name="raise_captures">A flag used to give captures a higher score than quiets (+10M). Used when generating all moves at once.</param>
 template<MoveType T>
-void MoveStager::score() {
+void MoveStager::score(bool raise_captures) {
 	SIDE Them = (pos->side_to_move == WHITE) ? BLACK : WHITE;
 
 	if constexpr (T == QUIET) {
@@ -76,7 +82,13 @@ void MoveStager::score() {
 
 		// Step 2. Loop through all the moves.
 		for (int i = 0; i < ml.size(); i++) {
-			ml[i]->score = 0;
+			
+			if (raise_captures) {
+				ml[i]->score = 10000000;
+			}
+			else {
+				ml[i]->score = 0;
+			}
 
 			// Step 2A. If the capture is a LxH, score it with MvvLva
 			if (pos->piece_list[Them][TOSQ(ml[i]->move)] > pos->piece_list[pos->side_to_move][FROMSQ(ml[i]->move)]) {

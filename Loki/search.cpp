@@ -393,8 +393,8 @@ namespace Search {
 		bool raised_alpha = false;
 		int legal = 0;
 
-		MoveList moves; 
-		ss->generate_moves(&moves);
+		//MoveList moves; 
+		//ss->generate_moves(&moves);
 
 
 		// Step 1. In-check extensions.
@@ -416,16 +416,9 @@ namespace Search {
 		bool ttHit = false;
 		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
 		unsigned int pvMove = (ttHit) ? entry->move : NOMOVE;
-		
-		if (ttHit) {
-			// Loop through the move list and find the pvMove
-			for (int m = 0; m < moves.size(); m++) {
-				if (moves[m]->move == pvMove) {
-					moves[m]->score = hash_move_sort;
-					break;
-				}
-			}
-		}
+
+
+		MoveStager stager(ss->pos, &ss->stats, pvMove);
 
 		if (ss->pos->ply >= ss->info->seldepth) {
 			ss->info->seldepth = ss->pos->ply;
@@ -433,15 +426,17 @@ namespace Search {
 
 
 		// Now we'll loop through the move list.
-		for (int m = 0; m < moves.size(); m++) {
+		//for (int m = 0; m < moves.size(); m++) {
+		Move_t mv;
+		while(stager.next_root(mv)){
 			line.clear();
 
-			ss->pickNextMove(m, &moves);
 			
-			unsigned int move = moves[m]->move;
+			
+			unsigned int move = mv.move;
 			
 
-			if (!ss->pos->make_move(moves[m])) {
+			if (!ss->pos->make_move(&mv)) {
 				continue;
 			}
 			
