@@ -116,3 +116,20 @@ void MoveList::replace(int index, Move_t newMove) {
 
 	moveList[index] = newMove;
 }
+
+/// <summary>
+/// Checks if a move is in the movelist.
+/// </summary>
+/// <param name="move">: The move to search for.</param>
+/// <returns>True if the move exists in the list and false if not.</returns>
+bool MoveList::contains(unsigned int move) {
+	if (move == NOMOVE) { return false; }
+
+	for (int i = 0; i < size(); i++) {
+		if (moveList[i].move == move) {
+			return true;
+		}
+	}
+
+	return false;
+}

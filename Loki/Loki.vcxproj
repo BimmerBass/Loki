@@ -162,6 +162,7 @@
     <ClCompile Include="misc.cpp" />
     <ClCompile Include="move.cpp" />
     <ClCompile Include="movegen.cpp" />
+    <ClCompile Include="movestager.cpp" />
     <ClCompile Include="perft.cpp" />
     <ClCompile Include="position.cpp" />
     <ClCompile Include="psqt.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="misc.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="movegen.h" />
+    <ClInclude Include="movestager.h" />
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
     <ClInclude Include="psqt.h" />

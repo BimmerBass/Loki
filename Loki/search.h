@@ -2,7 +2,7 @@
 #define SEARCH_H
 #include "movegen.h"
 #include "misc.h"
-#include "thread.h"
+#include "movestager.h"
 
 #include "evaluation.h"
 #include "transposition.h"

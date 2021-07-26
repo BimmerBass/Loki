@@ -66,6 +66,9 @@
     <ClCompile Include="texel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="movestager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitboard.h">
@@ -117,6 +120,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="texel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="movestager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
