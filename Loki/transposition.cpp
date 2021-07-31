@@ -105,7 +105,7 @@ EntryData_t* TranspositionTable::probe_tt(uint64_t key, bool& hit) {
 
 
 // For now we are just using a replace all strategy
-void TranspositionTable::store_entry(const GameState_t* pos, uint16_t move, int16_t score, int16_t eval, uint16_t depth, uint16_t flag) {
+void TranspositionTable::store_entry(const GameState_t* pos, uint16_t move, int16_t score, uint16_t depth, uint16_t flag) {
 	TT_Slot* slot = &table[pos->posKey & (num_slots - 1)];
 
 	// Step 1. Check if the data can be written to the first entry.

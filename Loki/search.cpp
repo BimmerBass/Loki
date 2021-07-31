@@ -466,7 +466,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				tt->store_entry(ss->pos, move.move, beta, ss->stats.static_eval[ss->pos->ply], depth, ttFlag::BETA);
+				tt->store_entry(ss->pos, move.move, beta, depth, ttFlag::BETA);
 
 
 				return beta;
@@ -499,10 +499,10 @@ namespace Search {
 		if (raised_alpha) {
 			assert(best_move == pvLine->pv[0]);
 		
-			tt->store_entry(ss->pos, best_move, alpha, ss->stats.static_eval[ss->pos->ply], depth, ttFlag::EXACT);
+			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
 		}
 		else {
-			tt->store_entry(ss->pos, best_move, alpha, ss->stats.static_eval[ss->pos->ply], depth, ttFlag::ALPHA);
+			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
 		}
 	
 		return alpha;
@@ -869,7 +869,7 @@ namespace Search {
 				}
 				
 				
-				tt->store_entry(ss->pos, move, beta, ss->stats.static_eval[ss->pos->ply], depth, ttFlag::BETA);
+				tt->store_entry(ss->pos, move, beta, depth, ttFlag::BETA);
 
 				return beta;
 			}
@@ -900,11 +900,11 @@ namespace Search {
 
 		
 		if (alpha > old_alpha) {
-			tt->store_entry(ss->pos, best_move, alpha, ss->stats.static_eval[ss->pos->ply], depth, ttFlag::EXACT);
+			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::EXACT);
 
 		}
 		else{
-			tt->store_entry(ss->pos, best_move, alpha, ss->stats.static_eval[ss->pos->ply], depth, ttFlag::ALPHA);
+			tt->store_entry(ss->pos, best_move, alpha, depth, ttFlag::ALPHA);
 		}
 
 

@@ -36,7 +36,7 @@ public:
 
 	EntryData_t* probe_tt(const uint64_t key, bool& hit);
 
-	void store_entry(const GameState_t* pos, uint16_t move, int16_t score, int16_t eval, uint16_t depth,  uint16_t flag);
+	void store_entry(const GameState_t* pos, uint16_t move, int16_t score, uint16_t depth,  uint16_t flag);
 
 	size_t size();
 	void clear_table();

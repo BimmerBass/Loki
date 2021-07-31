@@ -4,8 +4,9 @@
 #include "misc.h"
 #include "movestager.h"
 
-#include "evaluation.h"
 #include "transposition.h"
+#include "evaluation.h"
+
 
 #include <cmath>
 #include <atomic>
