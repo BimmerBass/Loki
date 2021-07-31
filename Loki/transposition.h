@@ -1,11 +1,15 @@
 #ifndef TRANSPOSITION_H
 #define TRANSPOSITION_H
-#include "position.h"
+#include "tt_entry.h"
 
 #include <vector>
 
 
-// Returns the nearest power of two lower than or equal to the number maxSize
+/// <summary>
+/// Return the nearest power of two less than or equal to some number.
+/// </summary>
+/// <param name="maxSize">The maximum number we can return.</param>
+/// <returns></returns>
 inline uint64_t nearest_power_two(uint64_t maxSize) {
 	uint64_t x = 1;
 	
@@ -18,51 +22,10 @@ inline uint64_t nearest_power_two(uint64_t maxSize) {
 }
 
 
-// Makes a mate score relative to the position instead of the root.
-inline int16_t value_to_tt(int score, int ply) {
-	return (score > MATE) ? score + ply : ((score < -MATE) ? score - ply : score);
-}
 
-// Makes a mate score relative to probing root instead of the stored position
-inline int16_t value_from_tt(int score, int ply) {
-	return (score > MATE) ? score - ply : ((score < -MATE) ? score + ply : score);
-}
-
-enum ttFlag :int { ALPHA = 0, BETA = 1, EXACT = 2, NO_FLAG = 3 };
-
-
-struct EntryData {
-	volatile uint16_t move;
-	volatile int16_t score;
-	//volatile uint16_t unused;
-	volatile uint16_t depth : 7, age : 7, flag : 2;
-};
-
-
-struct TT_Entry {
-	uint16_t key = 0;
-	uint16_t move = NOMOVE;
-	int16_t score = 0;
-	
-	uint16_t depth : 7, flag : 2, age : 7;
-	
-	// Clear the entry
-	void clear() {
-		key = 0; move = NOMOVE; score = 0; depth = 0; flag = NO_FLAG; age = 0;
-	}
-
-	// Store data to the entry
-	void set(const GameState_t* pos, uint16_t _move, int16_t _score, uint16_t _depth, uint16_t _flag, uint16_t _age) {
-		key = (pos->posKey >> 48); move = _move; score = value_to_tt(_score, pos->ply); depth = _depth; flag = _flag; age = _age;
-	}
-	
-};
-
-struct TT_Slot {
-	TT_Entry EntryOne;
-	TT_Entry EntryTwo;
-};
-
+/// <summary>
+/// The TranspositionTable class is responsible for managing the table itself and probing/storing positions from/to it.
+/// </summary>
 class TranspositionTable {
 public:
 	TranspositionTable(uint64_t size);
@@ -71,9 +34,9 @@ public:
 
 	void resize(uint64_t size);
 
-	TT_Entry* probe_tt(const uint64_t key, bool& hit);
+	EntryData_t* probe_tt(const uint64_t key, bool& hit);
 
-	void store_entry(const GameState_t* pos, uint16_t move, int16_t score, uint16_t depth,  uint16_t flag);
+	void store_entry(const GameState_t* pos, uint16_t move, int16_t score, int16_t eval, uint16_t depth,  uint16_t flag);
 
 	size_t size();
 	void clear_table();
@@ -92,7 +55,14 @@ public:
 		return generation;
 	}
 
-	private:
+private:
+	// Each slot in the transposition table holds two entries:
+	// 1st: Depth and age preferred replacement scheme.
+	// 2nd: Always replace.
+	struct TT_Slot {
+		TT_Entry EntryOne;
+		TT_Entry EntryTwo;
+	};
 
 	TT_Slot* table = nullptr;
 
