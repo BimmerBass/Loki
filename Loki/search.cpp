@@ -272,6 +272,9 @@ namespace Search {
 		if (ss->thread_id == 0) {
 
 			std::cout << "bestmove " << printMove(best_move) << std::endl;
+			
+			// If the search stopped because the max depth has been reached, we need to stop all other threads.
+			isStop = true;
 		}
 	} // searchPosition
 
