@@ -356,16 +356,16 @@ printHashEntry is a helper function for displaying the hash entry for the curren
 void UCI::printHashEntry(GameState_t* pos) {
 	bool ttHit = false;
 
-	volatile TT_Entry* entry = tt->probe_tt(pos->posKey, ttHit);
+	EntryData_t* entry = tt->probe_tt(pos->posKey, ttHit);
 
 	if (ttHit) {
 		pos->displayBoardState();
 
 		std::cout << "TT entry info:" << std::endl;
-		std::cout << "Move:		" << printMove(entry->move) << std::endl;
-		std::cout << "Score:	" << entry->score << std::endl;
-		std::cout << "Depth:	" << entry->depth << std::endl;
-		std::cout << "Flag:		" << (entry->flag == ttFlag::EXACT ? "EXACT" : ((entry->flag == ttFlag::BETA) ? "BETA" : "ALPHA")) << std::endl;
+		std::cout << "Move:		" << printMove(entry->get_move()) << std::endl;
+		std::cout << "Score:	" << entry->get_score() << std::endl;
+		std::cout << "Depth:	" << entry->get_depth() << std::endl;
+		std::cout << "Flag:		" << (entry->get_flag() == ttFlag::EXACT ? "EXACT" : ((entry->get_flag() == ttFlag::BETA) ? "BETA" : "ALPHA")) << std::endl;
 	}
 	else {
 		std::cout << "Position is not stored in transposition table" << std::endl;

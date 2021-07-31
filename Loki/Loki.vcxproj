@@ -171,6 +171,7 @@
     <ClCompile Include="texel.cpp" />
     <ClCompile Include="thread.cpp" />
     <ClCompile Include="transposition.cpp" />
+    <ClCompile Include="tt_entry.cpp" />
     <ClCompile Include="uci.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +191,7 @@
     <ClInclude Include="texel.h" />
     <ClInclude Include="thread.h" />
     <ClInclude Include="transposition.h" />
+    <ClInclude Include="tt_entry.h" />
     <ClInclude Include="uci.h" />
     <ClInclude Include="test_positions.h" />
   </ItemGroup>

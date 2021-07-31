@@ -403,24 +403,25 @@ namespace Search {
 			new_depth++;
 		}
 
-		
-		// Step 2. Static evaluation.
-		if (in_check) {
-			ss->stats.static_eval[ss->pos->ply] = VALUE_NONE;
-		}
-		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
 
-
-		// Step 3. Probe transposition table --> If there is a move from previous iterations, we'll assume the best move from that as the best move now, and
+		// Step 2. Probe transposition table --> If there is a move from previous iterations, we'll assume the best move from that as the best move now, and
 		//	order that first.
 		bool ttHit = false;
-		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
-		unsigned int pvMove = (ttHit) ? entry->move : NOMOVE;
+		EntryData_t* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		unsigned int pvMove = (ttHit) ? entry->get_move() : NOMOVE;
 
 
 		if (ss->pos->ply >= ss->info->seldepth) {
 			ss->info->seldepth = ss->pos->ply;
 		}
+
+
+		// Step 3. Static evaluation
+		if (in_check) {
+			ss->stats.static_eval[ss->pos->ply] = VALUE_NONE;
+		}
+		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+
 
 		// Step 4. Initialize a staged move generation object and loop through all moves.
 		RootMoveStager stager(ss->pos, &ss->stats, pvMove);
@@ -599,12 +600,12 @@ namespace Search {
 		// Step 4. Transposition table probing (~30 elo - too little?). This is done before quiescence since it is quite fast, and if we can get a cutoff before
 		// going into quiescence, we'll of course use that. Probing before quiescence search contributed with ~17 elo.
 		bool ttHit = false;
-		TT_Entry* entry = tt->probe_tt(ss->pos->posKey, ttHit);
+		EntryData_t* entry = tt->probe_tt(ss->pos->posKey, ttHit);
 		
-		int ttScore = (ttHit) ? value_from_tt(entry->score, ss->pos->ply) : -INF;
-		unsigned int ttMove = (ttHit) ? entry->move : NOMOVE;
-		int ttDepth = (ttHit) ? entry->depth : 0;
-		int tt_flag = (ttHit) ? entry->flag : ttFlag::NO_FLAG;
+		int ttScore = (ttHit) ? value_from_tt(entry->get_score(), ss->pos->ply) : -INF;
+		unsigned int ttMove = (ttHit) ? entry->get_move() : NOMOVE;
+		int ttDepth = (ttHit) ? entry->get_depth() : 0;
+		int tt_flag = (ttHit) ? entry->get_flag() : ttFlag::NO_FLAG;
 		
 		// If we're not in a PV-node (beta - alpha == 1), we can do a cutoff if the transposition table returned a valid depth.
 		if (ttHit
@@ -623,8 +624,6 @@ namespace Search {
 				return ttScore;
 			}
 		}
-
-
 
 
 
