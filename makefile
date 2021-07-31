@@ -28,8 +28,11 @@ ifeq ($(use_popcount), yes)
 CXXFLAGS += -DUSE_POPCNT
 endif
 ifeq ($(Bit), 64)
-CXXFLAGS += -DIS_64BIT
+CXXFLAGS += -DIS_64BIT -m64
 endif
+#ifneq ($(Bit), 64)
+#CXXFLAGS += -m32
+#endif
 ifeq ($(perft_transposition_table), yes)
 CXXFLAGS += -DPERFT_TT
 endif
@@ -40,7 +43,9 @@ endif
 
 SRC_PATH=Loki
 
-FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cpp movegen.cpp perft.cpp position.cpp psqt.cpp search.cpp see.cpp thread.cpp transposition.cpp uci.cpp texel.cpp
+FILES=bench.cpp bitboard.cpp evaluation.cpp magics.cpp main.cpp misc.cpp move.cpp \
+		movegen.cpp movestager.cpp perft.cpp position.cpp psqt.cpp search.cpp see.cpp \
+		thread.cpp transposition.cpp tt_entry.cpp uci.cpp texel.cpp
 
 SOURCES=$(FILES:%.cpp=$(SRC_PATH)/%.cpp)
 
