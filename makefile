@@ -8,7 +8,7 @@ ifeq ($(KERNEL),Linux)
 endif
 
 ### Definitions
-Bit = 64
+BIT = 64
 optimize = yes
 use_popcount = yes
 perft_transposition_table = no # Only used to make perft faster when testing movegen. Is switched off by default due to size concerns
@@ -21,22 +21,21 @@ LIBS = -lm -lpthread
 CXXFLAGS = -std=c++17 -lstdc++ -march=native
 
 ### Add options
-ifeq ($(optimize), yes)
+ifeq ($(optimize), yes) # Set optimizations
 CXXFLAGS += -O3
 endif
-ifeq ($(use_popcount), yes)
+ifeq ($(use_popcount), yes) # Use popcount
 CXXFLAGS += -DUSE_POPCNT
 endif
-ifeq ($(Bit), 64)
+ifeq ($(BIT), 64) # Compile for 64-bit systems
 CXXFLAGS += -DIS_64BIT -m64
+else
+CXXFLAGS += -m32 # Compile for 32-bit systems
 endif
-#ifneq ($(Bit), 64)
-#CXXFLAGS += -m32
-#endif
-ifeq ($(perft_transposition_table), yes)
+ifeq ($(perft_transposition_table), yes) # Should perft use a transposition table for speed?
 CXXFLAGS += -DPERFT_TT
 endif
-ifeq ($(debug), no)
+ifeq ($(debug), no) # Set debug mode
 CXXFLAGS += -DNDEBUG
 endif
 
