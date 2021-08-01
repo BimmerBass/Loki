@@ -45,6 +45,7 @@ A tapered eval is used to interpolate between game phases. Additionally, the ent
     - ~~Countermove heuristic~~.
     - Mvv/Lva for capture sorting.
     - Static Exchange evaluation for move ordering.
+    - Staged move generation.
     - Mate distance pruning.
     - Adaptive Null move pruning.
     - Enhanced futility pruning.
@@ -64,19 +65,18 @@ With all the above mentioned move ordering techniques, Loki achieves a cutoff on
 
 ## Building Loki
 Loki has been tested to build without errors on both MSVC and GCC (with some warnings by the former). If Loki should be compiled to a non-native popcount version one will have to either:
-1. If compiling on MSVC, the global preprocessor variable USE_POPCNT should be removed in the project properties.
-2. If compiling on GCC, the variable use_popcount in makefile should be set to "no".
 
-It is also possible to change the amount of optimizations with both compilers by (if MSVC) going to the project properties or (if GCC) setting optimize to "no" in the makefile.
+- If compiling on MSVC, the global preprocessor variable USE_POPCNT should be removed in the project properties.
+- If compiling on GCC, `use_popcount=no` should be added when running make.
 
+Additionally, a 32-bit compilation in GCC needs `BIT=32` when running make. It should be noted however, that 32-bit compilation on 64-bit systems is unstable and should be avoided at the moment.
+
+It is also possible to change the amount of optimizations with both compilers by (if MSVC) going to the project properties or (if GCC) using `optimize=no` when running make.
 ##### TO-DO
 - Try the following additions:
     - Singular extensions.
-    - AEL-pruning.
-    - Enhanced forward pruning.
     - Multi-Cut.
     - ProbCut.
-    - Fail-High reductions.
     - Null move reductions.
     - Null move threat extensions.
 - Port the tuning framework to python, and make it work with search tuning.
