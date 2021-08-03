@@ -878,7 +878,7 @@ namespace Search {
 				continue;
 			}
 			else if (!is_tactical && !is_pv && !root_node
-				&& moves_searched >= late_move_pruning(depth, improving)) {
+				&& moves_searched > late_move_pruning(depth, improving)) {
 				do_lmp = true;
 
 				ss->pos->undo_move();
