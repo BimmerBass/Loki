@@ -1243,7 +1243,8 @@ void Search::INIT() {
 			(5, 25)
 		*/
 		// It has a fit of R^2 = 0.9968
-		LMP_Limit[(int)d] = std::round(1.73 * std::exp(0.53 * d));
+		// Note: Since the growth is exponential, we'll cut it at 256 (max moves in a position).
+		LMP_Limit[(int)d] = static_cast<int>(std::min(uint64_t(std::round(1.73 * std::exp(0.53 * d))), (uint64_t)MAXPOSITIONMOVES));
 	}
 
 	// Initialize null move R-value table
