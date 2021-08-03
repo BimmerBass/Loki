@@ -85,6 +85,7 @@ extern int nullmove_reduction(int depth, int lead);
 
 extern int Reductions[MAXDEPTH][MAXPOSITIONMOVES];
 extern int late_move_reduction(int d, int c, bool i);
+extern void lmr_conditions(const SearchThread_t* ss, bool improving, bool capture, bool is_pv, bool gives_check, bool promotes, const Move_t& move, int& R);
 extern int late_move_pruning(int depth, bool improving);
 
 extern int futility_margin(int depth, bool improving);
