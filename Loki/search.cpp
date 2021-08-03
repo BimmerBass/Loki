@@ -886,7 +886,7 @@ namespace Search {
 			}
 
 
-			// Step 13. Principal variation search: Always search the first move at full depth, with a full window.
+			// Step 14. Principal variation search: Always search the first move at full depth, with a full window.
 			
 			new_depth = depth - 1 + extensions;
 
@@ -894,26 +894,26 @@ namespace Search {
 				score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 			}
 			else {
-				// Step 13A. Late move reductions (~107 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
+				// Step 14A. Late move reductions (~107 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha
 				if (moves_searched >= lmr_limit && depth >= lmr_depth && !in_check && !root_node) {
-					// Step 13A.1. Initialize the base reduction from a pre-calculated table.
+					// Step 14A.1. Initialize the base reduction from a pre-calculated table.
 					int R = late_move_reduction(depth, moves_searched);
 
-					// Step 13A.2. Increase/Decrease the reduction based on different conditions.
+					// Step 14A.2. Increase/Decrease the reduction based on different conditions.
 					lmr_conditions(ss, improving, capture, is_pv, gives_check, SPECIAL(move) == PROMOTION, current_move, R);
 
-					// Step 13A.3. We don't want to go directly into qsearch or search to a higher depth than d - 1.
+					// Step 14A.3. We don't want to go directly into qsearch or search to a higher depth than d - 1.
 					int d = std::clamp(depth - 1 - R, 1, depth - 1);
 
-					// Step 13A.4. Now search the move in a null-window centered around alpha.
+					// Step 14A.4. Now search the move in a null-window centered around alpha.
 					score = -alphabeta(ss, d, -(alpha + 1), -alpha, true, &line);
 				}
 				else {	/* Hack to enter normal search in case LMR isn't applicable */
 					score = alpha + 1;
 				}
 
-				// Step 13B. If we couldn't do LMR, or the reduced search returned a value above alpha, do a normal search.
+				// Step 14B. If we couldn't do LMR, or the reduced search returned a value above alpha, do a normal search.
 				if (score > alpha) {
 					score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
 
@@ -937,7 +937,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				// Step 13C. If a beta cutoff was achieved, update the quit move ordering heuristics 
+				// Step 14C. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
 					ss->update_move_heuristics(move, depth, stager.get_moves());
 				}
@@ -962,7 +962,7 @@ namespace Search {
 			}
 		}
 
-		// Step 14. Checkmate/Stalemate detection.
+		// Step 15. Checkmate/Stalemate detection.
 		if (legal <= 0) {
 			if (ss->pos->in_check()) {
 				return -INF + ss->pos->ply;
