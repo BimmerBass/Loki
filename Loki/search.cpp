@@ -613,6 +613,8 @@ namespace Search {
 		// Flag to trigger futility pruning in moves_loop
 		bool futility_pruning = false;
 
+		// Flag to trigger late move pruning of quiet moves.
+		bool do_lmp = false;
 		
 		// Determine if we're in check or not.
 		volatile bool in_check = ss->pos->in_check();
@@ -867,6 +869,22 @@ namespace Search {
 				ss->pos->undo_move();
 				continue;
 			}
+
+			// Step 13. Late move pruning. If we have searched a number of moves (dependent on depth - rises exponentially) and haven't gotten a beta cutoff
+			//			chances are that we won't get one with the quiets. Therefore, if they meet certain criteria, we skip them.
+
+			if (do_lmp && !is_tactical) { // do_lmp is only set if we're not in a pv-node or root node, so we don't need to check this here.
+				ss->pos->undo_move();
+				continue;
+			}
+			else if (!is_tactical && !is_pv && !root_node
+				&& moves_searched >= late_move_pruning(depth, improving)) {
+				do_lmp = true;
+
+				ss->pos->undo_move();
+				continue;
+			}
+
 
 			// Step 13. Principal variation search: Always search the first move at full depth, with a full window.
 			
