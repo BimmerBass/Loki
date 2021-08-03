@@ -91,10 +91,40 @@ int nullmove_reduction(int depth, int lead) {
 
 
 int late_move_reduction(int d, int c) {
-	//int R = 1;
-	int R = Reductions[std::min(d, MAXDEPTH - 1)][std::min(c, MAXPOSITIONMOVES - 1)];
-	return R;
+	return Reductions[std::min(d, MAXDEPTH - 1)][std::min(c, MAXPOSITIONMOVES - 1)];
 }
+
+
+void lmr_conditions(const SearchThread_t* ss, bool improving, bool capture, bool is_pv, bool gives_check, bool promotes, const Move_t& move, int& R) {
+	// Step 1. Initialize some variables.
+	int fromSq = FROMSQ(move.move);
+	int toSq = TOSQ(move.move);
+
+
+	// Step 2. Increase reduction if we're not improving.
+	R += !improving;
+
+	// Step 3. Increase reduction for moves with bad history.
+	// Note: The reason for using the "other side" is because the move already has been played.
+	if (ss->stats.history[(ss->pos->side_to_move == WHITE) ? BLACK : WHITE][fromSq][toSq] < 0) {
+		R += 1;
+	}
+
+	// Step 4. If the move is a capture, increase the reduction if SEE(move) < 0, otherwise decrease it.
+	if (capture) {
+		if (move.score < 0) { R += 1; }
+		else { R -= 2; }
+	}
+
+	// Step 5. Decrease if we're in a PV node.
+	R -= 2 * is_pv;
+
+	// Step 6. Decrease reduction if the move gives check or promotes a pawn.
+	R -= gives_check;
+	R -= promotes;
+
+}
+
 
 
 int late_move_pruning(int depth, bool improving) {
@@ -654,10 +684,10 @@ namespace Search {
 		}
 		
 		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
-		improving = (ss->pos->ply >= 2) ?
-			(ss->stats.static_eval[ss->pos->ply] >= ss->stats.static_eval[ss->pos->ply - 2] || ss->stats.static_eval[ss->pos->ply - 2] == VALUE_NONE) :
-			false;
-
+		//improving = (ss->pos->ply >= 2) ?
+		//	(ss->stats.static_eval[ss->pos->ply] >= ss->stats.static_eval[ss->pos->ply - 2] || ss->stats.static_eval[ss->pos->ply - 2] == VALUE_NONE) :
+		//	false;
+		improving = (ss->pos->ply >= 2) ? (ss->stats.static_eval[ss->pos->ply] > ss->stats.static_eval[ss->pos->ply - 2]) : false;
 
 
 		// Step 6. Null move pruning (~136 elo). FIXME: Improve safe_nullmove and nullmove_reduction, and set moves_path to MOVE_NULL so no unintentional pruning happens.
@@ -807,27 +837,17 @@ namespace Search {
 			
 			// Most of the below will first be used when adding proper LMR and LMP, and thus they're commented out.
 			bool capture = (ss->pos->piece_list[Them][TOSQ(move)] != NO_TYPE) ? true : false;
-			//bool is_promotion = (SPECIAL(move) == PROMOTION) ? true : false;
-			//int piece_captured = ss->pos->piece_list[Them][TOSQ(move)];
-			//int piece_moved = ss->pos->piece_list[ss->pos->side_to_move][FROMSQ(move)];
-			int piece_captured = ss->pos->piece_on(TOSQ(move), Them);
-			int piece_moved = ss->pos->piece_on(FROMSQ(move), ss->pos->side_to_move);
 
-			reduction = 0;
 			int extensions = 0;
 
 
-			// Step 11. Various extensions.
-
-			//if (SPECIAL(move) == CASTLING) { // Castle extensions.
-			//	extensions++;
-			//}
+			// Step 11. Check extensions. Singular extensions will also be added here in the future.
 			
 			if (in_check) { // In check extensions (~22 elo)
 				extensions++;
 			}
 
-
+			// Make the move.
 			if (!ss->pos->make_move(&current_move)) {
 				continue;
 			}
@@ -851,28 +871,50 @@ namespace Search {
 				continue;
 			}
 
-			// Step 13. Principal variation search
+			// Step 13. Principal variation search: Always search the first move at full depth, with a full window.
 			
 			new_depth = depth - 1 + extensions;
 
-			if (moves_searched == 0) { // Always search the first move at full depth with an open window
+			if (moves_searched == 0) {
 				score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 			}
-
 			else {
-				score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
-				
-				if (score > alpha && score < beta) {
-					score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+				// Step 13A. Late move reductions (~107 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
+				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha
+				if (moves_searched >= lmr_limit && depth >= lmr_depth && !in_check && !root_node) {
+					// Step 13A.1. Initialize the base reduction from a pre-calculated table.
+					int R = late_move_reduction(depth, moves_searched);
+
+					// Step 13A.2. Increase/Decrease the reduction based on different conditions.
+					lmr_conditions(ss, improving, capture, is_pv, gives_check, SPECIAL(move) == PROMOTION, current_move, R);
+
+					// Step 13A.3. We don't want to go directly into qsearch or search to a higher depth than d - 1.
+					int d = std::clamp(depth - 1 - R, 1, depth - 1);
+
+					// Step 13A.4. Now search the move in a null-window centered around alpha.
+					score = -alphabeta(ss, d, -(alpha + 1), -alpha, true, &line);
 				}
+				else {	/* Hack to enter normal search in case LMR isn't applicable */
+					score = alpha + 1;
+				}
+
+				// Step 13B. If we couldn't do LMR, or the reduced search returned a value above alpha, do a normal search.
+				if (score > alpha) {
+					score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
+
+					if (score > alpha && score < beta) { // If we raised alpha and stayed inside the bounds, re-search with a full window.
+						score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
+					}
+				}
+
 			}
 
+
+			// Undo the move and increment the moves_searched counter.
 			ss->pos->undo_move();
+			moves_searched++;
 
 			if (ss->info->stopped) { return 0; }
-
-			// Increment moves searched
-			moves_searched++;
 
 			if (score >= beta) {
 				if (moves_searched == 1) {
@@ -880,7 +922,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				// Step 13A. If a beta cutoff was achieved, update the quit move ordering heuristics 
+				// Step 13C. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
 					ss->update_move_heuristics(move, depth, stager.get_moves());
 				}
@@ -1175,15 +1217,20 @@ void Search::INIT() {
 	}
 
 	// Initialize table of late move reductions
-	for (int d = 1; d < MAXDEPTH; d++) {
+	for (double d = 1; d < MAXDEPTH; d += 1.0) {
 
-		for (int c = 1; c < MAXPOSITIONMOVES; c++) {
-			//Reductions[d][c] = (int)std::round(0.75 + (std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
-			//Reductions[d][c] = (int)std::round((std::log(2.0 * double(d)) * std::log(2.0 * double(c))) / 2.75);
-			Reductions[d][c] = (int)std::round(0.75 + (std::log(d) * std::log(c)) / 2.0);
+		for (double c = 1; c < MAXPOSITIONMOVES; c += 1.0) {
+
+			//Reductions[(int)d][(int)c] = 1.75 + (int)std::round((std::log(3.0 * d) * std::log(3.0 * c)) / 5.5);
+			Reductions[(int)d][(int)c] = (int)std::round((std::log(2.0 * d) * std::log(2.0 * c)) / 5.5);
+
+			if (Reductions[(int)d][(int)c] < 1) {
+				Reductions[(int)d][(int)c] = 1;
+			}
+
 		}
-
 	}
+
 
 
 	// Initialize null move R-value table
