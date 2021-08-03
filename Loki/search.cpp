@@ -216,6 +216,7 @@ namespace Search {
 
 		// These are just some parameters to print for UCI
 		long long nodes = 0;
+		long long time_to_depth = 0;
 
 		double branching_factor = 0.0;
 
@@ -253,11 +254,13 @@ namespace Search {
 
 			
 			nodes = getNodes();
+			
+			time_to_depth = getTimeMs() - ss->info->starttime;
 
 			branching_factor = std::pow(nodes, 1 / double(currDepth));
 
-			nps = nodes / ((getTimeMs() - ss->info->starttime) / 1000.0);
-
+			nps = nodes / ((time_to_depth < 1 ? 1 : time_to_depth) / 1000.0); // We need to make sure we don't divide by zero.
+			
 			// Get the best move from the pvLine stack
 			best_move = pvLine.pv[0];
 
@@ -276,7 +279,7 @@ namespace Search {
 					<< " seldepth " << ss->info->seldepth
 					<< " nodes " << nodes
 					<< " nps " << nps
-					<< " time " << getTimeMs() - ss->info->starttime;
+					<< " time " << time_to_depth;
 				
 				std::cout << " pv ";
 
