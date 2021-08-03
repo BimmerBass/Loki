@@ -877,7 +877,7 @@ namespace Search {
 				ss->pos->undo_move();
 				continue;
 			}
-			else if (!is_tactical && !is_pv && !root_node
+			else if (!is_tactical && !is_pv && !root_node && best_score > -MATE // We need to have raised alpha at least once.
 				&& moves_searched > late_move_pruning(depth, improving)) {
 				do_lmp = true;
 
