@@ -128,10 +128,7 @@ void lmr_conditions(const SearchThread_t* ss, bool improving, bool capture, bool
 
 
 int late_move_pruning(int depth, bool improving) {
-	//return (int)std::round((4.0 * std::exp(0.37 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
-	return (int)std::round((5 * std::exp(0.2 * double(depth))) + improving);
-	//return std::round((4.0 * std::exp(0.51 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
-
+	return LMP_Limit[std::min(depth, MAXDEPTH)];
 }
 
 
@@ -1200,6 +1197,7 @@ int to_mate(int score) {
 int MvvLva[6][6] = { {0} };
 
 int Reductions[MAXDEPTH][MAXPOSITIONMOVES] = { {0} };
+int LMP_Limit[MAXDEPTH] = { 0 };
 
 int NM_Reductions[MAXDEPTH][2000] = { {0} };
 
@@ -1231,7 +1229,22 @@ void Search::INIT() {
 		}
 	}
 
+	// Initialize table of move-count limits for late move pruning
+	LMP_Limit[0] = 0; // We won't be using LMP for depth = 0 anyways..
 
+	for (double d = 1.0; d < (double)MAXDEPTH; d += 1.0) {
+		// The below formula has been fitted using exponential regression to the following values:
+		/*
+			(depth, move count limit)
+			(1, 3)
+			(2, 5)
+			(3, 8)
+			(4, 14)
+			(5, 25)
+		*/
+		// It has a fit of R^2 = 0.9968
+		LMP_Limit[(int)d] = std::round(1.73 * std::exp(0.53 * d));
+	}
 
 	// Initialize null move R-value table
 	for (int d = 0; d < MAXDEPTH; d++) {

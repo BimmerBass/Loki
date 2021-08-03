@@ -80,16 +80,33 @@ namespace Search {
 Helper function for search parameters.
 
 */
+/*
+NMP
+*/
 extern int NM_Reductions[MAXDEPTH][2000];
 extern int nullmove_reduction(int depth, int lead);
 
+/*
+LMR
+*/
 extern int Reductions[MAXDEPTH][MAXPOSITIONMOVES];
-extern int late_move_reduction(int d, int c, bool i);
+extern int late_move_reduction(int d, int c);
 extern void lmr_conditions(const SearchThread_t* ss, bool improving, bool capture, bool is_pv, bool gives_check, bool promotes, const Move_t& move, int& R);
+
+/*
+LMP
+*/
+extern int LMP_Limit[MAXDEPTH];
 extern int late_move_pruning(int depth, bool improving);
 
+/*
+FP
+*/
 extern int futility_margin(int depth, bool improving);
 
+/*
+Razoring
+*/
 extern int razoring_margin(int depth, bool i);
 
 extern bool is_passed(int fromSq, GameState_t* pos);
