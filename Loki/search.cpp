@@ -128,10 +128,7 @@ void lmr_conditions(const SearchThread_t* ss, bool improving, bool capture, bool
 
 
 int late_move_pruning(int depth, bool improving) {
-	//return (int)std::round((4.0 * std::exp(0.37 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
-	return (int)std::round((5 * std::exp(0.2 * double(depth))) + improving);
-	//return std::round((4.0 * std::exp(0.51 * double(depth))) * ((1.0 + ((improving) ? 1.0 : 0.0)) / 2.0));
-
+	return LMP_Limit[std::min(depth, MAXDEPTH)];
 }
 
 
@@ -616,6 +613,8 @@ namespace Search {
 		// Flag to trigger futility pruning in moves_loop
 		bool futility_pruning = false;
 
+		// Flag to trigger late move pruning of quiet moves.
+		bool do_lmp = false;
 		
 		// Determine if we're in check or not.
 		volatile bool in_check = ss->pos->in_check();
@@ -871,7 +870,23 @@ namespace Search {
 				continue;
 			}
 
-			// Step 13. Principal variation search: Always search the first move at full depth, with a full window.
+			// Step 13. Late move pruning. If we have searched a number of moves (dependent on depth - rises exponentially) and haven't gotten a beta cutoff
+			//			chances are that we won't get one with the quiets. Therefore, if they meet certain criteria, we skip them.
+
+			if (do_lmp && !is_tactical) { // do_lmp is only set if we're not in a pv-node or root node, so we don't need to check this here.
+				ss->pos->undo_move();
+				continue;
+			}
+			else if (!is_tactical && !is_pv && !root_node && best_score > -MATE // We need to have raised alpha at least once.
+				&& moves_searched > late_move_pruning(depth, improving)) {
+				do_lmp = true;
+
+				ss->pos->undo_move();
+				continue;
+			}
+
+
+			// Step 14. Principal variation search: Always search the first move at full depth, with a full window.
 			
 			new_depth = depth - 1 + extensions;
 
@@ -879,26 +894,26 @@ namespace Search {
 				score = -alphabeta(ss, new_depth, -beta, -alpha, true, &line);
 			}
 			else {
-				// Step 13A. Late move reductions (~107 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
+				// Step 14A. Late move reductions (~107 elo). If we haven't raised alpha yet, we're probably in an ALL-node,
 				//	so we'll reduce the search depth and do a full-depth re-search if the score is (surprisingly) above alpha
 				if (moves_searched >= lmr_limit && depth >= lmr_depth && !in_check && !root_node) {
-					// Step 13A.1. Initialize the base reduction from a pre-calculated table.
+					// Step 14A.1. Initialize the base reduction from a pre-calculated table.
 					int R = late_move_reduction(depth, moves_searched);
 
-					// Step 13A.2. Increase/Decrease the reduction based on different conditions.
+					// Step 14A.2. Increase/Decrease the reduction based on different conditions.
 					lmr_conditions(ss, improving, capture, is_pv, gives_check, SPECIAL(move) == PROMOTION, current_move, R);
 
-					// Step 13A.3. We don't want to go directly into qsearch or search to a higher depth than d - 1.
+					// Step 14A.3. We don't want to go directly into qsearch or search to a higher depth than d - 1.
 					int d = std::clamp(depth - 1 - R, 1, depth - 1);
 
-					// Step 13A.4. Now search the move in a null-window centered around alpha.
+					// Step 14A.4. Now search the move in a null-window centered around alpha.
 					score = -alphabeta(ss, d, -(alpha + 1), -alpha, true, &line);
 				}
 				else {	/* Hack to enter normal search in case LMR isn't applicable */
 					score = alpha + 1;
 				}
 
-				// Step 13B. If we couldn't do LMR, or the reduced search returned a value above alpha, do a normal search.
+				// Step 14B. If we couldn't do LMR, or the reduced search returned a value above alpha, do a normal search.
 				if (score > alpha) {
 					score = -alphabeta(ss, new_depth, -(alpha + 1), -alpha, true, &line);
 
@@ -922,7 +937,7 @@ namespace Search {
 				}
 				ss->info->fh++;
 
-				// Step 13C. If a beta cutoff was achieved, update the quit move ordering heuristics 
+				// Step 14C. If a beta cutoff was achieved, update the quit move ordering heuristics 
 				if (!capture && SPECIAL(move) != PROMOTION && SPECIAL(move) != ENPASSANT) {
 					ss->update_move_heuristics(move, depth, stager.get_moves());
 				}
@@ -947,7 +962,7 @@ namespace Search {
 			}
 		}
 
-		// Step 14. Checkmate/Stalemate detection.
+		// Step 15. Checkmate/Stalemate detection.
 		if (legal <= 0) {
 			if (ss->pos->in_check()) {
 				return -INF + ss->pos->ply;
@@ -1200,6 +1215,7 @@ int to_mate(int score) {
 int MvvLva[6][6] = { {0} };
 
 int Reductions[MAXDEPTH][MAXPOSITIONMOVES] = { {0} };
+int LMP_Limit[MAXDEPTH] = { 0 };
 
 int NM_Reductions[MAXDEPTH][2000] = { {0} };
 
@@ -1231,7 +1247,23 @@ void Search::INIT() {
 		}
 	}
 
+	// Initialize table of move-count limits for late move pruning
+	LMP_Limit[0] = 0; // We won't be using LMP for depth = 0 anyways..
 
+	for (double d = 1.0; d < (double)MAXDEPTH; d += 1.0) {
+		// The below formula has been fitted using exponential regression to the following values:
+		/*
+			(depth, move count limit)
+			(1, 3)
+			(2, 5)
+			(3, 8)
+			(4, 14)
+			(5, 25)
+		*/
+		// It has a fit of R^2 = 0.9968
+		// Note: Since the growth is exponential, we'll cut it at 256 (max moves in a position).
+		LMP_Limit[(int)d] = static_cast<int>(std::min(uint64_t(std::round(1.73 * std::exp(0.53 * d))), (uint64_t)MAXPOSITIONMOVES));
+	}
 
 	// Initialize null move R-value table
 	for (int d = 0; d < MAXDEPTH; d++) {
