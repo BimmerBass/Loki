@@ -43,63 +43,74 @@ public:
 
 namespace Eval {
 
-	/*struct Evaluation {
-		Evaluation(int m, int e) {
-			mg = m; eg = e;
-		}
-
-		int interpolate(GameState_t* pos);
-
-		int mg = 0;
-		int eg = 0;
-
-
-		// Indexed by attacks[piecetype][side]
-		Bitboard attacks[6][2] = { {0} };
-
-		// Indexed by passed_pawns[side]
-		Bitboard passed_pawns[2] = { 0 };
-
-		int king_zone_attackers[2] = { 0 };
-		int king_zone_attack_units[2] = { 0 };
-	};
-
-	extern Bitboard king_flanks[8];
-
-	int evaluate(GameState_t* pos);
-
-	int phase(GameState_t* pos);
-
-	// Returns true if no checkmate can be forced by either side.
-	bool material_draw(GameState_t* pos);*/
+	/* Returns true if no checkmate can be forced by either side.
+	bool material_draw(GameState_t* pos);
+	*/
 	
 	template<EvalType = NORMAL>
 	class Evaluate {
 	public:
-		int score(const GameState_t* pos);
+		int score(const GameState_t* _pos);
 
 	private:
+		// The position object that we get when score is called. This is just stored such that all member methods can access it without it being passed as a parameter.
+		const GameState_t* pos = nullptr;
 
+		// We keep a struct that holds information gathered earlier in the search
+		// This helps to evaluate king safety etc..
+		struct EvalData {
+			// Piece attacks. Indexed by [side][piecetype]
+			Bitboard attacks[2][6] = { {0} };
+
+			// Passed pawns
+			Bitboard passed_pawns[2] = { 0 };
+
+			int king_zone_attacks[2] = { 0 };	/* The amount of pieces attacking the king */
+			int king_safety_units[2] = { 0 };	/* A kind of "weighted" amount of pieces attacking the king. Used to index the safety table */
+		};
+		// The constant ZeroData is used to quickly clear our evaluation data.
+		const EvalData ZeroData;
+		EvalData Data;
+
+		// Scores for middlegame and endgame respectively
+		int mg_score = 0;
+		int eg_score = 0;
+
+		// Clear all data from the previous evaluation.
+		void clear();
+
+		/*
+		Evaluation sub-methods.
+		*/
+		int game_phase();
+
+		template<SIDE S> void material();
+		template<SIDE S> void psqt();
+		template<SIDE S> void imbalance();
+		template<SIDE S> void pawns();
+		template<SIDE S> void space();
+		template<SIDE S> void mobility();
+		template<SIDE S> void king_safety();
 	};
 	
 	
+	// The king flanks array is used to determine which pawns to analyze depending on the king's file.
+	extern Bitboard king_flanks[8];
 	
-	
-
-
-
 
 	/*
 	Initialization functions
 	*/
 	void initKingFlanks();
+
 	void INIT();
 
+	/// <summary>
+	/// Used to check that the eval works and doesn't give different values for black and white.
+	/// </summary>
 	namespace Debug {
-
 		void eval_balance();
 	}
-
 }
 
 
