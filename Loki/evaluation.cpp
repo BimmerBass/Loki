@@ -253,6 +253,9 @@ namespace Eval {
 	/* -------------------- Evaluation sub-terms --------------------- */
 	/* --------------------------------------------------------------- */
 
+	/// <summary>
+	/// Evaluate the material on the board for side S.
+	/// </summary>
 	template<EvalType T> template<SIDE S>
 	void Evaluate<T>::material() {
 		int mg = 0;
@@ -285,6 +288,95 @@ namespace Eval {
 	}
 
 
+	// Anonymous namespace for adding piece-square-table values.
+	namespace {
+		const Score* tables[6] = { &PSQT::PawnTable[0], &PSQT::KnightTable[0], &PSQT::BishopTable[0], &PSQT::RookTable[0], &PSQT::QueenTable[0], &PSQT::KingTable[0] };
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="pce"></param>
+		/// <param name="sq"></param>
+		/// <returns></returns>
+		template<SIDE side, GamePhase p>
+		int addPsqtVal(int pce, int sq) {
+			int v = 0;
+
+			//assert(p == MG || p == EG);
+			//assert(side == WHITE || side == BLACK);
+			//assert(sq >= 0 && sq <= 63);
+			//assert(pce >= PAWN && pce < NO_TYPE);
+			//assert(PSQT::Mirror64[PSQT::Mirror64[sq]] == sq);
+
+			v += (p == MG) ? tables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]].mg : tables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
+
+			return v;
+		}
+	} // namespace
+
+
+
+	/// <summary>
+	/// Evaluate the placement of a side's pieces using piece-square tables.
+	/// </summary>
+	template<EvalType T> template<SIDE S>
+	void Evaluate<T>::psqt() {
+		int mg = 0;
+		int eg = 0;
+
+		Bitboard pceBoard = 0;
+		int sq = NO_SQ;
+
+		for (int pce = PAWN; pce <= KING; pce++) {
+			pceBoard = pos->pieceBBS[pce][side];
+
+			while (pceBoard) {
+				sq = PopBit(&pceBoard);
+
+				mg += addPsqtVal<side, MG>(pce, sq);
+				eg += addPsqtVal<side, EG>(pce, sq);
+			}
+		}
+
+		// Add the side-relative scores.
+		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
+		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+	}
+
+
+	/// <summary>
+	/// Evaluate the material imbalances in the position. This is an approximation of the principle that different piece-combinations might not have the 
+	/// same value as their individual values summed together.
+	/// </summary>
+	template<EvalType T> template<SIDE S>
+	void Evaluate<T>::imbalance() {
+		int mg = 0;
+		int eg = 0;
+
+		// Step 1. Bishop pair bonus. FIXME: Should we also have the square-colors of the bishops as a requirement?
+		if (countBits(pos->pieceBBS[BISHOP][side]) >= 2) {
+			mg += bishop_pair.mg;
+			eg += bishop_pair.eg;
+		}
+
+		int pawns_removed = 8 - countBits(pos->pieceBBS[PAWN][side]);
+
+		// Step 2. Give rooks bonuses as pawns disappear.
+		int rook_count = countBits(pos->pieceBBS[ROOK][side]);
+
+		mg += rook_count * pawns_removed * rook_pawn_bonus.mg;
+		eg += rook_count * pawns_removed * rook_pawn_bonus.eg;
+
+		// Step 3. Give the knights penalties as pawns dissapear.
+		int knight_count = countBits(pos->pieceBBS[KNIGHT][side]);
+
+		mg -= knight_count * pawns_removed * knight_pawn_penaly.mg;
+		eg -= knight_count * pawns_removed * knight_pawn_penaly.eg;
+
+		// Step 4. Store the side-relative scores.
+		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
+		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+	}
 
 
 	/*
