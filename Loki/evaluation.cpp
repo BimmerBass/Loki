@@ -57,10 +57,10 @@ const Score passedPawnTable[64] = {
 
 // Space evaluation values
 const Score space_bonus[32] = {
-		S(-40, 2)	,	S(-21, 19)	,	S(66, 9)	,	S(41, 14)	,	S(36, 12)	,	S(35, 10)	,	S(23, 15)	, S(18, 17),
-		S(5, 26)	,	S(2, 24)	,	S(-1, 27)	,	S(0, 23)	,	S(1, 30)	,	S(12, 26)	,	S(13, 23)	, S(20, 13),
-		S(31, 24)	,	S(40, 10)	,	S(39, 41)	,	S(74, -43)	,	S(69, 36)	,	S(68, 24)	,	S(99, 58)	, S(144, 61),
-		S(90, 7)	,	S(201, 36)	,	S(90, 4)	,	S(101, 61)	,	S(148, 73)	,	S(219, 38)	,	S(50, 4)	, S(187, 69),
+		S(-40, 0)	,	S(-21, 0)	,	S(66, 0)	,	S(41, 0)	,	S(36, 0)	,	S(35, 0)	,	S(23, 0)	, S(18, 0),
+		S(5, 0)		,	S(2, 0)		,	S(-1, 0)	,	S(0, 0)		,	S(1, 0)		,	S(12, 0)	,	S(13, 0)	, S(20, 0),
+		S(31, 0)	,	S(40, 0)	,	S(39, 0)	,	S(74, 0)	,	S(69, 0)	,	S(68, 0)	,	S(99, 0)	, S(144, 0),
+		S(90, 0)	,	S(201, 0)	,	S(90, 0)	,	S(101, 0)	,	S(148, 0)	,	S(219, 0)	,	S(50, 0)	, S(187, 0)
 };
 
 
@@ -380,6 +380,9 @@ namespace Eval {
 
 
 
+	/// <summary>
+	/// Evaluate the pawn-structure. This includes things like doubled, passed, isolated pawns etc..
+	/// </summary>
 	template<EvalType T> template<SIDE S>
 	void Evaluate<T>::pawns() {
 		int mg = 0;
@@ -453,6 +456,43 @@ namespace Eval {
 		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
 		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
 	}
+
+
+
+	/// <summary>
+	/// Evaluate the space. This is a term for how much of the board is controlled by one side.
+	/// </summary>
+	template<EvalType T> template<SIDE S>
+	void Evaluate<T>::space() {
+		int points = 0;
+
+		// The main space area is rank 3, 4, 5 and 6, and file c, d, e, f
+		constexpr Bitboard war_zone = (BBS::FileMasks8[FILE_C] | BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E] | BBS::FileMasks8[FILE_F])
+			& (BBS::RankMasks8[RANK_3] | BBS::RankMasks8[RANK_4] | BBS::RankMasks8[RANK_5] | BBS::RankMasks8[RANK_6]);
+		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+
+		// A space point is given for squares not attacked by enemy pawns and either 1) defended by our own, or 2) behind our own.
+		// Therefore we need to define the rearspan of our pawns.
+		Bitboard rearSpanBrd = 0;
+
+		Bitboard pawnBrd = pos->pieceBBS[PAWN][S];
+		int sq = 0;
+		while (pawnBrd) {
+			sq = PopBit(&pawnBrd);
+
+			rearSpanBrd |= BM::rear_span_masks[S][sq];
+		}
+
+		Bitboard space_zone = war_zone & ~Data.attacks[Them][PAWN]; // Don't consider squares attacked by enemy.
+
+		points += countBits(eval.attacks[PAWN][S]);
+		points += 2 * countBits(rearSpanBrd & space_zone);
+		
+		// Apply the scores based on our space points
+		mg_score += (pos->side_to_move == WHITE) ? space_bonus[std::min(31, points)].mg : -space_bonus[std::min(31, points)].mg;
+		eg_score += (pos->side_to_move == WHITE) ? space_bonus[std::min(31, points)].eg : -space_bonus[std::min(31, points)].eg;
+	}
+
 
 	/*
 	Explicit template instanciations for member functions.
