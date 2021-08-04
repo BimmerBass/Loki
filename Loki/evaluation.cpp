@@ -650,6 +650,7 @@ namespace Eval {
 	// Helper functions for the king safety evaluation.
 	namespace {
 
+
 		/// <summary>
 		/// Score the pawn shield around the king based on how damaged it is.
 		/// </summary>
@@ -725,7 +726,7 @@ namespace Eval {
 
 
 			// Scale down the middlegame score depending on the opponent's material.
-			_mg *= (S == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos);
+			_mg *= (S == WHITE) ? non_pawn_material<MG, BLACK>(pos) : non_pawn_material<MG, WHITE>(pos);
 			_mg /= max_material[MG];
 
 			// Only store the pawn score in the middlegame if we're not in the central two files.
