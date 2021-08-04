@@ -262,11 +262,11 @@ namespace Eval {
 		int eg = 0;
 
 		// Step 1. Get the number of each material type
-		int pawnCnt = countBits(pos->pieceBBS[PAWN][side]);
-		int knightCnt = countBits(pos->pieceBBS[KNIGHT][side]);
-		int bishopCnt = countBits(pos->pieceBBS[BISHOP][side]);
-		int rookCnt = countBits(pos->pieceBBS[ROOK][side]);
-		int queenCnt = countBits(pos->pieceBBS[QUEEN][side]);
+		int pawnCnt = countBits(pos->pieceBBS[PAWN][S]);
+		int knightCnt = countBits(pos->pieceBBS[KNIGHT][S]);
+		int bishopCnt = countBits(pos->pieceBBS[BISHOP][S]);
+		int rookCnt = countBits(pos->pieceBBS[ROOK][S]);
+		int queenCnt = countBits(pos->pieceBBS[QUEEN][S]);
 
 		// Step 2. Add middlegame values
 		mg += pawnCnt * pawn_value.mg;
@@ -328,13 +328,13 @@ namespace Eval {
 		int sq = NO_SQ;
 
 		for (int pce = PAWN; pce <= KING; pce++) {
-			pceBoard = pos->pieceBBS[pce][side];
+			pceBoard = pos->pieceBBS[pce][S];
 
 			while (pceBoard) {
 				sq = PopBit(&pceBoard);
 
-				mg += addPsqtVal<side, MG>(pce, sq);
-				eg += addPsqtVal<side, EG>(pce, sq);
+				mg += addPsqtVal<S, MG>(pce, sq);
+				eg += addPsqtVal<S, EG>(pce, sq);
 			}
 		}
 
@@ -354,21 +354,21 @@ namespace Eval {
 		int eg = 0;
 
 		// Step 1. Bishop pair bonus. FIXME: Should we also have the square-colors of the bishops as a requirement?
-		if (countBits(pos->pieceBBS[BISHOP][side]) >= 2) {
+		if (countBits(pos->pieceBBS[BISHOP][S]) >= 2) {
 			mg += bishop_pair.mg;
 			eg += bishop_pair.eg;
 		}
 
-		int pawns_removed = 8 - countBits(pos->pieceBBS[PAWN][side]);
+		int pawns_removed = 8 - countBits(pos->pieceBBS[PAWN][S]);
 
 		// Step 2. Give rooks bonuses as pawns disappear.
-		int rook_count = countBits(pos->pieceBBS[ROOK][side]);
+		int rook_count = countBits(pos->pieceBBS[ROOK][S]);
 
 		mg += rook_count * pawns_removed * rook_pawn_bonus.mg;
 		eg += rook_count * pawns_removed * rook_pawn_bonus.eg;
 
 		// Step 3. Give the knights penalties as pawns dissapear.
-		int knight_count = countBits(pos->pieceBBS[KNIGHT][side]);
+		int knight_count = countBits(pos->pieceBBS[KNIGHT][S]);
 
 		mg -= knight_count * pawns_removed * knight_pawn_penaly.mg;
 		eg -= knight_count * pawns_removed * knight_pawn_penaly.eg;
@@ -378,6 +378,81 @@ namespace Eval {
 		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
 	}
 
+
+
+	template<EvalType T> template<SIDE S>
+	void Evaluate<T>::pawns() {
+		int mg = 0;
+		int eg = 0;
+
+		// Declare some side-relative constants
+		constexpr Bitboard* passedBitmask = (side == WHITE) ? BBS::EvalBitMasks::passed_pawn_masks[WHITE] : BBS::EvalBitMasks::passed_pawn_masks[BLACK];
+
+		constexpr int relative_ranks[8] = { (S == WHITE) ? RANK_1 : RANK_8, (S == WHITE) ? RANK_2 : RANK_7,
+			(S == WHITE) ? RANK_3 : RANK_6, (S == WHITE) ? RANK_4 : RANK_5, (S == WHITE) ? RANK_5 : RANK_4,
+			(S == WHITE) ? RANK_6 : RANK_3, (S == WHITE) ? RANK_7 : RANK_2, (S == WHITE) ? RANK_8 : RANK_1 };
+
+		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+
+		constexpr DIRECTION downLeft = (S == WHITE) ? SOUTHWEST : NORTHWEST;
+		constexpr DIRECTION downRight = (S == WHITE) ? SOUTHEAST : NORTHEAST;
+		constexpr DIRECTION upLeft = (S == WHITE) ? NORTHWEST : SOUTHWEST;
+		constexpr DIRECTION upRight = (S == WHITE) ? NORTHEAST : SOUTHEAST;
+
+
+		Bitboard pawnBoard = pos->pieceBBS[PAWN][S];
+		int sq = NO_SQ;
+		int relative_sq = NO_SQ; // For black it is PSQT::Mirror64[sq] but for white it is just == sq
+
+
+		// Before evaluating all pawns, we will score the amount of doubled pawns by file.
+		int doubled_count = 0;
+		for (int f = FILE_A; f <= FILE_H; f++) {
+			doubled_count += (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][S]) > 1) ? 1 : 0;
+		}
+
+		mg -= doubled_count * doubled_penalty.mg;
+		eg -= doubled_count * doubled_penalty.eg;
+
+
+		// Now evaluate each individual pawn
+		while (pawnBoard) {
+			sq = PopBit(&pawnBoard);
+			relative_sq = (S == WHITE) ? sq : PSQT::Mirror64[sq];
+
+			int r = relative_ranks[sq / 8];
+			int f = sq % 8;
+
+			// Passed pawn bonus
+			if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
+				mg += PSQT::passedPawnTable[relative_sq].mg;
+				eg += PSQT::passedPawnTable[relative_sq].eg;
+
+				// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
+				Data.passed_pawns[S] |= (uint64_t(1) << sq);
+			}
+
+			// Isolated penalty and/or doubled
+			bool doubled = (countBits(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][S]) > 1) ? true : false;
+			bool isolated = ((BBS::EvalBitMasks::isolated_bitmasks[f] & pos->pieceBBS[PAWN][S]) == 0) ? true : false;
+
+			if (doubled && isolated) {
+				mg -= doubled_isolated_penalty.mg;
+				eg -= doubled_isolated_penalty.eg;
+			}
+			else if (isolated) {
+				mg -= isolated_penalty.mg;
+				eg -= isolated_penalty.eg;
+			}
+		}
+
+		// Populate the attacks bitboard with pawn attacks. This will be used in the evaluation of pieces.
+		Data.attacks[S][PAWN] = (shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S]));
+
+		// Apply the scores.
+		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
+		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+	}
 
 	/*
 	Explicit template instanciations for member functions.
