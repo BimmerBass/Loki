@@ -495,7 +495,9 @@ namespace Eval {
 
 
 
-	
+	/// <summary>
+	/// Mobility evaluation. If our pieces have a lot of squares to move to, it is usually a sign that we have a good position.
+	/// </summary>
 	template<EvalType T> template<SIDE S, piece pce>
 	void Evaluate<T>::mobility() {
 		int mg = 0;
@@ -643,6 +645,133 @@ namespace Eval {
 		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
 		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
 	}
+
+
+	// Helper functions for the king safety evaluation.
+	namespace {
+
+		/// <summary>
+		/// Score the pawn shield around the king based on how damaged it is.
+		/// </summary>
+		/// <param name="pos">The position object.</param>
+		/// <param name="mg">The middle game score.</param>
+		/// <param name="eg">The endgame score.</param>
+		template<SIDE side>
+		void damaged_shield(GameState_t* pos, int mg, int eg) {
+			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
+
+			int king_file = pos->king_squares[side] % 8;
+
+			int _mg = 0;
+			int _eg = 0;
+
+			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
+
+				if ((BBS::FileMasks8[f] & (pos->pieceBBS[PAWN][BLACK] | pos->pieceBBS[PAWN][WHITE])) == 0) {
+					_mg -= PSQT::open_kingfile_penalty[f].mg;
+					_eg -= PSQT::open_kingfile_penalty[f].eg;
+				}
+
+				else if ((BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]) == 0) {
+					_mg -= PSQT::semiopen_kingfile_penalty[f].mg;
+					_eg -= PSQT::semiopen_kingfile_penalty[f].eg;
+				}
+			}
+
+			mg += (side == WHITE) ? _mg : -_mg;
+			eg += (side == WHITE) ? _eg : -_eg;
+		}
+
+		/// <summary>
+		/// Evaluate the pawns protecting the king
+		/// </summary>
+		/// <param name="pos">The position object.</param>
+		/// <param name="mg">The middle game score</param>
+		/// <param name="eg">The endgame score.</param>
+		template<SIDE S>
+		void king_pawns(GameState_t* pos, int& mg, int & eg) {
+			constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+
+			int _mg = 0;
+			int _eg = 0;
+
+			int kingSq = pos->king_squares[S];
+			int king_file = kingSq % 8;
+
+			Bitboard our_pawns = king_flanks[king_file] & pos->pieceBBS[PAWN][S];
+			Bitboard their_pawns = king_flanks[king_file] & pos->pieceBBS[PAWN][Them];
+
+			if (our_pawns == 0) { // We have no pawns on the king's flank
+				_mg -= pawnless_flank.mg;
+				_eg -= pawnless_flank.eg;
+			}
+
+			int sq = NO_SQ;
+			while (our_pawns) {
+				sq = PopBit(&our_pawns);
+
+				_mg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg;
+				_eg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg;
+			}
+
+
+			while (their_pawns) {
+				sq = PopBit(&their_pawns);
+
+				_mg -= PSQT::pawnStorm[(S == WHITE) ? sq : PSQT::Mirror64[sq]].mg;
+				_eg -= PSQT::pawnStorm[(S == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
+			}
+
+
+
+			// Scale down the middlegame score depending on the opponent's material.
+			_mg *= (S == WHITE) ? non_pawn_material<BLACK, MG>(pos) : non_pawn_material<WHITE, MG>(pos);
+			_mg /= max_material[MG];
+
+			// Only store the pawn score in the middlegame if we're not in the central two files.
+			if (king_file != FILE_E && king_file != FILE_D) {
+				mg += (S == WHITE) ? _mg : -_mg;
+			}
+
+			// Open and semi-open files near the king.
+			damaged_shield<S>(pos, _mg, _eg);
+
+			eg += (side == WHITE) ? _eg : -_eg;
+		}
+	}
+
+	
+	template<EvalType T> template<SIDE S>
+	void Evaluate<T>::king_safety() {
+		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+		constexpr int relative_ranks[8] = { (S == WHITE) ? RANK_1 : RANK_8, (S == WHITE) ? RANK_2 : RANK_7,
+			(S == WHITE) ? RANK_3 : RANK_6, (S == WHITE) ? RANK_4 : RANK_5, (S == WHITE) ? RANK_5 : RANK_4,
+			(S == WHITE) ? RANK_6 : RANK_3, (S == WHITE) ? RANK_7 : RANK_2, (S == WHITE) ? RANK_8 : RANK_1 };
+
+		int mg = 0;
+		int eg = 0;
+
+		int king_square = pos->king_squares[S];
+		int king_file = king_square % 8;
+		Bitboard kingRing = king_ring(king_square);
+
+
+		// Step 1. Evaluate the king's pawn shield and the enemy's pawn storm if opponent has a queen.
+		if (pos->pieceBBS[QUEEN][Them] != 0) {
+			king_pawns<S>(pos, mg, eg);
+		}
+
+		// Now we'll gather information on attack units. We know all attackers and attack units from the calculated mobility.
+		// We'll only use the safety table if there are more than one attacker and if the opponent has a queen.
+		if (Data.king_zone_attacks[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
+			mg -= PSQT::safety_table[std::min(99, Data.king_safety_units[side])].mg;
+			eg -= PSQT::safety_table[std::min(99, Data.king_safety_units[side])].eg / 2;
+		}
+
+		mg_score += (side == WHITE) ? mg : -mg;
+		eg_score += (side == WHITE) ? eg : -eg;
+	}
+
 
 	/*
 	Explicit template instanciations for member functions.

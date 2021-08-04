@@ -267,4 +267,17 @@ inline int frontmost_sq(SIDE s, Bitboard b) {
 }
 
 
+// Calculate the amount of non-pawn material for one side.
+template<GamePhase P, SIDE S> inline int non_pawn_material(const GameState_t* pos) {
+	// Step 1. Get the amount of pieces.
+	int knightCnt = countBits(pos->pieceBBS[KNIGHT][S]);
+	int bishopCnt = countBits(pos->pieceBBS[BISHOP][S]);
+	int rookCnt = countBits(pos->pieceBBS[ROOK][S]);
+	int queenCnt = countBits(pos->pieceBBS[QUEEN][S]);
+
+	// Step 2. Return the non-pawn material.
+	return (P == MG) ? (knightCnt * knight_value.mg + bishopCnt * bishop_value.mg + rookCnt * rook_value.mg + queenCnt * queen_value.mg)
+		: (knightCnt * knight_value.eg + bishopCnt * bishop_value.eg + rookCnt * rook_value.eg + queenCnt * queen_value.eg);
+}
+
 #endif
