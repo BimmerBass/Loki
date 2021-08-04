@@ -221,8 +221,7 @@ extern const Score semiopen_kingfile_penalty[8];
 Other constants
 */
 constexpr int tempo = 18;
-const int max_material[2] = { queen_value.mg + 2 * rook_value.mg + 2 * bishop_value.mg + 2 * knight_value.mg,
-							queen_value.eg + 2 * rook_value.eg + 2 * bishop_value.eg + 2 * knight_value.eg };
+extern const int max_material[2];
 
 
 

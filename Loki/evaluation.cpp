@@ -161,8 +161,13 @@ const Score open_kingfile_penalty[8] = { S(-26, 50), S(143, -118), S(108, -38), 
 // Penalties for semi-open files near the king. Again, indexed by file number
 const Score semiopen_kingfile_penalty[8] = { S(-23, 58), S(107, -154), S(80, -98), S(-9, 60), S(-7, 10), S(0, 32), S(47, -12), S(-37, 62) };
 
-
 #undef S
+
+/*
+Other
+*/
+const int max_material[2] = { queen_value.mg + 2 * rook_value.mg + 2 * bishop_value.mg + 2 * knight_value.mg,
+							queen_value.eg + 2 * rook_value.eg + 2 * bishop_value.eg + 2 * knight_value.eg };
 
 
 
@@ -180,7 +185,8 @@ namespace Eval {
 		pos = _pos;
 
 		// Step 2. Evaluate material
-		material<WHITE>(); material<BLACK>();
+		material<WHITE>();
+		material<BLACK>();
 
 		// Step 3. Evaluate piece placements
 		psqt<WHITE>(); psqt<BLACK>();
@@ -282,9 +288,10 @@ namespace Eval {
 		eg += rookCnt * rook_value.eg;
 		eg += queenCnt * queen_value.eg;
 
+
 		// Step 4. Add the values to eval and make it side-dependent
-		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
-		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+		mg_score += (S == WHITE) ? mg : -mg;
+		eg_score += (S == WHITE) ? eg : -eg;
 	}
 
 
@@ -339,8 +346,8 @@ namespace Eval {
 		}
 
 		// Add the side-relative scores.
-		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
-		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+		mg_score += (S == WHITE) ? mg : -mg;
+		eg_score += (S == WHITE) ? eg : -eg;
 	}
 
 
@@ -374,8 +381,8 @@ namespace Eval {
 		eg -= knight_count * pawns_removed * knight_pawn_penaly.eg;
 
 		// Step 4. Store the side-relative scores.
-		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
-		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+		mg_score += (S == WHITE) ? mg : -mg;
+		eg_score += (S == WHITE) ? eg : -eg;
 	}
 
 
@@ -453,8 +460,8 @@ namespace Eval {
 		Data.attacks[S][PAWN] = (shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S]));
 
 		// Apply the scores.
-		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
-		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+		mg_score += (S == WHITE) ? mg : -mg;
+		eg_score += (S == WHITE) ? eg : -eg;
 	}
 
 
@@ -489,8 +496,8 @@ namespace Eval {
 		points += 2 * countBits(rearSpanBrd & space_zone);
 		
 		// Apply the scores based on our space points
-		mg_score += (pos->side_to_move == WHITE) ? space_bonus[std::min(31, points)].mg : -space_bonus[std::min(31, points)].mg;
-		eg_score += (pos->side_to_move == WHITE) ? space_bonus[std::min(31, points)].eg : -space_bonus[std::min(31, points)].eg;
+		mg_score += (S == WHITE) ? space_bonus[std::min(31, points)].mg : -space_bonus[std::min(31, points)].mg;
+		eg_score += (S == WHITE) ? space_bonus[std::min(31, points)].eg : -space_bonus[std::min(31, points)].eg;
 	}
 
 
@@ -521,8 +528,8 @@ namespace Eval {
 		}
 
 		// For mobility, we'll only score moves to squares not attacked by pawns, and not to pawns that are blocked.
-		Bitboard good_squares = ~(Data.attacks[Them][PAWN] | pos->pieceBBS[S][KING] |
-			(shift<Down>(pos->all_pieces[WHITE] | pos->all_pieces[BLACK]) & pos->pieceBBS[S][PAWN]));
+		Bitboard good_squares = ~(Data.attacks[Them][PAWN] | pos->pieceBBS[KING][S] |
+			(shift<Down>(pos->all_pieces[WHITE] | pos->all_pieces[BLACK]) & pos->pieceBBS[PAWN][S]));
 
 		int attack_cnt = 0;
 		while (pceBoard != 0) {
@@ -642,8 +649,8 @@ namespace Eval {
 		// Populate attacks bitmask for the piece and side in Eval.
 		Data.attacks[S][pce] = attacks;
 		
-		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
-		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+		mg_score += (S == WHITE) ? mg : -mg;
+		eg_score += (S == WHITE) ? eg : -eg;
 	}
 
 
@@ -710,7 +717,7 @@ namespace Eval {
 			int sq = NO_SQ;
 			while (our_pawns) {
 				sq = PopBit(&our_pawns);
-
+			
 				_mg -= king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg;
 				_eg -= king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg;
 			}
@@ -718,7 +725,7 @@ namespace Eval {
 
 			while (their_pawns) {
 				sq = PopBit(&their_pawns);
-
+			
 				_mg -= pawnStorm[(S == WHITE) ? sq : PSQT::Mirror64[sq]].mg;
 				_eg -= pawnStorm[(S == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
 			}
@@ -735,7 +742,7 @@ namespace Eval {
 			}
 
 			// Open and semi-open files near the king.
-			damaged_shield<S>(pos, _mg, _eg);
+			damaged_shield<S>(pos, mg, eg);
 
 			eg += (S == WHITE) ? _eg : -_eg;
 		}
@@ -759,7 +766,7 @@ namespace Eval {
 
 		// Step 1. Evaluate the king's pawn shield and the enemy's pawn storm if opponent has a queen.
 		if (pos->pieceBBS[QUEEN][Them] != 0) {
-			king_pawns<S>(pos, mg, eg);
+			king_pawns<S>(pos, mg_score, eg_score);
 		}
 
 		// Now we'll gather information on attack units. We know all attackers and attack units from the calculated mobility.
