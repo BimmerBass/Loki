@@ -145,7 +145,7 @@ bool is_passed(int fromSq, GameState_t* pos) {
 
 // The razoring margin should rise with depth, and on top of that, we do not want to prune too aggresively if our eval is improving
 int razoring_margin(int depth, bool i) {
-	return (2 * Eval::pawn_value.mg + (depth - 1) * (Eval::pawn_value.mg / 2)) + ((i == true) ? 100 : 0);
+	return (2 * pawn_value.mg + (depth - 1) * (pawn_value.mg / 2)) + ((i == true) ? 100 : 0);
 }
 
 

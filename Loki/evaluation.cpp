@@ -24,24 +24,24 @@ Initialization of constants (PSQT are handled in psqt.cpp)
 #define S(m, e) Score(m, e) // Inspired by Stockfish/Ethereal. Just a nice and clean way of initializing the constants.
 
 // Material values.
-const Score pawn_value = S(98, 108);
-const Score knight_value = S(405, 393);
-const Score bishop_value = S(415, 381);
-const Score rook_value = S(526, 625);
-const Score queen_value = S(1120, 1306);
+const Score pawn_value(98, 108);
+const Score knight_value(405, 393);
+const Score bishop_value(415, 381);
+const Score rook_value(526, 625);
+const Score queen_value(1120, 1306);
 
 
 // Material imbalances.
-const Score bishop_pair = S(18, 55);
-const Score knight_pawn_penaly = S(1, 1);
-const Score rook_pawn_bonus = S(3, 1);
+const Score bishop_pair(18, 55);
+const Score knight_pawn_penaly(1, 1);
+const Score rook_pawn_bonus(3, 1);
 
 
 // Pawn evaluation values.
-const Score doubled_penalty = S(5, 22);
-const Score doubled_isolated_penalty = S(16, 15);
-const Score isolated_penalty = S(11, 6);
-const Score backwards_penalty = S(7, 1);
+const Score doubled_penalty(5, 22);
+const Score doubled_isolated_penalty(16, 15);
+const Score isolated_penalty(11, 6);
+const Score backwards_penalty(7, 1);
 
 const Score passedPawnTable[64] = {
 		S(34, 26)	, S(52, 11)	,	S(20, 5)	,	S(13, 50)	,	S(3, 27)	,	S(0, 66)	,	S(4, 66)	,	S(16, 4)	,
@@ -92,30 +92,30 @@ const std::array<const Score*, 4> mobility_bonus = {
 
 
 // Piece evaluation values.
-const Score outpost = S(31, 13);
-const Score reachable_outpost = S(18, -2);
-const Score knight_on_kingring = S(8, -13);
-const Score defended_knight = S(0, 10);
-const Score bishop_on_kingring = S(11, 4);
-const Score bishop_on_queen = S(32, 24);
-const Score bad_bishop_coeff = S(0, 5);
-const Score doubled_rooks = S(31, 9);
-const Score rook_on_queen = S(6, 49);
-const Score rook_on_kingring = S(34, -20);
-const Score rook_open_file = S(43, -11);
-const Score rook_semi_open_file = S(11, 19);
-const Score rook_behind_passer = S(0, 10);
-const Score queen_on_kingring = S(3, 19);
-const Score threatened_queen = S(52, 70);
+const Score outpost(31, 13);
+const Score reachable_outpost(18, -2);
+const Score knight_on_kingring(8, -13);
+const Score defended_knight(0, 10);
+const Score bishop_on_kingring(11, 4);
+const Score bishop_on_queen(32, 24);
+const Score bad_bishop_coeff(0, 5);
+const Score doubled_rooks(31, 9);
+const Score rook_on_queen(6, 49);
+const Score rook_on_kingring(34, -20);
+const Score rook_open_file(43, -11);
+const Score rook_semi_open_file(11, 19);
+const Score rook_behind_passer(0, 10);
+const Score queen_on_kingring(3, 19);
+const Score threatened_queen(52, 70);
 
 // Penalties for early queen development in the middlegame.
 const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0), S(12, 0) };
 
 
 // King safety evaluation
-const Score king_open_file_penalty = S(100, 0);
-const Score king_semi_open_file_penalty = S(50, 0);
-const Score pawnless_flank = S(248, -78);
+const Score king_open_file_penalty(100, 0);
+const Score king_semi_open_file_penalty(50, 0);
+const Score pawnless_flank(248, -78);
 
 // This has been taken from the CPW and tuned a little. In the future, it should be tuned even more.
 const Score safety_table[100] = {
@@ -389,7 +389,7 @@ namespace Eval {
 		int eg = 0;
 
 		// Declare some side-relative constants
-		constexpr Bitboard* passedBitmask = (side == WHITE) ? BBS::EvalBitMasks::passed_pawn_masks[WHITE] : BBS::EvalBitMasks::passed_pawn_masks[BLACK];
+		constexpr Bitboard* passedBitmask = (S == WHITE) ? BBS::EvalBitMasks::passed_pawn_masks[WHITE] : BBS::EvalBitMasks::passed_pawn_masks[BLACK];
 
 		constexpr int relative_ranks[8] = { (S == WHITE) ? RANK_1 : RANK_8, (S == WHITE) ? RANK_2 : RANK_7,
 			(S == WHITE) ? RANK_3 : RANK_6, (S == WHITE) ? RANK_4 : RANK_5, (S == WHITE) ? RANK_5 : RANK_4,
@@ -428,8 +428,8 @@ namespace Eval {
 
 			// Passed pawn bonus
 			if ((passedBitmask[sq] & pos->pieceBBS[PAWN][Them]) == 0) { // No enemy pawns in front
-				mg += PSQT::passedPawnTable[relative_sq].mg;
-				eg += PSQT::passedPawnTable[relative_sq].eg;
+				mg += passedPawnTable[relative_sq].mg;
+				eg += passedPawnTable[relative_sq].eg;
 
 				// Save the passed pawn's position such that we can give a bonus if it is defended by pieces later.
 				Data.passed_pawns[S] |= (uint64_t(1) << sq);
@@ -480,12 +480,12 @@ namespace Eval {
 		while (pawnBrd) {
 			sq = PopBit(&pawnBrd);
 
-			rearSpanBrd |= BM::rear_span_masks[S][sq];
+			rearSpanBrd |= BBS::EvalBitMasks::rear_span_masks[S][sq];
 		}
 
 		Bitboard space_zone = war_zone & ~Data.attacks[Them][PAWN]; // Don't consider squares attacked by enemy.
 
-		points += countBits(eval.attacks[PAWN][S]);
+		points += countBits(Data.attacks[S][PAWN]);
 		points += 2 * countBits(rearSpanBrd & space_zone);
 		
 		// Apply the scores based on our space points
@@ -521,7 +521,7 @@ namespace Eval {
 		}
 
 		// For mobility, we'll only score moves to squares not attacked by pawns, and not to pawns that are blocked.
-		Bitboard good_squares = ~(eval.attacks[Them][PAWN] | pos->pieceBBS[S][KING] |
+		Bitboard good_squares = ~(Data.attacks[Them][PAWN] | pos->pieceBBS[S][KING] |
 			(shift<Down>(pos->all_pieces[WHITE] | pos->all_pieces[BLACK]) & pos->pieceBBS[S][PAWN]));
 
 		int attack_cnt = 0;
@@ -551,8 +551,8 @@ namespace Eval {
 				attack_cnt = countBits(piece_attacks);
 				assert(attack_cnt < 9);
 
-				mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
-				eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
+				mg += mobility_bonus[pce - 1][attack_cnt].mg;
+				eg += mobility_bonus[pce - 1][attack_cnt].eg;
 			}
 
 			else if constexpr (pce == BISHOP) {
@@ -577,8 +577,8 @@ namespace Eval {
 				attack_cnt = countBits(piece_attacks);
 				assert(attack_cnt < 15);
 
-				mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
-				eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
+				mg += mobility_bonus[pce - 1][attack_cnt].mg;
+				eg += mobility_bonus[pce - 1][attack_cnt].eg;
 			}
 
 			else if constexpr (pce == ROOK) {
@@ -602,8 +602,8 @@ namespace Eval {
 
 				attack_cnt = countBits(piece_attacks);
 
-				mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
-				eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
+				mg += mobility_bonus[pce - 1][attack_cnt].mg;
+				eg += mobility_bonus[pce - 1][attack_cnt].eg;
 			}
 
 			else if constexpr (pce == QUEEN) {
@@ -629,8 +629,8 @@ namespace Eval {
 				attack_cnt = countBits(piece_attacks);
 				assert(attack_cnt < 29);
 
-				mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
-				eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
+				mg += mobility_bonus[pce - 1][attack_cnt].mg;
+				eg += mobility_bonus[pce - 1][attack_cnt].eg;
 			}
 
 			else { // Just in case we went into the loop without a proper piece-type.
@@ -657,7 +657,7 @@ namespace Eval {
 		/// <param name="mg">The middle game score.</param>
 		/// <param name="eg">The endgame score.</param>
 		template<SIDE side>
-		void damaged_shield(GameState_t* pos, int mg, int eg) {
+		void damaged_shield(const GameState_t* pos, int mg, int eg) {
 			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
 
 			int king_file = pos->king_squares[side] % 8;
@@ -668,13 +668,13 @@ namespace Eval {
 			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
 
 				if ((BBS::FileMasks8[f] & (pos->pieceBBS[PAWN][BLACK] | pos->pieceBBS[PAWN][WHITE])) == 0) {
-					_mg -= PSQT::open_kingfile_penalty[f].mg;
-					_eg -= PSQT::open_kingfile_penalty[f].eg;
+					_mg -= open_kingfile_penalty[f].mg;
+					_eg -= open_kingfile_penalty[f].eg;
 				}
 
 				else if ((BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]) == 0) {
-					_mg -= PSQT::semiopen_kingfile_penalty[f].mg;
-					_eg -= PSQT::semiopen_kingfile_penalty[f].eg;
+					_mg -= semiopen_kingfile_penalty[f].mg;
+					_eg -= semiopen_kingfile_penalty[f].eg;
 				}
 			}
 
@@ -689,7 +689,7 @@ namespace Eval {
 		/// <param name="mg">The middle game score</param>
 		/// <param name="eg">The endgame score.</param>
 		template<SIDE S>
-		void king_pawns(GameState_t* pos, int& mg, int & eg) {
+		void king_pawns(const GameState_t* pos, int& mg, int & eg) {
 			constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
 
 			int _mg = 0;
@@ -710,16 +710,16 @@ namespace Eval {
 			while (our_pawns) {
 				sq = PopBit(&our_pawns);
 
-				_mg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg;
-				_eg -= PSQT::king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg;
+				_mg -= king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].mg;
+				_eg -= king_pawn_distance_penalty[PSQT::ManhattanDistance[kingSq][sq]].eg;
 			}
 
 
 			while (their_pawns) {
 				sq = PopBit(&their_pawns);
 
-				_mg -= PSQT::pawnStorm[(S == WHITE) ? sq : PSQT::Mirror64[sq]].mg;
-				_eg -= PSQT::pawnStorm[(S == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
+				_mg -= pawnStorm[(S == WHITE) ? sq : PSQT::Mirror64[sq]].mg;
+				_eg -= pawnStorm[(S == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
 			}
 
 
@@ -736,7 +736,7 @@ namespace Eval {
 			// Open and semi-open files near the king.
 			damaged_shield<S>(pos, _mg, _eg);
 
-			eg += (side == WHITE) ? _eg : -_eg;
+			eg += (S == WHITE) ? _eg : -_eg;
 		}
 	}
 
@@ -763,13 +763,13 @@ namespace Eval {
 
 		// Now we'll gather information on attack units. We know all attackers and attack units from the calculated mobility.
 		// We'll only use the safety table if there are more than one attacker and if the opponent has a queen.
-		if (Data.king_zone_attacks[side] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
-			mg -= PSQT::safety_table[std::min(99, Data.king_safety_units[side])].mg;
-			eg -= PSQT::safety_table[std::min(99, Data.king_safety_units[side])].eg / 2;
+		if (Data.king_zone_attacks[S] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
+			mg -= safety_table[std::min(99, Data.king_safety_units[S])].mg;
+			eg -= safety_table[std::min(99, Data.king_safety_units[S])].eg / 2;
 		}
 
-		mg_score += (side == WHITE) ? mg : -mg;
-		eg_score += (side == WHITE) ? eg : -eg;
+		mg_score += (S == WHITE) ? mg : -mg;
+		eg_score += (S == WHITE) ? eg : -eg;
 	}
 
 
@@ -778,16 +778,34 @@ namespace Eval {
 	*/
 	//template void Evaluate<T>::material<WHITE>(); template void Evaluate<T>::material<BLACK>();
 
+
+	Bitboard king_flanks[8] = { 0 };
+
+	/// <summary>
+	/// Initialize the king_flanks array.
+	/// </summary>
+	void initKingFlanks() {
+		for (int f = FILE_A; f <= FILE_H; f++) {
+			if (f < FILE_D) {
+				king_flanks[f] = (BBS::FileMasks8[FILE_A] | BBS::FileMasks8[FILE_B] | BBS::FileMasks8[FILE_C]);
+			}
+			else if (f == FILE_D) {
+				king_flanks[f] = (BBS::FileMasks8[FILE_C] | BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E]);
+			}
+			else if (f == FILE_E) {
+				king_flanks[f] = (BBS::FileMasks8[FILE_D] | BBS::FileMasks8[FILE_E] | BBS::FileMasks8[FILE_F]);
+			}
+			else if (f > FILE_E) {
+				king_flanks[f] = (BBS::FileMasks8[FILE_F] | BBS::FileMasks8[FILE_G] | BBS::FileMasks8[FILE_H]);
+			}
+		}
+	}
+
+	// Initialize the evaulation function. At the moment this is just the king flanks.
+	void INIT() {
+		initKingFlanks();
+	}
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -795,9 +813,10 @@ namespace Eval {
 /// <summary>
 /// Loop through a set of positions, evaluate each one, mirror it and evaluate it again. These two values should be the same, otherwise the evaluation function is broken.
 /// </summary>
-/*void Eval::Debug::eval_balance() {
+void Eval::Debug::eval_balance() {
 
 	GameState_t* pos = new GameState_t;
+	Evaluate<NORMAL> eval;
 
 	int total = 0;
 	int passed = 0;
@@ -810,11 +829,11 @@ namespace Eval {
 		total++;
 		pos->parseFen(test_positions[p]);
 
-		w_ev = evaluate(pos);
+		w_ev = eval.score(pos);
 
 		pos->mirror_board();
 
-		b_ev = evaluate(pos);
+		b_ev = eval.score(pos);
 
 
 		if (w_ev == b_ev) {
@@ -832,4 +851,4 @@ namespace Eval {
 	std::cout << failed << " positions failed. (" << (double(failed) / double(total)) * 100.0 << "%)" << std::endl;
 
 	delete pos;
-}*/
+}

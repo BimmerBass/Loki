@@ -162,10 +162,10 @@ extern const Score rook_pawn_bonus;
 /*
 Pawn evaluation
 */
-const Score doubled_penalty;
-const Score doubled_isolated_penalty;
-const Score isolated_penalty;
-const Score backwards_penalty;
+extern const Score doubled_penalty;
+extern const Score doubled_isolated_penalty;
+extern const Score isolated_penalty;
+extern const Score backwards_penalty;
 
 extern const Score passedPawnTable[64];
 
