@@ -107,9 +107,6 @@
     <ClInclude Include="misc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="psqt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="thread.h">
       <Filter>Header Files</Filter>
     </ClInclude>

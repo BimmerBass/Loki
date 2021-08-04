@@ -185,7 +185,6 @@
     <ClInclude Include="movestager.h" />
     <ClInclude Include="perft.h" />
     <ClInclude Include="position.h" />
-    <ClInclude Include="psqt.h" />
     <ClInclude Include="search.h" />
     <ClInclude Include="search_const.h" />
     <ClInclude Include="texel.h" />
