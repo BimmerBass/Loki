@@ -494,6 +494,156 @@ namespace Eval {
 	}
 
 
+
+	
+	template<EvalType T> template<SIDE S, piece pce>
+	void Evaluate<T>::mobility() {
+		int mg = 0;
+		int eg = 0;
+
+		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+		constexpr DIRECTION Down = (S == WHITE) ? SOUTH : NORTH;
+
+		Bitboard enemy_king_ring = king_ring(pos->king_squares[Them]);
+		Bitboard enemy_outer_king_ring = outer_kingRing(pos->king_squares[Them]);
+
+		Bitboard attacks = 0; // All attacks from all pieces of type pce used to populate the bitmasks in Eval
+		Bitboard piece_attacks = 0; // Individual piece attacks.
+
+		Bitboard pceBoard = pos->pieceBBS[pce][S];
+		int sq = 0;
+
+
+		if (pce < KNIGHT || pce > QUEEN || pceBoard == 0) {
+			return;
+		}
+
+		// For mobility, we'll only score moves to squares not attacked by pawns, and not to pawns that are blocked.
+		Bitboard good_squares = ~(eval.attacks[Them][PAWN] | pos->pieceBBS[S][KING] |
+			(shift<Down>(pos->all_pieces[WHITE] | pos->all_pieces[BLACK]) & pos->pieceBBS[S][PAWN]));
+
+		int attack_cnt = 0;
+		while (pceBoard != 0) {
+			sq = PopBit(&pceBoard);
+
+			if constexpr (pce == KNIGHT) {
+				piece_attacks = BBS::knight_attacks[sq];
+				attacks |= piece_attacks;
+
+
+				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
+					Data.king_zone_attacks[Them]++; // Increment attackers
+
+					// Add attack units to index the king attack table
+					Data.king_safety_units[Them] += 2;
+				}
+				else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
+					Data.king_zone_attacks[Them]++;
+
+					// Since we're not directly attacking the king, only add half the attack units
+					Data.king_safety_units[Them] += 1;
+				}
+
+				piece_attacks &= good_squares; // Only score mobility to good squares.
+
+				attack_cnt = countBits(piece_attacks);
+				assert(attack_cnt < 9);
+
+				mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
+				eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
+			}
+
+			else if constexpr (pce == BISHOP) {
+				piece_attacks = Magics::attacks_bb<BISHOP>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
+				attacks |= piece_attacks;
+
+				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
+					Data.king_zone_attacks[Them]++; // Increment attackers
+
+					// Add attack units to index the king attack table
+					Data.king_safety_units[Them] += 2;
+				}
+				else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
+					Data.king_zone_attacks[Them]++;
+
+					// Since we're not directly attacking the king, only add half the attack units
+					Data.king_safety_units[Them] += 1;
+				}
+
+				piece_attacks &= good_squares; // Only score mobility to good squares.
+
+				attack_cnt = countBits(piece_attacks);
+				assert(attack_cnt < 15);
+
+				mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
+				eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
+			}
+
+			else if constexpr (pce == ROOK) {
+				piece_attacks = Magics::attacks_bb<ROOK>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
+				attacks |= piece_attacks;
+
+				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
+					Data.king_zone_attacks[Them]++; // Increment attackers
+
+					// Add attack units to index the king attack table
+					Data.king_safety_units[Them] += 3;
+				}
+				else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
+					Data.king_zone_attacks[Them]++;
+
+					// Since we're not directly attacking the king, only add half the attack units
+					Data.king_safety_units[Them] += 2;
+				}
+
+				piece_attacks &= good_squares; // Only score mobility to good squares.
+
+				attack_cnt = countBits(piece_attacks);
+
+				mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
+				eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
+			}
+
+			else if constexpr (pce == QUEEN) {
+				piece_attacks = Magics::attacks_bb<QUEEN>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
+				attacks |= piece_attacks;
+
+
+				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
+					Data.king_zone_attacks[Them]++; // Increment attackers
+
+					// Add attack units to index the king attack table
+					Data.king_safety_units[Them] += 5;
+				}
+				else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
+					Data.king_zone_attacks[Them]++;
+
+					// Since we're not directly attacking the king, only add half the attack units
+					Data.king_safety_units[Them] += 3;
+				}
+
+				piece_attacks &= good_squares; // Only score mobility to good squares.
+
+				attack_cnt = countBits(piece_attacks);
+				assert(attack_cnt < 29);
+
+				mg += PSQT::mobilityBonus[pce - 1][attack_cnt].mg;
+				eg += PSQT::mobilityBonus[pce - 1][attack_cnt].eg;
+			}
+
+			else { // Just in case we went into the loop without a proper piece-type.
+				assert(pce >= KNIGHT && pce <= QUEEN); // Raise an error.
+				return;
+			}
+		}
+
+		// Populate attacks bitmask for the piece and side in Eval.
+		Data.attacks[S][pce] = attacks;
+		
+		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
+		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+	}
+
 	/*
 	Explicit template instanciations for member functions.
 	*/
