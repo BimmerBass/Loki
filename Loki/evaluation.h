@@ -47,7 +47,7 @@ namespace Eval {
 	bool material_draw(GameState_t* pos);
 	*/
 	
-	template<EvalType = NORMAL>
+	template<EvalType T = NORMAL>
 	class Evaluate {
 	public:
 		int score(const GameState_t* _pos);
@@ -89,7 +89,7 @@ namespace Eval {
 		template<SIDE S> void imbalance();
 		template<SIDE S> void pawns();
 		template<SIDE S> void space();
-		template<SIDE S> void mobility();
+		template<SIDE S, piece pce> void mobility();
 		template<SIDE S> void king_safety();
 	};
 	

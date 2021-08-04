@@ -166,6 +166,85 @@ const Score semiopen_kingfile_penalty[8] = { S(-23, 58), S(107, -154), S(80, -98
 
 
 
+namespace Eval {
+
+	/// <summary>
+	/// Evaluate a position with a side-relative score.
+	/// </summary>
+	/// <param name="_pos">The position object that is to be evaluated.</param>
+	/// <returns>A numerical score for the position, relative to the side to move.</returns>
+	int Evaluate<T>::score(const GameState_t* _pos) {
+		// Step 1. Clear the object and store the position object.
+		clear();
+		pos = _pos;
+
+		// Step 2. Evaluate material
+		material<WHITE>(); material<BLACK>();
+
+		// Step 3. Evaluate piece placements
+		psqt<WHITE>(); psqt<BLACK>();
+
+		// Step 4. Material imbalances
+		imbalance<WHITE>(); imbalance<BLACK>();
+
+		// Step 5. Pawn structure evaluation
+		pawns<WHITE>(); pawns<BLACK>();
+
+		// Step 6. Space evaluation
+		space<WHITE>(); space<BLACK>();
+
+		// Step 7. Mobility
+		mobility<WHITE, KNIGHT>(); mobility<BLACK, KNIGHT>();
+		mobility<WHITE, BISHOP>(); mobility<BLACK, BISHOP>();
+		mobility<WHITE, ROOK>(); mobility<BLACK, ROOK>();
+		mobility<WHITE, QUEEN>(); mobility<BLACK, QUEEN>();
+
+		// Step 8. King safety evaluation.
+		king_safety<WHITE>(); king_safety<BLACK>();
+
+		// Step 9. Compute the phase and interpolate the middle- and endgame scores.
+		int phase = game_phase();
+		
+		int v = (phase * mg_score + (24 - phase) * eg_score) / 24;
+
+		// Step 10. Add tempo for the side to move, make the score side-relative and return
+		v += (pos->side_to_move == WHITE) ? tempo : -tempo;
+		v *= (pos->side_to_move == WHITE) ? 1 : -1;
+
+		return v;
+	}
+
+
+	/// <summary>
+	/// Calculate the game phase based on the amount of material left on the board.
+	/// </summary>
+	/// <returns>A number between 0 and 24 representing the game phase.</returns>
+	int Evaluate<T>::game_phase() {
+		// We calculate the game phase by giving 1 point for each bishop and knight, 2 for each rook and 4 for each queen.
+		// This gives the starting position a phase of 24.
+		int p = 0;
+
+		p += 1 * (countBits(pos->pieceBBS[KNIGHT][WHITE] | pos->pieceBBS[KNIGHT][BLACK]));
+		p += 1 * (countBits(pos->pieceBBS[BISHOP][WHITE] | pos->pieceBBS[BISHOP][BLACK]));
+		p += 2 * (countBits(pos->pieceBBS[ROOK][WHITE] | pos->pieceBBS[ROOK][BLACK]));
+		p += 4 * (countBits(pos->pieceBBS[QUEEN][WHITE] | pos->pieceBBS[QUEEN][BLACK]));
+
+		return std::min(24, p);
+	}
+
+
+	/// <summary>
+	/// Clear the Evaluate object.
+	/// </summary>
+	void Evaluate<T>::clear() {
+		// Clear the EvalData.
+		Data = ZeroData;
+
+		// Clear the scores and the position pointer.
+		mg_score = eg_score = 0;
+		pos = nullptr;
+	}
+}
 
 
 
