@@ -173,6 +173,7 @@ namespace Eval {
 	/// </summary>
 	/// <param name="_pos">The position object that is to be evaluated.</param>
 	/// <returns>A numerical score for the position, relative to the side to move.</returns>
+	template<EvalType T>
 	int Evaluate<T>::score(const GameState_t* _pos) {
 		// Step 1. Clear the object and store the position object.
 		clear();
@@ -219,6 +220,7 @@ namespace Eval {
 	/// Calculate the game phase based on the amount of material left on the board.
 	/// </summary>
 	/// <returns>A number between 0 and 24 representing the game phase.</returns>
+	template<EvalType T>
 	int Evaluate<T>::game_phase() {
 		// We calculate the game phase by giving 1 point for each bishop and knight, 2 for each rook and 4 for each queen.
 		// This gives the starting position a phase of 24.
@@ -236,6 +238,7 @@ namespace Eval {
 	/// <summary>
 	/// Clear the Evaluate object.
 	/// </summary>
+	template<EvalType T>
 	void Evaluate<T>::clear() {
 		// Clear the EvalData.
 		Data = ZeroData;
@@ -244,6 +247,51 @@ namespace Eval {
 		mg_score = eg_score = 0;
 		pos = nullptr;
 	}
+
+
+	/* --------------------------------------------------------------- */
+	/* -------------------- Evaluation sub-terms --------------------- */
+	/* --------------------------------------------------------------- */
+
+	template<EvalType T> template<SIDE S>
+	void Evaluate<T>::material() {
+		int mg = 0;
+		int eg = 0;
+
+		// Step 1. Get the number of each material type
+		int pawnCnt = countBits(pos->pieceBBS[PAWN][side]);
+		int knightCnt = countBits(pos->pieceBBS[KNIGHT][side]);
+		int bishopCnt = countBits(pos->pieceBBS[BISHOP][side]);
+		int rookCnt = countBits(pos->pieceBBS[ROOK][side]);
+		int queenCnt = countBits(pos->pieceBBS[QUEEN][side]);
+
+		// Step 2. Add middlegame values
+		mg += pawnCnt * pawn_value.mg;
+		mg += knightCnt * knight_value.mg;
+		mg += bishopCnt * bishop_value.mg;
+		mg += rookCnt * rook_value.mg;
+		mg += queenCnt * queen_value.mg;
+
+		// Step 3. Add endgame values
+		eg += pawnCnt * pawn_value.eg;
+		eg += knightCnt * knight_value.eg;
+		eg += bishopCnt * bishop_value.eg;
+		eg += rookCnt * rook_value.eg;
+		eg += queenCnt * queen_value.eg;
+
+		// Step 4. Add the values to eval and make it side-dependent
+		mg_score += (pos->side_to_move == WHITE) ? mg : -mg;
+		eg_score += (pos->side_to_move == WHITE) ? eg : -eg;
+	}
+
+
+
+
+	/*
+	Explicit template instanciations for member functions.
+	*/
+	//template void Evaluate<T>::material<WHITE>(); template void Evaluate<T>::material<BLACK>();
+
 }
 
 
