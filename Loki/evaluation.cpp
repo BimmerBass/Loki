@@ -209,7 +209,7 @@ namespace Eval {
 		// Step 8. King safety evaluation.
 		king_safety<WHITE>(); king_safety<BLACK>();
 
-		// Step 9. Compute the phase and interpolate the middle- and endgame scores.
+		// Step 9. Compute the phase and interpolate the middle game and endgame scores.
 		int phase = game_phase();
 		
 		int v = (phase * mg_score + (24 - phase) * eg_score) / 24;
