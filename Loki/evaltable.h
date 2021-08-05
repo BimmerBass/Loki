@@ -17,7 +17,41 @@
 */
 #ifndef EVALTABLE_H
 #define EVALTABLE_H
+#include <cstdint>
 
+
+/// <summary>
+/// EvalEntry_t is the container for the data in a single entry in the evaluation hash table.
+/// </summary>
+class EvalEntry_t {
+public:
+	void set(uint64_t pos_key, int eval);
+
+	uint32_t get_key() const;
+	int get_score() const;
+private:
+	uint32_t key = 0;
+	int score = 0;
+
+};
+
+
+
+/// <summary>
+/// EvaluationTable is the class responsible for managing the evaluation hash table.
+/// </summary>
+class EvaluationTable {
+public:
+	EvaluationTable();
+	~EvaluationTable();
+
+	void store(uint64_t key, int eval);
+	const EvalEntry_t* probe(uint64_t key, bool& hit);
+
+private:
+	size_t num_slots = 0;
+	EvalEntry_t* entries;
+};
 
 
 
