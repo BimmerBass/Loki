@@ -19,7 +19,7 @@
 
 
 /*
-Initialization of constants (PSQT are handled in psqt.cpp)
+Initialization of constants. (PSQT are handled in psqt.cpp)
 */
 #define S(m, e) Score(m, e) // Inspired by Stockfish/Ethereal. Just a nice and clean way of initializing the constants.
 
