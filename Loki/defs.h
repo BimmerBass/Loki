@@ -82,9 +82,6 @@ constexpr int VALUE_NONE = 50000;
 #define THREADS_DEFAULT_NUM 1
 #define THREADS_MIN_NUM 1
 
-// Default eval table size.
-#define DEFAULT_EVAL_TABLE_SIZE 200
-
 typedef uint64_t Bitboard;
 
 

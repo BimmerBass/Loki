@@ -19,16 +19,22 @@
 #define EVALTABLE_H
 #include <cstdint>
 
+/// <summary>
+/// The default size of the evaluation hash table in bytes. It is 128KB.
+/// </summary>
+constexpr size_t EVAL_TABLE_SIZE = 128 << 10;
+
+
 
 /// <summary>
 /// EvalEntry_t is the container for the data in a single entry in the evaluation hash table.
 /// </summary>
 class EvalEntry_t {
 public:
-	void set(uint64_t pos_key, int eval);
+	void set(uint64_t pos_key, int eval) { key = pos_key >> 32; score = eval; }
 
-	uint32_t get_key() const;
-	int get_score() const;
+	uint32_t get_key() const { return key; }
+	int get_score() const { return score; }
 private:
 	uint32_t key = 0;
 	int score = 0;
