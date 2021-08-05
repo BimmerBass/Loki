@@ -183,38 +183,51 @@ namespace Eval {
 		// Step 1. Clear the object and store the position object.
 		clear();
 		pos = _pos;
+		int v = 0;
 
-		// Step 2. Evaluate material
-		material<WHITE>();
-		material<BLACK>();
+		// Step 2. Probe the evaluation hash table for an entry.
+		bool hit = false;
+		const EvalEntry_t* entry = eval_table.probe(pos->posKey, hit);
 
-		// Step 3. Evaluate piece placements
-		psqt<WHITE>(); psqt<BLACK>();
+		if (hit) {
+			v = entry->get_score();
+		}
+		else {
+			// Step 3. Evaluate material
+			material<WHITE>();
+			material<BLACK>();
 
-		// Step 4. Material imbalances
-		imbalance<WHITE>(); imbalance<BLACK>();
+			// Step 4. Evaluate piece placements
+			psqt<WHITE>(); psqt<BLACK>();
 
-		// Step 5. Pawn structure evaluation
-		pawns<WHITE>(); pawns<BLACK>();
+			// Step 5. Material imbalances
+			imbalance<WHITE>(); imbalance<BLACK>();
 
-		// Step 6. Space evaluation
-		space<WHITE>(); space<BLACK>();
+			// Step 6. Pawn structure evaluation
+			pawns<WHITE>(); pawns<BLACK>();
 
-		// Step 7. Mobility
-		mobility<WHITE, KNIGHT>(); mobility<BLACK, KNIGHT>();
-		mobility<WHITE, BISHOP>(); mobility<BLACK, BISHOP>();
-		mobility<WHITE, ROOK>(); mobility<BLACK, ROOK>();
-		mobility<WHITE, QUEEN>(); mobility<BLACK, QUEEN>();
+			// Step 7. Space evaluation
+			space<WHITE>(); space<BLACK>();
 
-		// Step 8. King safety evaluation.
-		king_safety<WHITE>(); king_safety<BLACK>();
+			// Step 8. Mobility
+			mobility<WHITE, KNIGHT>(); mobility<BLACK, KNIGHT>();
+			mobility<WHITE, BISHOP>(); mobility<BLACK, BISHOP>();
+			mobility<WHITE, ROOK>(); mobility<BLACK, ROOK>();
+			mobility<WHITE, QUEEN>(); mobility<BLACK, QUEEN>();
 
-		// Step 9. Compute the phase and interpolate the middle game and endgame scores.
-		int phase = game_phase();
-		
-		int v = (phase * mg_score + (24 - phase) * eg_score) / 24;
+			// Step 9. King safety evaluation.
+			king_safety<WHITE>(); king_safety<BLACK>();
 
-		// Step 10. Add tempo for the side to move, make the score side-relative and return
+			// Step 10. Compute the phase and interpolate the middle game and endgame scores.
+			int phase = game_phase();
+
+			v = (phase * mg_score + (24 - phase) * eg_score) / 24;
+
+			// Step 11. Store the evaluation in the hash table (white's POV)
+			eval_table.store(pos->posKey, v);
+		}
+
+		// Step 12. Add tempo for the side to move, make the score side-relative and return
 		v += (pos->side_to_move == WHITE) ? tempo : -tempo;
 		v *= (pos->side_to_move == WHITE) ? 1 : -1;
 

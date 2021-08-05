@@ -21,6 +21,7 @@
 #include <array>
 #include "movegen.h"
 #include "test_positions.h"
+#include "evaltable.h"
 
 
 /*
@@ -91,6 +92,9 @@ namespace Eval {
 		template<SIDE S> void space();
 		template<SIDE S, piece pce> void mobility();
 		template<SIDE S> void king_safety();
+
+		// An evaluation hash table to re-use recently calculated evaluations.
+		EvaluationTable eval_table;
 	};
 	
 	
