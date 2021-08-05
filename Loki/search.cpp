@@ -145,7 +145,7 @@ bool is_passed(int fromSq, GameState_t* pos) {
 
 // The razoring margin should rise with depth, and on top of that, we do not want to prune too aggresively if our eval is improving
 int razoring_margin(int depth, bool i) {
-	return (2 * Eval::pawn_value.mg + (depth - 1) * (Eval::pawn_value.mg / 2)) + ((i == true) ? 100 : 0);
+	return (2 * pawn_value.mg + (depth - 1) * (pawn_value.mg / 2)) + ((i == true) ? 100 : 0);
 }
 
 
@@ -467,7 +467,7 @@ namespace Search {
 		if (in_check) {
 			ss->stats.static_eval[ss->pos->ply] = VALUE_NONE;
 		}
-		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		ss->stats.static_eval[ss->pos->ply] = ss->eval->score(ss->pos);
 
 
 		// Step 4. Initialize a staged move generation object and loop through all moves.
@@ -633,7 +633,7 @@ namespace Search {
 
 			// Step 3B. Protect the data structures from overflow if the depth becomes too high
 			if (ss->pos->ply >= MAXDEPTH) {
-				return Eval::evaluate(ss->pos);
+				return ss->eval->score(ss->pos);
 			}
 
 			// Step 3C. Mate distance pruning (~0 elo). If there has already been found a forced mate, don't search irrelevant nodes.
@@ -685,7 +685,7 @@ namespace Search {
 			goto moves_loop;
 		}
 		
-		ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+		ss->stats.static_eval[ss->pos->ply] = ss->eval->score(ss->pos);
 		//improving = (ss->pos->ply >= 2) ?
 		//	(ss->stats.static_eval[ss->pos->ply] >= ss->stats.static_eval[ss->pos->ply - 2] || ss->stats.static_eval[ss->pos->ply - 2] == VALUE_NONE) :
 		//	false;
@@ -715,7 +715,7 @@ namespace Search {
 			int old_enpassant = ss->pos->make_nullmove();
 			
 			// We want to use another eval here than the one already calculated since the former is inaccurate when the side to move gets switched
-			ss->stats.static_eval[ss->pos->ply] = Eval::evaluate(ss->pos);
+			ss->stats.static_eval[ss->pos->ply] = ss->eval->score(ss->pos);
 		
 			// When we do a nullmove, we can't rely on the countermove heuristic, so we'll have to set the move to indicate NMP usage
 			ss->stats.moves_path[ss->pos->ply] = MOVE_NULL;
@@ -1010,11 +1010,11 @@ namespace Search {
 		}
 
 		if (ss->pos->ply >= MAXDEPTH) {
-			return Eval::evaluate(ss->pos);
+			return ss->eval->score(ss->pos);
 		}
 
 		// Step 2. Static evaluation and possible cutoff if this beats beta.
-		int stand_pat = Eval::evaluate(ss->pos);
+		int stand_pat = ss->eval->score(ss->pos);
 
 		assert(stand_pat > -MATE && stand_pat < MATE);
 
@@ -1201,7 +1201,7 @@ void uci_moveinfo(int move, int depth, int index) {
 
 
 int to_cp(int score) {
-	return score * (100 / Eval::pawn_value.mg);
+	return score * (100 / pawn_value.mg);
 }
 
 int to_mate(int score) {
@@ -1274,7 +1274,7 @@ void Search::INIT() {
 		for (int lead = 0; lead < 2000; lead++) {
 			// This is set so as to not reduce by more than six plies under any circumstance
 			//NM_Reductions[d][lead] = ((d > 6) ? 3 : 2) + std::max(0, std::min(3, (int)std::round(1.5 * std::log(std::pow(lead / 100, 2)))));
-			NM_Reductions[d][lead] = (int)std::round(1.5 + 0.25 * double(d) + std::min(3.0, double(lead) / (2.0 * (double)Eval::pawn_value.mg)));
+			NM_Reductions[d][lead] = (int)std::round(1.5 + 0.25 * double(d) + std::min(3.0, double(lead) / (2.0 * (double)pawn_value.mg)));
 		}
 	}
 }

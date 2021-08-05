@@ -85,6 +85,7 @@ namespace Texel {
 	void thread_batch(tuning_positions* EPDS, double k, double* sum) {
 
 		GameState_t* pos = new GameState_t;
+		Eval::Evaluate eval;
 		int value = 0;
 
 		for (int i = 0; i < EPDS->size(); i++) {
@@ -93,7 +94,7 @@ namespace Texel {
 			pos->parseFen((*EPDS)[i].fen);
 
 			// Step 2. Evaluate and make the result relative to white
-			value = Eval::evaluate(pos);
+			value = eval.score(pos);
 			value *= (pos->side_to_move == WHITE) ? 1 : -1;
 
 			// Step 3. Square the difference between the game result and the eval, and add this to the sum.

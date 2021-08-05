@@ -19,6 +19,7 @@
 #define THREAD_H
 #include "movegen.h"
 #include "search_const.h"
+#include "evaluation.h"
 
 
 
@@ -83,6 +84,7 @@ class SearchThread_t {
 public:
 	GameState_t* pos = new GameState_t;
 	SearchInfo_t* info = new SearchInfo_t;
+	Eval::Evaluate<NORMAL>* eval = new Eval::Evaluate<NORMAL>;
 
 	int thread_id = 0;
 
@@ -98,6 +100,7 @@ public:
 	~SearchThread_t() {
 		delete pos;
 		delete info;
+		delete eval;
 	}
 };
 

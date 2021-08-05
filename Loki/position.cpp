@@ -16,7 +16,7 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "position.h"
-#include "psqt.h"
+#include "evaluation.h"
 
 
 template <>
