@@ -665,7 +665,7 @@ namespace Eval {
 		/// <param name="mg">The middle game score.</param>
 		/// <param name="eg">The endgame score.</param>
 		template<SIDE side>
-		void damaged_shield(const GameState_t* pos, int mg, int eg) {
+		void damaged_shield(const GameState_t* pos, int& mg, int& eg) {
 			constexpr SIDE Them = (side == WHITE) ? BLACK : WHITE;
 
 			int king_file = pos->king_squares[side] % 8;
