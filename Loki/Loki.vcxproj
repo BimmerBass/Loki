@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="bench.cpp" />
     <ClCompile Include="bitboard.cpp" />
+    <ClCompile Include="evaltable.cpp" />
     <ClCompile Include="evaluation.cpp" />
     <ClCompile Include="magics.cpp" />
     <ClCompile Include="main.cpp">
@@ -178,6 +179,7 @@
     <ClInclude Include="bench.h" />
     <ClInclude Include="bitboard.h" />
     <ClInclude Include="defs.h" />
+    <ClInclude Include="evaltable.h" />
     <ClInclude Include="evaluation.h" />
     <ClInclude Include="misc.h" />
     <ClInclude Include="move.h" />
