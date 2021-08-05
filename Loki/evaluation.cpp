@@ -309,11 +309,11 @@ namespace Eval {
 		int addPsqtVal(int pce, int sq) {
 			int v = 0;
 
-			//assert(p == MG || p == EG);
-			//assert(side == WHITE || side == BLACK);
-			//assert(sq >= 0 && sq <= 63);
-			//assert(pce >= PAWN && pce < NO_TYPE);
-			//assert(PSQT::Mirror64[PSQT::Mirror64[sq]] == sq);
+			assert(p == MG || p == EG);
+			assert(side == WHITE || side == BLACK);
+			assert(sq >= 0 && sq <= 63);
+			assert(pce >= PAWN && pce < NO_TYPE);
+			assert(PSQT::Mirror64[PSQT::Mirror64[sq]] == sq);
 
 			v += (p == MG) ? tables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]].mg : tables[pce][(side == WHITE) ? sq : PSQT::Mirror64[sq]].eg;
 
