@@ -32,7 +32,9 @@ The evaluation considers the following characteristics of a given position:
 - King safety evaluation.
 - Specialized piece evaluation. This has been implemented, but lost elo, so it is disabled at the moment. I will experiment with it in the future.
 
-A tapered eval is used to interpolate between game phases. Additionally, the entire evaluation is tuned using an SPSA-texel optimization algorithm.
+A tapered eval is used to interpolate between game phases. Additionally, each thread's evaluation function object has its own evaluation hash table (128KB).
+
+The evaluation function is tuned using an SPSA-texel tuning framework. This will later be changed though.
 
 #### Search
 - Lazy SMP supporting up to 8 threads.
@@ -53,8 +55,8 @@ A tapered eval is used to interpolate between game phases. Additionally, the ent
     - Razoring.
     - ~~Internal iterative deepening if no hash move has been found~~.
     - In check extensions ~~and castling extensions~~.
-    - ~~Late move pruning~~.
-    - ~~Late move reductions~~.
+    - Late move pruning.
+    - Late move reductions.
 - Quiescence search to resolve captures
     - ~~Delta pruning~~.
     - ~~Futility pruning for individual moves~~.
@@ -79,7 +81,8 @@ It is also possible to change the amount of optimizations with both compilers by
     - ProbCut.
     - Null move reductions.
     - Null move threat extensions.
-- Port the tuning framework to python, and make it work with search tuning.
+- Make a real gradient-based (in contrast to SPSA that only has gradient directions) evaluation tuner.
+- Make a search-tuner that uses self-play.
 - Make the evaluation term for pieces work.
 - I am very amazed of Stockfish's NNUE evaluation, and if I ever get Loki to play descent chess on CCRL, I will look into creating a new evaluation with some sort of Machine Learning.
 - Create my own magic bitboard implementation. Early in the development of Loki, I didn't want to spend too much time with move generation since my primary goal was to get it to play chess. Therefore, I took the easy way, which is unsatisfactory now... 
