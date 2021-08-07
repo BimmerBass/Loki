@@ -113,6 +113,9 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 
 
 // King safety evaluation
+const Score knight_defender(50, 40);
+const Score bishop_defender(25, 35);
+
 const Score weak_king_ring(150, 75);
 
 const Score semi_open_kingfile(100, 0);
@@ -559,12 +562,6 @@ namespace Eval {
 					Data.king_safety_units[Them] += 1;
 				}
 
-				// If we're in reach of our own king's zone, we can defend it.
-				if ((piece_attacks & friendly_outer_king_ring) != 0) {
-					Data.king_zone_defenders[S]++;
-					Data.king_defence_units[S] += 80;
-				}
-
 				piece_attacks &= good_squares; // Only score mobility to good squares.
 
 				attack_cnt = countBits(piece_attacks);
@@ -595,11 +592,6 @@ namespace Eval {
 					Data.king_safety_units[Them] += 1;
 				}
 
-				// If we're in reach of our own king's zone, we can defend it.
-				if ((piece_attacks & friendly_outer_king_ring) != 0) {
-					Data.king_zone_defenders[S]++;
-					Data.king_defence_units[S] += 40;
-				}
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
 
@@ -631,12 +623,6 @@ namespace Eval {
 					Data.king_safety_units[Them] += 2;
 				}
 
-				// If we're in reach of our own king's zone, we can defend it.
-				if ((piece_attacks & friendly_outer_king_ring) != 0) {
-					Data.king_zone_defenders[S]++;
-					Data.king_defence_units[S] += 20;
-				}
-
 				piece_attacks &= good_squares; // Only score mobility to good squares.
 
 				attack_cnt = countBits(piece_attacks);
@@ -664,12 +650,6 @@ namespace Eval {
 
 					// Since we're not directly attacking the king, only add half the attack units
 					Data.king_safety_units[Them] += 3;
-				}
-
-				// If we're in reach of our own king's zone, we can defend it.
-				if ((piece_attacks & friendly_outer_king_ring) != 0) {
-					Data.king_zone_defenders[S]++;
-					Data.king_defence_units[S] += 20;
 				}
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
@@ -805,15 +785,28 @@ namespace Eval {
 		int safety_mg = 0;
 		int safety_eg = 0;
 
+		// Step 1. Evaluate the king's pawns.
+		king_pawns<T, S>(pos, safety_mg, safety_eg);
+
 		// Step 2. Now we can apply our knowledge of king attacks from mobility calculation.
 		// Note: Only apply these if the enemy has a queen and more than two attackers.
 		if (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 2) {
-			safety_mg += safety_table[std::min(99, Data.king_safety_units[S])].mg;
-			safety_eg += safety_table[std::min(99, Data.king_safety_units[S])].eg;
+			safety_mg += safety_table[std::min(99, Data.king_safety_units[S])].mg / 2;
+			safety_eg += safety_table[std::min(99, Data.king_safety_units[S])].eg / 2;
 
-			// Step2A. Apply defence scores too. This method is inspired by Toga (see CPW King safety)
-			safety_mg -= Data.king_defence_units[S] * defence_weights[std::min(6, Data.king_zone_defenders[S])].mg / 100;
-			safety_eg -= Data.king_defence_units[S] * defence_weights[std::min(6, Data.king_zone_defenders[S])].eg / 100;
+			// Step 2A. Apply defence scores too.
+			// Defenders include: knights, pawns and bishops inside our king-area (king ring + outer king ring)
+			Bitboard defenders = (king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]))
+				& (pos->pieceBBS[KNIGHT][S] | pos->pieceBBS[BISHOP][S]);
+			
+			int knight_defenders = countBits(defenders & pos->pieceBBS[KNIGHT][S]);
+			int bishop_defenders = countBits(defenders & pos->pieceBBS[BISHOP][S]);
+
+			safety_mg -= knight_defender.mg * knight_defenders;
+			safety_eg -= knight_defender.eg * knight_defenders;
+
+			safety_mg -= bishop_defender.mg * bishop_defenders;
+			safety_eg -= bishop_defender.eg * bishop_defenders;
 
 			// Step 2B. Evaluate the amount of weak squares around the king.
 			Bitboard weak = weak_squares<S>();
@@ -823,12 +816,9 @@ namespace Eval {
 			safety_eg += weak_count * weak_king_ring.eg;
 		}
 
-		// Step 3. Evaluate the king's pawns.
-		king_pawns<T, S>(pos, safety_mg, safety_eg);
-
 		// Step 5. Save the new safety scores. Note: We don't safe them if they're negative since that would give a bonus.
-		int king_mg = -1 * ((safety_mg * safety_mg) / 8192);
-		int king_eg = -1 * ((safety_eg * safety_eg) / 8192);
+		int king_mg = -1 * ((safety_mg * std::max(0, safety_mg)) / 8192);
+		int king_eg = -1 * ((safety_eg * std::max(0, safety_eg)) / 8192);
 
 		mg_score += (S == WHITE) ? king_mg : -king_mg;
 		eg_score += (S == WHITE) ? king_eg : -king_eg;

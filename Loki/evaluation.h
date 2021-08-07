@@ -69,9 +69,6 @@ namespace Eval {
 
 			int king_zone_attacks[2] = { 0 };	/* The amount of pieces attacking the king */
 			int king_safety_units[2] = { 0 };	/* A kind of "weighted" amount of pieces attacking the king. Used to index the safety table */
-
-			int king_zone_defenders[2] = { 0 };
-			int king_defence_units[2] = { 0 };
 		};
 		// The constant ZeroData is used to quickly clear our evaluation data.
 		const EvalData ZeroData;
@@ -217,6 +214,8 @@ extern const Score queen_development_penalty[5];
 /*
 King evaluation
 */
+extern const Score knight_defender;
+extern const Score bishop_defender;
 extern const Score weak_king_ring;
 extern const Score semi_open_kingfile;
 extern const Score open_kingfile;
@@ -225,7 +224,6 @@ extern const Score safe_kpd_penalty[8];
 
 extern const Score pawnStorm[64];
 extern const Score safety_table[100];
-extern const Score defence_weights[7];
 
 /*
 Other constants
