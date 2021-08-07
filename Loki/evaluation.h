@@ -214,16 +214,14 @@ extern const Score queen_development_penalty[5];
 /*
 King evaluation
 */
-extern const Score knight_defender;
-extern const Score bishop_defender;
-extern const Score weak_king_ring;
-extern const Score semi_open_kingfile;
-extern const Score open_kingfile;
-extern const Score kpd_penalty[8];
-extern const Score safe_kpd_penalty[8];
-
-extern const Score pawnStorm[64];
+extern const Score missing_king_pawn;
+extern const Score no_enemy_queen;
+extern const Score weak_king_square;
+extern const Score king_pawn_shelter[8][7];
+extern const Score king_pawn_storm[8][7];
+extern const Score defending_minors[4][3][3];
 extern const Score safety_table[100];
+
 
 /*
 Other constants
@@ -271,6 +269,15 @@ inline int frontmost_sq(SIDE s, Bitboard b) {
 	}
 
 	return (s == WHITE) ? bitScanReverse(b) : bitScanForward(b);
+}
+
+template<SIDE S>
+inline int backmost_sq(const Bitboard b) {
+	if (b == 0) {
+		return NO_SQ;
+	}
+
+	return (S == WHITE) ? bitScanForward(b) : bitScanReverse(b);
 }
 
 

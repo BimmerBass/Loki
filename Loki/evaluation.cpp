@@ -113,30 +113,43 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 
 
 // King safety evaluation
-const Score knight_defender(43, 35);
-const Score bishop_defender(62, -26);
+const Score missing_king_pawn(65, 30);
+const Score no_enemy_queen(-200, -250);
+const Score weak_king_square(17, 50);
 
-const Score weak_king_ring(17, 50);
-
-const Score semi_open_kingfile(65, -15);
-const Score open_kingfile(94, 71);
-
-// Both of the below arrays are indexed by the Manhattan-Distance between the pawn and the king. KPD stands for king-pawn-distance.
-const Score kpd_penalty[8] = { S(41, -69), S(-51, -15), S(-27, 1), S(-32, -4), S(-17, -1), S(54, 12), S(64, 82), S(29, 143) };
-const Score safe_kpd_penalty[8] = { S(17, -59), S(-59, -13), S(24, 8), S(28, 46), S(73, 7), S(53, 29), S(26, 40), S(108, 70) };
-
-
-// Penalties for storming pawns on the side the king is castled on.
-const Score pawnStorm[64] = {
-		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)			,	S(0, 0)		,	S(0, 0)		,	S(0, 0),
-		S(57, -194)	,	S(223, -8)	,	S(139, 76)	,	S(33, 128)	,	S(-159, -232)	,	S(-3, 66)	,	S(133, 146)	,	S(27, 78),
-		S(13, -136)	,	S(-275, 0)	,	S(171, -4)	,	S(123, 60)	,	S(-79, -14)		,	S(147, 86)	,	S(73, 100)	,	S(-1, -10),
-		S(10, 178)	,	S(0, -8)	,	S(188, 56)	,	S(140, 64)	,	S(80, -54)		,	S(30, -10)	,	S(60, -20)	,	S(-8, 14),
-		S(-11, 16)	,	S(75, -80)	,	S(45, 78)	,	S(-77, 60)	,	S(-87, -30)		,	S(-1, 14)	,	S(67, -26)	,	S(-3, 16),
-		S(-101, 108),	S(11, -136)	,	S(-45, 96)	,	S(-291, 58)	,	S(-3, 20)		,	S(1, 18)	,	S(37, -18)	,	S(-17, 18),
-		S(-60, 64)	,	S(18, -24)	,	S(74, -30)	,	S(80, -24)	,	S(6, 38)		,	S(2, 48)	,	S(44, 4)	,	S(-14, -34),
-		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)			,	S(0, 0)		,	S(0, 0)		,	S(0, 0)
+const Score king_pawn_shelter[8][7] = {
+	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File A */
+	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File B */
+	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File C */
+	{ S(0, 0)	,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)	  },	/* File D */
+	{ S(0, 0)	,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)   },	/* File E */
+	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File F */
+	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File G */
+	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) }		/* File H */
+	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq			  7sq	*/
 };
+
+const Score king_pawn_storm[8][7] = {
+	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File A */
+	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File B */
+	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File C */
+	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30)	},	/* File D */
+	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File E */
+	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File F */
+	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File G */
+	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) }	/* File H */
+	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq			  7sq	*/
+};
+
+
+const Score defending_minors[4][3][3] = {
+	{{S(15, 15), S(10, 10)}		,	{S(10, 10),	S(-5, -5)}},		/* 0 Defending pawns */
+	{{S(10, 10), S(5, 5)}		,	{S(5, 5),	S(-10, -10)}},		/* 1 Defending pawn  */
+	{{S(-5, -5), S(-10, -10)}	,	{S(-10, -10), S(-15, -15)}},	/* 2 Defending pawns */
+	{{S(-10, -10), S(-15, -15)}	,	{S(-15, -15), S(-20, -20)}} 	/* 3 Defending pawns */
+	/*   1 knight						2 knights		*/
+};
+
 
 const Score safety_table[100] = {
 		S(0, 0),		S(2, 2),		S(12, 2),		S(-11, 2),		S(7, 5),		S(16, 4),		S(17, 11),		S(27, 15),		S(34, 22),		S(63, 39),
@@ -150,7 +163,6 @@ const Score safety_table[100] = {
 		S(479, 481),	S(501, 491),	S(499, 521),	S(515, 515),	S(541, 539),	S(547, 551),	S(557, 539),	S(559, 559),	S(563, 573),	S(583, 571),
 		S(563, 573),	S(583, 571),	S(583, 579),	S(593, 589),	S(593, 611),	S(617, 625),	S(627, 647),	S(631, 637),	S(639, 641),	S(655, 651),
 };
-
 
 #undef S
 
@@ -682,93 +694,52 @@ namespace Eval {
 
 			return ((shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S])) & (uint64_t(1) << sq)) != 0;
 		}
-
-
-		template<EvalType T, SIDE S>
-		void broken_shield(const GameState_t* pos, int& s_mg, int& s_eg) {
-			// Step 1. Initialize variables.
-			constexpr SIDE Them = S == WHITE ? BLACK : WHITE;
-			int king_file = pos->king_squares[S] % 8;
-
-			// Step 2. Find the files of our king flank.
-			int start_file, end_file;
-
-			if (king_file < FILE_D) {
-				start_file = FILE_A; end_file = FILE_C;
-			}
-			else if (king_file == FILE_D) {
-				start_file = FILE_C; end_file = FILE_E;
-			}
-			else if (king_file == FILE_E) {
-				start_file = FILE_D; end_file = FILE_F;
-			}
-			else if (king_file > FILE_E) {
-				start_file = FILE_F; end_file = FILE_H;
-			}
-
-			// Step 3. Now check the files for open or semi-open files.
-			for (int f = start_file; f <= end_file; f++) {
-				if (((pos->pieceBBS[PAWN][S] | pos->pieceBBS[PAWN][Them]) & BBS::FileMasks8[f]) == 0) { // Open file.
-					s_mg += open_kingfile.mg;
-					s_eg += open_kingfile.eg;
-				}
-				else if ((pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Semi-open file.
-					s_mg += semi_open_kingfile.mg;
-					s_eg += semi_open_kingfile.eg;
-				}
-			}
-		}
 		
 		/// <summary>
 		/// Score the pawn shield around the king.
 		/// </summary>
 		/// <param name="pos">The position</param>
-		/// <param name="s_mg">A reference to the mg safety score.</param>
-		/// <param name="s_eg">A reference to the eg safety score.</param>
+		/// <returns>A score with safety values</returns>
 		template<EvalType T, SIDE S>
-		void king_pawns(const GameState_t* pos, int& s_mg, int& s_eg) {
+		Score king_pawns(const GameState_t* pos) {
 			// Step 1. Variable declaration.
 			constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
 
+			Score safety;
+
 			int king_sq = pos->king_squares[S];
 			int king_file = king_sq % 8;
-			Bitboard king_flank = king_flanks[king_file];
+			int sq, dist;
 
 			// Step 2. Evaluate pawn advancement in front of the king.
-			Bitboard our_pawns = pos->pieceBBS[PAWN][S] & king_flank;
-			Bitboard their_pawns = pos->pieceBBS[PAWN][Them] & king_flank;
-			int sq = 0;
+			// We do this by simply looping over the files adjacent to the king's
+			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
+				// Step 2A. Find the closest of our own pawns and score it based on the distance to the king and it's file.
+				sq = backmost_sq<S>(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][S]);
 
-			while (our_pawns) {
-				sq = PopBit(&our_pawns);
-
-				if (defended_by_pawn<S>(pos, sq)) {
-					s_mg += safe_kpd_penalty[PSQT::ManhattanDistance[king_sq][sq]].mg;
-					s_eg += safe_kpd_penalty[PSQT::ManhattanDistance[king_sq][sq]].eg;
+				if (sq == NO_SQ) { // There are no pawns.
+					safety.mg += missing_king_pawn.mg;
+					safety.eg += missing_king_pawn.eg;
 				}
 				else {
-					s_mg += kpd_penalty[PSQT::ManhattanDistance[king_sq][sq]].mg;
-					s_eg += kpd_penalty[PSQT::ManhattanDistance[king_sq][sq]].eg;
+					dist = PSQT::ManhattanDistance[king_sq][sq];
+
+					safety.mg += king_pawn_shelter[f][dist].mg;
+					safety.eg += king_pawn_shelter[f][dist].eg;
+				}
+
+				// Step 2B. Find the closest enemy pawn and evaluate the pawn storm based on the file and the distance to our king.
+				sq = backmost_sq<S>(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]);
+
+				if (sq != NO_SQ) {
+					dist = PSQT::ManhattanDistance[king_sq][sq];
+
+					safety.mg += king_pawn_storm[f][dist].mg;
+					safety.eg += king_pawn_storm[f][dist].eg;
 				}
 			}
-
-			// Step 3. Examine a potentially broken pawn shield (open or semi-open files).
-			broken_shield<T, S>(pos, s_mg, s_eg);
-
-			// Step 4. Evaluate enemy pawn storm
-			while (their_pawns) {
-				sq = PopBit(&their_pawns);
-
-				// If the storming pawn is defended, score it two times higher.
-				if (defended_by_pawn<S == WHITE ? BLACK : WHITE>(pos, sq)) {
-					s_mg += 2 * pawnStorm[S == WHITE ? sq : PSQT::Mirror64[sq]].mg;
-					s_eg += 2 * pawnStorm[S == WHITE ? sq : PSQT::Mirror64[sq]].eg;
-				}
-				else {
-					s_mg += pawnStorm[S == WHITE ? sq : PSQT::Mirror64[sq]].mg;
-					s_eg += pawnStorm[S == WHITE ? sq : PSQT::Mirror64[sq]].eg;
-				}
-			}
+			
+			return safety;
 		}
 	}
 
@@ -784,43 +755,43 @@ namespace Eval {
 		int safety_mg = 0;
 		int safety_eg = 0;
 
-		// Step 1. Evaluate the king's pawns.
-		king_pawns<T, S>(pos, safety_mg, safety_eg);
+		// Step 2. Only evaluate king safety if either: 1) There are more than two attackers, or 2) There are more than one attacker and the enemy has a queen
+		if (Data.king_zone_attacks[S] > 2 || (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1)) {
+			// Step 3. Score defending pawns, knights and bishops.
+			Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
+			int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S]) - 1, 0, 2);
+			int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S]) - 1, 0, 1);
+			int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S]) - 1, 0, 1);
 
-		// Step 2. Now we can apply our knowledge of king attacks from mobility calculation.
-		// Note: Only apply these if the enemy has a queen and more than two attackers.
-		if ((pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1) || Data.king_zone_attacks[S] > 2) {
-			safety_mg += safety_table[std::min(99, Data.king_safety_units[S])].mg / 2;
-			safety_eg += safety_table[std::min(99, Data.king_safety_units[S])].eg / 2;
+			safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
+			safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
 
-			// Step 2A. Apply defence scores too.
-			// Defenders include: knights, pawns and bishops inside our king-area (king ring + outer king ring)
-			Bitboard defenders = (king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]))
-				& (pos->pieceBBS[KNIGHT][S] | pos->pieceBBS[BISHOP][S]);
-			
-			int knight_defenders = countBits(defenders & pos->pieceBBS[KNIGHT][S]);
-			int bishop_defenders = countBits(defenders & pos->pieceBBS[BISHOP][S]);
+			// Step 4. Evaluate the king's pawn shield.
+			Score kings_pawns = king_pawns<T, S>(pos);
 
-			safety_mg -= knight_defender.mg * knight_defenders;
-			safety_eg -= knight_defender.eg * knight_defenders;
-
-			safety_mg -= bishop_defender.mg * bishop_defenders;
-			safety_eg -= bishop_defender.eg * bishop_defenders;
-
-			// Step 2B. Evaluate the amount of weak squares around the king.
+			// Step 5. Determine the weak squares around the king.
 			Bitboard weak = weak_squares<S>();
-			int weak_count = countBits(weak);
+			Bitboard weak_count = countBits(weak);
 
-			safety_mg += weak_count * weak_king_ring.mg;
-			safety_eg += weak_count * weak_king_ring.eg;
+			// Step 6. Now apply the remaining
+			safety_mg += safety_table[Data.king_safety_units[S]].mg
+				+ kings_pawns.mg
+				+ weak_king_square.mg * weak_count
+				+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
+
+			safety_eg += safety_table[Data.king_safety_units[S]].eg
+				+ kings_pawns.eg
+				+ weak_king_square.eg * weak_count
+				+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
 		}
 
-		// Step 5. Save the new safety scores. Note: We don't safe them if they're negative since that would give a bonus.
-		int king_mg = -1 * (safety_mg * std::max(0, safety_mg) / 4096);
-		int king_eg = -1 * (safety_mg * std::max(0, safety_eg) / 4096);
+		// Step 5. Scale the scores.
+		// This is done in order because a safety value of -300cp should be considered 9 times worse than one of -100cp instead of only 3 times.
+		int king_safety_mg = -1 * safety_mg * std::max(safety_mg, 0) / 4096;
+		int king_safety_eg = -1 * safety_eg * std::max(safety_eg, 0) / 4096;
 
-		mg_score += (S == WHITE) ? king_mg : -king_mg;
-		eg_score += (S == WHITE) ? king_eg : -king_eg;
+		mg_score += (S == WHITE) ? king_safety_mg : -king_safety_mg;
+		eg_score += (S == WHITE) ? king_safety_eg : -king_safety_eg;
 	}
 
 
