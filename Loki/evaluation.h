@@ -62,12 +62,16 @@ namespace Eval {
 		struct EvalData {
 			// Piece attacks. Indexed by [side][piecetype]
 			Bitboard attacks[2][6] = { {0} };
+			Bitboard attacked_by_two[2] = { 0 };
 
 			// Passed pawns
 			Bitboard passed_pawns[2] = { 0 };
 
 			int king_zone_attacks[2] = { 0 };	/* The amount of pieces attacking the king */
 			int king_safety_units[2] = { 0 };	/* A kind of "weighted" amount of pieces attacking the king. Used to index the safety table */
+
+			int king_zone_defenders[2] = { 0 };
+			int king_defence_units[2] = { 0 };
 		};
 		// The constant ZeroData is used to quickly clear our evaluation data.
 		const EvalData ZeroData;
@@ -95,6 +99,9 @@ namespace Eval {
 
 		// An evaluation hash table to re-use recently calculated evaluations.
 		EvaluationTable eval_table;
+
+		template<SIDE S> Bitboard weak_squares();
+		template<SIDE S> Bitboard attacked_by_all();
 	};
 	
 	
@@ -210,13 +217,15 @@ extern const Score queen_development_penalty[5];
 /*
 King evaluation
 */
-extern const Score king_attack_weight[7];
+extern const Score weak_king_ring;
+extern const Score semi_open_kingfile;
+extern const Score open_kingfile;
 extern const Score kpd_penalty[8];
 extern const Score safe_kpd_penalty[8];
+
 extern const Score pawnStorm[64];
-extern const Score open_kingfile_penalty[8];
-extern const Score semi_kingfile_penalty[8];
-extern const Score minors_near_king[5];
+extern const Score safety_table[100];
+extern const Score defence_weights[7];
 
 /*
 Other constants
