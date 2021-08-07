@@ -211,7 +211,11 @@ extern const Score queen_development_penalty[5];
 King evaluation
 */
 extern const Score king_attack_weight[7];
-
+extern const Score kpd_penalty[8];
+extern const Score safe_kpd_penalty[8];
+extern const Score pawnStorm[64];
+extern const Score open_kingfile_penalty[8];
+extern const Score semi_kingfile_penalty[8];
 
 /*
 Other constants

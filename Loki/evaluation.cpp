@@ -115,6 +115,24 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 // King safety evaluation
 const Score king_attack_weight[7] = { S(0, 0), S(50, 50), S(75, 75), S(88, 88), S(94, 94), S(97, 97), S(99, 99) }; // Values are taken from CPW at the moment.
 
+// Both of the below arrays are indexed by the Manhattan-Distance between the pawn and the king. KPD stands for king-pawn-distance.
+const Score kpd_penalty[8] = { S(0, 0), S(0, 0), S(10, 10), S(15, 15), S(20, 20), S(35, 35), S(45, 45), S(50, 50) };
+const Score safe_kpd_penalty[8] = { S(0, 0), S(0, 0), S(5, 5), S(7, 7), S(10, 10), S(18, 18), S(23, 23), S(25, 25) };
+
+const Score open_kingfile_penalty[8] = { S(25, 15), S(20, 10), S(15, 5), S(10, 0), S(10, 0), S(15, 5), S(20, 10), S(25, 15) };
+const Score semi_kingfile_penalty[8] = { S(35, 25), S(30, 20), S(25, 15), S(20, 10), S(20, 10), S(25, 15), S(30, 20), S(35, 25) };
+
+// Penalties for storming pawns on the side the king is castled on.
+const Score pawnStorm[64] = {
+		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)			,	S(0, 0)		,	S(0, 0)		,	S(0, 0),
+		S(57, -194)	,	S(223, -8)	,	S(139, 76)	,	S(33, 128)	,	S(-159, -232)	,	S(-3, 66)	,	S(133, 146)	,	S(27, 78),
+		S(13, -136)	,	S(-275, 0)	,	S(171, -4)	,	S(123, 60)	,	S(-79, -14)		,	S(147, 86)	,	S(73, 100)	,	S(-1, -10),
+		S(10, 178)	,	S(0, -8)	,	S(188, 56)	,	S(140, 64)	,	S(80, -54)		,	S(30, -10)	,	S(60, -20)	,	S(-8, 14),
+		S(-11, 16)	,	S(75, -80)	,	S(45, 78)	,	S(-77, 60)	,	S(-87, -30)		,	S(-1, 14)	,	S(67, -26)	,	S(-3, 16),
+		S(-101, 108),	S(11, -136)	,	S(-45, 96)	,	S(-291, 58)	,	S(-3, 20)		,	S(1, 18)	,	S(37, -18)	,	S(-17, 18),
+		S(-60, 64)	,	S(18, -24)	,	S(74, -30)	,	S(80, -24)	,	S(6, 38)		,	S(2, 48)	,	S(44, 4)	,	S(-14, -34),
+		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)			,	S(0, 0)		,	S(0, 0)		,	S(0, 0)
+};
 
 #undef S
 
@@ -623,24 +641,131 @@ namespace Eval {
 	
 
 
+	namespace {
+
+		template<SIDE S>
+		bool defended_by_pawn(const GameState_t* pos, int sq) {
+			constexpr DIRECTION upRight = (S == WHITE) ? NORTHEAST : SOUTHEAST;
+			constexpr DIRECTION upLeft = (S == WHITE) ? NORTHWEST : SOUTHWEST;
+
+			return ((shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S])) & (uint64_t(1) << sq)) != 0;
+		}
+
+
+		template<EvalType T, SIDE S>
+		void broken_shield(const GameState_t* pos, int& s_mg, int& s_eg) {
+			// Step 1. Initialize variables.
+			constexpr SIDE Them = S == WHITE ? BLACK : WHITE;
+			int king_file = pos->king_squares[S] % 8;
+
+			// Step 2. Find the files of our king flank.
+			int start_file, end_file;
+
+			if (king_file < FILE_D) {
+				start_file = FILE_A; end_file = FILE_C;
+			}
+			else if (king_file == FILE_D) {
+				start_file = FILE_C; end_file = FILE_E;
+			}
+			else if (king_file == FILE_E) {
+				start_file = FILE_D; end_file = FILE_F;
+			}
+			else if (king_file > FILE_E) {
+				start_file = FILE_F; end_file = FILE_H;
+			}
+
+			// Step 3. Now check the files for open or semi-open files.
+			for (int f = start_file; f <= end_file; f++) {
+				if (((pos->pieceBBS[PAWN][S] | pos->pieceBBS[PAWN][Them]) & BBS::FileMasks8[f]) == 0) { // Open file.
+					s_mg -= open_kingfile_penalty[f].mg;
+					s_eg -= open_kingfile_penalty[f].eg;
+				}
+				else if ((pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]) == 0) { // Semi-open file.
+					s_mg -= semi_kingfile_penalty[f].mg;
+					s_eg -= semi_kingfile_penalty[f].eg;
+				}
+			}
+		}
+		
+		/// <summary>
+		/// Score the pawn shield around the king.
+		/// </summary>
+		/// <param name="pos">The position</param>
+		/// <param name="s_mg">A reference to the mg safety score.</param>
+		/// <param name="s_eg">A reference to the eg safety score.</param>
+		template<EvalType T, SIDE S>
+		void king_pawns(const GameState_t* pos, int& s_mg, int& s_eg) {
+			// Step 1. Variable declaration.
+			constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+			int safety_mg = 0;
+			int safety_eg = 0;
+
+			int king_sq = pos->king_squares[S];
+			int king_file = king_sq % 8;
+			Bitboard king_flank = king_flanks[king_file];
+
+			// Step 2. Evaluate pawn advancement in front of the king.
+			Bitboard our_pawns = pos->pieceBBS[PAWN][S] & king_flank;
+			Bitboard their_pawns = pos->pieceBBS[PAWN][Them] & king_flank;
+			int sq = 0;
+
+			while (our_pawns) {
+				sq = PopBit(&our_pawns);
+
+				if (defended_by_pawn<S>(pos, sq)) {
+					safety_mg += safe_kpd_penalty[PSQT::ManhattanDistance[king_sq][sq]].mg;
+					safety_eg += safe_kpd_penalty[PSQT::ManhattanDistance[king_sq][sq]].eg;
+				}
+				else {
+					safety_mg += kpd_penalty[PSQT::ManhattanDistance[king_sq][sq]].mg;
+					safety_eg += kpd_penalty[PSQT::ManhattanDistance[king_sq][sq]].eg;
+				}
+			}
+
+			// Step 3. Examine a potentially broken pawn shield (open or semi-open files).
+			broken_shield<T, S>(pos, safety_mg, safety_eg);
+
+			// Step 4. Evaluate enemy pawn storm
+			while (their_pawns) {
+				sq = PopBit(&their_pawns);
+
+				// If the storming pawn is defended, score it two times higher.
+				if (defended_by_pawn<S == WHITE ? BLACK : WHITE>(pos, sq)) {
+					safety_mg += 2 * pawnStorm[S == WHITE ? sq : PSQT::Mirror64[sq]].mg;
+					safety_eg += 2 * pawnStorm[S == WHITE ? sq : PSQT::Mirror64[sq]].eg;
+				}
+				else {
+					safety_mg += pawnStorm[S == WHITE ? sq : PSQT::Mirror64[sq]].mg;
+					safety_eg += pawnStorm[S == WHITE ? sq : PSQT::Mirror64[sq]].eg;
+				}
+			}
+
+			// Step 5. Add the safety points.
+			s_mg += safety_mg;
+			s_eg += safety_eg;
+		}
+	}
+
 
 	/// <summary>
 	/// Evaluate the king safety.
 	/// </summary>
 	template<EvalType T> template<SIDE S>
 	void Evaluate<T>::king_safety() {
-		// Step 1. Initiaize variables
-		SIDE Them = (S == WHITE) ? BLACK : WHITE;
+		// Step 1. Initialize variables
+		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
 
-		int mg = 0;
-		int eg = 0;
+		int safety_mg = 0;
+		int safety_eg = 0;
 
 		// Step 2. Now we can apply our knowledge of king attacks from mobility calculation. This uses the same method as Toga.
-		mg -= Data.king_safety_units[S] * king_attack_weight[std::min(Data.king_zone_attacks[S], 6)].mg / 100;
-		eg -= Data.king_safety_units[S] * king_attack_weight[std::min(Data.king_zone_attacks[S], 6)].eg / 100;
+		safety_mg += Data.king_safety_units[S] * king_attack_weight[std::min(Data.king_zone_attacks[S], 6)].mg / 100;
+		safety_eg += Data.king_safety_units[S] * king_attack_weight[std::min(Data.king_zone_attacks[S], 6)].eg / 100;
 
-		mg_score += (S == WHITE) ? mg : -mg;
-		eg_score += (S == WHITE) ? eg : -eg;
+		// Step 3. Evaluate the king's pawns.
+		king_pawns<T, S>(pos, safety_mg, safety_eg);
+
+		// Step 4. Evaluate the minor pieces near the king.
 	}
 
 
