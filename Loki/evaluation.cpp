@@ -817,8 +817,8 @@ namespace Eval {
 		}
 
 		// Step 5. Save the new safety scores. Note: We don't safe them if they're negative since that would give a bonus.
-		int king_mg = -1 * (std::max(0, safety_mg) / 1024);
-		int king_eg = -1 * (std::max(0, safety_eg) / 1024);
+		int king_mg = -1 * (safety_mg * std::max(0, safety_mg) / 4096);
+		int king_eg = -1 * (safety_mg * std::max(0, safety_eg) / 4096);
 
 		mg_score += (S == WHITE) ? king_mg : -king_mg;
 		eg_score += (S == WHITE) ? king_eg : -king_eg;
