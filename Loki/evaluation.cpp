@@ -761,9 +761,9 @@ namespace Eval {
 		if (Data.king_zone_attacks[S] > 2 || (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1)) {
 			// Step 3. Score defending pawns, knights and bishops.
 			Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
-			int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S]) - 1, 0, 2);
-			int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S]) - 1, 0, 1);
-			int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S]) - 1, 0, 1);
+			int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
+			int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
+			int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
 
 			safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
 			safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
@@ -789,8 +789,8 @@ namespace Eval {
 
 		// Step 5. Scale the scores.
 		// This is done in order because a safety value of -300cp should be considered 9 times worse than one of -100cp instead of only 3 times.
-		int king_safety_mg = -1 * safety_mg * std::max(safety_mg, 0) / 4096;
-		int king_safety_eg = -1 * safety_eg * std::max(safety_eg, 0) / 4096;
+		volatile int king_safety_mg = -1 * safety_mg * std::max(safety_mg, 0) / 4096;
+		volatile int king_safety_eg = -1 * safety_eg * std::max(safety_eg, 0) / 4096;
 
 		mg_score += (S == WHITE) ? king_safety_mg : -king_safety_mg;
 		eg_score += (S == WHITE) ? king_safety_eg : -king_safety_eg;
