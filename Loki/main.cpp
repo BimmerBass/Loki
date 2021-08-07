@@ -15,7 +15,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "uci.h"
+#include "texel.h"
 
 
 int main(int argc, char* argv[]) {
@@ -27,13 +27,37 @@ int main(int argc, char* argv[]) {
 
 
 	// If "bench" has been added as an argument, just run this and quit
-	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
-		Bench::run_benchmark();
-		return 0;
-	}
-	
-	UCI::loop();
+	//if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
+	//	Bench::run_benchmark();
+	//	return 0;
+	//}
+	//
+	//UCI::loop();
 
+
+	using namespace Texel;
+
+	Parameters vs;
+
+	/*vs.push_back(Parameter(&missing_king_pawn));
+	vs.push_back(Parameter(&no_enemy_queen));
+	vs.push_back(Parameter(&weak_king_square));
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 7; j++) {
+			vs.push_back(Parameter(&king_pawn_shelter[i][j]));
+		}
+	}
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 7; j++) {
+			vs.push_back(Parameter(&king_pawn_storm[i][j]));
+		}
+	}*/
+	for (int i = 0; i < 100; i++) {
+		vs.push_back(Parameter(&safety_table[i]));
+	}
+
+	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
 
 	return 0;
 }
