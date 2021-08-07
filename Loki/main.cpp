@@ -39,10 +39,10 @@ int main(int argc, char* argv[]) {
 
 	Parameters vs;
 
-	/*vs.push_back(Parameter(&missing_king_pawn));
+	vs.push_back(Parameter(&missing_king_pawn));
 	vs.push_back(Parameter(&no_enemy_queen));
 	vs.push_back(Parameter(&weak_king_square));
-
+	/*
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 7; j++) {
 			vs.push_back(Parameter(&king_pawn_shelter[i][j]));
@@ -53,11 +53,8 @@ int main(int argc, char* argv[]) {
 			vs.push_back(Parameter(&king_pawn_storm[i][j]));
 		}
 	}*/
-	for (int i = 0; i < 100; i++) {
-		vs.push_back(Parameter(&safety_table[i]));
-	}
 
-	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
+	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 250);
 
 	return 0;
 }

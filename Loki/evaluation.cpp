@@ -113,9 +113,9 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 
 
 // King safety evaluation
-Score missing_king_pawn(65, 30);
-Score no_enemy_queen(-200, -250);
-Score weak_king_square(17, 50);
+const Score missing_king_pawn(123, -28);
+const Score no_enemy_queen(-258, -298);
+const Score weak_king_square(-31, -8);
 
 Score king_pawn_shelter[8][7] = {
 	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File A */
