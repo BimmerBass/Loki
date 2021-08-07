@@ -155,7 +155,7 @@ namespace Eval {
 	/// <param name="_pos">The position object that is to be evaluated.</param>
 	/// <returns>A numerical score for the position, relative to the side to move.</returns>
 	template<EvalType T>
-	int Evaluate<T>::score(const GameState_t* _pos) {
+	int Evaluate<T>::score(const GameState_t* _pos, bool use_table) {
 		// Step 1. Clear the object and store the position object.
 		clear();
 		pos = _pos;
@@ -165,7 +165,7 @@ namespace Eval {
 		bool hit = false;
 		const EvalEntry_t* entry = eval_table.probe(pos->posKey, hit);
 
-		if (hit) {
+		if (use_table && hit) {
 			v = entry->get_score();
 		}
 		else {
@@ -840,11 +840,11 @@ void Eval::Debug::eval_balance() {
 		total++;
 		pos->parseFen(test_positions[p]);
 
-		w_ev = eval.score(pos);
+		w_ev = eval.score(pos, false);
 
 		pos->mirror_board();
 
-		b_ev = eval.score(pos);
+		b_ev = eval.score(pos, false);
 
 
 		if (w_ev == b_ev) {

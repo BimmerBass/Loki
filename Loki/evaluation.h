@@ -51,7 +51,7 @@ namespace Eval {
 	template<EvalType T = NORMAL>
 	class Evaluate {
 	public:
-		int score(const GameState_t* _pos);
+		int score(const GameState_t* _pos, bool use_table = true);
 
 	private:
 		// The position object that we get when score is called. This is just stored such that all member methods can access it without it being passed as a parameter.
