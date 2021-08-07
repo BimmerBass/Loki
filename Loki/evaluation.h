@@ -216,6 +216,7 @@ extern const Score safe_kpd_penalty[8];
 extern const Score pawnStorm[64];
 extern const Score open_kingfile_penalty[8];
 extern const Score semi_kingfile_penalty[8];
+extern const Score minors_near_king[5];
 
 /*
 Other constants

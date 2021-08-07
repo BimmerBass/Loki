@@ -122,6 +122,9 @@ const Score safe_kpd_penalty[8] = { S(0, 0), S(0, 0), S(5, 5), S(7, 7), S(10, 10
 const Score open_kingfile_penalty[8] = { S(25, 15), S(20, 10), S(15, 5), S(10, 0), S(10, 0), S(15, 5), S(20, 10), S(25, 15) };
 const Score semi_kingfile_penalty[8] = { S(35, 25), S(30, 20), S(25, 15), S(20, 10), S(20, 10), S(25, 15), S(30, 20), S(35, 25) };
 
+// The amount of friendly minors near the king.
+const Score minors_near_king[5] = { S(50, 50), S(25, 25), S(0, 0), S(-10, -10), S(-25, -25) };
+
 // Penalties for storming pawns on the side the king is castled on.
 const Score pawnStorm[64] = {
 		S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)			,	S(0, 0)		,	S(0, 0)		,	S(0, 0),
@@ -759,13 +762,25 @@ namespace Eval {
 		int safety_eg = 0;
 
 		// Step 2. Now we can apply our knowledge of king attacks from mobility calculation. This uses the same method as Toga.
-		safety_mg += Data.king_safety_units[S] * king_attack_weight[std::min(Data.king_zone_attacks[S], 6)].mg / 100;
-		safety_eg += Data.king_safety_units[S] * king_attack_weight[std::min(Data.king_zone_attacks[S], 6)].eg / 100;
+		safety_mg += Data.king_safety_units[S] * king_attack_weight[std::min(Data.king_zone_attacks[S], 6)].mg; // / 100;
+		safety_eg += Data.king_safety_units[S] * king_attack_weight[std::min(Data.king_zone_attacks[S], 6)].eg; // / 100;
 
 		// Step 3. Evaluate the king's pawns.
 		king_pawns<T, S>(pos, safety_mg, safety_eg);
 
 		// Step 4. Evaluate the minor pieces near the king.
+		Bitboard king_flank = king_flanks[pos->king_squares[S] % 8];
+		int close_friendly_minors = std::min(4, countBits(king_flank & (pos->pieceBBS[KNIGHT][S] | pos->pieceBBS[BISHOP][S])));
+		
+		safety_mg += minors_near_king[close_friendly_minors].mg;
+		safety_eg += minors_near_king[close_friendly_minors].eg;
+
+		// Step 5. Save the new safety scores. Note: We don't safe them if they're negative since that would give a bonus.
+		int king_mg = -1 * std::max(0, safety_mg) / 100;
+		int king_eg = -1 * std::max(0, safety_eg) / 100;
+
+		mg_score += (S == WHITE) ? king_mg : -king_mg;
+		eg_score += (S == WHITE) ? king_eg : -king_eg;
 	}
 
 
