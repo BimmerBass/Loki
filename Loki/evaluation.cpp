@@ -117,7 +117,7 @@ const Score missing_king_pawn(123, -28);
 const Score no_enemy_queen(-258, -298);
 const Score weak_king_square(-31, -8);
 
-Score king_pawn_shelter[8][7] = {
+const Score king_pawn_shelter[8][7] = {
 	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File A */
 	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File B */
 	{ S(0, 0)	,	S(0, 0)		,	S(5, 5)		,	S(10, 10)	,	S(15, 15)	,	S(20, 20)	,	S(30, 30) },	/* File C */
@@ -129,7 +129,7 @@ Score king_pawn_shelter[8][7] = {
 	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq			  7sq	*/
 };
 
-Score king_pawn_storm[8][7] = {
+const Score king_pawn_storm[8][7] = {
 	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File A */
 	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File B */
 	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File C */
@@ -142,13 +142,15 @@ Score king_pawn_storm[8][7] = {
 };
 
 
-const Score defending_minors[4][3][3] = {
-	{{S(15, 15), S(10, 10)}		,	{S(10, 10),	S(-5, -5)}},		/* 0 Defending pawns */
-	{{S(10, 10), S(5, 5)}		,	{S(5, 5),	S(-10, -10)}},		/* 1 Defending pawn  */
-	{{S(-5, -5), S(-10, -10)}	,	{S(-10, -10), S(-15, -15)}},	/* 2 Defending pawns */
-	{{S(-10, -10), S(-15, -15)}	,	{S(-15, -15), S(-20, -20)}} 	/* 3 Defending pawns */
-	/*   1 knight						2 knights		*/
+
+Score defending_minors[4][3][3] = {
+	{{S(0, 0), S(15, 15), S(10, 10)}		,	{S(0, 0),	S(10, 10),	S(-5, -5)}		,	{S(0, 0), S(15, 15), S(10, 10)}},		/* 0 Defending pawns */
+	{{S(0, 0), S(10, 10), S(5, 5)}			,	{S(0, 0),	S(5, 5),	S(-10, -10)}	,	{S(0, 0), S(10, 10), S(5, 5)}},			/* 1 Defending pawn  */
+	{{S(0, 0), S(-5, -5), S(-10, -10)}		,	{S(0, 0),	S(-10, -10), S(-15, -15)}	,	{S(0, 0), S(-5, -5), S(-10, -10)}},		/* 2 Defending pawns */
+	{{S(0, 0), S(-10, -10), S(-15, -15)}	,	{S(0, 0),	S(-15, -15), S(-20, -20)}	,	{S(0, 0), S(-10, -10), S(-15, -15)}} 	/* 3 Defending pawns */
+	/*			0 knights									 1 knight									2 knights				*/
 };
+
 
 
 const Score safety_table[100] = {
@@ -475,6 +477,7 @@ namespace Eval {
 		}
 
 		// Populate the attacks bitboard with pawn attacks. This will be used in the evaluation of pieces.
+		Data.attacked_by_two[S] = attacked_by_all<S>() & (shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S]));
 		Data.attacks[S][PAWN] = (shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S]));
 
 		// Apply the scores.
@@ -557,10 +560,11 @@ namespace Eval {
 			if constexpr (pce == KNIGHT) {
 				// Calculate attacks and update the EvalData object.
 				piece_attacks = BBS::knight_attacks[sq];
+
+				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
 				Data.attacks[S][pce] |= piece_attacks;
 
-				// Update the Data bitboard of all squares attacked by two pieces or more.
-				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
+				
 
 				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
 					Data.king_zone_attacks[Them]++; // Increment attackers
@@ -587,10 +591,9 @@ namespace Eval {
 			else if constexpr (pce == BISHOP) {
 				// Calculate attacks and update the EvalData object.
 				piece_attacks = Magics::attacks_bb<BISHOP>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
-				Data.attacks[S][pce] |= piece_attacks;
-
-				// Update the Data bitboard of all squares attacked by two pieces or more.
+				
 				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
+				Data.attacks[S][pce] |= piece_attacks;
 
 				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
 					Data.king_zone_attacks[Them]++; // Increment attackers
@@ -618,10 +621,9 @@ namespace Eval {
 			else if constexpr (pce == ROOK) {
 				// Calculate attacks and update the EvalData object.
 				piece_attacks = Magics::attacks_bb<ROOK>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
-				Data.attacks[S][pce] |= piece_attacks;
 
-				// Update the Data bitboard of all squares attacked by two pieces or more.
 				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
+				Data.attacks[S][pce] |= piece_attacks;
 
 				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
 					Data.king_zone_attacks[Them]++; // Increment attackers
@@ -647,10 +649,9 @@ namespace Eval {
 			else if constexpr (pce == QUEEN) {
 				// Calculate attacks and update the EvalData object.
 				piece_attacks = Magics::attacks_bb<QUEEN>(sq, (pos->all_pieces[WHITE] | pos->all_pieces[BLACK]));
-				Data.attacks[S][pce] |= piece_attacks;
 
-				// Update the Data bitboard of all squares attacked by two pieces or more.
 				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
+				Data.attacks[S][pce] |= piece_attacks;
 
 				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
 					Data.king_zone_attacks[Them]++; // Increment attackers
@@ -764,7 +765,7 @@ namespace Eval {
 			int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
 			int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
 			int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
-
+			
 			safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
 			safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
 
@@ -773,7 +774,7 @@ namespace Eval {
 
 			// Step 5. Determine the weak squares around the king.
 			Bitboard weak = weak_squares<S>();
-			Bitboard weak_count = countBits(weak);
+			Bitboard weak_count = countBits(weak & king_ring(pos->king_squares[S]));
 
 			// Step 6. Now apply the remaining
 			safety_mg += safety_table[Data.king_safety_units[S]].mg
@@ -789,8 +790,8 @@ namespace Eval {
 
 		// Step 5. Scale the scores.
 		// This is done in order because a safety value of -300cp should be considered 9 times worse than one of -100cp instead of only 3 times.
-		volatile int king_safety_mg = -1 * safety_mg * std::max(safety_mg, 0) / 4096;
-		volatile int king_safety_eg = -1 * safety_eg * std::max(safety_eg, 0) / 4096;
+		int king_safety_mg = -1 * safety_mg * std::max(safety_mg, 0) / 4096;
+		int king_safety_eg = -1 * safety_eg * std::max(safety_eg, 0) / 4096;
 
 		mg_score += (S == WHITE) ? king_safety_mg : -king_safety_mg;
 		eg_score += (S == WHITE) ? king_safety_eg : -king_safety_eg;
