@@ -113,17 +113,17 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 
 
 // King safety evaluation
-const Score knight_defender(50, 40);
-const Score bishop_defender(25, 35);
+const Score knight_defender(43, 35);
+const Score bishop_defender(62, -26);
 
-const Score weak_king_ring(150, 75);
+const Score weak_king_ring(17, 50);
 
-const Score semi_open_kingfile(100, 0);
-const Score open_kingfile(75, 0);
+const Score semi_open_kingfile(65, -15);
+const Score open_kingfile(94, 71);
 
 // Both of the below arrays are indexed by the Manhattan-Distance between the pawn and the king. KPD stands for king-pawn-distance.
-const Score kpd_penalty[8] = { S(0, 0), S(0, 0), S(10, 10), S(15, 15), S(20, 20), S(35, 35), S(45, 45), S(50, 50) };
-const Score safe_kpd_penalty[8] = { S(0, 0), S(0, 0), S(5, 5), S(7, 7), S(10, 10), S(18, 18), S(23, 23), S(25, 25) };
+const Score kpd_penalty[8] = { S(41, -69), S(-51, -15), S(-27, 1), S(-32, -4), S(-17, -1), S(54, 12), S(64, 82), S(29, 143) };
+const Score safe_kpd_penalty[8] = { S(17, -59), S(-59, -13), S(24, 8), S(28, 46), S(73, 7), S(53, 29), S(26, 40), S(108, 70) };
 
 
 // Penalties for storming pawns on the side the king is castled on.
@@ -151,7 +151,6 @@ const Score safety_table[100] = {
 		S(563, 573),	S(583, 571),	S(583, 579),	S(593, 589),	S(593, 611),	S(617, 625),	S(627, 647),	S(631, 637),	S(639, 641),	S(655, 651),
 };
 
-const Score defence_weights[7] = { S(10, 10), S(50, 50), S(75, 75), S(88, 88), S(94, 94), S(97, 97), S(99, 99) };
 
 #undef S
 
@@ -790,7 +789,7 @@ namespace Eval {
 
 		// Step 2. Now we can apply our knowledge of king attacks from mobility calculation.
 		// Note: Only apply these if the enemy has a queen and more than two attackers.
-		if (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 2) {
+		if ((pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1) || Data.king_zone_attacks[S] > 2) {
 			safety_mg += safety_table[std::min(99, Data.king_safety_units[S])].mg / 2;
 			safety_eg += safety_table[std::min(99, Data.king_safety_units[S])].eg / 2;
 
