@@ -146,12 +146,14 @@ const Score king_pawn_storm[8][7] = {
 
 
 const Score defending_minors[4][3][3] = {
-	{{S(0, 0), S(15, 15), S(10, 10)}		,	{S(0, 0),	S(10, 10),	S(-5, -5)}		,	{S(0, 0), S(15, 15), S(10, 10)}},		/* 0 Defending pawns */
-	{{S(0, 0), S(10, 10), S(5, 5)}			,	{S(0, 0),	S(5, 5),	S(-10, -10)}	,	{S(0, 0), S(10, 10), S(5, 5)}},			/* 1 Defending pawn  */
-	{{S(0, 0), S(-5, -5), S(-10, -10)}		,	{S(0, 0),	S(-10, -10), S(-15, -15)}	,	{S(0, 0), S(-5, -5), S(-10, -10)}},		/* 2 Defending pawns */
-	{{S(0, 0), S(-10, -10), S(-15, -15)}	,	{S(0, 0),	S(-15, -15), S(-20, -20)}	,	{S(0, 0), S(-10, -10), S(-15, -15)}} 	/* 3 Defending pawns */
-	/*			0 knights									 1 knight									2 knights				*/
+	{{S(3, 3), S(16, 14), S(9, 7)}		,	{S(1, -1), S(9, 11), S(-4, -6)}		,	{S(-1, 1), S(16, 14), S(9, 9)}},	/* 0 Defending pawns */
+	{{S(1, -1), S(9, 11), S(-4, -6)}	,	{S(-1, 1), S(16, 14), S(9, 9)}		,	{S(3, 3), S(11, 11), S(4, 4)}},		/* 1 Defending pawn  */
+	{{S(-1, 1), S(16, 14), S(9, 9)}		,	{S(3, 3), S(11, 11), S(4, 4)}		,	{S(1, 1), S(6, 6), S(-13, -11)}},	/* 2 Defending pawns */
+	{{S(3, 3), S(11, 11), S(4, 4)}		,	{S(1, 1), S(6, 6), S(-13, -11)}		,	{S(1, -1), S(9, 11), S(4, 4)}}		/* 3 Defending pawns */
+	/*		   0 knights								1 knight								2 knights		*/
 };
+
+
 
 
 const Score safety_table[100] = {
@@ -766,13 +768,13 @@ namespace Eval {
 		// Step 3. Only evaluate king safety if either: 1) There are more than two attackers, or 2) There are more than one attacker and the enemy has a queen
 		if (Data.king_zone_attacks[S] > 2 || (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1)) {
 			// Step 4. Score defending pawns, knights and bishops.
-			//Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
-			//int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
-			//int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
-			//int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
-			//
-			//safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
-			//safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
+			Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
+			int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
+			int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
+			int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
+			
+			safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
+			safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
 			
 			// Step 5. Determine the weak squares around the king.
 			Bitboard weak = weak_squares<S>();

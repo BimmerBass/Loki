@@ -38,7 +38,13 @@ int main(int argc, char* argv[]) {
 
 	Parameters vs;
 
-	vs.push_back(Parameter(&weak_king_square));
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 3; j++) {
+			for (int w = 0; w < 3; w++) {
+				vs.push_back(Parameter(&defending_minors[i][j][w]));
+			}
+		}
+	}
 
 	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
 
