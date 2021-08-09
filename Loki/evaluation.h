@@ -214,7 +214,7 @@ extern const Score queen_development_penalty[5];
 /*
 King evaluation
 */
-extern Score missing_king_pawn;
+extern const Score missing_king_pawn;
 extern const Score no_enemy_queen;
 extern const Score weak_king_square;
 extern const Score king_pawn_shelter[8][7];

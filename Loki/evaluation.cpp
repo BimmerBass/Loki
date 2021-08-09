@@ -113,7 +113,7 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 
 
 // King safety evaluation
-Score missing_king_pawn(123, -28);
+const Score missing_king_pawn(58, 5);
 const Score no_enemy_queen(-258, -298);
 const Score weak_king_square(-31, -8);
 
