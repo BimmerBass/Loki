@@ -116,6 +116,7 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 const Score missing_king_pawn(58, 5);
 const Score no_enemy_queen(-201, -61);
 const Score weak_king_square(34, -5);
+const Score central_king(22, -18);
 
 
 const Score king_pawn_shelter[8][7] = {
@@ -760,21 +761,22 @@ namespace Eval {
 		int safety_mg = 0;
 		int safety_eg = 0;
 
-		// Step 2. Evaluate the kings pawn shield and pawn storm
+		// Step 2. Evaluate the kings pawn shield and pawn storm.
 		Score kings_pawns = king_pawns<T, S>(pos);
 		safety_mg += kings_pawns.mg;
 		safety_eg += kings_pawns.eg;
 
-		// Step 3. Only evaluate king safety if either: 1) There are more than two attackers, or 2) There are more than one attacker and the enemy has a queen
-		if (Data.king_zone_attacks[S] > 2 || (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1)) {
-			// Step 4. Score defending pawns, knights and bishops.
-			Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
-			int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
-			int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
-			int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
-			
-			safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
-			safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
+		// Step 3. Score defending pawns, knights and bishops.
+		Bitboard king_area = king_ring(pos->king_squares[S]);
+		int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
+		int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
+		int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
+
+		safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
+		safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
+
+		// Step 4. Only evaluate king safety if there are more than two attackers and the opponent has a queen.
+		if (Data.king_zone_attacks[S] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
 			
 			// Step 5. Determine the weak squares around the king.
 			Bitboard weak = weak_squares<S>();
@@ -783,11 +785,13 @@ namespace Eval {
 			// Step 6. Now apply the remaining
 			safety_mg += safety_table[Data.king_safety_units[S]].mg
 				+ weak_king_square.mg * weak_count
-				+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
+				+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0)
+				+ central_king.mg * (pos->king_squares[S] % 8 == FILE_D || pos->king_squares[S] % 8 == FILE_E);
 
 			safety_eg += safety_table[Data.king_safety_units[S]].eg
 				+ weak_king_square.eg * weak_count
-				+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
+				+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0)
+				+ central_king.eg * (pos->king_squares[S] % 8 == FILE_D || pos->king_squares[S] % 8 == FILE_E);
 		}
 
 		// Step 5. Scale the scores.
