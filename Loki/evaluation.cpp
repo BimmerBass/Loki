@@ -115,7 +115,7 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 // King safety evaluation
 const Score missing_king_pawn(58, 5);
 const Score no_enemy_queen(-258, -298);
-const Score weak_king_square(-31, -8);
+Score weak_king_square(-31, -8);
 
 
 const Score king_pawn_shelter[8][7] = {
@@ -155,16 +155,16 @@ const Score defending_minors[4][3][3] = {
 
 
 const Score safety_table[100] = {
-		S(5, 1),		S(-5, 9),		S(5, 1),		S(-20, -7),		S(-18, -16),	S(5, -23),		S(-4, -34),		S(20, -14),		S(35, 7),		S(62, 42),
-		S(39, 25),		S(66, 44),		S(61, 19),		S(46, 2),		S(23, 21),		S(6, 18),		S(27, 7),		S(26, 28),		S(17, 23),		S(24, 18),
-		S(15, 37),		S(40, 24),		S(17, 39),		S(44, 30),		S(40, 42),		S(56, 44),		S(66, 50),		S(83, 61),		S(92, 90),		S(82, 108),
-		S(96, 78),		S(90, 112),		S(108, 106),	S(110, 112),	S(116, 126),	S(152, 148),	S(130, 152),	S(158, 148),	S(184, 188),	S(164, 164),
-		S(174, 176),	S(172, 176),	S(208, 176),	S(210, 210),	S(210, 242),	S(226, 210),	S(240, 232),	S(266, 232),	S(260, 252),	S(266, 250),
-		S(254, 244),	S(262, 250),	S(248, 262),	S(278, 286),	S(278, 272),	S(300, 302),	S(304, 304),	S(318, 318),	S(326, 344),	S(338, 326),
-		S(328, 332),	S(322, 318),	S(352, 328),	S(354, 362),	S(390, 376),	S(392, 378),	S(384, 374),	S(414, 406),	S(414, 392),	S(422, 422),
-		S(426, 404),	S(414, 418),	S(432, 418),	S(434, 448),	S(422, 452),	S(456, 474),	S(470, 466),	S(474, 490),	S(478, 486),	S(500, 496),
-		S(478, 484),	S(506, 496),	S(504, 524),	S(518, 528),	S(536, 534),	S(546, 550),	S(550, 544),	S(554, 542),	S(564, 566),	S(580, 566),
-		S(564, 560),	S(604, 566),	S(580, 584),	S(582, 582),	S(582, 612),	S(620, 624),	S(628, 640),	S(642, 634),	S(638, 640),	S(646, 652)
+		S(4, -2),	S(-8, 10)	,	S(2, 0)		,	S(-19, -8)	,	S(-15, -19)	,	S(10, -22)	,	S(5, -35)	,	S(29, -15)	,	S(46, 8)	,	S(69, 49)	,
+	S(40, 24)	,	S(73, 47)	,	S(56, 22)	,	S(39, 3)	,	S(28, 22)	,	S(13, 17)	,	S(24, 12)	,	S(27, 35)	,	S(14, 22)	,	S(23, 19)	,
+	S(14, 42)	,	S(43, 23)	,	S(16, 40)	,	S(39, 31)	,	S(45, 41)	,	S(51, 47)	,	S(65, 51)	,	S(80, 62)	,	S(91, 87)	,	S(75, 115)	,
+	S(97, 79)	,	S(89, 111)	,	S(109, 105)	,	S(111, 117)	,	S(117, 125)	,	S(149, 147)	,	S(131, 159)	,	S(155, 149)	,	S(179, 191)	,	S(163, 163)	,
+	S(171, 179)	,	S(171, 171)	,	S(207, 181)	,	S(209, 211)	,	S(209, 237)	,	S(229, 211)	,	S(237, 227)	,	S(265, 231)	,	S(259, 255)	,	S(267, 251)	,
+	S(253, 245)	,	S(259, 251)	,	S(247, 265)	,	S(285, 289)	,	S(281, 269)	,	S(301, 303)	,	S(303, 301)	,	S(317, 317)	,	S(327, 345)	,	S(339, 327)	,
+	S(329, 337)	,	S(319, 321)	,	S(347, 325)	,	S(353, 363)	,	S(391, 377)	,	S(395, 373)	,	S(383, 373)	,	S(417, 401)	,	S(417, 395)	,	S(427, 423)	,
+	S(423, 403)	,	S(417, 415)	,	S(431, 421)	,	S(437, 443)	,	S(419, 455)	,	S(453, 471)	,	S(465, 463)	,	S(471, 495)	,	S(481, 493)	,	S(499, 495)	,
+	S(473, 485)	,	S(505, 497)	,	S(501, 527)	,	S(515, 527)	,	S(537, 533)	,	S(545, 549)	,	S(555, 541)	,	S(557, 549)	,	S(561, 569)	,	S(575, 567)	,
+	S(563, 565)	,	S(601, 563)	,	S(585, 585)	,	S(585, 581)	,	S(579, 615)	,	S(619, 621)	,	S(627, 647)	,	S(643, 633)	,	S(635, 641)	,	S(643, 649)
 };
 
 
@@ -764,31 +764,29 @@ namespace Eval {
 		safety_eg += kings_pawns.eg;
 
 		// Step 3. Only evaluate king safety if either: 1) There are more than two attackers, or 2) There are more than one attacker and the enemy has a queen
-		//if (Data.king_zone_attacks[S] > 2 || (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1)) {
-		//	// Step 4. Score defending pawns, knights and bishops.
-		//	Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
-		//	int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
-		//	int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
-		//	int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
-		//	
-		//	safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
-		//	safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
-		//
-		//	// Step 5. Determine the weak squares around the king.
-		//	Bitboard weak = weak_squares<S>();
-		//	Bitboard weak_count = countBits(weak & king_ring(pos->king_squares[S]));
-		//
-		//	// Step 6. Now apply the remaining
-		//	safety_mg += safety_table[Data.king_safety_units[S]].mg
-		//		+ kings_pawns.mg
-		//		+ weak_king_square.mg * weak_count
-		//		+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
-		//
-		//	safety_eg += safety_table[Data.king_safety_units[S]].eg
-		//		+ kings_pawns.eg
-		//		+ weak_king_square.eg * weak_count
-		//		+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
-		//}
+		if (Data.king_zone_attacks[S] > 2 || (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1)) {
+			// Step 4. Score defending pawns, knights and bishops.
+			//Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
+			//int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
+			//int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
+			//int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
+			//
+			//safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
+			//safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
+			
+			// Step 5. Determine the weak squares around the king.
+			Bitboard weak = weak_squares<S>();
+			Bitboard weak_count = countBits(weak & king_ring(pos->king_squares[S]));
+		
+			// Step 6. Now apply the remaining
+			safety_mg += safety_table[Data.king_safety_units[S]].mg;
+				+ weak_king_square.mg * weak_count
+				//+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
+		
+			safety_eg += safety_table[Data.king_safety_units[S]].eg;
+				+ weak_king_square.eg * weak_count
+				//+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
+		}
 
 		// Step 5. Scale the scores.
 		// This is done in order because a safety value of -300cp should be considered 9 times worse than one of -100cp instead of only 3 times.

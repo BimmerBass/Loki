@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
 	Parameters vs;
 
-	vs.push_back(&missing_king_pawn);
+	vs.push_back(Parameter(&weak_king_square));
 
 	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
 
