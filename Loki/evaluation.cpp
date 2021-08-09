@@ -115,7 +115,7 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 // King safety evaluation
 const Score missing_king_pawn(58, 5);
 const Score no_enemy_queen(-258, -298);
-Score weak_king_square(-31, -8);
+const Score weak_king_square(34, -5);
 
 
 const Score king_pawn_shelter[8][7] = {
@@ -779,12 +779,12 @@ namespace Eval {
 			Bitboard weak_count = countBits(weak & king_ring(pos->king_squares[S]));
 		
 			// Step 6. Now apply the remaining
-			safety_mg += safety_table[Data.king_safety_units[S]].mg;
-				+ weak_king_square.mg * weak_count
+			safety_mg += safety_table[Data.king_safety_units[S]].mg
+				+ weak_king_square.mg * weak_count;
 				//+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
-		
-			safety_eg += safety_table[Data.king_safety_units[S]].eg;
-				+ weak_king_square.eg * weak_count
+
+				safety_eg += safety_table[Data.king_safety_units[S]].eg
+				+ weak_king_square.eg * weak_count;
 				//+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
 		}
 
