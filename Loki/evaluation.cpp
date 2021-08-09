@@ -113,35 +113,36 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 
 
 // King safety evaluation
-const Score missing_king_pawn(123, -28);
+Score missing_king_pawn(123, -28);
 const Score no_enemy_queen(-258, -298);
 const Score weak_king_square(-31, -8);
 
 
-Score king_pawn_shelter[8][7] = {
-	{ S(0, 0)	,	S(0, 0)		,	S(15, 15)	,	S(25, 25)	,	S(35, 35)	,	S(45, 45)	,	S(50, 50) },	/* File A */
-	{ S(0, 0)	,	S(0, 0)		,	S(15, 15)	,	S(25, 25)	,	S(35, 35)	,	S(45, 45)	,	S(50, 50) },	/* File B */
-	{ S(0, 0)	,	S(0, 0)		,	S(15, 15)	,	S(25, 25)	,	S(35, 35)	,	S(45, 45)	,	S(50, 50) },	/* File C */
-	{ S(0, 0)	,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)	  },	/* File D */
-	{ S(0, 0)	,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)		,	S(0, 0)   },	/* File E */
-	{ S(0, 0)	,	S(0, 0)		,	S(15, 15)	,	S(25, 25)	,	S(35, 35)	,	S(45, 45)	,	S(50, 50) },	/* File F */
-	{ S(0, 0)	,	S(0, 0)		,	S(15, 15)	,	S(25, 25)	,	S(35, 35)	,	S(45, 45)	,	S(50, 50) },	/* File G */
-	{ S(0, 0)	,	S(0, 0)		,	S(15, 15)	,	S(25, 25)	,	S(35, 35)	,	S(45, 45)	,	S(50, 50) }		/* File H */
-	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq			  7sq	*/
+const Score king_pawn_shelter[8][7] = {
+	{ S(7, 3)	,	S(5, 3)		,	S(18, 16)	,	S(22, 18)	,	S(40, 36)	, S(46, 44)	,	S(47, 53) },	/* File A */
+	{ S(1, -3)	,	S(-9, 5)	,	S(16, 2)	,	S(26, 14)	,	S(30, 40)	, S(46, 44)	,	S(47, 57) },	/* File B */
+	{ S(3, -7)	,	S(-7, -3)	,	S(12, 10)	,	S(20, 26)	,	S(38, 36)	, S(42, 50)	,	S(41, 47) },	/* File C */
+	{ S(-7, -3)	,	S(3, -1)	,	S(-9, -1)	,	S(-1, -11)	,	S(-7, -7)	, S(-5, 3)	,	S(-11, 3) },	/* File D */
+	{ S(3, 7)	,	S(3, -7)	,	S(1, 11)	,	S(-3, 5)	,	S(1, -9)	, S(-11, -3),	S(3, 7)	  },	/* File E */
+	{ S(7, 5)	,	S(-1, -5)	,	S(0, 4)		,	S(26, 18)	,	S(32, 32)	, S(48, 34)	,	S(49, 49) },	/* File F */
+	{ S(-1, -3)	,	S(-9, 19)	,	S(6, 18)	,	S(12, 32)	,	S(32, 26)	, S(50, 40)	,	S(53, 39) },	/* File G */
+	{ S(-3, 1)	,	S(3, 9)		,	S(22, 18)	,	S(18, 10)	,	S(34, 20)	, S(42, 42)	,	S(43, 55) }		/* File H */
+	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq			7sq  */
 };
+
+
 
 const Score king_pawn_storm[8][7] = {
-	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File A */
-	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File B */
-	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File C */
-	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30)	},	/* File D */
-	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File E */
-	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File F */
-	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) },	/* File G */
-	{ S(0, 0)	,	S(0, 0)		,	S(-5, -5)	,	S(-10, -10)	,	S(-15, -15)	,	S(-20, -20)	,	S(-30, -30) }	/* File H */
-	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq			  7sq	*/
+	{ S(-15, -3),	S(-3, -5)	,	S(-8, -10)	,	S(-3, 1)	,	S(-12, -14)	,	S(-23, -17)	,	S(-27, -35) },	/* File A */
+	{ S(-11, 7)	,	S(13, -13)	,	S(-8, 14)	,	S(-15, -3)	,	S(-14, -22)	,	S(-25, -25)	,	S(-31, -19) },	/* File B */
+	{ S(5, 3)	,	S(9, 9)		,	S(0, -12)	,	S(-5, -1)	,	S(-14, -8)	,	S(-9, -21)	,	S(-29, -25) },	/* File C */
+	{ S(13, -3)	,	S(7, 1)		,	S(-8, 0)	,	S(-9, -11)	,	S(-8, -10)	,	S(-1, -23)	,	S(-19, -35) },	/* File D */
+	{ S(-3, 9)	,	S(-3, 3)	,	S(2, -6)	,	S(1, -17)	,	S(-18, -6)	,	S(-19, 3)	,	S(-35, -29) },	/* File E */
+	{ S(11, 3)	,	S(3, -7)	,	S(-2, -2)	,	S(-17, -7)	,	S(-12, -16)	,	S(-15, -3)	,	S(-19, -15) },	/* File F */
+	{ S(-25, -9),	S(-5, -17)	,	S(-2, -16)	,	S(-19, -7)	,	S(-10, 0)	,	S(-33, -1)	,	S(-49, -15) },	/* File G */
+	{ S(3, 1)	,	S(-3, -11)	,	S(2, -2)	,	S(3, -13)	,	S(-16, 6)	,	S(-13, -9)	,	S(-21, -15) } 	/* File H */
+	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq				7sq		*/
 };
-
 
 
 const Score defending_minors[4][3][3] = {
@@ -151,7 +152,6 @@ const Score defending_minors[4][3][3] = {
 	{{S(0, 0), S(-10, -10), S(-15, -15)}	,	{S(0, 0),	S(-15, -15), S(-20, -20)}	,	{S(0, 0), S(-10, -10), S(-15, -15)}} 	/* 3 Defending pawns */
 	/*			0 knights									 1 knight									2 knights				*/
 };
-
 
 
 const Score safety_table[100] = {
@@ -166,7 +166,6 @@ const Score safety_table[100] = {
 		S(478, 484),	S(506, 496),	S(504, 524),	S(518, 528),	S(536, 534),	S(546, 550),	S(550, 544),	S(554, 542),	S(564, 566),	S(580, 566),
 		S(564, 560),	S(604, 566),	S(580, 584),	S(582, 582),	S(582, 612),	S(620, 624),	S(628, 640),	S(642, 634),	S(638, 640),	S(646, 652)
 };
-
 
 
 #undef S
@@ -733,14 +732,14 @@ namespace Eval {
 				}
 
 				// Step 2B. Find the closest enemy pawn and evaluate the pawn storm based on the file and the distance to our king.
-				//sq = backmost_sq<S>(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]);
-				//
-				//if (sq != NO_SQ) {
-				//	dist = PSQT::ManhattanDistance[king_sq][sq];
-				//
-				//	safety.mg += king_pawn_storm[f][dist].mg;
-				//	safety.eg += king_pawn_storm[f][dist].eg;
-				//}
+				sq = backmost_sq<S>(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]);
+				
+				if (sq != NO_SQ) {
+					dist = PSQT::ManhattanDistance[king_sq][sq];
+				
+					safety.mg += king_pawn_storm[f][dist].mg;
+					safety.eg += king_pawn_storm[f][dist].eg;
+				}
 			}
 			
 			return safety;
@@ -793,8 +792,8 @@ namespace Eval {
 
 		// Step 5. Scale the scores.
 		// This is done in order because a safety value of -300cp should be considered 9 times worse than one of -100cp instead of only 3 times.
-		int king_safety_mg = -1 * safety_mg * std::max(safety_mg, 0) / 4096;
-		int king_safety_eg = -1 * safety_eg * std::max(safety_eg, 0) / 4096;
+		int king_safety_mg = -1 * safety_mg * safety_mg / 256;
+		int king_safety_eg = -1 * safety_eg * safety_eg / 128;
 
 		mg_score += (S == WHITE) ? king_safety_mg : -king_safety_mg;
 		eg_score += (S == WHITE) ? king_safety_eg : -king_safety_eg;

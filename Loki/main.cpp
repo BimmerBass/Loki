@@ -38,11 +38,7 @@ int main(int argc, char* argv[]) {
 
 	Parameters vs;
 
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 7; j++) {
-			vs.push_back(Parameter(&king_pawn_shelter[i][j]));
-		}
-	}
+	vs.push_back(&missing_king_pawn);
 
 	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
 
