@@ -27,26 +27,13 @@ int main(int argc, char* argv[]) {
 
 
 	// If "bench" has been added as an argument, just run this and quit
-	//if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
-	//	Bench::run_benchmark();
-	//	return 0;
-	//}
-	//
-	//UCI::loop();
-
-	using namespace Texel;
-
-	Parameters vs;
-
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 3; j++) {
-			for (int w = 0; w < 3; w++) {
-				vs.push_back(Parameter(&defending_minors[i][j][w]));
-			}
-		}
+	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
+		Bench::run_benchmark();
+		return 0;
 	}
+	
+	UCI::loop();
 
-	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
 
 	return 0;
 }

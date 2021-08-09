@@ -114,7 +114,7 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 
 // King safety evaluation
 const Score missing_king_pawn(58, 5);
-const Score no_enemy_queen(-258, -298);
+const Score no_enemy_queen(-201, -61);
 const Score weak_king_square(34, -5);
 
 
@@ -782,12 +782,12 @@ namespace Eval {
 		
 			// Step 6. Now apply the remaining
 			safety_mg += safety_table[Data.king_safety_units[S]].mg
-				+ weak_king_square.mg * weak_count;
-				//+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
+				+ weak_king_square.mg * weak_count
+				+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
 
-				safety_eg += safety_table[Data.king_safety_units[S]].eg
-				+ weak_king_square.eg * weak_count;
-				//+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
+			safety_eg += safety_table[Data.king_safety_units[S]].eg
+				+ weak_king_square.eg * weak_count
+				+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
 		}
 
 		// Step 5. Scale the scores.
