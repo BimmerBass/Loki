@@ -40,11 +40,11 @@ int main(int argc, char* argv[]) {
 
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 7; j++) {
-			vs.push_back(Parameter(&king_pawn_shelter[i][j], Value(0.003, 0.003), Value(8.0, 8.0)));
+			vs.push_back(Parameter(&king_pawn_shelter[i][j]));
 		}
 	}
 
-	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 250);
+	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
 
 	return 0;
 }

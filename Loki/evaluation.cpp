@@ -733,14 +733,14 @@ namespace Eval {
 				}
 
 				// Step 2B. Find the closest enemy pawn and evaluate the pawn storm based on the file and the distance to our king.
-				sq = backmost_sq<S>(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]);
-
-				if (sq != NO_SQ) {
-					dist = PSQT::ManhattanDistance[king_sq][sq];
-
-					safety.mg += king_pawn_storm[f][dist].mg;
-					safety.eg += king_pawn_storm[f][dist].eg;
-				}
+				//sq = backmost_sq<S>(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]);
+				//
+				//if (sq != NO_SQ) {
+				//	dist = PSQT::ManhattanDistance[king_sq][sq];
+				//
+				//	safety.mg += king_pawn_storm[f][dist].mg;
+				//	safety.eg += king_pawn_storm[f][dist].eg;
+				//}
 			}
 			
 			return safety;
@@ -759,35 +759,37 @@ namespace Eval {
 		int safety_mg = 0;
 		int safety_eg = 0;
 
-		// Step 2. Only evaluate king safety if either: 1) There are more than two attackers, or 2) There are more than one attacker and the enemy has a queen
-		if (Data.king_zone_attacks[S] > 2 || (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1)) {
-			// Step 3. Score defending pawns, knights and bishops.
-			Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
-			int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
-			int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
-			int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
-			
-			safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
-			safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
+		// Step 2. Evaluate the kings pawn shield and pawn storm
+		Score kings_pawns = king_pawns<T, S>(pos);
+		safety_mg += kings_pawns.mg;
+		safety_eg += kings_pawns.eg;
 
-			// Step 4. Evaluate the king's pawn shield.
-			Score kings_pawns = king_pawns<T, S>(pos);
-
-			// Step 5. Determine the weak squares around the king.
-			Bitboard weak = weak_squares<S>();
-			Bitboard weak_count = countBits(weak & king_ring(pos->king_squares[S]));
-
-			// Step 6. Now apply the remaining
-			safety_mg += safety_table[Data.king_safety_units[S]].mg
-				+ kings_pawns.mg
-				+ weak_king_square.mg * weak_count
-				+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
-
-			safety_eg += safety_table[Data.king_safety_units[S]].eg
-				+ kings_pawns.eg
-				+ weak_king_square.eg * weak_count
-				+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
-		}
+		// Step 3. Only evaluate king safety if either: 1) There are more than two attackers, or 2) There are more than one attacker and the enemy has a queen
+		//if (Data.king_zone_attacks[S] > 2 || (pos->pieceBBS[QUEEN][Them] != 0 && Data.king_zone_attacks[S] > 1)) {
+		//	// Step 4. Score defending pawns, knights and bishops.
+		//	Bitboard king_area = king_ring(pos->king_squares[S]) | outer_kingRing(pos->king_squares[S]);
+		//	int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
+		//	int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
+		//	int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
+		//	
+		//	safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
+		//	safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
+		//
+		//	// Step 5. Determine the weak squares around the king.
+		//	Bitboard weak = weak_squares<S>();
+		//	Bitboard weak_count = countBits(weak & king_ring(pos->king_squares[S]));
+		//
+		//	// Step 6. Now apply the remaining
+		//	safety_mg += safety_table[Data.king_safety_units[S]].mg
+		//		+ kings_pawns.mg
+		//		+ weak_king_square.mg * weak_count
+		//		+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0);
+		//
+		//	safety_eg += safety_table[Data.king_safety_units[S]].eg
+		//		+ kings_pawns.eg
+		//		+ weak_king_square.eg * weak_count
+		//		+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0);
+		//}
 
 		// Step 5. Scale the scores.
 		// This is done in order because a safety value of -300cp should be considered 9 times worse than one of -100cp instead of only 3 times.
