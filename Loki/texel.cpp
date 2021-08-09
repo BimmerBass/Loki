@@ -94,7 +94,7 @@ namespace Texel {
 			pos->parseFen((*EPDS)[i].fen);
 
 			// Step 2. Evaluate and make the result relative to white
-			value = eval.score(pos);
+			value = eval.score(pos, false);
 			value *= (pos->side_to_move == WHITE) ? 1 : -1;
 
 			// Step 3. Square the difference between the game result and the eval, and add this to the sum.

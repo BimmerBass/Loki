@@ -27,39 +27,24 @@ int main(int argc, char* argv[]) {
 
 
 	// If "bench" has been added as an argument, just run this and quit
-	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
-		Bench::run_benchmark();
-		return 0;
-	}
-	
-	UCI::loop();
-
-
-	using namespace Texel;
-	
-	Parameters vs;
-	
-	
-	//for (int i = 0; i < 8; i++) {
-	//	for (int j = 0; j < 7; j++) {
-	//		vs.push_back(Parameter(&king_pawn_shelter[i][j]));
-	//	}
-	//}
-	//for (int i = 0; i < 8; i++) {
-	//	for (int j = 0; j < 7; j++) {
-	//		vs.push_back(Parameter(&king_pawn_storm[i][j]));
-	//	}
-	//}
-	
-	//for (int i = 0; i < 4; i++) {
-	//	for (int j = 0; j < 3; j++) {
-	//		for (int w = 0; w < 3; w++) {
-	//			vs.push_back(Parameter(&defending_minors[i][j][w], Value(0.004, 0.004), Value(16.0, 16.0)));
-	//		}
-	//	}
+	//if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
+	//	Bench::run_benchmark();
+	//	return 0;
 	//}
 	//
-	//Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 250);
+	//UCI::loop();
+
+	using namespace Texel;
+
+	Parameters vs;
+
+	for (int i = 0; i < 8; i++) {
+		for (int j = 0; j < 7; j++) {
+			vs.push_back(Parameter(&king_pawn_shelter[i][j], Value(0.003, 0.003), Value(8.0, 8.0)));
+		}
+	}
+
+	Tune(vs, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 250);
 
 	return 0;
 }
