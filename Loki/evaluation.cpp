@@ -796,8 +796,8 @@ namespace Eval {
 
 		// Step 5. Scale the scores.
 		// This is done in order because a safety value of -300cp should be considered 9 times worse than one of -100cp instead of only 3 times.
-		int king_safety_mg = -1 * safety_mg * safety_mg / 256;
-		int king_safety_eg = -1 * safety_eg * safety_eg / 128;
+		int king_safety_mg = -1 * safety_mg * std::max(0, safety_mg) / 256;
+		int king_safety_eg = -1 * safety_eg * std::max(0, safety_eg) / 128;
 
 		mg_score += (S == WHITE) ? king_safety_mg : -king_safety_mg;
 		eg_score += (S == WHITE) ? king_safety_eg : -king_safety_eg;
