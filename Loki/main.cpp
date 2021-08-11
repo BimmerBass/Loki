@@ -35,5 +35,18 @@ int main(int argc, char* argv[]) {
 	UCI::loop();
 
 
+	//using namespace Texel;
+	//
+	//Parameters v;
+	//
+	//
+	//for (int sq = 0; sq < 64; sq++) {
+	//	v.push_back(Parameter(&king_shelter[1][sq]));
+	//}
+	//
+	//
+	//
+	//Tune(v, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 750);
+	
 	return 0;
 }

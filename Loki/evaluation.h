@@ -35,6 +35,20 @@ public:
 	Score(int m, int e) { mg = m; eg = e; }
 	Score(const Score& s) { mg = s.mg; eg = s.eg; }
 	Score() { mg = 0; eg = 0; }
+	
+	// Some operators.
+	Score& operator+=(const Score& rhs) { this->mg += rhs.mg; this->eg += rhs.eg; return *this;}
+	Score& operator-=(const Score& rhs) { this->mg -= rhs.mg; this->eg -= rhs.eg; return *this;}
+	Score operator+(const Score& rhs) { 
+		Score s;
+		s.mg = mg + rhs.mg; s.eg = eg + rhs.eg;
+		return s;
+	}
+	Score operator-(const Score& rhs) {
+		Score s;
+		s.mg = mg - rhs.mg; s.eg = eg - rhs.eg;
+		return s;
+	}
 
 	int mg = 0;
 	int eg = 0;
@@ -69,6 +83,9 @@ namespace Eval {
 
 			int king_zone_attacks[2] = { 0 };	/* The amount of pieces attacking the king */
 			int king_safety_units[2] = { 0 };	/* A kind of "weighted" amount of pieces attacking the king. Used to index the safety table */
+
+			// Safety points from king pawn scoring.
+			Score king_pawn_safety[2];
 		};
 		// The constant ZeroData is used to quickly clear our evaluation data.
 		const EvalData ZeroData;
@@ -92,12 +109,13 @@ namespace Eval {
 		template<SIDE S> void pawns();
 		template<SIDE S> void space();
 		template<SIDE S, piece pce> void mobility();
-		template<SIDE S> void king_safety();
+		//template<SIDE S> void king_safety();
+		template<SIDE S> void king_pawns(); // Called in pawns().
 
 		// An evaluation hash table to re-use recently calculated evaluations.
 		EvaluationTable eval_table;
 
-		template<SIDE S> Bitboard weak_squares();
+		//template<SIDE S> Bitboard weak_squares();
 		template<SIDE S> Bitboard attacked_by_all();
 	};
 	
@@ -212,7 +230,13 @@ extern const Score queen_development_penalty[5];
 
 
 /*
-King evaluation
+King pawn shield eval.
+*/
+extern const Score minimum_kp_distance[15];
+extern const Score king_shelter[2][64];
+
+/*
+King safety evaluation
 */
 
 

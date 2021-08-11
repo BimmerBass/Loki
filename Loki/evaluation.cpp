@@ -112,9 +112,36 @@ const Score threatened_queen(52, 70);
 const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0), S(12, 0) };
 
 
+// King pawn shield evaluation
+const Score minimum_kp_distance[15] = { S(15, 3), S(3, 7), S(-7, 3), S(-15, -3), S(-19, -11), S(-7, -19), S(-3, -17),
+								S(-3, -3), S(5, 3), S(-7, 3), S(-1, -3), S(-1, -5), S(23, 1), S(-1, 7), S(15, 13) }; // Indexed by manhattan distance - 1
+
+// Indexed such that if the king is on the king-side it is [0][sq] and if it's on the queen-side it's [1][sq]
+const Score king_shelter[2][64] = {
+	{
+		S(10, 4)	,	S(16, -14)	,	S(-2, 6)	,	S(22, 22)	,	S(-4, -6)	,	S(-10, 6)	,	S(2, 8)		,	S(-14, -2)	,
+		S(-8, 10)	,	S(4, 0)		,	S(8, -8)	,	S(16, -2)	,	S(8, 0)		,	S(12, -6)	,	S(14, -16)	,	S(0, -10)	,
+		S(0, -4)	,	S(-22, 8)	,	S(-6, -2)	,	S(14, 10)	,	S(16, -6)	,	S(12, -4)	,	S(12, -14)	,	S(12, -6)	,
+		S(0, 2)		,	S(6, 14)	,	S(12, -6)	,	S(4, 12)	,	S(22, -4)	,	S(0, 6)		,	S(16, -12)	,	S(26, -12)	,
+		S(-6, -20)	,	S(0, 10)	,	S(-16, -8)	,	S(2, 2)		,	S(-10, 16)	,	S(2, 2)		,	S(0, -8)	,	S(-10, 4)	,
+		S(-6, -10)	,	S(4, 8)		,	S(4, -10)	,	S(-10, 12)	,	S(-4, 0)	,	S(-2, 2)	,	S(-12, 12)	,	S(-18, -2)	,
+		S(6, 0)		,	S(16, 4)	,	S(0, 2)		,	S(-20, 22)	,	S(-6, -16)	,	S(-6, -2)	,	S(0, 8)		,	S(-32, -8)	,
+		S(4, -10)	,	S(16, -16)	,	S(-4, -26)	,	S(-20, 0)	,	S(2, 6)		,	S(-14, -26)	,	S(-12, -8)	,	S(-4, -2)
+	},
+	{
+		S(-1, -1)	,	S(-5, 1)	,	S(-5, 11)	,	S(-1, -5)	,	S(11, -5)	,	S(5, -5)	,	S(-1, 1)	, S(-1, -7)	,
+		S(1, -1)	,	S(23, -17)	,	S(25, -7)	,	S(-11, -9)	,	S(-5, -7)	,	S(5, 7)		,	S(7, 1)		, S(1, -9)	,
+		S(5, 1)		,	S(3, -3)	,	S(7, 3)		,	S(-9, -1)	,	S(-5, -5)	,	S(-5, -19)	,	S(1, -5)	, S(1, 11)	,
+		S(7, 3)		,	S(1, 3)		,	S(11, 7)	,	S(1, 15)	,	S(5, 5)		,	S(9, -1)	,	S(11, 3)	, S(9, -1)	,
+		S(3, 9)		,	S(5, 9)		,	S(3, 9)		,	S(-1, 3)	,	S(-5, 11)	,	S(-5, 1)	,	S(-3, 9)	, S(-1, -3)	,
+		S(-9, 7)	,	S(-3, 11)	,	S(5, 19)	,	S(3, 5)		,	S(1, 9)		,	S(-1, -9)	,	S(3, 7)		, S(-5, -7)	,
+		S(-7, 7)	,	S(-1, 5)	,	S(-7, 5)	,	S(-3, 1)	,	S(-3, -7)	,	S(-1, -1)	,	S(1, 1)		, S(-1, 7)	,
+		S(1, 7)		,	S(9, -5)	,	S(3, -5)	,	S(3, -1)	,	S(-3, 1)	,	S(-7, 7)	,	S(-1, -1)	, S(-3, 9)
+	}
+};
+
+
 // King safety evaluation
-
-
 
 #undef S
 
@@ -171,7 +198,7 @@ namespace Eval {
 			mobility<WHITE, QUEEN>(); mobility<BLACK, QUEEN>();
 
 			// Step 9. King safety evaluation.
-			king_safety<WHITE>(); king_safety<BLACK>();
+			//king_safety<WHITE>(); king_safety<BLACK>();
 
 			// Step 10. Compute the phase and interpolate the middle game and endgame scores.
 			int phase = game_phase();
@@ -428,9 +455,75 @@ namespace Eval {
 		Data.attacked_by_two[S] = attacked_by_all<S>() & (shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S]));
 		Data.attacks[S][PAWN] = (shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S]));
 
+		// Lastly, evaluate the kings pawn shelter
+		king_pawns<S>();
+
 		// Apply the scores.
 		mg_score += (S == WHITE) ? mg : -mg;
 		eg_score += (S == WHITE) ? eg : -eg;
+	}
+
+
+
+	/// <summary>
+	/// Score the pawn shelter and pawn storm around the king.
+	/// </summary>
+	template<EvalType T> template<SIDE S>
+	void Evaluate<T>::king_pawns() {
+		// Constants
+		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+		constexpr int relative_ranks[8] = { (S == WHITE) ? RANK_1 : RANK_8, (S == WHITE) ? RANK_2 : RANK_7,
+			(S == WHITE) ? RANK_3 : RANK_6, (S == WHITE) ? RANK_4 : RANK_5, (S == WHITE) ? RANK_5 : RANK_4,
+			(S == WHITE) ? RANK_6 : RANK_3, (S == WHITE) ? RANK_7 : RANK_2, (S == WHITE) ? RANK_8 : RANK_1 };
+
+		// Step 1. Variable initialization
+		Score kp_eval, kp_safety;
+			
+		Bitboard our_pawns = pos->pieceBBS[PAWN][S];
+		Bitboard their_pawns = pos->pieceBBS[PAWN][Them];
+		int sq = NO_SQ;
+		int king_sq = pos->king_squares[S];
+
+		// Idea from Stockfish: Clamp the king-file between the B- and G-file such that we still evaluate the F-pawn when the king is on the H-file for example.
+		int king_file = std::clamp(king_sq % 8, 1, 6); 
+		int real_king_file = king_sq % 8;
+		
+		// Step 2. Find the closest pawn and score the king based on the Manhattan-Distance.
+		// Note: A distance of 15 counts as no pawns being left on the board.
+		int shortest_dist = 15;
+
+		if (our_pawns != 0) {
+			while (our_pawns) {
+				sq = PopBit(&our_pawns);
+
+				shortest_dist = std::min(shortest_dist, PSQT::ManhattanDistance[king_sq][sq]);
+			}
+		}
+		kp_eval += minimum_kp_distance[shortest_dist - 1];
+
+		// Since we have removed bits from our_pawns, we need to set it again.
+		our_pawns = pos->pieceBBS[PAWN][S];
+		
+
+		// Step 3. Loop through the files adjacent to the king-file and score the pawn shelter/storm.
+		for (int f = king_file - 1; f <= king_file + 1; f++) {
+
+			// Step 3A. Evaluate the pawn shelter based on the which side the king is on and the pawn's square.
+			int sq = backmost_sq<S>(pos->pieceBBS[PAWN][S] & BBS::FileMasks8[f]);
+			if (sq == NO_SQ) { continue; }
+			
+			if (real_king_file >= FILE_E) {
+				kp_eval += king_shelter[0][(S == WHITE) ? sq : PSQT::Mirror64[sq]];
+			}
+			else {
+				kp_eval += king_shelter[1][(S == WHITE) ? sq : PSQT::Mirror64[sq]];
+			}
+
+		}
+
+		// Lastly, add the eval scores.
+		mg_score += (S == WHITE) ? kp_eval.mg : -kp_eval.mg;
+		eg_score += (S == WHITE) ? kp_eval.eg : -kp_eval.eg;
 	}
 
 
