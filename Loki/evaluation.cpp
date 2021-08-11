@@ -113,62 +113,7 @@ const Score queen_development_penalty[5] = { S(0, 0), S(0, 0), S(0, 0), S(3, 0),
 
 
 // King safety evaluation
-const Score missing_king_pawn(58, 5);
-const Score no_enemy_queen(-201, -61);
-const Score weak_king_square(34, -5);
-const Score central_king(22, -18);
 
-
-const Score king_pawn_shelter[8][7] = {
-	{ S(7, 3)	,	S(5, 3)		,	S(18, 16)	,	S(22, 18)	,	S(40, 36)	, S(46, 44)	,	S(47, 53) },	/* File A */
-	{ S(1, -3)	,	S(-9, 5)	,	S(16, 2)	,	S(26, 14)	,	S(30, 40)	, S(46, 44)	,	S(47, 57) },	/* File B */
-	{ S(3, -7)	,	S(-7, -3)	,	S(12, 10)	,	S(20, 26)	,	S(38, 36)	, S(42, 50)	,	S(41, 47) },	/* File C */
-	{ S(-7, -3)	,	S(3, -1)	,	S(-9, -1)	,	S(-1, -11)	,	S(-7, -7)	, S(-5, 3)	,	S(-11, 3) },	/* File D */
-	{ S(3, 7)	,	S(3, -7)	,	S(1, 11)	,	S(-3, 5)	,	S(1, -9)	, S(-11, -3),	S(3, 7)	  },	/* File E */
-	{ S(7, 5)	,	S(-1, -5)	,	S(0, 4)		,	S(26, 18)	,	S(32, 32)	, S(48, 34)	,	S(49, 49) },	/* File F */
-	{ S(-1, -3)	,	S(-9, 19)	,	S(6, 18)	,	S(12, 32)	,	S(32, 26)	, S(50, 40)	,	S(53, 39) },	/* File G */
-	{ S(-3, 1)	,	S(3, 9)		,	S(22, 18)	,	S(18, 10)	,	S(34, 20)	, S(42, 42)	,	S(43, 55) }		/* File H */
-	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq			7sq  */
-};
-
-
-
-const Score king_pawn_storm[8][7] = {
-	{ S(-15, -3),	S(-3, -5)	,	S(-8, -10)	,	S(-3, 1)	,	S(-12, -14)	,	S(-23, -17)	,	S(-27, -35) },	/* File A */
-	{ S(-11, 7)	,	S(13, -13)	,	S(-8, 14)	,	S(-15, -3)	,	S(-14, -22)	,	S(-25, -25)	,	S(-31, -19) },	/* File B */
-	{ S(5, 3)	,	S(9, 9)		,	S(0, -12)	,	S(-5, -1)	,	S(-14, -8)	,	S(-9, -21)	,	S(-29, -25) },	/* File C */
-	{ S(13, -3)	,	S(7, 1)		,	S(-8, 0)	,	S(-9, -11)	,	S(-8, -10)	,	S(-1, -23)	,	S(-19, -35) },	/* File D */
-	{ S(-3, 9)	,	S(-3, 3)	,	S(2, -6)	,	S(1, -17)	,	S(-18, -6)	,	S(-19, 3)	,	S(-35, -29) },	/* File E */
-	{ S(11, 3)	,	S(3, -7)	,	S(-2, -2)	,	S(-17, -7)	,	S(-12, -16)	,	S(-15, -3)	,	S(-19, -15) },	/* File F */
-	{ S(-25, -9),	S(-5, -17)	,	S(-2, -16)	,	S(-19, -7)	,	S(-10, 0)	,	S(-33, -1)	,	S(-49, -15) },	/* File G */
-	{ S(3, 1)	,	S(-3, -11)	,	S(2, -2)	,	S(3, -13)	,	S(-16, 6)	,	S(-13, -9)	,	S(-21, -15) } 	/* File H */
-	/*	1sq			  2sq			  3sq			  4sq			  5sq			  6sq				7sq		*/
-};
-
-
-const Score defending_minors[4][3][3] = {
-	{{S(3, 3), S(16, 14), S(9, 7)}		,	{S(1, -1), S(9, 11), S(-4, -6)}		,	{S(-1, 1), S(16, 14), S(9, 9)}},	/* 0 Defending pawns */
-	{{S(1, -1), S(9, 11), S(-4, -6)}	,	{S(-1, 1), S(16, 14), S(9, 9)}		,	{S(3, 3), S(11, 11), S(4, 4)}},		/* 1 Defending pawn  */
-	{{S(-1, 1), S(16, 14), S(9, 9)}		,	{S(3, 3), S(11, 11), S(4, 4)}		,	{S(1, 1), S(6, 6), S(-13, -11)}},	/* 2 Defending pawns */
-	{{S(3, 3), S(11, 11), S(4, 4)}		,	{S(1, 1), S(6, 6), S(-13, -11)}		,	{S(1, -1), S(9, 11), S(4, 4)}}		/* 3 Defending pawns */
-	/*		   0 knights								1 knight								2 knights		*/
-};
-
-
-
-
-const Score safety_table[100] = {
-		S(4, -2),	S(-8, 10)	,	S(2, 0)		,	S(-19, -8)	,	S(-15, -19)	,	S(10, -22)	,	S(5, -35)	,	S(29, -15)	,	S(46, 8)	,	S(69, 49)	,
-	S(40, 24)	,	S(73, 47)	,	S(56, 22)	,	S(39, 3)	,	S(28, 22)	,	S(13, 17)	,	S(24, 12)	,	S(27, 35)	,	S(14, 22)	,	S(23, 19)	,
-	S(14, 42)	,	S(43, 23)	,	S(16, 40)	,	S(39, 31)	,	S(45, 41)	,	S(51, 47)	,	S(65, 51)	,	S(80, 62)	,	S(91, 87)	,	S(75, 115)	,
-	S(97, 79)	,	S(89, 111)	,	S(109, 105)	,	S(111, 117)	,	S(117, 125)	,	S(149, 147)	,	S(131, 159)	,	S(155, 149)	,	S(179, 191)	,	S(163, 163)	,
-	S(171, 179)	,	S(171, 171)	,	S(207, 181)	,	S(209, 211)	,	S(209, 237)	,	S(229, 211)	,	S(237, 227)	,	S(265, 231)	,	S(259, 255)	,	S(267, 251)	,
-	S(253, 245)	,	S(259, 251)	,	S(247, 265)	,	S(285, 289)	,	S(281, 269)	,	S(301, 303)	,	S(303, 301)	,	S(317, 317)	,	S(327, 345)	,	S(339, 327)	,
-	S(329, 337)	,	S(319, 321)	,	S(347, 325)	,	S(353, 363)	,	S(391, 377)	,	S(395, 373)	,	S(383, 373)	,	S(417, 401)	,	S(417, 395)	,	S(427, 423)	,
-	S(423, 403)	,	S(417, 415)	,	S(431, 421)	,	S(437, 443)	,	S(419, 455)	,	S(453, 471)	,	S(465, 463)	,	S(471, 495)	,	S(481, 493)	,	S(499, 495)	,
-	S(473, 485)	,	S(505, 497)	,	S(501, 527)	,	S(515, 527)	,	S(537, 533)	,	S(545, 549)	,	S(555, 541)	,	S(557, 549)	,	S(561, 569)	,	S(575, 567)	,
-	S(563, 565)	,	S(601, 563)	,	S(585, 585)	,	S(585, 581)	,	S(579, 615)	,	S(619, 621)	,	S(627, 647)	,	S(643, 633)	,	S(635, 641)	,	S(643, 649)
-};
 
 
 #undef S
@@ -575,12 +520,6 @@ namespace Eval {
 					// Add attack units to index the king attack table
 					Data.king_safety_units[Them] += 2;
 				}
-				else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
-					Data.king_zone_attacks[Them]++;
-				
-					// Since we're not directly attacking the king, only add half the attack units
-					Data.king_safety_units[Them] += 1;
-				}
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
 
@@ -603,12 +542,6 @@ namespace Eval {
 
 					// Add attack units to index the king attack table
 					Data.king_safety_units[Them] += 2;
-				}
-				else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
-					Data.king_zone_attacks[Them]++;
-
-					// Since we're not directly attacking the king, only add half the attack units
-					Data.king_safety_units[Them] += 1;
 				}
 
 
@@ -634,12 +567,6 @@ namespace Eval {
 					// Add attack units to index the king attack table
 					Data.king_safety_units[Them] += 3;
 				}
-				else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
-					Data.king_zone_attacks[Them]++;
-
-					// Since we're not directly attacking the king, only add half the attack units
-					Data.king_safety_units[Them] += 2;
-				}
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
 
@@ -661,12 +588,6 @@ namespace Eval {
 
 					// Add attack units to index the king attack table
 					Data.king_safety_units[Them] += 5;
-				}
-				else if ((piece_attacks & enemy_outer_king_ring) != 0) { // If it can move to a square that (probably) attacks the king
-					Data.king_zone_attacks[Them]++;
-
-					// Since we're not directly attacking the king, only add half the attack units
-					Data.king_safety_units[Them] += 3;
 				}
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
@@ -691,132 +612,7 @@ namespace Eval {
 	
 
 
-	namespace {
 
-		template<SIDE S>
-		bool defended_by_pawn(const GameState_t* pos, int sq) {
-			constexpr DIRECTION upRight = (S == WHITE) ? NORTHEAST : SOUTHEAST;
-			constexpr DIRECTION upLeft = (S == WHITE) ? NORTHWEST : SOUTHWEST;
-
-			return ((shift<upRight>(pos->pieceBBS[PAWN][S]) | shift<upLeft>(pos->pieceBBS[PAWN][S])) & (uint64_t(1) << sq)) != 0;
-		}
-		
-		/// <summary>
-		/// Score the pawn shield around the king.
-		/// </summary>
-		/// <param name="pos">The position</param>
-		/// <returns>A score with safety values</returns>
-		template<EvalType T, SIDE S>
-		Score king_pawns(const GameState_t* pos) {
-			// Step 1. Variable declaration.
-			constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
-
-			Score safety;
-
-			int king_sq = pos->king_squares[S];
-			int king_file = king_sq % 8;
-			int sq, dist;
-
-			// Step 2. Evaluate pawn advancement in front of the king.
-			// We do this by simply looping over the files adjacent to the king's
-			for (int f = std::max(0, king_file - 1); f <= std::min(7, king_file + 1); f++) {
-				// Step 2A. Find the closest of our own pawns and score it based on the distance to the king and it's file.
-				sq = backmost_sq<S>(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][S]);
-
-				if (sq == NO_SQ) { // There are no pawns.
-					safety.mg += missing_king_pawn.mg;
-					safety.eg += missing_king_pawn.eg;
-				}
-				else {
-					dist = PSQT::ManhattanDistance[king_sq][sq];
-
-					safety.mg += king_pawn_shelter[f][dist].mg;
-					safety.eg += king_pawn_shelter[f][dist].eg;
-				}
-
-				// Step 2B. Find the closest enemy pawn and evaluate the pawn storm based on the file and the distance to our king.
-				sq = backmost_sq<S>(BBS::FileMasks8[f] & pos->pieceBBS[PAWN][Them]);
-				
-				if (sq != NO_SQ) {
-					dist = PSQT::ManhattanDistance[king_sq][sq];
-				
-					safety.mg += king_pawn_storm[f][dist].mg;
-					safety.eg += king_pawn_storm[f][dist].eg;
-				}
-			}
-			
-			return safety;
-		}
-	}
-
-
-	/// <summary>
-	/// Evaluate the king safety.
-	/// </summary>
-	template<EvalType T> template<SIDE S>
-	void Evaluate<T>::king_safety() {
-		// Step 1. Initialize variables
-		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
-
-		int safety_mg = 0;
-		int safety_eg = 0;
-
-		// Step 2. Evaluate the kings pawn shield and pawn storm.
-		Score kings_pawns = king_pawns<T, S>(pos);
-		safety_mg += kings_pawns.mg;
-		safety_eg += kings_pawns.eg;
-
-		// Step 3. Score defending pawns, knights and bishops.
-		Bitboard king_area = king_ring(pos->king_squares[S]);
-		int pawn_defenders = std::clamp(countBits(pos->pieceBBS[PAWN][S] & king_area) - 1, 0, 3);
-		int knight_defenders = std::clamp(countBits(pos->pieceBBS[KNIGHT][S] & king_area) - 1, 0, 2);
-		int bishop_defenders = std::clamp(countBits(pos->pieceBBS[BISHOP][S] & king_area) - 1, 0, 2);
-
-		safety_mg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].mg;
-		safety_eg += defending_minors[pawn_defenders][knight_defenders][bishop_defenders].eg;
-
-		// Step 4. Only evaluate king safety if there are more than two attackers and the opponent has a queen.
-		if (Data.king_zone_attacks[S] > 2 && pos->pieceBBS[QUEEN][Them] != 0) {
-			
-			// Step 5. Determine the weak squares around the king.
-			Bitboard weak = weak_squares<S>();
-			Bitboard weak_count = countBits(weak & king_ring(pos->king_squares[S]));
-		
-			// Step 6. Now apply the remaining
-			safety_mg += safety_table[Data.king_safety_units[S]].mg
-				+ weak_king_square.mg * weak_count
-				+ no_enemy_queen.mg * (pos->pieceBBS[QUEEN][Them] == 0)
-				+ central_king.mg * (pos->king_squares[S] % 8 == FILE_D || pos->king_squares[S] % 8 == FILE_E);
-
-			safety_eg += safety_table[Data.king_safety_units[S]].eg
-				+ weak_king_square.eg * weak_count
-				+ no_enemy_queen.eg * (pos->pieceBBS[QUEEN][Them] == 0)
-				+ central_king.eg * (pos->king_squares[S] % 8 == FILE_D || pos->king_squares[S] % 8 == FILE_E);
-		}
-
-		// Step 5. Scale the scores.
-		// This is done in order because a safety value of -300cp should be considered 9 times worse than one of -100cp instead of only 3 times.
-		int king_safety_mg = -1 * safety_mg * std::max(0, safety_mg) / 256;
-		int king_safety_eg = -1 * safety_eg * std::max(0, safety_eg) / 128;
-
-		mg_score += (S == WHITE) ? king_safety_mg : -king_safety_mg;
-		eg_score += (S == WHITE) ? king_safety_eg : -king_safety_eg;
-	}
-
-
-	/// <summary>
-	/// Identify weak squares around the king.
-	/// </summary>
-	/// <returns>A bitboard with all squares attacked more than once and only defended by our king or queen.</returns>
-	template<EvalType T> template<SIDE S>
-	Bitboard Evaluate<T>::weak_squares() {
-		// Weak squares are defined as being attacked more than once and only defended by our king or queen.
-		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
-
-		return attacked_by_all<Them>()
-			& ~Data.attacked_by_two[S]
-			& (~attacked_by_all<S>() | Data.attacks[S][QUEEN] | king_ring(pos->king_squares[S]));
-	}
 
 	/// <summary>
 	/// Return a bitboard of all (currently calculated) attacks by one of the sides.
