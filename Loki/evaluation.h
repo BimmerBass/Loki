@@ -234,6 +234,8 @@ King pawn shield eval.
 */
 extern const Score minimum_kp_distance[15];
 extern const Score king_shelter[2][64];
+extern const Score open_file[8];
+extern Score semi_open_file[8];
 
 /*
 King safety evaluation

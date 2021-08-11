@@ -141,6 +141,11 @@ const Score king_shelter[2][64] = {
 };
 
 
+
+// Both of the below arrays are indexed by file number.
+const Score open_file[8] = { S(8, -28), S(-10, -16), S(0, -16), S(-6, -10), S(-12, -6), S(0, -14), S(-14, -10), S(-12, -12) };
+Score semi_open_file[8] = { S(-1, 9), S(3, 15), S(-7, 13), S(-11, 11), S(-5, 1), S(-11, 11), S(-11, 21), S(-5, 21) };
+
 // King safety evaluation
 
 #undef S
@@ -481,7 +486,7 @@ namespace Eval {
 			
 		Bitboard our_pawns = pos->pieceBBS[PAWN][S];
 		Bitboard their_pawns = pos->pieceBBS[PAWN][Them];
-		int sq = NO_SQ;
+		int sq = NO_SQ, our_sq = NO_SQ, their_sq = NO_SQ;
 		int king_sq = pos->king_squares[S];
 
 		// Idea from Stockfish: Clamp the king-file between the B- and G-file such that we still evaluate the F-pawn when the king is on the H-file for example.
@@ -508,15 +513,26 @@ namespace Eval {
 		// Step 3. Loop through the files adjacent to the king-file and score the pawn shelter/storm.
 		for (int f = king_file - 1; f <= king_file + 1; f++) {
 
-			// Step 3A. Evaluate the pawn shelter based on the which side the king is on and the pawn's square.
-			int sq = backmost_sq<S>(pos->pieceBBS[PAWN][S] & BBS::FileMasks8[f]);
-			if (sq == NO_SQ) { continue; }
 			
+			our_sq = backmost_sq<S>(pos->pieceBBS[PAWN][S] & BBS::FileMasks8[f]);
+			their_sq = backmost_sq<S>(pos->pieceBBS[PAWN][Them] & BBS::FileMasks8[f]);
+
+			// Step 3A. Evaluate potentially open or semi-open files near the king.
+			if (our_sq == NO_SQ && their_sq == NO_SQ) {
+				kp_eval += open_file[f];
+				continue;
+			}
+			else if (our_sq == NO_SQ) {
+				kp_eval += semi_open_file[f];
+				continue;
+			}
+
+			// Step 3B. Evaluate the pawn shelter based on the which side the king is on and the pawn's square.
 			if (real_king_file >= FILE_E) {
-				kp_eval += king_shelter[0][(S == WHITE) ? sq : PSQT::Mirror64[sq]];
+				kp_eval += king_shelter[0][(S == WHITE) ? our_sq : PSQT::Mirror64[our_sq]];
 			}
 			else {
-				kp_eval += king_shelter[1][(S == WHITE) ? sq : PSQT::Mirror64[sq]];
+				kp_eval += king_shelter[1][(S == WHITE) ? our_sq : PSQT::Mirror64[our_sq]];
 			}
 
 		}
