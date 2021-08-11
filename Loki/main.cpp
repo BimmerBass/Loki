@@ -35,18 +35,18 @@ int main(int argc, char* argv[]) {
 	UCI::loop();
 
 
-	/*using namespace Texel;
-	
-	Parameters v;
-	
-	
-	for (int i = 0; i < 8; i++) {
-		v.push_back(Parameter(&semi_open_file[i]));
-	}
-	
-	
-	
-	Tune(v, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);*/
+	//using namespace Texel;
+	//
+	//Parameters v;
+	//
+	//
+	//for (int i = 0; i < 7; i++) {
+	//	v.push_back(Parameter(&weighted_attacks[i]));
+	//}
+	//
+	//
+	//
+	//Tune(v, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
 	
 	return 0;
 }

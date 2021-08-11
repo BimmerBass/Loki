@@ -144,9 +144,15 @@ const Score king_shelter[2][64] = {
 
 // Both of the below arrays are indexed by file number.
 const Score open_file[8] = { S(8, -28), S(-10, -16), S(0, -16), S(-6, -10), S(-12, -6), S(0, -14), S(-14, -10), S(-12, -12) };
-Score semi_open_file[8] = { S(-1, 9), S(3, 15), S(-7, 13), S(-11, 11), S(-5, 1), S(-11, 11), S(-11, 21), S(-5, 21) };
+const Score semi_open_file[8] = { S(-1, 9), S(3, 15), S(-7, 13), S(-11, 11), S(-5, 1), S(-11, 11), S(-11, 21), S(-5, 21) };
+
+
+
 
 // King safety evaluation
+const Score weighted_attacks[7] = { S(0, 0), S(53, 51), S(84, 70), S(97, 87), S(87, 97), S(90, 102), S(96, 100) }; // Indexed by number of attackers.
+
+
 
 #undef S
 
@@ -203,7 +209,7 @@ namespace Eval {
 			mobility<WHITE, QUEEN>(); mobility<BLACK, QUEEN>();
 
 			// Step 9. King safety evaluation.
-			//king_safety<WHITE>(); king_safety<BLACK>();
+			king_safety<WHITE>(); king_safety<BLACK>();
 
 			// Step 10. Compute the phase and interpolate the middle game and endgame scores.
 			int phase = game_phase();
@@ -621,13 +627,13 @@ namespace Eval {
 				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
 				Data.attacks[S][pce] |= piece_attacks;
 
-				
 
-				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
-					Data.king_zone_attacks[Them]++; // Increment attackers
+				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king area
+					Data.king_attackers[Them]++; // Increment attackers
 
-					// Add attack units to index the king attack table
-					Data.king_safety_units[Them] += 2;
+					// Add the attacker's corresponding value.
+					//Data.king_attack_value[Them] += ks_attack_value[pce];
+					Data.king_attack_value[Them] += ks_attack_value[pce] * countBits(piece_attacks & enemy_king_ring);
 				}
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
@@ -646,12 +652,14 @@ namespace Eval {
 				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
 				Data.attacks[S][pce] |= piece_attacks;
 
-				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
-					Data.king_zone_attacks[Them]++; // Increment attackers
+				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king area
+					Data.king_attackers[Them]++; // Increment attackers
 
-					// Add attack units to index the king attack table
-					Data.king_safety_units[Them] += 2;
+					// Add the attacker's corresponding value.
+					//Data.king_attack_value[Them] += ks_attack_value[pce];
+					Data.king_attack_value[Them] += ks_attack_value[pce] * countBits(piece_attacks & enemy_king_ring);
 				}
+
 
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
@@ -670,12 +678,14 @@ namespace Eval {
 				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
 				Data.attacks[S][pce] |= piece_attacks;
 
-				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
-					Data.king_zone_attacks[Them]++; // Increment attackers
+				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king area
+					Data.king_attackers[Them]++; // Increment attackers
 
-					// Add attack units to index the king attack table
-					Data.king_safety_units[Them] += 3;
+					// Add the attacker's corresponding value.
+					//Data.king_attack_value[Them] += ks_attack_value[pce];
+					Data.king_attack_value[Them] += ks_attack_value[pce] * countBits(piece_attacks & enemy_king_ring);
 				}
+
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
 
@@ -692,12 +702,14 @@ namespace Eval {
 				Data.attacked_by_two[S] |= attacked_by_all<S>() & piece_attacks;
 				Data.attacks[S][pce] |= piece_attacks;
 
-				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king
-					Data.king_zone_attacks[Them]++; // Increment attackers
+				if ((piece_attacks & enemy_king_ring) != 0) { // If the piece attacks the enemy king area
+					Data.king_attackers[Them]++; // Increment attackers
 
-					// Add attack units to index the king attack table
-					Data.king_safety_units[Them] += 5;
+					// Add the attacker's corresponding value.
+					//Data.king_attack_value[Them] += ks_attack_value[pce];
+					Data.king_attack_value[Them] += ks_attack_value[pce] * countBits(piece_attacks & enemy_king_ring);
 				}
+
 
 				piece_attacks &= good_squares; // Only score mobility to good squares.
 
@@ -721,6 +733,30 @@ namespace Eval {
 	
 
 
+	/// <summary>
+	/// Evaluation of king attacks.
+	/// </summary>
+	template<EvalType T> template<SIDE S>
+	void Evaluate<T>::king_safety() {
+		// Constants
+		constexpr SIDE Them = (S == WHITE) ? BLACK : WHITE;
+
+		Score safety(0, 0), eval(0, 0);
+
+		// Step 1. Only evaluate king safety when there are more than two attackers
+		if (Data.king_attackers[S] > 2 || (Data.king_attackers[S] > 1 && pos->pieceBBS[QUEEN][Them] != 0)) {
+
+			safety.mg += (Data.king_attack_value[S] * weighted_attacks[std::clamp(Data.king_attackers[S], 0, 6)].mg) / 100;
+			safety.eg += (Data.king_attack_value[S] * weighted_attacks[std::clamp(Data.king_attackers[S], 0, 6)].eg) / 100;
+		}
+
+		// Step 2. Now convert the safety score to CP.
+		// Note: We do this since very few attackers isn't really a problem, whereas it rises greatly even if one attacker is added.
+		eval = Score(-1 * safety.mg * std::max(0, safety.mg) / 256, -1 * std::max(0, safety.eg) / 64);
+
+		mg_score += (S == WHITE) ? eval.mg : -eval.mg;
+		eg_score += (S == WHITE) ? eval.eg : -eval.eg;
+	}
 
 
 	/// <summary>

@@ -81,8 +81,8 @@ namespace Eval {
 			// Passed pawns
 			Bitboard passed_pawns[2] = { 0 };
 
-			int king_zone_attacks[2] = { 0 };	/* The amount of pieces attacking the king */
-			int king_safety_units[2] = { 0 };	/* A kind of "weighted" amount of pieces attacking the king. Used to index the safety table */
+			int king_attackers[2] = { 0 }; // Amount of pieces attacking the king.
+			int king_attack_value[2] = { 0 }; // The value of the attackers.
 
 			// Safety points from king pawn scoring.
 			Score king_pawn_safety[2];
@@ -104,12 +104,18 @@ namespace Eval {
 		int game_phase();
 
 		template<SIDE S> void material();
+
 		template<SIDE S> void psqt();
+
 		template<SIDE S> void imbalance();
+
 		template<SIDE S> void pawns();
+
 		template<SIDE S> void space();
+
 		template<SIDE S, piece pce> void mobility();
-		//template<SIDE S> void king_safety();
+
+		template<SIDE S> void king_safety();
 		template<SIDE S> void king_pawns(); // Called in pawns().
 
 		// An evaluation hash table to re-use recently calculated evaluations.
@@ -235,12 +241,13 @@ King pawn shield eval.
 extern const Score minimum_kp_distance[15];
 extern const Score king_shelter[2][64];
 extern const Score open_file[8];
-extern Score semi_open_file[8];
+extern const Score semi_open_file[8];
 
 /*
 King safety evaluation
 */
-
+constexpr int ks_attack_value[5] = { 0, 20, 20, 40, 80 }; // Values for attacking the king zone (pawn, knight, bishop, rook, queen)
+extern const Score weighted_attacks[7];
 
 
 /*
