@@ -35,6 +35,20 @@ public:
 	Score(int m, int e) { mg = m; eg = e; }
 	Score(const Score& s) { mg = s.mg; eg = s.eg; }
 	Score() { mg = 0; eg = 0; }
+	
+	// Some operators.
+	Score& operator+=(const Score& rhs) { this->mg += rhs.mg; this->eg += rhs.eg; return *this;}
+	Score& operator-=(const Score& rhs) { this->mg -= rhs.mg; this->eg -= rhs.eg; return *this;}
+	Score operator+(const Score& rhs) { 
+		Score s;
+		s.mg = mg + rhs.mg; s.eg = eg + rhs.eg;
+		return s;
+	}
+	Score operator-(const Score& rhs) {
+		Score s;
+		s.mg = mg - rhs.mg; s.eg = eg - rhs.eg;
+		return s;
+	}
 
 	int mg = 0;
 	int eg = 0;
@@ -51,7 +65,7 @@ namespace Eval {
 	template<EvalType T = NORMAL>
 	class Evaluate {
 	public:
-		int score(const GameState_t* _pos);
+		int score(const GameState_t* _pos, bool use_table = true);
 
 	private:
 		// The position object that we get when score is called. This is just stored such that all member methods can access it without it being passed as a parameter.
@@ -62,12 +76,16 @@ namespace Eval {
 		struct EvalData {
 			// Piece attacks. Indexed by [side][piecetype]
 			Bitboard attacks[2][6] = { {0} };
+			Bitboard attacked_by_two[2] = { 0 };
 
 			// Passed pawns
 			Bitboard passed_pawns[2] = { 0 };
 
-			int king_zone_attacks[2] = { 0 };	/* The amount of pieces attacking the king */
-			int king_safety_units[2] = { 0 };	/* A kind of "weighted" amount of pieces attacking the king. Used to index the safety table */
+			int king_attackers[2] = { 0 }; // Amount of pieces attacking the king.
+			int king_attack_value[2] = { 0 }; // The value of the attackers.
+
+			// Safety points from king pawn scoring.
+			Score king_pawn_safety[2];
 		};
 		// The constant ZeroData is used to quickly clear our evaluation data.
 		const EvalData ZeroData;
@@ -86,15 +104,25 @@ namespace Eval {
 		int game_phase();
 
 		template<SIDE S> void material();
+
 		template<SIDE S> void psqt();
+
 		template<SIDE S> void imbalance();
+
 		template<SIDE S> void pawns();
+
 		template<SIDE S> void space();
+
 		template<SIDE S, piece pce> void mobility();
+
 		template<SIDE S> void king_safety();
+		template<SIDE S> void king_pawns(); // Called in pawns().
 
 		// An evaluation hash table to re-use recently calculated evaluations.
 		EvaluationTable eval_table;
+
+		//template<SIDE S> Bitboard weak_squares();
+		template<SIDE S> Bitboard attacked_by_all();
 	};
 	
 	
@@ -208,17 +236,18 @@ extern const Score queen_development_penalty[5];
 
 
 /*
-King evaluation
+King pawn shield eval.
 */
-extern const Score king_open_file_penalty;
-extern const Score king_semi_open_file_penalty;
-extern const Score pawnless_flank;
+extern const Score minimum_kp_distance[15];
+extern const Score king_shelter[2][64];
+extern const Score open_file[8];
+extern const Score semi_open_file[8];
 
-extern const Score safety_table[100];
-extern const Score pawnStorm[64];
-extern const Score king_pawn_distance_penalty[8];
-extern const Score open_kingfile_penalty[8];
-extern const Score semiopen_kingfile_penalty[8];
+/*
+King safety evaluation
+*/
+constexpr int ks_attack_value[5] = { 0, 20, 20, 40, 80 }; // Values for attacking the king zone (pawn, knight, bishop, rook, queen)
+extern const Score weighted_attacks[7];
 
 
 /*
@@ -267,6 +296,15 @@ inline int frontmost_sq(SIDE s, Bitboard b) {
 	}
 
 	return (s == WHITE) ? bitScanReverse(b) : bitScanForward(b);
+}
+
+template<SIDE S>
+inline int backmost_sq(const Bitboard b) {
+	if (b == 0) {
+		return NO_SQ;
+	}
+
+	return (S == WHITE) ? bitScanForward(b) : bitScanReverse(b);
 }
 
 

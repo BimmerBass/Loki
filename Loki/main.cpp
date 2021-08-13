@@ -15,7 +15,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "uci.h"
+#include "texel.h"
 
 
 int main(int argc, char* argv[]) {
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 	PSQT::INIT();
 
 
-	// If "bench" has been added as an argument, just run this and quit
+	// If "bench" has been added as an argument, just run this and quit.
 	if (argc > 1 && !strncmp(argv[1], "bench", 5)) {
 		Bench::run_benchmark();
 		return 0;
@@ -35,5 +35,18 @@ int main(int argc, char* argv[]) {
 	UCI::loop();
 
 
+	//using namespace Texel;
+	//
+	//Parameters v;
+	//
+	//
+	//for (int i = 0; i < 7; i++) {
+	//	v.push_back(Parameter(&weighted_attacks[i]));
+	//}
+	//
+	//
+	//
+	//Tune(v, "C:\\Users\\abild\\Desktop\\data\\text\\10MB\\quiet-labeled.epd", 500);
+	
 	return 0;
 }
