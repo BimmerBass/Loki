@@ -171,6 +171,7 @@
     <ClCompile Include="see.cpp" />
     <ClCompile Include="texel.cpp" />
     <ClCompile Include="thread.cpp" />
+    <ClCompile Include="time.cpp" />
     <ClCompile Include="transposition.cpp" />
     <ClCompile Include="tt_entry.cpp" />
     <ClCompile Include="uci.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="search_const.h" />
     <ClInclude Include="texel.h" />
     <ClInclude Include="thread.h" />
+    <ClInclude Include="time.h" />
     <ClInclude Include="transposition.h" />
     <ClInclude Include="tt_entry.h" />
     <ClInclude Include="uci.h" />
