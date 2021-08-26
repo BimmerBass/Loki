@@ -41,7 +41,7 @@ public:
 	void adjust_time(const int score_drop);
 private:
 	int total_time, search_time, start_time;
-	bool time_limit, movetime_set;
+	bool time_set, movetime_set;
 };
 
 

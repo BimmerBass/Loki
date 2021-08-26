@@ -33,9 +33,10 @@ TimeManager::TimeManager(bool use_time, int time_left, int inc, int movetime, in
 
 	// Step 2. Calculate the default time to search. This is just the total time divided by the amount of moves before next time control.
 	movetime_set = false;
+	movestogo = (movestogo > 0) ? movestogo : 1;
 
 	if (use_time) {
-		time_limit = true;
+		time_set = true;
 
 		
 		search_time = (time_left / movestogo) + inc - TIME_BUFFER;
@@ -46,12 +47,45 @@ TimeManager::TimeManager(bool use_time, int time_left, int inc, int movetime, in
 	}
 	else {
 		search_time = total_time = start_time = 0;
-		time_limit = false;
+		time_set = false;
 	}
 
 	// Step 2B. If we have been told a movetime, just search for this exact amount.
 	if (movetime > 0) {
-		movetime_set = time_limit = true;
+		movetime_set = time_set = true;
 		search_time = movetime;
 	}
+}
+
+
+/// <summary>
+/// Copy constructor.
+/// </summary>
+/// <param name="_Rhs">Object to be copied.</param>
+TimeManager::TimeManager(const TimeManager& _Rhs) {
+	total_time = _Rhs.total_time;
+	search_time = _Rhs.search_time;
+	start_time = _Rhs.start_time;
+
+	time_set = _Rhs.time_set;
+	movetime_set = _Rhs.movetime_set;
+}
+
+
+
+/// <summary>
+/// Check if we have used all our time.
+/// </summary>
+/// <returns>True if we have reached our time limit, false otherwise.</returns>
+bool TimeManager::time_limit_exceeded() const {
+	return ((time_set || movetime_set) && getTimeMs() >= start_time + search_time);
+}
+
+
+/// <summary>
+/// Calculate additional panic time based on how much our score drops from previous iteration.
+/// </summary>
+/// <param name="score_drop">The amount that the score dropped by between iterations.</param>
+void TimeManager::adjust_time(const int score_drop) {
+
 }
