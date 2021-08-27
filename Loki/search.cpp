@@ -730,21 +730,20 @@ namespace Search {
 			ss->pos->undo_nullmove(old_enpassant);
 		
 			if (score >= beta && abs(score) < MATE) {
-				// Verified null move pruning hasn't been tested properly yet, so it is left out until there is time for tests with longer tc's
 				// Step 6A. Verified Null Move Pruning. For high depths, we will want to do a verification search with a null window centered around beta to be sure
-				//if (depth >= 8) {
-				//	// This time, the score is not inside a "make/undo" move, so we shouldn't make it negative or switch the bounds
-				//	score = alphabeta(ss, depth - R - 1, beta - 1, beta, false, &line);
-				//
-				//	if (score >= beta && abs(score < MATE)) { // If we're still above beta, it is safe to say, that our null move is good enough
-				//		return beta;
-				//	}
-				//}
-				//
-				//else {
-				//	return beta;
-				//}
-				return beta;
+				if (depth >= 8) {
+					// This time, the score is not inside a "make/undo" move, so we shouldn't make it negative or switch the bounds
+					score = alphabeta(ss, depth - R - 1, beta - 1, beta, false, &line);
+				
+					if (score >= beta && abs(score < MATE)) { // If we're still above beta, it is safe to say, that our null move is good enough
+						return beta;
+					}
+				}
+				
+				else {
+					return beta;
+				}
+				//return beta;
 			}
 		}
 		
