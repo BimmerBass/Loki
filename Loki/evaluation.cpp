@@ -791,6 +791,10 @@ namespace Eval {
 		}
 	}
 
+	// Explicit Evaluate<> instantiations.
+	template class Evaluate<NORMAL>;
+	template class Evaluate<TRACE>;
+
 	// Initialize the evaulation function. At the moment this is just the king flanks.
 	void INIT() {
 		initKingFlanks();
