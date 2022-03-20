@@ -13,126 +13,57 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\movegen">
+      <UniqueIdentifier>{084cd0c2-1226-4014-88c7-9b829cd25265}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\movegen">
+      <UniqueIdentifier>{4fea60f3-0084-49f5-bfcb-1adde8a4afe8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\position">
+      <UniqueIdentifier>{5cdf8b68-ec4e-4cc0-925f-1993ab3bc14d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\position">
+      <UniqueIdentifier>{78f4d0d3-2254-4668-bc23-36587241e0f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\search">
+      <UniqueIdentifier>{3e701253-533d-4de1-8550-0ae4669fee82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\search">
+      <UniqueIdentifier>{47edc1e8-fe1a-4e4e-99d0-4a82540c23d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\evaluation">
+      <UniqueIdentifier>{ccb4a615-abe8-4530-91e0-4ab8953f60f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\evaluation">
+      <UniqueIdentifier>{4cd2bed0-8cda-40cd-b15f-ebd09cddd9e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="magics.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="move.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="position\position.cpp">
+      <Filter>Source Files\position</Filter>
     </ClCompile>
-    <ClCompile Include="evaluation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="bitboard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="movegen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="perft.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="position.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="search.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="transposition.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="uci.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="misc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="psqt.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="thread.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="bench.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="see.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="texel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="movestager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="tt_entry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="evaltable.cpp">
+    <ClCompile Include="loki.pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bitboard.h">
+    <ClInclude Include="loki.pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="defs.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="position\gamestate.h">
+      <Filter>Header Files\position</Filter>
     </ClInclude>
-    <ClInclude Include="evaluation.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="movegen\move_stack.h">
+      <Filter>Header Files\movegen</Filter>
     </ClInclude>
-    <ClInclude Include="move.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="position\castling_rights.h">
+      <Filter>Header Files\position</Filter>
     </ClInclude>
-    <ClInclude Include="movegen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="perft.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="position.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="search.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="transposition.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="uci.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="misc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="thread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="search_const.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="bench.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test_positions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="texel.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="movestager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tt_entry.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="evaltable.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="position\position.h">
+      <Filter>Header Files\position</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
