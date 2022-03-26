@@ -6,9 +6,9 @@ namespace loki::movegen {
 	move_generator::attack_table_t	move_generator::knight_attacks{ 0 };
 	move_generator::attack_table_t	move_generator::king_attacks{ 0 };
 
-	move_generator::move_generator(position::position_t pos, magics::magics_index_t magic_index) noexcept :
+	move_generator::move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept :
 		m_position(pos),
-		m_magic_index(magic_index) {
+		m_slider_generator(slider_generator) {
 
 		static std::mutex mtx;
 		static std::atomic_bool tables_initialized = false;

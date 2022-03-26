@@ -20,6 +20,6 @@ int main() {
 	auto m_ttt = loki::bitboard_t(1) << (static_cast<int64_t>(loki::D5) + 9);
 	printBitboard(m_ttt);
 	std::cout << "\n\n";
-	loki::movegen::magics::magics_index<loki::BISHOP> m_magics_index;
-	printBitboard(m_magics_index.attacks_bb(loki::D5, m_ttt));
+	loki::movegen::magics::slider_generator m_sl;
+	printBitboard(m_sl.queen_attacks(loki::D5, m_ttt));
 }

@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClInclude Include="loki.pch.h" />
     <ClInclude Include="movegen\magics\magics_index.h" />
+    <ClInclude Include="movegen\magics\slider_generator.h" />
     <ClInclude Include="movegen\move_generator.h" />
     <ClInclude Include="movegen\move_list.h" />
     <ClInclude Include="movegen\move_stack.h" />

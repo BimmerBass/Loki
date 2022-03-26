@@ -93,4 +93,7 @@ namespace loki::movegen::magics {
 		}();
 #pragma endregion
 	};
+
+	template<PIECE _Pce>
+	using magics_index_t = std::unique_ptr<magics_index<_Pce>>;
 }

@@ -310,10 +310,9 @@ namespace loki::movegen {
 	using move_generator_t = std::unique_ptr<move_generator>;
 
 	namespace magics {
-		template<PIECE _Pce>
-		class magics_index;
+		class slider_generator;
 
-		using magics_index_t = std::shared_ptr<magics_index<BISHOP>>;
+		using slider_generator_t = std::shared_ptr<slider_generator>;
 	}
 }
 
@@ -332,6 +331,7 @@ namespace loki::position {
 #include "position/position.h"
 
 #include "movegen/magics/magics_index.h"
+#include "movegen/magics/slider_generator.h"
 #include "movegen/move_stack.h"
 #include "movegen/move_list.h"
 #include "movegen/move_generator.h"

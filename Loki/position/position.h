@@ -24,7 +24,7 @@ namespace loki::position {
 		/// </summary>
 		/// <param name="generator"></param>
 		/// <returns></returns>
-		static friend position_t create_position(movegen::magics::magics_index_t magic_index);
+		static friend position_t create_position(movegen::magics::slider_generator_t magic_index);
 
 		/// <summary>
 		/// Make a move.
@@ -39,7 +39,7 @@ namespace loki::position {
 		void undo_move() noexcept;
 		
 	private:
-		position(movegen::magics::magics_index_t magic_index);
+		position(movegen::magics::slider_generator_t magic_index);
 	};
 
 }
