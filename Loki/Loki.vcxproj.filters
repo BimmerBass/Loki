@@ -37,6 +37,12 @@
     <Filter Include="Header Files\evaluation">
       <UniqueIdentifier>{4cd2bed0-8cda-40cd-b15f-ebd09cddd9e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\movegen\magics">
+      <UniqueIdentifier>{398ca193-246c-466d-aa19-81fa76b70fed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\movegen\magics">
+      <UniqueIdentifier>{e908232d-3b43-41a5-8cd5-475adf4008dc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -47,6 +53,12 @@
     </ClCompile>
     <ClCompile Include="loki.pch.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\move_generator.cpp">
+      <Filter>Source Files\movegen</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\magics_index.cpp">
+      <Filter>Source Files\movegen\magics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -64,6 +76,15 @@
     </ClInclude>
     <ClInclude Include="position\position.h">
       <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_generator.h">
+      <Filter>Header Files\movegen</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\magics_index.h">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_list.h">
+      <Filter>Header Files\movegen</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

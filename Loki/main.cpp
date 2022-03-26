@@ -1,18 +1,25 @@
 #include "loki.pch.h"
 
+inline void printBitboard(loki::bitboard_t bb) {
+	for (int rank = 7; rank >= 0; rank--) {
 
+		for (int file = 0; file < 8; file++) {
+			if (((bb >> (8 * rank + file)) & 1) == 1) {
+				std::cout << "X";
+			}
+			else {
+				std::cout << "-";
+			}
+		}
+		std::cout << "\n";
+	}
+	std::cout << "\n\n";
+}
 
 int main() {
-	std::cout << "Hello world" << std::endl;
-
-	loki::movegen::move_stack<16> m_stack;
-
-	for (loki::move_t i = 0; i < 16; i++) {
-		m_stack.insert(i, loki::movegen::lost_move_info{});
-		std::cout << "Inserted " << i << std::endl;
-	}
-
-	for (loki::move_t i = 0; i < 16; i++) {
-		std::cout << "Popped " << m_stack.pop().first << std::endl;
-	}
+	auto m_ttt = loki::bitboard_t(1) << (static_cast<int64_t>(loki::D5) + 9);
+	printBitboard(m_ttt);
+	std::cout << "\n\n";
+	loki::movegen::magics::magics_index<loki::BISHOP> m_magics_index;
+	printBitboard(m_magics_index.attacks_bb(loki::D5, m_ttt));
 }

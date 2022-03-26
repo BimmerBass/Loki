@@ -17,7 +17,15 @@ namespace loki::position {
 		bitboard_t								m_all_pieces[SIDE_NB];			/* Two bitboards containing all pieces on the respective sides. */
 		SQUARE									m_king_squares[SIDE_NB];		/* The two squares where the kings are. */
 		size_t									m_ply;							/* The ply-depth we're at from the base position. */
+		weak_position_t							m_self;							/* Shared-ptr to this object. */
 	public:
+		/// <summary>
+		/// Create a position object. A static method is needed because the m_self property to be set.
+		/// </summary>
+		/// <param name="generator"></param>
+		/// <returns></returns>
+		static friend position_t create_position(movegen::magics::magics_index_t magic_index);
+
 		/// <summary>
 		/// Make a move.
 		/// </summary>
@@ -31,6 +39,7 @@ namespace loki::position {
 		void undo_move() noexcept;
 		
 	private:
+		position(movegen::magics::magics_index_t magic_index);
 	};
 
 }
