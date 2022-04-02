@@ -16,7 +16,7 @@ namespace loki::movegen {
 		std::array<scored_move, _Size> m_movelist;
 		size_t m_size;
 	public:
-		move_list() {
+		move_list() : m_movelist{ 0 } {
 			m_size = 0;
 		}
 
@@ -49,6 +49,17 @@ namespace loki::movegen {
 		}
 		inline const_iterator end() const noexcept {
 			return m_movelist.begin() + m_size;
+		}
+
+		inline move_list(const move_list& _src) : m_size(_src.m_size) {
+			std::copy(_src.m_movelist.begin(), _src.m_movelist.end(), m_movelist.begin());
+		}
+		inline move_list& operator=(const move_list& _src) {
+			if (this != &_src) {
+				m_size = _src.m_size;
+				std::copy(_src.m_movelist.begin(), _src.m_movelist.end(), m_movelist.begin());
+			}
+			return *this;
 		}
 	};
 

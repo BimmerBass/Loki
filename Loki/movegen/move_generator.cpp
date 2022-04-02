@@ -24,6 +24,51 @@ namespace loki::movegen {
 	}
 
 	/// <summary>
+	/// Generate a list of pseudo-legal moves in the position.
+	/// _Ty: The type of moves (ACTIVES: Generally moves that change the material situation, QUIETS: Moves that does not change material on the board, ALL: All pseudo-legal moves)
+	/// _Si: The side to generate the moves for (WHITE: Generate white's pseudo-legal moves, BLACK: Generate black's pseudo-legal moves, SIDE_NB: Generate pseudo-legal moves for the side to move)
+	/// </summary>
+	/// <returns></returns>
+	template<MOVE_TYPE _Ty, SIDE _Si>
+	const move_generator::move_list_t& move_generator::generate() {
+		// Make the generator ready to generate moves.
+		m_moves.clear();
+
+		// FIXME: Ugly implementation...
+		if constexpr (_Si == SIDE_NB) {
+			switch (m_position->m_state_info->side_to_move) {
+			case WHITE:
+				get_pawn_moves<WHITE, _Ty>();
+				get_knight_moves<WHITE, _Ty>();
+				get_bishop_moves<WHITE, _Ty>();
+				get_rook_moves<WHITE, _Ty>();
+				get_queen_moves<WHITE, _Ty>();
+				get_king_moves<WHITE, _Ty>();
+			case BLACK:
+				get_pawn_moves<BLACK, _Ty>();
+				get_knight_moves<BLACK, _Ty>();
+				get_bishop_moves<BLACK, _Ty>();
+				get_rook_moves<BLACK, _Ty>();
+				get_queen_moves<BLACK, _Ty>();
+				get_king_moves<BLACK, _Ty>();
+			default:
+				throw std::runtime_error("An illegal value for the side to generate moves for were passed.");
+			}
+		}
+		else {
+			get_pawn_moves<_Si, _Ty>();
+			get_knight_moves<_Si, _Ty>();
+			get_bishop_moves<_Si, _Ty>();
+			get_rook_moves<_Si, _Ty>();
+			get_queen_moves<_Si, _Ty>();
+			get_king_moves<_Si, _Ty>();
+		}
+
+		return m_moves;
+	}
+
+#pragma region Piece specific move generation
+	/// <summary>
 	/// Generate pawn moves.
 	/// TODO: Perhaps it would be a good idea to have a pre-calculated table of possible pawn moves..?
 	/// </summary>
@@ -257,6 +302,7 @@ namespace loki::movegen {
 			get_king_moves<_S, ACTIVES>();
 		}
 	}
+#pragma endregion
 
 	/// <summary>
 	/// Initialize the table of attacks for knights.
@@ -301,6 +347,24 @@ namespace loki::movegen {
 
 			king_attacks[sq] = current_attack_mask;
 		}
+	}
+
+	// Note: For the move-constructors, we don't need to check for table initialization since it is guaranteed to have been done before the move ctor was called.
+	move_generator::move_generator(move_generator&& _src) noexcept
+		:	m_position(std::move(_src.m_position)),
+			m_slider_generator(std::move(_src.m_slider_generator)),
+			m_moves(_src.m_moves) {
+	}
+
+	move_generator& move_generator::operator=(move_generator&& _src) noexcept {
+		if (this != &_src) {
+			m_position = position::position_t(std::move(_src.m_position));
+			m_slider_generator = magics::slider_generator_t(std::move(_src.m_slider_generator));
+
+			// move_list is just a wrapped static array, so we can only copy it..
+			m_moves = _src.m_moves;
+		}
+		return *this;
 	}
 
 #pragma region Explicit template instantiations

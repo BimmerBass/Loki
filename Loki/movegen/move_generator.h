@@ -5,9 +5,10 @@
 namespace loki::movegen {
 
 	class move_generator {
+	public:
+		using move_list_t = move_list<MAX_POSITION_MOVES>;
 	private:
 		using attack_table_t	= std::array<bitboard_t, 64>;
-		using move_list_t		= move_list<MAX_POSITION_MOVES>;
 
 		position::position_t		m_position;
 		magics::slider_generator_t	m_slider_generator;
@@ -18,17 +19,16 @@ namespace loki::movegen {
 	public:
 		// No default constructor since a reference to the position object is required.
 		move_generator() = delete;
+		move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept;
 
 		// No copying, only moving allowed.
 		move_generator(const move_generator&) = delete;
 		move_generator& operator=(const move_generator&) = delete;
 
-		move_generator(move_generator&& _src);
-		move_generator&& operator=(move_generator&& _src);
+		move_generator(move_generator&& _src) noexcept;
+		move_generator& operator=(move_generator&& _src) noexcept;
 
-		move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept;
-
-		template<MOVE_TYPE _Ty>
+		template<MOVE_TYPE _Ty, SIDE _Si = SIDE_NB>
 		const move_list_t& generate();
 	private:
 		template<SIDE _S, MOVE_TYPE _Ty>
