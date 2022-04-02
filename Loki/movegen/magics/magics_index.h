@@ -48,7 +48,7 @@ namespace loki::movegen::magics {
 
 		void initialize_entry_table() noexcept;
 	private:
-#pragma region "Pre-initialized magics array"
+#pragma region Pre-initialized magics array
 		inline static constexpr std::array<bitboard_t, 64> magics = [] {
 			if constexpr (_Pce == BISHOP) {
 				return std::array<bitboard_t, 64> {

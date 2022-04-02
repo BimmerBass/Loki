@@ -18,6 +18,11 @@
 
 namespace loki {
 	// General type definitions.
+	// Note: A move is stored in a 16-bit integer, and the data is saved as follows (from lsb to msb):
+	// bit 0..5 -> to square (0 to 63)
+	// bit 6..11 -> from square (0 to 63)
+	// bit 12..13 -> promotion piece ((0) knight = 00, (1) bishop = 01, (2) rook = 10, (3) queen = 11)
+	// bit 14..16 -> special move flag ((0) promotion = 00, (1) en-passant = 01, (2) castling = 2, (3) neither = 11)
 	using move_t		= uint16_t;
 	using bitboard_t	= uint64_t;
 
@@ -101,6 +106,10 @@ namespace loki {
 	}
 	inline constexpr SQUARE operator--(SQUARE& orig, int) {
 		return static_cast<SQUARE>(static_cast<int64_t>(orig) - 1);
+	}
+
+	inline constexpr SIDE operator!(SIDE s) {
+		return (s == WHITE) ? BLACK : WHITE;
 	}
 
 	// Constant declarations.
@@ -275,6 +284,9 @@ namespace loki {
 	inline constexpr RANK rank(SQUARE sq) noexcept {
 		return static_cast<RANK>(sq / 8);
 	}
+	inline constexpr RANK rank(size_t sq) noexcept {
+		return rank(static_cast<SQUARE>(sq));
+	}
 
 	inline constexpr FILE file(SQUARE sq) noexcept {
 		return static_cast<FILE>(sq % 8);
@@ -295,11 +307,35 @@ namespace loki {
 
 namespace loki::movegen {
 	// Constants and type declarations.
-	enum move_type : size_t {
-		CAPTURES,
-		QUIET,
-		ALL
+	enum MOVE_TYPE : size_t {
+		ACTIVES,	/* All active moves; captures, promotions etc.. */
+		QUIET,		/* All quiet moves. */
+		ALL			/* All moves. */
 	};
+
+	enum SPECIAL_MOVE : size_t {
+		PROMOTION	= 0,
+		ENPASSANT	= 1,
+		CASTLE		= 2,
+		NOT_SPECIAL	= 3
+	};
+
+	// Inline functions.
+	inline constexpr SQUARE from_sq(move_t move) noexcept {
+		return static_cast<SQUARE>((move >> 4) & 63);
+	}
+	inline constexpr SQUARE to_sq(move_t move) noexcept {
+		return static_cast<SQUARE>(move >> 10);
+	}
+	inline constexpr SPECIAL_MOVE special(move_t move) noexcept {
+		return static_cast<SPECIAL_MOVE>(move & 3);
+	}
+	inline constexpr PIECE promotion_piece(move_t move) noexcept {
+		return static_cast<PIECE>((move >> 2) & 3);
+	}
+	inline constexpr move_t create_move(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece) noexcept {
+		return static_cast<move_t>((to_sq << 10) | (from_sq << 4) | (promotion_piece << 2) | (special));
+	}
 
 	template<size_t _Size>
 	class move_stack;

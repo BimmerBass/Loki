@@ -20,7 +20,7 @@ namespace loki::position {
 		/// </summary>
 		template<CASTLING_RIGHTS _Ss>
 		bool operator()() const noexcept {
-			return ((m_rights << _Ss) & uint8_t(1)) != 0;
+			return ((m_rights >> _Ss) & uint8_t(1)) != 0;
 		}
 
 		/// <summary>
@@ -28,7 +28,7 @@ namespace loki::position {
 		/// </summary>
 		/// <param name="_Ss"></param>
 		void operator+=(CASTLING_RIGHTS _Ss) {
-			m_rights |= (uint8_t(1) >> _Ss);
+			m_rights |= (uint8_t(1) << _Ss);
 		}
 
 		/// <summary>
@@ -36,8 +36,8 @@ namespace loki::position {
 		/// </summary>
 		/// <param name="_Ss"></param>
 		void operator-=(CASTLING_RIGHTS _Ss) {
-			if (((m_rights << _Ss) & uint8_t(1)) != 0) // Only if we can castle.
-				m_rights &= ~(uint8_t(1) >> _Ss);
+			if (((m_rights >> _Ss) & uint8_t(1)) != 0) // Only if we can castle.
+				m_rights &= ~(uint8_t(1) << _Ss);
 		}
 	};
 

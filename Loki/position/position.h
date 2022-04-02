@@ -40,6 +40,10 @@ namespace loki::position {
 		
 	private:
 		position(movegen::magics::slider_generator_t magic_index);
+
+		// Checks if a square is attacked by one of the sides.
+		template<SIDE _S>
+		bool square_attacked(SQUARE sq);
 	};
 
 }

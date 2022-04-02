@@ -24,10 +24,16 @@ namespace loki::movegen {
 			if (m_size >= _Size) {
 				throw std::runtime_error("move_list capacity exceeded");
 			}
-			m_movelist[m_size++] = scored_move{
-				move,
-				score
-			};
+			m_movelist[m_size].move = move;
+			m_movelist[m_size].score = score;
+		}
+
+		inline void add(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece, int score) {
+			if (m_size >= _Size) {
+				throw std::runtime_error("move_list capacity exceeded");
+			}
+			m_movelist[m_size].move = create_move(from_sq, to_sq, special, promotion_piece);
+			m_movelist[m_size].score = score;
 		}
 
 		inline void clear() noexcept {
