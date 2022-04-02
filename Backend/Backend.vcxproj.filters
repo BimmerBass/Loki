@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\movegen">
+      <UniqueIdentifier>{084cd0c2-1226-4014-88c7-9b829cd25265}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\movegen">
+      <UniqueIdentifier>{4fea60f3-0084-49f5-bfcb-1adde8a4afe8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\position">
+      <UniqueIdentifier>{5cdf8b68-ec4e-4cc0-925f-1993ab3bc14d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\position">
+      <UniqueIdentifier>{78f4d0d3-2254-4668-bc23-36587241e0f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\search">
+      <UniqueIdentifier>{3e701253-533d-4de1-8550-0ae4669fee82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\search">
+      <UniqueIdentifier>{47edc1e8-fe1a-4e4e-99d0-4a82540c23d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\evaluation">
+      <UniqueIdentifier>{ccb4a615-abe8-4530-91e0-4ab8953f60f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\evaluation">
+      <UniqueIdentifier>{4cd2bed0-8cda-40cd-b15f-ebd09cddd9e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\movegen\magics">
+      <UniqueIdentifier>{398ca193-246c-466d-aa19-81fa76b70fed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\movegen\magics">
+      <UniqueIdentifier>{e908232d-3b43-41a5-8cd5-475adf4008dc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="position\position.cpp">
+      <Filter>Source Files\position</Filter>
+    </ClCompile>
+    <ClCompile Include="loki.pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\move_generator.cpp">
+      <Filter>Source Files\movegen</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\magics_index.cpp">
+      <Filter>Source Files\movegen\magics</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="loki.pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="position\gamestate.h">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_stack.h">
+      <Filter>Header Files\movegen</Filter>
+    </ClInclude>
+    <ClInclude Include="position\castling_rights.h">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="position\position.h">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_generator.h">
+      <Filter>Header Files\movegen</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\magics_index.h">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_list.h">
+      <Filter>Header Files\movegen</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\slider_generator.h">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
