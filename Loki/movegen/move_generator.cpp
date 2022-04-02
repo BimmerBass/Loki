@@ -409,5 +409,15 @@ namespace loki::movegen {
 	template<> void move_generator::get_king_moves<BLACK, ACTIVES>();
 	template<> void move_generator::get_king_moves<BLACK, QUIET>();
 	template<> void move_generator::get_king_moves<BLACK, ALL>();
+
+	template<> const move_generator::move_list_t& move_generator::generate<ACTIVES, WHITE>();
+	template<> const move_generator::move_list_t& move_generator::generate<QUIET, WHITE>();
+	template<> const move_generator::move_list_t& move_generator::generate<ALL, WHITE>();
+	template<> const move_generator::move_list_t& move_generator::generate<ACTIVES, BLACK>();
+	template<> const move_generator::move_list_t& move_generator::generate<QUIET, BLACK>();
+	template<> const move_generator::move_list_t& move_generator::generate<ALL, BLACK>();
+	template<> const move_generator::move_list_t& move_generator::generate<ACTIVES, SIDE_NB>();
+	template<> const move_generator::move_list_t& move_generator::generate<QUIET, SIDE_NB>();
+	template<> const move_generator::move_list_t& move_generator::generate<ALL, SIDE_NB>();
 #pragma endregion
 }
