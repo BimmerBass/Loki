@@ -39,6 +39,13 @@ namespace loki::position {
 			if (((m_rights >> _Ss) & uint8_t(1)) != 0) // Only if we can castle.
 				m_rights &= ~(uint8_t(1) << _Ss);
 		}
+
+		bool any() {
+			return m_rights != 0;
+		}
+		void clear() {
+			m_rights = 0;
+		}
 	};
 
 }

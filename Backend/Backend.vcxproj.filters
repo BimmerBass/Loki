@@ -57,6 +57,9 @@
     <ClCompile Include="movegen\magics\magics_index.cpp">
       <Filter>Source Files\movegen\magics</Filter>
     </ClCompile>
+    <ClCompile Include="gamestate.cpp">
+      <Filter>Source Files\position</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.h">

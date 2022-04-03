@@ -8,6 +8,7 @@
 #include <mutex>
 #include <iostream>
 #include <assert.h>
+#include <format>
 
 #if (defined(_MSC_VER) || defined(__INTEL_COMPILER))
 #include <nmmintrin.h> // Used for count_bits
@@ -357,7 +358,7 @@ namespace loki::position {
 	struct game_state;
 	class position;
 
-	using game_state_t		= std::unique_ptr<game_state>;
+	using game_state_t		= std::shared_ptr<game_state>;
 	using position_t		= std::shared_ptr<position>;
 	using weak_position_t	= std::weak_ptr<position>;
 }

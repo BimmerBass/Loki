@@ -12,8 +12,26 @@ namespace loki::position {
 		SIDE side_to_move;
 
 		size_t fifty_move_counter;
+		size_t full_move_counter;
 		SQUARE en_passant_square;
 		castle_rights castling_rights;
+
+		/// <summary>
+		/// Parse a FEN position.
+		/// </summary>
+		/// <param name="fen"></param>
+		void operator<<(const std::string& fen);
+
+		/// <summary>
+		/// Generate a FEN string from the current position.
+		/// </summary>
+		/// <param name="fen"></param>
+		void operator>>(std::string& fen);
+
+		/// <summary>
+		/// Print the position to a given stream.
+		/// </summary>
+		void print_position(std::ostream& os);
 	};
 
 }
