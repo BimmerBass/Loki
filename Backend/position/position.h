@@ -41,7 +41,7 @@ namespace loki::position {
 		/// </summary>
 		/// <param name="generator"></param>
 		/// <returns></returns>
-		static friend position_t create_position(movegen::magics::slider_generator_t magic_index);
+		static position_t create_position(game_state_t internal_state, movegen::magics::slider_generator_t magic_index);
 
 		/// <summary>
 		/// Make a move.
@@ -55,12 +55,38 @@ namespace loki::position {
 		/// </summary>
 		void undo_move() noexcept;
 		
+		/// <summary>
+		/// Load a FEN.
+		/// </summary>
+		/// <param name="fen"></param>
+		void operator<<(const std::string& fen);
+
+		/// <summary>
+		/// Generate a FEN.
+		/// </summary>
+		/// <param name="fen"></param>
+		void operator>>(std::string& fen) const;
+
+		/// <summary>
+		/// Print the position.
+		/// </summary>
+		/// <param name="os"></param>
+		/// <param name="pos"></param>
+		/// <returns></returns>
+		friend std::ostream& operator<<(std::ostream& os, const position& pos);
+		friend std::ostream& operator<<(std::ostream& os, const position_t& pos);
 	private:
-		position(movegen::magics::slider_generator_t magic_index);
+		position(game_state_t internal_state, movegen::magics::slider_generator_t magic_index);
 
 		// Checks if a square is attacked by one of the sides.
 		template<SIDE _S>
-		bool square_attacked(SQUARE sq);
+		bool square_attacked(SQUARE sq) const noexcept;
+
+		/// <summary>
+		/// Re-load this object from our internal state.
+		/// Note: This function is expensive and should only be used for loading a FEN.
+		/// </summary>
+		void reload();
 	};
 
 }

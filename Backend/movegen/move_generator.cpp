@@ -84,6 +84,51 @@ namespace loki::movegen {
 		return m_moves;
 	}
 
+	/// <summary>
+	/// Get attackers of some piece type to a given square from a certain side.
+	/// </summary>
+	/// <param name="sq"></param>
+	/// <returns></returns>
+	template<SIDE _Si, PIECE _Pce>
+	bitboard_t move_generator::attackers_to(SQUARE sq)  const noexcept {
+		constexpr DIRECTION up_left		= (_Si == WHITE) ? NORTHWEST : SOUTHWEST;
+		constexpr DIRECTION up_right	= (_Si == WHITE) ? NORTHEAST : SOUTHEAST;
+
+		bitboard_t occupancy = m_position->m_all_pieces[WHITE] | m_position->m_all_pieces[BLACK];
+		bitboard_t attacks = 0;
+
+		switch (_Pce) {
+		case PAWN: 
+			auto sq_bb = bitboard_t(1) << sq;
+			attacks = shift<up_left>(sq_bb) | shift<up_right>(sq_bb);
+			break;
+		case KNIGHT: attacks = knight_attacks[sq]; break;
+		case BISHOP: attacks = m_slider_generator->bishop_attacks(sq, occupancy); break;
+		case ROOK: attacks = m_slider_generator->rook_attacks(sq, occupancy); break;
+		case QUEEN: attacks = m_slider_generator->queen_attacks(sq, occupancy); break;
+		case KING: attacks = king_attacks[sq]; break;
+		}
+
+		return attacks & m_position->m_state_info->piece_placements[_Si][_Pce];
+	}
+
+
+	/// <summary>
+	/// Get all attackers to a given square from a side.
+	/// </summary>
+	/// <param name="sq"></param>
+	/// <returns></returns>
+	template<SIDE _Si>
+	bitboard_t move_generator::attackers_to(SQUARE sq)  const noexcept {
+		return (
+			attackers_to<_Si, PAWN>(sq) |
+			attackers_to<_Si, KNIGHT>(sq) |
+			attackers_to<_Si, BISHOP>(sq) |
+			attackers_to<_Si, ROOK>(sq) |
+			attackers_to<_Si, QUEEN>(sq) |
+			attackers_to<_Si, KING>(sq));
+	}
+
 #pragma region Piece specific move generation
 	/// <summary>
 	/// Generate pawn moves.
@@ -436,5 +481,22 @@ namespace loki::movegen {
 	template<> const move_generator::move_list_t& move_generator::generate<ACTIVES, SIDE_NB>();
 	template<> const move_generator::move_list_t& move_generator::generate<QUIET, SIDE_NB>();
 	template<> const move_generator::move_list_t& move_generator::generate<ALL, SIDE_NB>();
+
+	template<> bitboard_t move_generator::attackers_to<WHITE, PAWN>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<WHITE, KNIGHT>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<WHITE, BISHOP>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<WHITE, ROOK>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<WHITE, QUEEN>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<WHITE, KING>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<BLACK, PAWN>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<BLACK, KNIGHT>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<BLACK, BISHOP>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<BLACK, ROOK>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<BLACK, QUEEN>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<BLACK, KING>(SQUARE) const noexcept;
+
+	template<> bitboard_t move_generator::attackers_to<WHITE>(SQUARE) const noexcept;
+	template<> bitboard_t move_generator::attackers_to<BLACK>(SQUARE) const noexcept;
+
 #pragma endregion
 }

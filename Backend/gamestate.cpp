@@ -64,7 +64,7 @@ namespace loki::position {
 		}
 
 		namespace write {
-			void position(game_state* pos, std::stringstream& ss) {
+			void position(const game_state* pos, std::stringstream& ss) {
 				// Firstly, create an array for all piece placements.
 				char piece_list[6] = { 'p', 'n', 'b', 'r', 'q', 'k' };
 				std::array<char, SQ_NB> piece_array;
@@ -110,7 +110,7 @@ namespace loki::position {
 					ss << (i == 0 ? "" : "/") << rank_piece_placements[i];
 				}
 			}
-			std::string castling(game_state* pos) {
+			std::string castling(const game_state* pos) {
 				if (!pos->castling_rights.any()) {
 					return "-";
 				}
@@ -120,7 +120,7 @@ namespace loki::position {
 					std::string((pos->castling_rights.operator()<BKCA>() ? "k" : "")) +
 					std::string((pos->castling_rights.operator()<BQCA>() ? "q" : ""));
 			}
-			std::string en_passant(game_state* pos) {
+			std::string en_passant(const game_state* pos) {
 				if (pos->en_passant_square == NO_SQ) {
 					return "-";
 				}
@@ -249,7 +249,7 @@ namespace loki::position {
 		}
 	}
 
-	void game_state::operator>>(std::string& fen) {
+	void game_state::operator>>(std::string& fen) const {
 		
 		std::stringstream fen_ss("");
 		write::position(this, fen_ss);
@@ -267,13 +267,13 @@ namespace loki::position {
 	}
 
 	
-	void game_state::print_position(std::ostream& os) {
+	std::ostream& operator<<(std::ostream& os, const game_state& gs) {
 		const static std::array<char, PIECE_NB> piece_letters = { 'p', 'n', 'b', 'r', 'q', 'k' };
 		std::string output = "................................................................";
 
 		for (size_t pce = PAWN; pce <= KING; pce++) {
-			bitboard_t whites = piece_placements[WHITE][pce];
-			bitboard_t blacks = piece_placements[BLACK][pce];
+			bitboard_t whites = gs.piece_placements[WHITE][pce];
+			bitboard_t blacks = gs.piece_placements[BLACK][pce];
 
 			while (whites) {
 				auto inx = pop_bit(whites);
@@ -295,10 +295,12 @@ namespace loki::position {
 		}
 		os << "\n";
 		os << "\t  a b c d e f g h\n\n";
-		os << "\tSide to move: " << (side_to_move == WHITE ? "White" : "Black") << "\n";
-		os << "\tEn passant: " << (en_passant_square == NO_SQ ? "N/A" : to_algebraic(en_passant_square)) << "\n";
-		os << "\tCastling rights: " << write::castling(this) << "\n";
-		os << "\tFifty moves counter: " << fifty_move_counter << "\n";
-		os << "\tFull move clock: " << full_move_counter << "\n";
+		os << "\tSide to move: " << (gs.side_to_move == WHITE ? "White" : "Black") << "\n";
+		os << "\tEn passant: " << (gs.en_passant_square == NO_SQ ? "N/A" : to_algebraic(gs.en_passant_square)) << "\n";
+		os << "\tCastling rights: " << write::castling(&gs) << "\n";
+		os << "\tFifty moves counter: " << gs.fifty_move_counter << "\n";
+		os << "\tFull move clock: " << gs.full_move_counter << "\n";
+
+		return os;
 	}
 }

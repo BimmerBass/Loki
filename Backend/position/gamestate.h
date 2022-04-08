@@ -43,12 +43,12 @@ namespace loki::position {
 		/// Generate a FEN string from the current position.
 		/// </summary>
 		/// <param name="fen"></param>
-		void operator>>(std::string& fen);
+		void operator>>(std::string& fen) const;
 
 		/// <summary>
 		/// Print the position to a given stream.
 		/// </summary>
-		void print_position(std::ostream& os);
+		friend std::ostream& operator<<(std::ostream& os, const game_state& gs);
 	};
 
 }

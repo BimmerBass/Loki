@@ -58,6 +58,9 @@ namespace loki::movegen {
 		size_t size() const noexcept {
 			return m_current_size;
 		}
+		void clear() noexcept {
+			m_current_size = 0;
+		}
 
 		// Constructor/destructor.
 		move_stack() = default;

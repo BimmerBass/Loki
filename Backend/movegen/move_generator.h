@@ -47,6 +47,12 @@ namespace loki::movegen {
 
 		template<MOVE_TYPE _Ty, SIDE _Si = SIDE_NB>
 		const move_list_t& generate();
+
+		template<SIDE _Si, PIECE _Pce>
+		bitboard_t attackers_to(SQUARE sq) const noexcept;
+
+		template<SIDE _Si>
+		bitboard_t attackers_to(SQUARE sq) const noexcept;
 	private:
 		template<SIDE _S, MOVE_TYPE _Ty>
 		void get_pawn_moves();

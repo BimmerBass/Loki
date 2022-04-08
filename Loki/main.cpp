@@ -1,5 +1,6 @@
 #include "Backend/loki.pch.h"
 
+
 inline void printBitboard(loki::bitboard_t bb) {
 	for (int rank = 7; rank >= 0; rank--) {
 
@@ -30,9 +31,9 @@ int main() {
 	std::string start_fen = "4k3/8/8/8/8/8/8/R3K3 w Q - 0 1";
 	loki::position::game_state_t pos = std::make_shared<loki::position::game_state>();
 	*pos << start_fen;
-	pos->print_position(std::cout);
+	std::cout << (*pos);
 	std::string tst;
 	*pos >> tst;
-
+	
 	std::cout << tst << "\n";
 }

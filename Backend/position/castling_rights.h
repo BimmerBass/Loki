@@ -57,7 +57,7 @@ namespace loki::position {
 				m_rights &= ~(uint8_t(1) << _Ss);
 		}
 
-		bool any() {
+		bool any() const {
 			return m_rights != 0;
 		}
 		void clear() {
