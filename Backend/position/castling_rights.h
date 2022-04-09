@@ -66,6 +66,9 @@ namespace loki::position {
 		uint8_t get() const noexcept {
 			return m_rights;
 		}
+		void load(uint8_t r) noexcept {
+			m_rights = r;
+		}
 	};
 
 }

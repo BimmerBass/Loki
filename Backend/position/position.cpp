@@ -142,21 +142,7 @@ namespace loki::position {
 		m_ply++;
 		m_state_info->fifty_move_counter++;
 		m_state_info->full_move_counter += me == BLACK ? 1 : 0;
-
-		m_all_pieces[WHITE] = (
-			m_state_info->piece_placements[WHITE][PAWN] |
-			m_state_info->piece_placements[WHITE][KNIGHT] |
-			m_state_info->piece_placements[WHITE][BISHOP] |
-			m_state_info->piece_placements[WHITE][ROOK] |
-			m_state_info->piece_placements[WHITE][QUEEN] |
-			m_state_info->piece_placements[WHITE][KING]);
-		m_all_pieces[BLACK] = (
-			m_state_info->piece_placements[BLACK][PAWN] |
-			m_state_info->piece_placements[BLACK][KNIGHT] |
-			m_state_info->piece_placements[BLACK][BISHOP] |
-			m_state_info->piece_placements[BLACK][ROOK] |
-			m_state_info->piece_placements[BLACK][QUEEN] |
-			m_state_info->piece_placements[BLACK][KING]);
+		update_occupancies();
 
 		// if we're in check, undo the move since it was illegal
 		if (in_check()) {
@@ -173,15 +159,68 @@ namespace loki::position {
 	/// </summary>
 	/// <returns></returns>
 	void position::undo_move() {
-		std::pair<move_t, movegen::lost_move_info> lost_info;
+		std::pair<move_t, movegen::lost_move_info> move_info;
 		try {
-			lost_info = m_move_history->pop();
+			move_info = m_move_history->pop();
 		}
 		catch (std::out_of_range&) { // Tried to pop empty stack.
 			return;
 		}
-
+		auto origin				= movegen::from_sq(move_info.first);
+		auto destination		= movegen::to_sq(move_info.first);
+		auto special_props		= movegen::special(move_info.first);
+		auto promotion_piece	= static_cast<PIECE>(static_cast<int64_t>(movegen::promotion_piece(move_info.first)) + 1);
+		auto lost_info			= move_info.second;
 		
+		// toggle side to move.
+		m_state_info->side_to_move	= !m_state_info->side_to_move;
+		auto me						= m_state_info->side_to_move;
+		auto them					= !me;
+
+		// handle piece moved
+		if (special_props != movegen::PROMOTION) {
+			m_piece_list[me][destination] = PIECE_NB;
+			m_state_info->piece_placements[me][lost_info.piece_moved] ^= bitboard_t(1) << destination;
+		}
+		else {
+			m_piece_list[me][destination] = PIECE_NB;
+			m_state_info->piece_placements[me][promotion_piece] ^= bitboard_t(1) << destination;
+		}
+
+		m_piece_list[me][origin] = lost_info.piece_moved;
+		m_state_info->piece_placements[me][lost_info.piece_moved] |= bitboard_t(1) << origin;
+
+		if (lost_info.piece_moved == KING) {
+			m_king_squares[me] = origin;
+		}
+
+		// handle special moves other than promotion.
+		switch (special_props) {
+		case movegen::ENPASSANT:	/* Place back the pawn captured. */
+			auto pawn_sq = static_cast<SQUARE>(me == WHITE ? lost_info.en_passant_square - 8 : lost_info.en_passant_square + 8);
+			m_piece_list[them][pawn_sq] = PAWN;
+			m_state_info->piece_placements[them][PAWN] |= bitboard_t(1) << pawn_sq;
+			break;
+		case movegen::CASTLE:	/* Move back the rook. */
+			perform_rook_castle(origin, destination, true);
+			break;
+		default:
+			break;
+		}
+
+		// handle captured piece.
+		if (lost_info.piece_captured != PIECE_NB) {
+			m_piece_list[them][destination] = lost_info.piece_captured;
+			m_state_info->piece_placements[them][lost_info.piece_captured] |= bitboard_t(1) << destination;
+		}
+
+		// handle lost information.
+		update_occupancies();
+		m_ply--;
+		m_state_info->castling_rights.load(move_info.second.castling_rights);
+		m_state_info->fifty_move_counter = move_info.second.fifty_moves_count;
+		m_state_info->full_move_counter -= me == BLACK ? 1 : 0;
+		m_state_info->en_passant_square = move_info.second.en_passant_square;
 	}
 
 	/// <summary>
@@ -189,7 +228,7 @@ namespace loki::position {
 	/// </summary>
 	/// <param name="orig"></param>
 	/// <param name="dest"></param>
-	void position::perform_rook_castle(SQUARE orig, SQUARE dest) noexcept {
+	void position::perform_rook_castle(SQUARE orig, SQUARE dest, bool undo) noexcept {
 		auto stm = m_state_info->side_to_move;
 		bool is_kingside = dest > orig;
 		auto castling_side = is_kingside ? (stm == WHITE ? WKCA : BKCA) : (stm == WHITE ? WQCA : BKCA);
@@ -214,11 +253,40 @@ namespace loki::position {
 			break;
 		}
 
-		m_piece_list[stm][rook_orig] = PIECE_NB;
-		m_state_info->piece_placements[stm][ROOK] ^= bitboard_t(1) << rook_orig;
+		if (!undo) {
+			m_piece_list[stm][rook_orig] = PIECE_NB;
+			m_state_info->piece_placements[stm][ROOK] ^= bitboard_t(1) << rook_orig;
 
-		m_piece_list[stm][rook_dest] = ROOK;
-		m_state_info->piece_placements[stm][ROOK] |= bitboard_t(1) << rook_dest;
+			m_piece_list[stm][rook_dest] = ROOK;
+			m_state_info->piece_placements[stm][ROOK] |= bitboard_t(1) << rook_dest;
+		}
+		else {
+			m_piece_list[stm][rook_orig] = ROOK;
+			m_state_info->piece_placements[stm][ROOK] |= bitboard_t(1) << rook_orig;
+
+			m_piece_list[stm][rook_dest] = PIECE_NB;
+			m_state_info->piece_placements[stm][ROOK] ^= bitboard_t(1) << rook_dest;
+		}
+	}
+
+	/// <summary>
+	/// Update the occupancy bitboards.
+	/// </summary>
+	void position::update_occupancies() {
+		m_all_pieces[WHITE] = (
+			m_state_info->piece_placements[WHITE][PAWN] |
+			m_state_info->piece_placements[WHITE][KNIGHT] |
+			m_state_info->piece_placements[WHITE][BISHOP] |
+			m_state_info->piece_placements[WHITE][ROOK] |
+			m_state_info->piece_placements[WHITE][QUEEN] |
+			m_state_info->piece_placements[WHITE][KING]);
+		m_all_pieces[BLACK] = (
+			m_state_info->piece_placements[BLACK][PAWN] |
+			m_state_info->piece_placements[BLACK][KNIGHT] |
+			m_state_info->piece_placements[BLACK][BISHOP] |
+			m_state_info->piece_placements[BLACK][ROOK] |
+			m_state_info->piece_placements[BLACK][QUEEN] |
+			m_state_info->piece_placements[BLACK][KING]);
 	}
 
 	/// <summary>

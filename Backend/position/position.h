@@ -88,13 +88,18 @@ namespace loki::position {
 		/// </summary>
 		/// <param name="orig"></param>
 		/// <param name="dest"></param>
-		void perform_rook_castle(SQUARE orig, SQUARE dest) noexcept;
+		void perform_rook_castle(SQUARE orig, SQUARE dest, bool undo = false) noexcept;
 
 		/// <summary>
 		/// Re-load this object from our internal state.
 		/// Note: This function is expensive and should only be used for loading a FEN.
 		/// </summary>
 		void reload();
+
+		/// <summary>
+		/// Update the occupancy bitboards.
+		/// </summary>
+		void update_occupancies();
 	};
 
 }
