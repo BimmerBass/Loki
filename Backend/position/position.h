@@ -48,12 +48,12 @@ namespace loki::position {
 		/// </summary>
 		/// <param name="move"></param>
 		/// <returns></returns>
-		bool make_move(move_t move) noexcept;
+		bool make_move(move_t move);
 
 		/// <summary>
 		/// Undo the previous move made.
 		/// </summary>
-		void undo_move() noexcept;
+		void undo_move();
 		
 		/// <summary>
 		/// Load a FEN.
@@ -81,6 +81,14 @@ namespace loki::position {
 		// Checks if a square is attacked by one of the sides.
 		template<SIDE _S>
 		bool square_attacked(SQUARE sq) const noexcept;
+		bool in_check() const noexcept;
+
+		/// <summary>
+		/// Move the rook during a castling move
+		/// </summary>
+		/// <param name="orig"></param>
+		/// <param name="dest"></param>
+		void perform_rook_castle(SQUARE orig, SQUARE dest) noexcept;
 
 		/// <summary>
 		/// Re-load this object from our internal state.

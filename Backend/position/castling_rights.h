@@ -57,11 +57,14 @@ namespace loki::position {
 				m_rights &= ~(uint8_t(1) << _Ss);
 		}
 
-		bool any() const {
+		bool any() const noexcept {
 			return m_rights != 0;
 		}
-		void clear() {
+		void clear() noexcept {
 			m_rights = 0;
+		}
+		uint8_t get() const noexcept {
+			return m_rights;
 		}
 	};
 

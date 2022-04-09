@@ -44,17 +44,181 @@ namespace loki::position {
 	/// Make a move on the board.
 	/// </summary>
 	/// <param name="move"></param>
-	/// <returns></returns>
-	bool position::make_move(move_t move) noexcept {
-		return false;
+	/// <returns>Whether or not the move is legal (if not, the move is unmade)</returns>
+	bool position::make_move(move_t move) {
+		auto me					= m_state_info->side_to_move;
+		auto them				= !me;
+		auto origin				= movegen::from_sq(move);
+		auto destination		= movegen::to_sq(move);
+		auto special_props		= movegen::special(move);
+		auto promotion_piece	= static_cast<PIECE>(static_cast<int64_t>(movegen::promotion_piece(move)) + 1);
+		auto piece_moved		= m_piece_list[m_state_info->side_to_move][origin];
+		auto piece_captured		= m_piece_list[them][destination];
+
+		// debug assertations.
+		assert(origin != destination);
+		assert(origin >= A1 && origin <= H8);
+		assert(destination >= A1 && destination <= H8);
+		assert(special_props >= movegen::PROMOTION && special_props <= movegen::NOT_SPECIAL);
+		assert(promotion_piece >= KNIGHT && promotion_piece <= QUEEN);
+		assert(piece_moved >= PAWN && piece_moved < PIECE_NB);
+		assert(piece_captured >= PAWN && piece_captured <= PIECE_NB);
+
+		if (piece_captured == KING) {
+			return false;
+		}
+
+		// irreversible data.
+		m_move_history->insert(move, movegen::lost_move_info{
+			piece_captured,
+			piece_moved,
+			m_state_info->castling_rights.get(),
+			m_state_info->fifty_move_counter,
+			m_state_info->en_passant_square });
+
+		auto add_to_destination = [&]() {
+			m_piece_list[me][destination] = piece_moved;
+			m_state_info->piece_placements[me][piece_moved] |= bitboard_t(1) << destination;
+
+			if (piece_moved == KING)
+				m_king_squares[me] = destination;
+		};
+
+		// handle moved piece
+		m_state_info->piece_placements[me][piece_moved] ^= bitboard_t(1) << origin;
+		m_piece_list[me][origin] = PIECE_NB;
+
+		switch (special_props) {
+		case movegen::PROMOTION: /* Add promotion piece instead of moved piece. */
+			m_piece_list[me][destination] = promotion_piece;
+			m_state_info->piece_placements[me][promotion_piece] |= bitboard_t(1) << origin;
+			break;
+		
+		case movegen::CASTLE: /* Move the rook. */
+			perform_rook_castle(origin, destination);
+			add_to_destination();
+			break;
+		
+		case movegen::ENPASSANT: /* Remove captured pawn and fall-through */
+			assert(piece_moved == PAWN);
+			SQUARE en_pas_cap = static_cast<SQUARE>((me == WHITE) ? m_state_info->en_passant_square - 8 : m_state_info->en_passant_square + 8);
+			m_piece_list[them][en_pas_cap] = PIECE_NB;
+			m_state_info->piece_placements[them][PAWN] ^= bitboard_t(1) << en_pas_cap;
+			[[fallthrough]];
+		
+		case movegen::NOT_SPECIAL: /* Add moved piece to destination. */
+			add_to_destination();
+			break;
+		}
+
+		// handle captured piece.
+		if (piece_captured != PIECE_NB) {
+			m_piece_list[them][destination] = PIECE_NB;
+			m_state_info->piece_placements[them][piece_captured] ^= bitboard_t(1) << destination;
+		}
+
+		// handle new castling rights.
+		if (piece_moved == KING) {
+			m_state_info->castling_rights -= me == WHITE ? WKCA : BKCA;
+			m_state_info->castling_rights -= me == WHITE ? WQCA : BQCA;
+		}
+		// If a piece has been moved to or from a corner square, the castling rights for that corner is automatically removed.
+		if (origin == A1 || destination == A1)
+			m_state_info->castling_rights -= WQCA;
+		if (origin == H1 || destination == H1)
+			m_state_info->castling_rights -= WKCA;
+		if (origin == A8 || destination == A8)
+			m_state_info->castling_rights -= BQCA;
+		if (origin == H8 || destination == H8)
+			m_state_info->castling_rights -= BKCA;
+
+		// handle new en-passant square.
+		m_state_info->en_passant_square = NO_SQ;
+
+		if (piece_moved == PAWN && std::abs(static_cast<int64_t>(destination) - static_cast<int64_t>(origin)) == 16)
+			m_state_info->en_passant_square = static_cast<SQUARE>(me == WHITE ? static_cast<int64_t>(destination) - 8 : static_cast<int64_t>(destination) + 8);
+
+		// misc data updates.
+		m_ply++;
+		m_state_info->fifty_move_counter++;
+		m_state_info->full_move_counter += me == BLACK ? 1 : 0;
+
+		m_all_pieces[WHITE] = (
+			m_state_info->piece_placements[WHITE][PAWN] |
+			m_state_info->piece_placements[WHITE][KNIGHT] |
+			m_state_info->piece_placements[WHITE][BISHOP] |
+			m_state_info->piece_placements[WHITE][ROOK] |
+			m_state_info->piece_placements[WHITE][QUEEN] |
+			m_state_info->piece_placements[WHITE][KING]);
+		m_all_pieces[BLACK] = (
+			m_state_info->piece_placements[BLACK][PAWN] |
+			m_state_info->piece_placements[BLACK][KNIGHT] |
+			m_state_info->piece_placements[BLACK][BISHOP] |
+			m_state_info->piece_placements[BLACK][ROOK] |
+			m_state_info->piece_placements[BLACK][QUEEN] |
+			m_state_info->piece_placements[BLACK][KING]);
+
+		// if we're in check, undo the move since it was illegal
+		if (in_check()) {
+			me = !me; // will be toggled by undo_move
+			undo_move();
+			return false;
+		}
+		me = !me;
+		return true;
 	}
 
 	/// <summary>
 	/// Take back the latest move.
 	/// </summary>
 	/// <returns></returns>
-	void position::undo_move() noexcept {
+	void position::undo_move() {
+		std::pair<move_t, movegen::lost_move_info> lost_info;
+		try {
+			lost_info = m_move_history->pop();
+		}
+		catch (std::out_of_range&) { // Tried to pop empty stack.
+			return;
+		}
 
+		
+	}
+
+	/// <summary>
+	/// Move the rook during a castling move
+	/// </summary>
+	/// <param name="orig"></param>
+	/// <param name="dest"></param>
+	void position::perform_rook_castle(SQUARE orig, SQUARE dest) noexcept {
+		auto stm = m_state_info->side_to_move;
+		bool is_kingside = dest > orig;
+		auto castling_side = is_kingside ? (stm == WHITE ? WKCA : BKCA) : (stm == WHITE ? WQCA : BKCA);
+		SQUARE rook_orig, rook_dest;
+
+		switch (castling_side) {
+		case WKCA:
+			rook_orig = H1;
+			rook_dest = F1;
+			break;
+		case WQCA:
+			rook_orig = A1;
+			rook_dest = D1;
+			break;
+		case BKCA:
+			rook_orig = H8;
+			rook_dest = F8;
+			break;
+		case BQCA:
+			rook_orig = A8;
+			rook_dest = D8;
+			break;
+		}
+
+		m_piece_list[stm][rook_orig] = PIECE_NB;
+		m_state_info->piece_placements[stm][ROOK] ^= bitboard_t(1) << rook_orig;
+
+		m_piece_list[stm][rook_dest] = ROOK;
+		m_state_info->piece_placements[stm][ROOK] |= bitboard_t(1) << rook_dest;
 	}
 
 	/// <summary>
@@ -84,6 +248,16 @@ namespace loki::position {
 			return true;
 		}
 		return false;
+	}
+
+	/// <summary>
+	/// Return whether or not we're in check.
+	/// </summary>
+	/// <returns></returns>
+	bool position::in_check() const noexcept {
+		return m_state_info->side_to_move == WHITE ?
+			square_attacked<BLACK>(m_king_squares[WHITE]) :
+			square_attacked<WHITE>(m_king_squares[BLACK]);
 	}
 
 	/// <summary>
