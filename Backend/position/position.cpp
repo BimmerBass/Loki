@@ -19,6 +19,8 @@
 
 namespace loki::position {
 
+
+
 	/// <summary>
 	/// Create a position object. Since we need to set the m_self pointer, we need to have a factory method to do this.
 	/// Move generator is also created here
@@ -41,6 +43,17 @@ namespace loki::position {
 	}
 
 	/// <summary>
+	/// Generate moves of the given type and side.
+	/// </summary>
+	/// <returns></returns>
+	template<movegen::MOVE_TYPE _Ty>
+	const movegen::move_list_t& position::generate_moves() {
+		return m_state_info->side_to_move == WHITE ?
+			m_generator->generate<_Ty, WHITE>() :
+			m_generator->generate<_Ty, BLACK>();
+	}
+
+	/// <summary>
 	/// Make a move on the board.
 	/// </summary>
 	/// <param name="move"></param>
@@ -48,8 +61,8 @@ namespace loki::position {
 	bool position::make_move(move_t move) {
 		auto me					= m_state_info->side_to_move;
 		auto them				= !me;
-		auto origin				= movegen::from_sq(move);
-		auto destination		= movegen::to_sq(move);
+		size_t origin			= movegen::from_sq(move);
+		size_t destination		= movegen::to_sq(move);
 		auto special_props		= movegen::special(move);
 		auto promotion_piece	= static_cast<PIECE>(static_cast<int64_t>(movegen::promotion_piece(move)) + 1);
 		auto piece_moved		= m_piece_list[m_state_info->side_to_move][origin];
@@ -63,6 +76,7 @@ namespace loki::position {
 		assert(promotion_piece >= KNIGHT && promotion_piece <= QUEEN);
 		assert(piece_moved >= PAWN && piece_moved < PIECE_NB);
 		assert(piece_captured >= PAWN && piece_captured <= PIECE_NB);
+
 
 		if (piece_captured == KING) {
 			return false;
@@ -78,20 +92,21 @@ namespace loki::position {
 
 		auto add_to_destination = [&]() {
 			m_piece_list[me][destination] = piece_moved;
-			m_state_info->piece_placements[me][piece_moved] |= bitboard_t(1) << destination;
+			m_state_info->piece_placements[me][piece_moved] = set_bit(m_state_info->piece_placements[me][piece_moved], destination);
 
 			if (piece_moved == KING)
-				m_king_squares[me] = destination;
+				m_king_squares[me] = static_cast<SQUARE>(destination);
 		};
 
 		// handle moved piece
-		m_state_info->piece_placements[me][piece_moved] ^= bitboard_t(1) << origin;
+		m_state_info->piece_placements[me][piece_moved] = toggle_bit(m_state_info->piece_placements[me][piece_moved], origin);
 		m_piece_list[me][origin] = PIECE_NB;
 
+		size_t en_pas_cap;
 		switch (special_props) {
 		case movegen::PROMOTION: /* Add promotion piece instead of moved piece. */
 			m_piece_list[me][destination] = promotion_piece;
-			m_state_info->piece_placements[me][promotion_piece] |= bitboard_t(1) << origin;
+			m_state_info->piece_placements[me][promotion_piece] = set_bit(m_state_info->piece_placements[me][promotion_piece], destination);
 			break;
 		
 		case movegen::CASTLE: /* Move the rook. */
@@ -101,9 +116,9 @@ namespace loki::position {
 		
 		case movegen::ENPASSANT: /* Remove captured pawn and fall-through */
 			assert(piece_moved == PAWN);
-			SQUARE en_pas_cap = static_cast<SQUARE>((me == WHITE) ? m_state_info->en_passant_square - 8 : m_state_info->en_passant_square + 8);
+			en_pas_cap = (me == WHITE) ? m_state_info->en_passant_square - 8 : m_state_info->en_passant_square + 8;
 			m_piece_list[them][en_pas_cap] = PIECE_NB;
-			m_state_info->piece_placements[them][PAWN] ^= bitboard_t(1) << en_pas_cap;
+			m_state_info->piece_placements[them][PAWN] = toggle_bit(m_state_info->piece_placements[them][PAWN], en_pas_cap);
 			[[fallthrough]];
 		
 		case movegen::NOT_SPECIAL: /* Add moved piece to destination. */
@@ -114,7 +129,7 @@ namespace loki::position {
 		// handle captured piece.
 		if (piece_captured != PIECE_NB) {
 			m_piece_list[them][destination] = PIECE_NB;
-			m_state_info->piece_placements[them][piece_captured] ^= bitboard_t(1) << destination;
+			m_state_info->piece_placements[them][piece_captured] = toggle_bit(m_state_info->piece_placements[them][piece_captured], destination);
 		}
 
 		// handle new castling rights.
@@ -135,8 +150,9 @@ namespace loki::position {
 		// handle new en-passant square.
 		m_state_info->en_passant_square = NO_SQ;
 
-		if (piece_moved == PAWN && std::abs(static_cast<int64_t>(destination) - static_cast<int64_t>(origin)) == 16)
-			m_state_info->en_passant_square = static_cast<SQUARE>(me == WHITE ? static_cast<int64_t>(destination) - 8 : static_cast<int64_t>(destination) + 8);
+		if (piece_moved == PAWN && 
+			((me == WHITE && destination == origin + 16) || (me == BLACK && destination == origin - 16)))
+			m_state_info->en_passant_square = static_cast<SQUARE>(me == WHITE ? destination - 8 : destination + 8);
 
 		// misc data updates.
 		m_ply++;
@@ -146,11 +162,11 @@ namespace loki::position {
 
 		// if we're in check, undo the move since it was illegal
 		if (in_check()) {
-			me = !me; // will be toggled by undo_move
+			m_state_info->side_to_move = !me; // will be toggled by undo_move
 			undo_move();
 			return false;
 		}
-		me = !me;
+		m_state_info->side_to_move = !me;
 		return true;
 	}
 
@@ -166,8 +182,8 @@ namespace loki::position {
 		catch (std::out_of_range&) { // Tried to pop empty stack.
 			return;
 		}
-		auto origin				= movegen::from_sq(move_info.first);
-		auto destination		= movegen::to_sq(move_info.first);
+		size_t origin			= movegen::from_sq(move_info.first);
+		size_t destination		= movegen::to_sq(move_info.first);
 		auto special_props		= movegen::special(move_info.first);
 		auto promotion_piece	= static_cast<PIECE>(static_cast<int64_t>(movegen::promotion_piece(move_info.first)) + 1);
 		auto lost_info			= move_info.second;
@@ -180,26 +196,27 @@ namespace loki::position {
 		// handle piece moved
 		if (special_props != movegen::PROMOTION) {
 			m_piece_list[me][destination] = PIECE_NB;
-			m_state_info->piece_placements[me][lost_info.piece_moved] ^= bitboard_t(1) << destination;
+			m_state_info->piece_placements[me][lost_info.piece_moved] = toggle_bit(m_state_info->piece_placements[me][lost_info.piece_moved], destination);
 		}
 		else {
 			m_piece_list[me][destination] = PIECE_NB;
-			m_state_info->piece_placements[me][promotion_piece] ^= bitboard_t(1) << destination;
+			m_state_info->piece_placements[me][promotion_piece] = toggle_bit(m_state_info->piece_placements[me][promotion_piece], destination);
 		}
 
 		m_piece_list[me][origin] = lost_info.piece_moved;
-		m_state_info->piece_placements[me][lost_info.piece_moved] |= bitboard_t(1) << origin;
+		m_state_info->piece_placements[me][lost_info.piece_moved] = set_bit(m_state_info->piece_placements[me][lost_info.piece_moved], origin);
 
 		if (lost_info.piece_moved == KING) {
-			m_king_squares[me] = origin;
+			m_king_squares[me] = static_cast<SQUARE>(origin);
 		}
 
 		// handle special moves other than promotion.
+		size_t pawn_sq;
 		switch (special_props) {
 		case movegen::ENPASSANT:	/* Place back the pawn captured. */
-			auto pawn_sq = static_cast<SQUARE>(me == WHITE ? lost_info.en_passant_square - 8 : lost_info.en_passant_square + 8);
+			pawn_sq = me == WHITE ? lost_info.en_passant_square - 8 : lost_info.en_passant_square + 8;
 			m_piece_list[them][pawn_sq] = PAWN;
-			m_state_info->piece_placements[them][PAWN] |= bitboard_t(1) << pawn_sq;
+			m_state_info->piece_placements[them][PAWN] = set_bit(m_state_info->piece_placements[them][PAWN], pawn_sq);
 			break;
 		case movegen::CASTLE:	/* Move back the rook. */
 			perform_rook_castle(origin, destination, true);
@@ -211,7 +228,7 @@ namespace loki::position {
 		// handle captured piece.
 		if (lost_info.piece_captured != PIECE_NB) {
 			m_piece_list[them][destination] = lost_info.piece_captured;
-			m_state_info->piece_placements[them][lost_info.piece_captured] |= bitboard_t(1) << destination;
+			m_state_info->piece_placements[them][lost_info.piece_captured] = set_bit(m_state_info->piece_placements[them][lost_info.piece_captured], destination);
 		}
 
 		// handle lost information.
@@ -228,10 +245,10 @@ namespace loki::position {
 	/// </summary>
 	/// <param name="orig"></param>
 	/// <param name="dest"></param>
-	void position::perform_rook_castle(SQUARE orig, SQUARE dest, bool undo) noexcept {
+	void position::perform_rook_castle(size_t orig, size_t dest, bool undo) noexcept {
 		auto stm = m_state_info->side_to_move;
 		bool is_kingside = dest > orig;
-		auto castling_side = is_kingside ? (stm == WHITE ? WKCA : BKCA) : (stm == WHITE ? WQCA : BKCA);
+		auto castling_side = is_kingside ? (stm == WHITE ? WKCA : BKCA) : (stm == WHITE ? WQCA : BQCA);
 		SQUARE rook_orig, rook_dest;
 
 		switch (castling_side) {
@@ -290,11 +307,21 @@ namespace loki::position {
 	}
 
 	/// <summary>
+	/// Return whether or not we're in check.
+	/// </summary>
+	/// <returns></returns>
+	bool position::in_check() const noexcept {
+		return m_state_info->side_to_move == WHITE ?
+			square_attacked<BLACK>(m_king_squares[WHITE]) :
+			square_attacked<WHITE>(m_king_squares[BLACK]);
+	}
+
+	/// <summary>
 	/// Check if a square is attacked by side _Si
 	/// </summary>
 	/// <param name="sq"></param>
 	/// <returns></returns>
-	template<SIDE _Si>
+	template<SIDE _Si> requires (_Si == WHITE || _Si == BLACK)
 	bool position::square_attacked(SQUARE sq) const noexcept {
 		// Note: We go from king to pawns because they are a little (negligible) more expensive to look up.
 		if (m_generator->attackers_to<_Si, KING>(sq) != 0) {
@@ -317,17 +344,7 @@ namespace loki::position {
 		}
 		return false;
 	}
-
-	/// <summary>
-	/// Return whether or not we're in check.
-	/// </summary>
-	/// <returns></returns>
-	bool position::in_check() const noexcept {
-		return m_state_info->side_to_move == WHITE ?
-			square_attacked<BLACK>(m_king_squares[WHITE]) :
-			square_attacked<WHITE>(m_king_squares[BLACK]);
-	}
-
+	
 	/// <summary>
 	/// Reload our data from m_state_info
 	/// </summary>
@@ -403,7 +420,11 @@ namespace loki::position {
 	}
 
 #pragma region Explicit instantiations
-	template<> bool position::square_attacked<WHITE>(SQUARE) const noexcept;
-	template<> bool position::square_attacked<BLACK>(SQUARE) const noexcept;
+	template bool position::square_attacked<WHITE>(SQUARE) const noexcept;
+	template bool position::square_attacked<BLACK>(SQUARE) const noexcept;
+
+	template const movegen::move_list_t& position::generate_moves<movegen::ACTIVES>();
+	template const movegen::move_list_t& position::generate_moves<movegen::QUIET>();
+	template const movegen::move_list_t& position::generate_moves<movegen::ALL>();
 #pragma endregion
 }

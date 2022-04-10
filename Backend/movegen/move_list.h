@@ -43,6 +43,7 @@ namespace loki::movegen {
 			}
 			m_movelist[m_size].move = move;
 			m_movelist[m_size].score = score;
+			m_size++;
 		}
 
 		inline void add(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece, int score) {
@@ -51,6 +52,7 @@ namespace loki::movegen {
 			}
 			m_movelist[m_size].move = create_move(from_sq, to_sq, special, promotion_piece);
 			m_movelist[m_size].score = score;
+			m_size++;
 		}
 
 		inline void clear() noexcept {
@@ -60,12 +62,11 @@ namespace loki::movegen {
 		inline size_t size() const noexcept {
 			return m_size;
 		}
-
-		inline const_iterator begin() const noexcept {
-			return m_movelist.begin();
-		}
-		inline const_iterator end() const noexcept {
-			return m_movelist.begin() + m_size;
+		const scored_move& operator[](size_t idx) const {
+			if (idx >= m_size) {
+				throw std::out_of_range("Index requested was bigger than the list.");
+			}
+			return m_movelist[idx];
 		}
 
 		inline move_list(const move_list& _src) : m_size(_src.m_size) {

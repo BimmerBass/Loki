@@ -34,14 +34,14 @@ namespace loki::movegen::magics {
 			m_rook_index = std::make_unique<magics_index<ROOK>>();
 		}
 
-		inline bitboard_t rook_attacks(SQUARE sq, bitboard_t occupancy) const noexcept {
-			return m_rook_index->attacks_bb(sq, occupancy);
+		inline bitboard_t rook_attacks(size_t sq, bitboard_t occupancy) const noexcept {
+			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
 		}
-		inline bitboard_t bishop_attacks(SQUARE sq, bitboard_t occupancy) const noexcept {
-			return m_bishop_index->attacks_bb(sq, occupancy);
+		inline bitboard_t bishop_attacks(size_t sq, bitboard_t occupancy) const noexcept {
+			return m_bishop_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
 		}
-		inline bitboard_t queen_attacks(SQUARE sq, bitboard_t occupancy) const noexcept {
-			return m_rook_index->attacks_bb(sq, occupancy) | m_bishop_index->attacks_bb(sq, occupancy);
+		inline bitboard_t queen_attacks(size_t sq, bitboard_t occupancy) const noexcept {
+			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy) | m_bishop_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
 		}
 	};
 

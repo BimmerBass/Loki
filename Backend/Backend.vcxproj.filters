@@ -43,6 +43,12 @@
     <Filter Include="Source Files\movegen\magics">
       <UniqueIdentifier>{e908232d-3b43-41a5-8cd5-475adf4008dc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\utility">
+      <UniqueIdentifier>{f815738a-c516-4369-bafa-bea8670bd348}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utility">
+      <UniqueIdentifier>{25848668-45d6-4d1f-8dd5-22aa061292cc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="position\position.cpp">
@@ -59,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="gamestate.cpp">
       <Filter>Source Files\position</Filter>
+    </ClCompile>
+    <ClCompile Include="utility\perft.cpp">
+      <Filter>Source Files\utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +97,9 @@
     </ClInclude>
     <ClInclude Include="movegen\magics\slider_generator.h">
       <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\perft.h">
+      <Filter>Header Files\utility</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

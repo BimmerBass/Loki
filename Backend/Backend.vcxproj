@@ -178,6 +178,7 @@
     <ClCompile Include="movegen\magics\magics_index.cpp" />
     <ClCompile Include="movegen\move_generator.cpp" />
     <ClCompile Include="position\position.cpp" />
+    <ClCompile Include="utility\perft.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.h" />
@@ -189,6 +190,7 @@
     <ClInclude Include="position\castling_rights.h" />
     <ClInclude Include="position\gamestate.h" />
     <ClInclude Include="position\position.h" />
+    <ClInclude Include="utility\perft.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

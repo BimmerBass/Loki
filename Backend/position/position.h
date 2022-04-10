@@ -25,7 +25,7 @@ namespace loki::position {
 	/// data-extraction from a position. This is for example done by indexing where all pieces are in both arrays and bitboards, and where the kings are.
 	/// </summary>
 	class position {
-		friend class move_generator;
+		friend class movegen::move_generator;
 	private:
 		movegen::move_stack_t<MAX_GAME_MOVES>	m_move_history;					/* The stack of moves that has led to this position. */
 		movegen::move_generator_t				m_generator;					/* The object responsible for finding all pseudo-legal moves in the position. */
@@ -35,6 +35,7 @@ namespace loki::position {
 		SQUARE									m_king_squares[SIDE_NB];		/* The two squares where the kings are. */
 		size_t									m_ply;							/* The ply-depth we're at from the base position. */
 		weak_position_t							m_self;							/* Shared-ptr to this object. */
+
 	public:
 		/// <summary>
 		/// Create a position object. A static method is needed because the m_self property to be set.
@@ -54,6 +55,18 @@ namespace loki::position {
 		/// Undo the previous move made.
 		/// </summary>
 		void undo_move();
+
+		/// <summary>
+		/// Generate moves of the given type, for the side to move.
+		/// </summary>
+		/// <returns></returns>
+		template<movegen::MOVE_TYPE _Ty>
+		const movegen::move_list_t& generate_moves();
+
+		// Checks if a square is attacked by one of the sides.
+		template<SIDE _Si> requires (_Si == WHITE || _Si == BLACK)
+		bool square_attacked(SQUARE sq) const noexcept;
+		bool in_check() const noexcept;
 		
 		/// <summary>
 		/// Load a FEN.
@@ -78,17 +91,12 @@ namespace loki::position {
 	private:
 		position(game_state_t internal_state, movegen::magics::slider_generator_t magic_index);
 
-		// Checks if a square is attacked by one of the sides.
-		template<SIDE _S>
-		bool square_attacked(SQUARE sq) const noexcept;
-		bool in_check() const noexcept;
-
 		/// <summary>
 		/// Move the rook during a castling move
 		/// </summary>
 		/// <param name="orig"></param>
 		/// <param name="dest"></param>
-		void perform_rook_castle(SQUARE orig, SQUARE dest, bool undo = false) noexcept;
+		void perform_rook_castle(size_t orig, size_t dest, bool undo = false) noexcept;
 
 		/// <summary>
 		/// Re-load this object from our internal state.
@@ -101,7 +109,6 @@ namespace loki::position {
 		/// </summary>
 		void update_occupancies();
 	};
-
 }
 
 

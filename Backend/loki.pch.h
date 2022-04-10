@@ -115,6 +115,33 @@ namespace loki {
 		SOUTHEAST = 7
 	};
 
+	enum DEPTH : size_t {
+		MAX_DEPTH = 100
+	};
+
+	template<typename T> requires std::is_fundamental_v<T>
+	inline constexpr DEPTH operator-(DEPTH d, T rhs) {
+		return static_cast<DEPTH>(static_cast<T>(d) - rhs);
+	}
+	template<typename T> requires std::is_fundamental_v<T>
+	inline constexpr DEPTH operator+(DEPTH d, T rhs) {
+		return static_cast<DEPTH>(static_cast<T>(d) + rhs);
+	}
+	template<typename T> requires std::is_fundamental_v<T>
+	inline constexpr DEPTH operator--(DEPTH& d, T) {
+		auto rval = static_cast<T>(d);
+		rval--;
+		d = static_cast<DEPTH>(rval);
+		return d;
+	}
+	template<typename T> requires std::is_fundamental_v<T>
+	inline constexpr DEPTH operator++(DEPTH& d, T) {
+		auto rval = static_cast<T>(d);
+		rval++;
+		d = static_cast<DEPTH>(rval);
+		return d;
+	}
+
 	inline constexpr SQUARE& operator++(SQUARE& orig, int) {
 		auto rval = static_cast<int64_t>(orig);
 		rval++;
@@ -164,6 +191,46 @@ namespace loki {
 	}
 
 	// Inline bit-manipulation functions.
+
+	/// <summary>
+	/// Check if a bit is set.
+	/// </summary>
+	/// <typeparam name="_Ty">The type of the number to check.</typeparam>
+	/// <typeparam name="_IdxT">The type of the index.</typeparam>
+	/// <param name="x"></param>
+	/// <param name="idx"></param>
+	/// <returns></returns>
+	template<typename _Ty, typename _IdxT> requires(std::is_arithmetic_v<_Ty> && std::is_arithmetic_v<_IdxT>)
+	inline constexpr bool is_set(const _Ty& x, _IdxT idx) noexcept {
+		return ((x >> idx) & 1) != 0;
+	}
+
+	/// <summary>
+	/// Set a bit.
+	/// </summary>
+	/// <typeparam name="_Ty"></typeparam>
+	/// <typeparam name="_IdxT"></typeparam>
+	/// <param name="x"></param>
+	/// <param name="idx"></param>
+	/// <returns></returns>
+	template<typename _Ty, typename _IdxT> requires(std::is_arithmetic_v<_Ty>&& std::is_arithmetic_v<_IdxT>)
+	inline constexpr _Ty set_bit(const _Ty& x, _IdxT idx) noexcept {
+		return (x | (_Ty(1) << idx));
+	}
+
+	/// <summary>
+	/// Toggle a bit.
+	/// </summary>
+	/// <typeparam name="_Ty"></typeparam>
+	/// <typeparam name="_IdxT"></typeparam>
+	/// <param name="x"></param>
+	/// <param name="idx"></param>
+	/// <returns></returns>
+	template<typename _Ty, typename _IdxT> requires(std::is_arithmetic_v<_Ty>&& std::is_arithmetic_v<_IdxT>)
+	inline constexpr _Ty toggle_bit(const _Ty& x, _IdxT idx) noexcept {
+		return (x ^ (_Ty(1) << idx));
+	}
+
 
 	/// <summary>
 	/// Count the amount of high bits in a 64-bit number.
@@ -320,8 +387,25 @@ namespace loki {
 			static_cast<RANK>(r),
 			static_cast<FILE>(f));
 	}
+
+
+	/// <summary>
+	/// Convert a square to algebraic notation.
+	/// </summary>
+	/// <param name="sq"></param>
+	/// <returns></returns>
+	inline std::string to_algebraic(SQUARE sq) {
+		const static std::array<std::string, FILE_NB> file_names = { "a", "b", "c", "d", "e", "f", "g", "h" };
+		size_t f = file(sq);
+		size_t r = rank(sq) + 1;
+
+		return file_names[f] + std::to_string(r);
+	}
 }
 
+namespace loki::utility {
+	class perft;
+}
 
 namespace loki::movegen {
 	// Constants and type declarations.
@@ -357,11 +441,15 @@ namespace loki::movegen {
 
 	template<size_t _Size>
 	class move_stack;
+	template<size_t _Size> requires(_Size > 0)
+	class move_list;
 	class move_generator;
 
 	template<size_t _Size>
 	using move_stack_t = std::unique_ptr<move_stack<_Size>>;
 	using move_generator_t = std::unique_ptr<move_generator>;
+
+	using move_list_t = move_list<MAX_POSITION_MOVES>;
 
 	namespace magics {
 		class slider_generator;
@@ -389,5 +477,7 @@ namespace loki::position {
 #include "movegen/move_stack.h"
 #include "movegen/move_list.h"
 #include "movegen/move_generator.h"
+
+#include "utility/perft.h"
 
 #endif

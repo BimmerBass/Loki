@@ -25,7 +25,8 @@ namespace loki::movegen {
 
 	move_generator::move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept :
 		m_position(pos),
-		m_slider_generator(slider_generator) {
+		m_slider_generator(slider_generator),
+		m_moves(nullptr) {
 
 		static std::mutex mtx;
 		static std::atomic_bool tables_initialized = false;
@@ -47,9 +48,10 @@ namespace loki::movegen {
 	/// </summary>
 	/// <returns></returns>
 	template<MOVE_TYPE _Ty, SIDE _Si>
-	const move_generator::move_list_t& move_generator::generate() {
+	const move_list_t& move_generator::generate() {
 		// Make the generator ready to generate moves.
-		m_moves.clear();
+		m_moves = &m_movelists[m_position->m_ply];
+		m_moves->clear();
 
 		// FIXME: Ugly implementation...
 		if constexpr (_Si == SIDE_NB) {
@@ -61,6 +63,7 @@ namespace loki::movegen {
 				get_rook_moves<WHITE, _Ty>();
 				get_queen_moves<WHITE, _Ty>();
 				get_king_moves<WHITE, _Ty>();
+				break;
 			case BLACK:
 				get_pawn_moves<BLACK, _Ty>();
 				get_knight_moves<BLACK, _Ty>();
@@ -68,6 +71,7 @@ namespace loki::movegen {
 				get_rook_moves<BLACK, _Ty>();
 				get_queen_moves<BLACK, _Ty>();
 				get_king_moves<BLACK, _Ty>();
+				break;
 			default:
 				throw std::runtime_error("An illegal value for the side to generate moves for were passed.");
 			}
@@ -81,7 +85,7 @@ namespace loki::movegen {
 			get_king_moves<_Si, _Ty>();
 		}
 
-		return m_moves;
+		return *m_moves;
 	}
 
 	/// <summary>
@@ -90,16 +94,17 @@ namespace loki::movegen {
 	/// <param name="sq"></param>
 	/// <returns></returns>
 	template<SIDE _Si, PIECE _Pce>
-	bitboard_t move_generator::attackers_to(SQUARE sq)  const noexcept {
-		constexpr DIRECTION up_left		= (_Si == WHITE) ? NORTHWEST : SOUTHWEST;
-		constexpr DIRECTION up_right	= (_Si == WHITE) ? NORTHEAST : SOUTHEAST;
+	bitboard_t move_generator::attackers_to(SQUARE sq) const noexcept {
+		constexpr DIRECTION up_left		= (_Si == BLACK) ? NORTHWEST : SOUTHWEST;
+		constexpr DIRECTION up_right	= (_Si == BLACK) ? NORTHEAST : SOUTHEAST;
 
 		bitboard_t occupancy = m_position->m_all_pieces[WHITE] | m_position->m_all_pieces[BLACK];
 		bitboard_t attacks = 0;
 
+		bitboard_t sq_bb;
 		switch (_Pce) {
 		case PAWN: 
-			auto sq_bb = bitboard_t(1) << sq;
+			sq_bb = bitboard_t(1) << sq;
 			attacks = shift<up_left>(sq_bb) | shift<up_right>(sq_bb);
 			break;
 		case KNIGHT: attacks = knight_attacks[sq]; break;
@@ -119,7 +124,7 @@ namespace loki::movegen {
 	/// <param name="sq"></param>
 	/// <returns></returns>
 	template<SIDE _Si>
-	bitboard_t move_generator::attackers_to(SQUARE sq)  const noexcept {
+	bitboard_t move_generator::all_attackers_to(SQUARE sq) const noexcept {
 		return (
 			attackers_to<_Si, PAWN>(sq) |
 			attackers_to<_Si, KNIGHT>(sq) |
@@ -146,7 +151,10 @@ namespace loki::movegen {
 		constexpr bitboard_t relative_r8	= bitmasks::rank_masks[_S == WHITE ? RANK_8 : RANK_1];
 		constexpr RANK relative_top_rank	= _S == WHITE ? RANK_8 : RANK_1;
 		constexpr int left_attack_origin	= (_S == WHITE) ? 7 : -9;
-		constexpr int right_attack_origin	= (_S == WHITE) ? 9 : -7;
+		constexpr int right_attack_origin	= (_S == WHITE) ? 9 : -7;		
+		constexpr int left_ep_origin		= (_S == WHITE) ? 9 : -7;
+		constexpr int right_ep_origin		= (_S == WHITE) ? 7 : -9;
+		
 
 		bitboard_t pawns			= m_position->m_state_info->piece_placements[_S][PAWN];
 		bitboard_t opponent_pieces	= m_position->m_all_pieces[!_S];
@@ -163,54 +171,54 @@ namespace loki::movegen {
 			while (one_up) {
 				idx = pop_bit(one_up);
 
-				m_moves.add(_S == WHITE ? idx - 8 : idx + 8, idx, NOT_SPECIAL, 0, 0);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, NOT_SPECIAL, 0, 0);
 			}
 			while (two_up) {
 				idx = pop_bit(two_up);
-				m_moves.add(_S == WHITE ? idx - 16 : idx + 16, idx, NOT_SPECIAL, 0, 0);
+				m_moves->add(_S == WHITE ? idx - 16 : idx + 16, idx, NOT_SPECIAL, 0, 0);
 			}
 		}
 		else if constexpr (_Ty == ACTIVES) {
 			// 1: Attacks.
 			bitboard_t left_attacks		= shift<up_left>(pawns) & opponent_pieces;
 			bitboard_t right_attacks	= shift<up_right>(pawns) & opponent_pieces;
-			bitboard_t promotions		= shift<up>(pawns) & relative_r8 & ~opponent_pieces;
+			bitboard_t promotions		= shift<up>(pawns) & relative_r8 & ~occupied;
 
 			while (left_attacks) {
 				idx = pop_bit(left_attacks);
 
 				if (rank(idx) == relative_top_rank) { // Promotion capture.
-					m_moves.add(idx - left_attack_origin, idx, PROMOTION, KNIGHT - 1, 0);
-					m_moves.add(idx - left_attack_origin, idx, PROMOTION, BISHOP - 1, 0);
-					m_moves.add(idx - left_attack_origin, idx, PROMOTION, ROOK - 1, 0);
-					m_moves.add(idx - left_attack_origin, idx, PROMOTION, QUEEN - 1, 0);
+					m_moves->add(idx - left_attack_origin, idx, PROMOTION, KNIGHT - 1, 0);
+					m_moves->add(idx - left_attack_origin, idx, PROMOTION, BISHOP - 1, 0);
+					m_moves->add(idx - left_attack_origin, idx, PROMOTION, ROOK - 1, 0);
+					m_moves->add(idx - left_attack_origin, idx, PROMOTION, QUEEN - 1, 0);
 				}
 				else { // Regular capture.
-					m_moves.add(idx - left_attack_origin, idx, NOT_SPECIAL, 0, 0);
+					m_moves->add(idx - left_attack_origin, idx, NOT_SPECIAL, 0, 0);
 				}
 			}
 			while (right_attacks) {
 				idx = pop_bit(right_attacks);
 
 				if (rank(idx) == relative_top_rank) { // Promotion capture.
-					m_moves.add(idx - right_attack_origin, idx, PROMOTION, KNIGHT - 1, 0);
-					m_moves.add(idx - right_attack_origin, idx, PROMOTION, BISHOP - 1, 0);
-					m_moves.add(idx - right_attack_origin, idx, PROMOTION, ROOK - 1, 0);
-					m_moves.add(idx - right_attack_origin, idx, PROMOTION, QUEEN - 1, 0);
+					m_moves->add(idx - right_attack_origin, idx, PROMOTION, KNIGHT - 1, 0);
+					m_moves->add(idx - right_attack_origin, idx, PROMOTION, BISHOP - 1, 0);
+					m_moves->add(idx - right_attack_origin, idx, PROMOTION, ROOK - 1, 0);
+					m_moves->add(idx - right_attack_origin, idx, PROMOTION, QUEEN - 1, 0);
 				}
 				else { // Regular capture.
-					m_moves.add(idx - right_attack_origin, idx, NOT_SPECIAL, 0, 0);
+					m_moves->add(idx - right_attack_origin, idx, NOT_SPECIAL, 0, 0);
 				}
 			}
 
 			// 2. Regular promotions.
 			while (promotions) {
-				idx = pop_bit(right_attacks);
+				idx = pop_bit(promotions);
 
-				m_moves.add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, KNIGHT - 1, 0);
-				m_moves.add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, BISHOP - 1, 0);
-				m_moves.add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, ROOK - 1, 0);
-				m_moves.add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, QUEEN - 1, 0);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, KNIGHT - 1, 0);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, BISHOP - 1, 0);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, ROOK - 1, 0);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, QUEEN - 1, 0);
 			}
 
 			// 3. En-passant.
@@ -219,10 +227,10 @@ namespace loki::movegen {
 				bitboard_t ep_board = bitboard_t(1) << ep_square;
 
 				if ((shift<down_left>(ep_board) & pawns) != 0) {
-					m_moves.add(ep_square - left_attack_origin, ep_square, ENPASSANT, 0, 0);
+					m_moves->add(ep_square - left_ep_origin, ep_square, ENPASSANT, 0, 0);
 				}
 				if ((shift<down_right>(ep_board) & pawns) != 0) {
-					m_moves.add(ep_square - right_attack_origin, ep_square, ENPASSANT, 0, 0);
+					m_moves->add(ep_square - right_ep_origin, ep_square, ENPASSANT, 0, 0);
 				}
 			}
 		}
@@ -256,7 +264,7 @@ namespace loki::movegen {
 
 			while (attacks) {
 				auto to_sq = pop_bit(attacks);
-				m_moves.add(idx, to_sq, NOT_SPECIAL, 0, 0);
+				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
 			}
 		}
 	}
@@ -278,7 +286,7 @@ namespace loki::movegen {
 			
 			while (attacks) {
 				auto to_sq = pop_bit(attacks);
-				m_moves.add(idx, to_sq, NOT_SPECIAL, 0, 0);
+				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
 			}
 		}
 	}
@@ -300,7 +308,7 @@ namespace loki::movegen {
 
 			while (attacks) {
 				auto to_sq = pop_bit(attacks);
-				m_moves.add(idx, to_sq, NOT_SPECIAL, 0, 0);
+				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
 			}
 		}
 	}
@@ -322,7 +330,7 @@ namespace loki::movegen {
 
 			while (attacks) {
 				auto to_sq = pop_bit(attacks);
-				m_moves.add(idx, to_sq, NOT_SPECIAL, 0, 0);
+				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
 			}
 		}
 	}
@@ -340,7 +348,7 @@ namespace loki::movegen {
 
 			while (attacks) {
 				auto idx = pop_bit(attacks);
-				m_moves.add(king_sq, idx, NOT_SPECIAL, 0, 0);
+				m_moves->add(king_sq, idx, NOT_SPECIAL, 0, 0);
 			}
 		}
 		else if constexpr (_Ty == QUIET) {
@@ -348,15 +356,15 @@ namespace loki::movegen {
 
 			while (attacks) {
 				auto idx = pop_bit(attacks);
-				m_moves.add(king_sq, idx, NOT_SPECIAL, 0, 0);
+				m_moves->add(king_sq, idx, NOT_SPECIAL, 0, 0);
 			}
 
 			// FIXME: Should castling be considered a QUIET or an ACTIVE move?
 			if (can_castle<_S, _S == WHITE ? WKCA : BKCA>()) {
-				m_moves.add(king_sq, kingside_castling_dest, CASTLE, 0, 0);
+				m_moves->add(king_sq, kingside_castling_dest, CASTLE, 0, 0);
 			}
 			if (can_castle<_S, _S == WHITE ? WQCA : BQCA>()) {
-				m_moves.add(king_sq, queenside_castling_dest, CASTLE, 0, 0);
+				m_moves->add(king_sq, queenside_castling_dest, CASTLE, 0, 0);
 			}
 		}
 		else {
@@ -415,7 +423,8 @@ namespace loki::movegen {
 	move_generator::move_generator(move_generator&& _src) noexcept
 		:	m_position(std::move(_src.m_position)),
 			m_slider_generator(std::move(_src.m_slider_generator)),
-			m_moves(_src.m_moves) {
+			m_movelists(_src.m_movelists),
+			m_moves(m_movelists.data() + (_src.m_moves - _src.m_movelists.data())) {
 	}
 
 	move_generator& move_generator::operator=(move_generator&& _src) noexcept {
@@ -424,79 +433,80 @@ namespace loki::movegen {
 			m_slider_generator = magics::slider_generator_t(std::move(_src.m_slider_generator));
 
 			// move_list is just a wrapped static array, so we can only copy it..
-			m_moves = _src.m_moves;
+			m_movelists = _src.m_movelists;
+			m_moves = m_movelists.data() + (_src.m_moves - _src.m_movelists.data());
 		}
 		return *this;
 	}
 
 #pragma region Explicit template instantiations
-	template<> void move_generator::get_pawn_moves<WHITE, ACTIVES>();
-	template<> void move_generator::get_pawn_moves<WHITE, QUIET>();
-	template<> void move_generator::get_pawn_moves<WHITE, ALL>();
-	template<> void move_generator::get_pawn_moves<BLACK, ACTIVES>();
-	template<> void move_generator::get_pawn_moves<BLACK, QUIET>();
-	template<> void move_generator::get_pawn_moves<BLACK, ALL>();
+	template void move_generator::get_pawn_moves<WHITE, ACTIVES>();
+	template void move_generator::get_pawn_moves<WHITE, QUIET>();
+	template void move_generator::get_pawn_moves<WHITE, ALL>();
+	template void move_generator::get_pawn_moves<BLACK, ACTIVES>();
+	template void move_generator::get_pawn_moves<BLACK, QUIET>();
+	template void move_generator::get_pawn_moves<BLACK, ALL>();
 
-	template<> void move_generator::get_knight_moves<WHITE, ACTIVES>();
-	template<> void move_generator::get_knight_moves<WHITE, QUIET>();
-	template<> void move_generator::get_knight_moves<WHITE, ALL>();
-	template<> void move_generator::get_knight_moves<BLACK, ACTIVES>();
-	template<> void move_generator::get_knight_moves<BLACK, QUIET>();
-	template<> void move_generator::get_knight_moves<BLACK, ALL>();
+	template void move_generator::get_knight_moves<WHITE, ACTIVES>();
+	template void move_generator::get_knight_moves<WHITE, QUIET>();
+	template void move_generator::get_knight_moves<WHITE, ALL>();
+	template void move_generator::get_knight_moves<BLACK, ACTIVES>();
+	template void move_generator::get_knight_moves<BLACK, QUIET>();
+	template void move_generator::get_knight_moves<BLACK, ALL>();
 
-	template<> void move_generator::get_bishop_moves<WHITE, ACTIVES>();
-	template<> void move_generator::get_bishop_moves<WHITE, QUIET>();
-	template<> void move_generator::get_bishop_moves<WHITE, ALL>();
-	template<> void move_generator::get_bishop_moves<BLACK, ACTIVES>();
-	template<> void move_generator::get_bishop_moves<BLACK, QUIET>();
-	template<> void move_generator::get_bishop_moves<BLACK, ALL>();
+	template void move_generator::get_bishop_moves<WHITE, ACTIVES>();
+	template void move_generator::get_bishop_moves<WHITE, QUIET>();
+	template void move_generator::get_bishop_moves<WHITE, ALL>();
+	template void move_generator::get_bishop_moves<BLACK, ACTIVES>();
+	template void move_generator::get_bishop_moves<BLACK, QUIET>();
+	template void move_generator::get_bishop_moves<BLACK, ALL>();
 
-	template<> void move_generator::get_rook_moves<WHITE, ACTIVES>();
-	template<> void move_generator::get_rook_moves<WHITE, QUIET>();
-	template<> void move_generator::get_rook_moves<WHITE, ALL>();
-	template<> void move_generator::get_rook_moves<BLACK, ACTIVES>();
-	template<> void move_generator::get_rook_moves<BLACK, QUIET>();
-	template<> void move_generator::get_rook_moves<BLACK, ALL>();
+	template void move_generator::get_rook_moves<WHITE, ACTIVES>();
+	template void move_generator::get_rook_moves<WHITE, QUIET>();
+	template void move_generator::get_rook_moves<WHITE, ALL>();
+	template void move_generator::get_rook_moves<BLACK, ACTIVES>();
+	template void move_generator::get_rook_moves<BLACK, QUIET>();
+	template void move_generator::get_rook_moves<BLACK, ALL>();
 
-	template<> void move_generator::get_queen_moves<WHITE, ACTIVES>();
-	template<> void move_generator::get_queen_moves<WHITE, QUIET>();
-	template<> void move_generator::get_queen_moves<WHITE, ALL>();
-	template<> void move_generator::get_queen_moves<BLACK, ACTIVES>();
-	template<> void move_generator::get_queen_moves<BLACK, QUIET>();
-	template<> void move_generator::get_queen_moves<BLACK, ALL>();
+	template void move_generator::get_queen_moves<WHITE, ACTIVES>();
+	template void move_generator::get_queen_moves<WHITE, QUIET>();
+	template void move_generator::get_queen_moves<WHITE, ALL>();
+	template void move_generator::get_queen_moves<BLACK, ACTIVES>();
+	template void move_generator::get_queen_moves<BLACK, QUIET>();
+	template void move_generator::get_queen_moves<BLACK, ALL>();
 
-	template<> void move_generator::get_king_moves<WHITE, ACTIVES>();
-	template<> void move_generator::get_king_moves<WHITE, QUIET>();
-	template<> void move_generator::get_king_moves<WHITE, ALL>();
-	template<> void move_generator::get_king_moves<BLACK, ACTIVES>();
-	template<> void move_generator::get_king_moves<BLACK, QUIET>();
-	template<> void move_generator::get_king_moves<BLACK, ALL>();
+	template void move_generator::get_king_moves<WHITE, ACTIVES>();
+	template void move_generator::get_king_moves<WHITE, QUIET>();
+	template void move_generator::get_king_moves<WHITE, ALL>();
+	template void move_generator::get_king_moves<BLACK, ACTIVES>();
+	template void move_generator::get_king_moves<BLACK, QUIET>();
+	template void move_generator::get_king_moves<BLACK, ALL>();
 
-	template<> const move_generator::move_list_t& move_generator::generate<ACTIVES, WHITE>();
-	template<> const move_generator::move_list_t& move_generator::generate<QUIET, WHITE>();
-	template<> const move_generator::move_list_t& move_generator::generate<ALL, WHITE>();
-	template<> const move_generator::move_list_t& move_generator::generate<ACTIVES, BLACK>();
-	template<> const move_generator::move_list_t& move_generator::generate<QUIET, BLACK>();
-	template<> const move_generator::move_list_t& move_generator::generate<ALL, BLACK>();
-	template<> const move_generator::move_list_t& move_generator::generate<ACTIVES, SIDE_NB>();
-	template<> const move_generator::move_list_t& move_generator::generate<QUIET, SIDE_NB>();
-	template<> const move_generator::move_list_t& move_generator::generate<ALL, SIDE_NB>();
+	template const move_list_t& move_generator::generate<ACTIVES, WHITE>();
+	template const move_list_t& move_generator::generate<QUIET, WHITE>();
+	template const move_list_t& move_generator::generate<ALL, WHITE>();
+	template const move_list_t& move_generator::generate<ACTIVES, BLACK>();
+	template const move_list_t& move_generator::generate<QUIET, BLACK>();
+	template const move_list_t& move_generator::generate<ALL, BLACK>();
+	template const move_list_t& move_generator::generate<ACTIVES, SIDE_NB>();
+	template const move_list_t& move_generator::generate<QUIET, SIDE_NB>();
+	template const move_list_t& move_generator::generate<ALL, SIDE_NB>();
 
-	template<> bitboard_t move_generator::attackers_to<WHITE, PAWN>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<WHITE, KNIGHT>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<WHITE, BISHOP>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<WHITE, ROOK>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<WHITE, QUEEN>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<WHITE, KING>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<BLACK, PAWN>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<BLACK, KNIGHT>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<BLACK, BISHOP>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<BLACK, ROOK>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<BLACK, QUEEN>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<BLACK, KING>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, PAWN>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, KNIGHT>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, BISHOP>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, ROOK>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, QUEEN>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, KING>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, PAWN>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, KNIGHT>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, BISHOP>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, ROOK>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, QUEEN>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, KING>(SQUARE) const noexcept;
 
-	template<> bitboard_t move_generator::attackers_to<WHITE>(SQUARE) const noexcept;
-	template<> bitboard_t move_generator::attackers_to<BLACK>(SQUARE) const noexcept;
+	template bitboard_t move_generator::all_attackers_to<WHITE>(SQUARE) const noexcept;
+	template bitboard_t move_generator::all_attackers_to<BLACK>(SQUARE) const noexcept;
 
 #pragma endregion
 }

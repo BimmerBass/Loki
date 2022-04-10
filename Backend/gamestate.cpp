@@ -52,15 +52,7 @@ namespace loki::position {
 			auto file = str[0];
 			auto rank = str[1];
 
-			return get_square(rank - '0', file_mappings[std::tolower(file)]);
-		}
-
-		std::string to_algebraic(SQUARE sq) {
-			const static std::array<std::string, FILE_NB> file_names = { "a", "b", "c", "d", "e", "f", "g", "h" };
-			size_t f = file(sq);
-			size_t r = rank(sq);
-
-			return file_names[f] + std::to_string(r);
+			return get_square((rank - '0') - 1, file_mappings[std::tolower(file)]);
 		}
 
 		namespace write {

@@ -22,17 +22,15 @@
 namespace loki::movegen {
 
 	class move_generator {
-	public:
-		using move_list_t = move_list<MAX_POSITION_MOVES>;
 	private:
 		using attack_table_t	= std::array<bitboard_t, 64>;
 
-		position::position_t		m_position;
-		magics::slider_generator_t	m_slider_generator;
-		move_list_t					m_moves;
-		static attack_table_t		knight_attacks;
-		static attack_table_t		king_attacks;
-	
+		position::position_t					m_position;
+		magics::slider_generator_t				m_slider_generator;
+		static attack_table_t					knight_attacks;
+		static attack_table_t					king_attacks;
+		std::array<move_list_t, MAX_GAME_MOVES>	m_movelists;
+		move_list_t*							m_moves;
 	public:
 		// No default constructor since a reference to the position object is required.
 		move_generator() = delete;
@@ -52,7 +50,7 @@ namespace loki::movegen {
 		bitboard_t attackers_to(SQUARE sq) const noexcept;
 
 		template<SIDE _Si>
-		bitboard_t attackers_to(SQUARE sq) const noexcept;
+		bitboard_t all_attackers_to(SQUARE sq) const noexcept;
 	private:
 		template<SIDE _S, MOVE_TYPE _Ty>
 		void get_pawn_moves();
@@ -77,9 +75,9 @@ namespace loki::movegen {
 			constexpr SQUARE relative_g1				= _S == WHITE ? G1 : G8;
 			constexpr SQUARE relative_d1				= _S == WHITE ? D1 : D8;
 			constexpr SQUARE relative_c1				= _S == WHITE ? C1 : C8;
-			constexpr bitboard_t key_queenside_squares	= bitmasks::rank_masks[_S == WHITE ? RANK_1 : RANK_8] & (bitmasks::file_masks[FILE_G] | bitmasks::file_masks[FILE_F]);
-			constexpr bitboard_t key_kingside_squares	= bitmasks::rank_masks[_S == WHITE ? RANK_1 : RANK_8] 
-															& (bitmasks::file_masks[FILE_C] | bitmasks::file_masks[FILE_D] | bitmasks::file_masks[FILE_B]);
+			constexpr bitboard_t key_queenside_squares = bitmasks::rank_masks[_S == WHITE ? RANK_1 : RANK_8]
+				& (bitmasks::file_masks[FILE_C] | bitmasks::file_masks[FILE_D] | bitmasks::file_masks[FILE_B]);
+			constexpr bitboard_t key_kingside_squares = bitmasks::rank_masks[_S == WHITE ? RANK_1 : RANK_8] & (bitmasks::file_masks[FILE_G] | bitmasks::file_masks[FILE_F]);
 
 			if (_Cr == WKCA || _Cr == BKCA) {
 				return m_position->m_state_info->castling_rights.operator()<_Cr>() &&
@@ -97,7 +95,6 @@ namespace loki::movegen {
 			}
 		}
 	};
-
 }
 
 
