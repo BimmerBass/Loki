@@ -29,6 +29,14 @@ namespace loki::movegen {
 		uint8_t castling_rights;
 		size_t	fifty_moves_count;
 		SQUARE	en_passant_square;
+
+		void set(std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE>&& info) {
+			piece_captured		= std::get<0>(info);
+			piece_moved			= std::get<1>(info);
+			castling_rights		= std::get<2>(info);
+			fifty_moves_count	= std::get<3>(info);
+			en_passant_square	= std::get<4>(info);
+		}
 	};
 
 	/// <summary>
@@ -43,13 +51,16 @@ namespace loki::movegen {
 		size_t m_current_size = 0;
 
 	public:
-		void insert(move_t move, lost_move_info lost_info) {
+		void insert(move_t move, std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE>&& info) {
 			if (m_current_size >= _Size) {
 				throw std::out_of_range("stack size limit exceeded");
 			}
-			m_stack[m_current_size++] = std::make_pair(move, lost_info);
+			m_stack[m_current_size].first = move;
+			m_stack[m_current_size].second.set(std::move(info));
+
+			m_current_size++;
 		}
-		value_t pop() {
+		const value_t& pop() {
 			if (m_current_size <= 0) {
 				throw std::out_of_range("pop() called on an empty stack");
 			}

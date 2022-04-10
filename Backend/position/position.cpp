@@ -83,12 +83,13 @@ namespace loki::position {
 		}
 
 		// irreversible data.
-		m_move_history->insert(move, movegen::lost_move_info{
-			piece_captured,
-			piece_moved,
-			m_state_info->castling_rights.get(),
-			m_state_info->fifty_move_counter,
-			m_state_info->en_passant_square });
+		m_move_history->insert(move, 
+			std::make_tuple(
+				piece_captured,
+				piece_moved, 
+				m_state_info->castling_rights.get(), 
+				m_state_info->fifty_move_counter, 
+				m_state_info->en_passant_square));
 
 		auto add_to_destination = [&]() {
 			m_piece_list[me][destination] = piece_moved;
@@ -175,13 +176,7 @@ namespace loki::position {
 	/// </summary>
 	/// <returns></returns>
 	void position::undo_move() {
-		std::pair<move_t, movegen::lost_move_info> move_info;
-		try {
-			move_info = m_move_history->pop();
-		}
-		catch (std::out_of_range&) { // Tried to pop empty stack.
-			return;
-		}
+		const auto& move_info	= m_move_history->pop();
 		size_t origin			= movegen::from_sq(move_info.first);
 		size_t destination		= movegen::to_sq(move_info.first);
 		auto special_props		= movegen::special(move_info.first);
