@@ -42,6 +42,14 @@ namespace loki::utility {
 		return perft_test(d, os, debug);
 	}
 
+	/// <summary>
+	/// Set a new fen.
+	/// </summary>
+	/// <param name="new_fen"></param>
+	void perft::load(const std::string& new_fen) {
+		m_initial_fen = new_fen;
+	}
+
 	size_t perft::perft_test(DEPTH d, std::ostream& os, bool debug) {
 		os << "Starting perft test for depth " << static_cast<size_t>(d) << ".\n";
 		os << "[FEN]: " << m_initial_fen << "\n";

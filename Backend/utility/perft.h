@@ -33,6 +33,7 @@ namespace loki::utility {
 		perft& operator=(perft&&) = delete;
 
 		size_t perform(DEPTH d, std::ostream& os, bool debug);
+		void load(const std::string& new_fen);
 	private:
 		std::string				m_initial_fen;
 		position::position_t	m_pos;
