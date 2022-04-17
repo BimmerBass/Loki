@@ -26,6 +26,7 @@
 #include <iostream>
 #include <assert.h>
 #include <format>
+#include <random>
 
 #if (defined(_MSC_VER) || defined(__INTEL_COMPILER))
 #include <nmmintrin.h> // Used for count_bits
@@ -460,15 +461,18 @@ namespace loki::movegen {
 
 namespace loki::position {
 	class castling_rights;
+	class zobrist;
 	struct game_state;
 	class position;
 
+	using zobrist_t			= std::unique_ptr<zobrist>;
 	using game_state_t		= std::shared_ptr<game_state>;
 	using position_t		= std::shared_ptr<position>;
 	using weak_position_t	= std::weak_ptr<position>;
 }
 
 #include "position/castling_rights.h"
+#include "position/hashing/zobrist.h"
 #include "position/gamestate.h"
 #include "position/position.h"
 

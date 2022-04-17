@@ -177,6 +177,7 @@
     </ClCompile>
     <ClCompile Include="movegen\magics\magics_index.cpp" />
     <ClCompile Include="movegen\move_generator.cpp" />
+    <ClCompile Include="position\hashing\zobrist.cpp" />
     <ClCompile Include="position\position.cpp" />
     <ClCompile Include="utility\perft.cpp" />
   </ItemGroup>
@@ -189,6 +190,7 @@
     <ClInclude Include="movegen\move_stack.h" />
     <ClInclude Include="position\castling_rights.h" />
     <ClInclude Include="position\gamestate.h" />
+    <ClInclude Include="position\hashing\zobrist.h" />
     <ClInclude Include="position\position.h" />
     <ClInclude Include="utility\perft.h" />
   </ItemGroup>

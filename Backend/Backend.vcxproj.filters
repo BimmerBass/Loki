@@ -49,6 +49,12 @@
     <Filter Include="Header Files\utility">
       <UniqueIdentifier>{25848668-45d6-4d1f-8dd5-22aa061292cc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\position\hashing">
+      <UniqueIdentifier>{f7467651-2c8a-4a13-a7e6-4ef558244a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\position\hashing">
+      <UniqueIdentifier>{c1d8dfea-d757-458a-a169-6d0e00ac086d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="position\position.cpp">
@@ -68,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="utility\perft.cpp">
       <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="position\hashing\zobrist.cpp">
+      <Filter>Source Files\position\hashing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +109,9 @@
     </ClInclude>
     <ClInclude Include="utility\perft.h">
       <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="position\hashing\zobrist.h">
+      <Filter>Header Files\position\hashing</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

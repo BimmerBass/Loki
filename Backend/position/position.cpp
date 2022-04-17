@@ -37,8 +37,9 @@ namespace loki::position {
 	}
 
 	position::position(game_state_t internal_state, movegen::magics::slider_generator_t magics_index) {
-		m_move_history = std::make_unique<movegen::move_stack<MAX_GAME_MOVES>>();
-		m_state_info = internal_state;
+		m_move_history		= std::make_unique<movegen::move_stack<MAX_GAME_MOVES>>();
+		m_hashing_generator = std::make_unique<zobrist>();
+		m_state_info		= internal_state;
 		reload();
 	}
 
@@ -379,6 +380,30 @@ namespace loki::position {
 				}
 			}
 		}
+
+		// Now generate our poskey.
+		generate_poskey();
+	}
+
+	/// <summary>
+	/// Generate a position key from scratch
+	/// </summary>
+	void position::generate_poskey() {
+		m_poskey = 0;
+		
+		if (m_state_info->side_to_move == WHITE)
+			m_hashing_generator->toggle_stm(m_poskey);
+		if (m_state_info->en_passant_square != NO_SQ)
+			m_hashing_generator->toggle_ep(m_poskey, m_state_info->en_passant_square);
+		m_hashing_generator->toggle_castling(m_poskey, m_state_info->castling_rights);
+
+		// Piece placements.
+		for (size_t sq = A1; sq <= H8; sq++) {
+			for (size_t pce = PAWN; pce <= KING; pce++) {
+				m_hashing_generator->toggle_piece(m_poskey, WHITE, static_cast<PIECE>(pce), static_cast<SQUARE>(sq));
+				m_hashing_generator->toggle_piece(m_poskey, BLACK, static_cast<PIECE>(pce), static_cast<SQUARE>(sq));
+			}
+		}
 	}
 
 	/// <summary>
@@ -407,10 +432,12 @@ namespace loki::position {
 	/// <returns></returns>
 	std::ostream& operator<<(std::ostream& os, const position& pos) {
 		os << (*pos.m_state_info);
+		os << "\tZobrist key: " << std::hex << pos.m_poskey << "\n";
 		return os;
 	}
 	std::ostream& operator<<(std::ostream& os, const position_t& pos) {
 		os << (*pos->m_state_info);
+		os << "\tZobrist key: " << std::hex << pos->m_poskey << "\n";
 		return os;
 	}
 
