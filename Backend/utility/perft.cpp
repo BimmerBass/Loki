@@ -38,6 +38,7 @@ namespace loki::utility {
 	size_t perft::perform(DEPTH d, std::ostream& os, bool debug) {
 		*m_pos << m_initial_fen;
 		m_nodes = 0;
+		m_nps = 0.0;
 
 		return perft_test(d, os, debug);
 	}
@@ -75,12 +76,12 @@ namespace loki::utility {
 		}
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> end_time = std::chrono::high_resolution_clock::now();
-
 		auto start = std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch().count();
 		auto end = std::chrono::time_point_cast<std::chrono::milliseconds>(end_time).time_since_epoch().count();
+		m_nps = static_cast<size_t>(double(m_nodes) / (double(end - start) / 1000.0));
 
 		os << "\nPerft test completed after: " << (end - start) << "ms.\n";
-		os << std::fixed << "Nodes/second: " << (double(m_nodes) / (double(end - start) / 1000.0)) << "\n";
+		os << std::fixed << "Nodes/second: " << m_nps << "\n";
 		os << "\nNodes visited: " << m_nodes << "\n";
 
 		return m_nodes;

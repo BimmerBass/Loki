@@ -35,7 +35,7 @@ namespace loki::position {
 		SQUARE									m_king_squares[SIDE_NB];		/* The two squares where the kings are. */
 		size_t									m_ply;							/* The ply-depth we're at from the base position. */
 		weak_position_t							m_self;							/* Shared-ptr to this object. */
-		bitboard_t								m_poskey;						/* Position (zobrist) hash key. */
+		hashkey_t								m_poskey;						/* Position (zobrist) hash key. */
 		zobrist_t								m_hashing_generator;			/* Object to alter the position's hash. */
 	public:
 		/// <summary>
@@ -114,7 +114,7 @@ namespace loki::position {
 		/// Generate a position hash-key from scratch.
 		/// Note: This is expensive, and should only be used for newly loaded positions. In all other cases, incremental updates in make_move and undo_move are preferred.
 		/// </summary>
-		void generate_poskey();
+		hashkey_t generate_poskey() const;
 	};
 }
 

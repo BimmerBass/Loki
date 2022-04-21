@@ -24,18 +24,20 @@ namespace loki::movegen {
 	/// All info that is lost when a move is made.
 	/// </summary>
 	struct lost_move_info {
-		PIECE	piece_captured;
-		PIECE	piece_moved;
-		uint8_t castling_rights;
-		size_t	fifty_moves_count;
-		SQUARE	en_passant_square;
+		PIECE		piece_captured;
+		PIECE		piece_moved;
+		uint8_t		castling_rights;
+		size_t		fifty_moves_count;
+		SQUARE		en_passant_square;
+		bitboard_t	position_hash;
 
-		void set(std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE>&& info) {
+		void set(std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info) {
 			piece_captured		= std::get<0>(info);
 			piece_moved			= std::get<1>(info);
 			castling_rights		= std::get<2>(info);
 			fifty_moves_count	= std::get<3>(info);
 			en_passant_square	= std::get<4>(info);
+			position_hash		= std::get<5>(info);
 		}
 	};
 
@@ -51,24 +53,58 @@ namespace loki::movegen {
 		size_t m_current_size = 0;
 
 	public:
-		void insert(move_t move, std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE>&& info) {
+		/// <summary>
+		/// Insert an entry into the stack.
+		/// Note: Throws std::out_of_range if the container size limit is exceeded.
+		/// </summary>
+		/// <param name="move"></param>
+		/// <param name="info"></param>
+		void insert(move_t move, std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info) {
 			if (m_current_size >= _Size) {
-				throw std::out_of_range("stack size limit exceeded");
+				throw std::out_of_range("insert() called on a full stack. Limit exceeded.");
 			}
 			m_stack[m_current_size].first = move;
 			m_stack[m_current_size].second.set(std::move(info));
 
 			m_current_size++;
 		}
+
+		/// <summary>
+		/// Remove the latest inserted entry from the stack.
+		/// Note: Throws std::out_of_range if the container is empty.
+		/// </summary>
+		/// <returns></returns>
 		const value_t& pop() {
 			if (m_current_size <= 0) {
 				throw std::out_of_range("pop() called on an empty stack");
 			}
 			return m_stack[--m_current_size];
 		}
+
+		/// <summary>
+		/// Returns the latest inserted entry from the stack, but in contrast to pop(), it doesn't alter the internal state.
+		/// Note: Throws std::out_of_range if the container is empty.
+		/// </summary>
+		/// <returns></returns>
+		const value_t& top() const {
+			if (m_current_size <= 0) {
+				throw std::out_of_range("top() called on an empty stack");
+			}
+			return m_stack[m_current_size - 1];
+		}
+
+		/// <summary>
+		/// Retrieve the current size of the container
+		/// </summary>
+		/// <returns></returns>
 		size_t size() const noexcept {
 			return m_current_size;
 		}
+
+		/// <summary>
+		/// Clear the container.
+		/// </summary>
+		/// <returns></returns>
 		void clear() noexcept {
 			m_current_size = 0;
 		}

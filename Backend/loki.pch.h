@@ -44,6 +44,7 @@ namespace loki {
 	// bit 14..16 -> special move flag ((0) promotion = 00, (1) en-passant = 01, (2) castling = 2, (3) neither = 11)
 	using move_t		= uint16_t;
 	using bitboard_t	= uint64_t;
+	using hashkey_t		= uint64_t;
 
 	enum SIDE : int64_t {
 		WHITE = 0,

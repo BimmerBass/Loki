@@ -90,11 +90,17 @@ namespace loki::position {
 				piece_moved, 
 				m_state_info->castling_rights.get(), 
 				m_state_info->fifty_move_counter, 
-				m_state_info->en_passant_square));
+				m_state_info->en_passant_square,
+				m_poskey));
+
+		// Remove en-passant from position key.
+		if (m_state_info->en_passant_square != NO_SQ)
+			m_hashing_generator->toggle_ep(m_poskey, m_state_info->en_passant_square);
 
 		auto add_to_destination = [&]() {
 			m_piece_list[me][destination] = piece_moved;
 			m_state_info->piece_placements[me][piece_moved] = set_bit(m_state_info->piece_placements[me][piece_moved], destination);
+			m_hashing_generator->toggle_piece(m_poskey, me, piece_moved, destination);
 
 			if (piece_moved == KING)
 				m_king_squares[me] = static_cast<SQUARE>(destination);
@@ -103,12 +109,14 @@ namespace loki::position {
 		// handle moved piece
 		m_state_info->piece_placements[me][piece_moved] = toggle_bit(m_state_info->piece_placements[me][piece_moved], origin);
 		m_piece_list[me][origin] = PIECE_NB;
+		m_hashing_generator->toggle_piece(m_poskey, me, piece_moved, origin);
 
 		size_t en_pas_cap;
 		switch (special_props) {
 		case movegen::PROMOTION: /* Add promotion piece instead of moved piece. */
 			m_piece_list[me][destination] = promotion_piece;
 			m_state_info->piece_placements[me][promotion_piece] = set_bit(m_state_info->piece_placements[me][promotion_piece], destination);
+			m_hashing_generator->toggle_piece(m_poskey, me, promotion_piece, destination);
 			break;
 		
 		case movegen::CASTLE: /* Move the rook. */
@@ -121,6 +129,8 @@ namespace loki::position {
 			en_pas_cap = (me == WHITE) ? m_state_info->en_passant_square - 8 : m_state_info->en_passant_square + 8;
 			m_piece_list[them][en_pas_cap] = PIECE_NB;
 			m_state_info->piece_placements[them][PAWN] = toggle_bit(m_state_info->piece_placements[them][PAWN], en_pas_cap);
+			m_hashing_generator->toggle_piece(m_poskey, them, PAWN, en_pas_cap);
+
 			[[fallthrough]];
 		
 		case movegen::NOT_SPECIAL: /* Add moved piece to destination. */
@@ -132,6 +142,7 @@ namespace loki::position {
 		if (piece_captured != PIECE_NB) {
 			m_piece_list[them][destination] = PIECE_NB;
 			m_state_info->piece_placements[them][piece_captured] = toggle_bit(m_state_info->piece_placements[them][piece_captured], destination);
+			m_hashing_generator->toggle_piece(m_poskey, them, piece_captured, destination);
 		}
 
 		// handle new castling rights.
@@ -149,18 +160,27 @@ namespace loki::position {
 		if (origin == H8 || destination == H8)
 			m_state_info->castling_rights -= BKCA;
 
+		// If the castling rights has changed, update the position hash.
+		if (m_move_history->top().second.castling_rights != m_state_info->castling_rights.get()) {
+			m_hashing_generator->toggle_castling(m_poskey, m_move_history->top().second.castling_rights);
+			m_hashing_generator->toggle_castling(m_poskey, m_state_info->castling_rights.get());
+		}
+
 		// handle new en-passant square.
 		m_state_info->en_passant_square = NO_SQ;
 
-		if (piece_moved == PAWN && 
-			((me == WHITE && destination == origin + 16) || (me == BLACK && destination == origin - 16)))
+		if (piece_moved == PAWN &&
+			((me == WHITE && destination == origin + 16) || (me == BLACK && destination == origin - 16))) {
 			m_state_info->en_passant_square = static_cast<SQUARE>(me == WHITE ? destination - 8 : destination + 8);
+			m_hashing_generator->toggle_ep(m_poskey, m_state_info->en_passant_square);
+		}
 
 		// misc data updates.
 		m_ply++;
 		m_state_info->fifty_move_counter++;
 		m_state_info->full_move_counter += me == BLACK ? 1 : 0;
 		update_occupancies();
+		m_hashing_generator->toggle_stm(m_poskey);
 
 		// if we're in check, undo the move since it was illegal
 		if (in_check()) {
@@ -169,6 +189,7 @@ namespace loki::position {
 			return false;
 		}
 		m_state_info->side_to_move = !me;
+
 		return true;
 	}
 
@@ -234,6 +255,7 @@ namespace loki::position {
 		m_state_info->fifty_move_counter = move_info.second.fifty_moves_count;
 		m_state_info->full_move_counter -= me == BLACK ? 1 : 0;
 		m_state_info->en_passant_square = move_info.second.en_passant_square;
+		m_poskey						= move_info.second.position_hash;
 	}
 
 	/// <summary>
@@ -382,28 +404,32 @@ namespace loki::position {
 		}
 
 		// Now generate our poskey.
-		generate_poskey();
+		m_poskey = generate_poskey();
 	}
 
 	/// <summary>
 	/// Generate a position key from scratch
 	/// </summary>
-	void position::generate_poskey() {
-		m_poskey = 0;
+	hashkey_t position::generate_poskey() const {
+		hashkey_t poskey = 0;
 		
 		if (m_state_info->side_to_move == WHITE)
-			m_hashing_generator->toggle_stm(m_poskey);
+			m_hashing_generator->toggle_stm(poskey);
 		if (m_state_info->en_passant_square != NO_SQ)
-			m_hashing_generator->toggle_ep(m_poskey, m_state_info->en_passant_square);
-		m_hashing_generator->toggle_castling(m_poskey, m_state_info->castling_rights);
+			m_hashing_generator->toggle_ep(poskey, m_state_info->en_passant_square);
+		m_hashing_generator->toggle_castling(poskey, m_state_info->castling_rights.get());
 
 		// Piece placements.
 		for (size_t sq = A1; sq <= H8; sq++) {
 			for (size_t pce = PAWN; pce <= KING; pce++) {
-				m_hashing_generator->toggle_piece(m_poskey, WHITE, static_cast<PIECE>(pce), static_cast<SQUARE>(sq));
-				m_hashing_generator->toggle_piece(m_poskey, BLACK, static_cast<PIECE>(pce), static_cast<SQUARE>(sq));
+				if (m_piece_list[WHITE][sq] == pce)
+					m_hashing_generator->toggle_piece(poskey, WHITE, static_cast<PIECE>(pce), static_cast<SQUARE>(sq));
+				if (m_piece_list[BLACK][sq] == pce)
+					m_hashing_generator->toggle_piece(poskey, BLACK, static_cast<PIECE>(pce), static_cast<SQUARE>(sq));
 			}
 		}
+
+		return poskey;
 	}
 
 	/// <summary>
@@ -432,12 +458,18 @@ namespace loki::position {
 	/// <returns></returns>
 	std::ostream& operator<<(std::ostream& os, const position& pos) {
 		os << (*pos.m_state_info);
-		os << "\tZobrist key: " << std::hex << pos.m_poskey << "\n";
+		
+		std::stringstream ss;
+		ss << "\tZobrist key: " << std::hex << pos.m_poskey << "\n";
+		os << ss.str();
 		return os;
 	}
 	std::ostream& operator<<(std::ostream& os, const position_t& pos) {
 		os << (*pos->m_state_info);
-		os << "\tZobrist key: " << std::hex << pos->m_poskey << "\n";
+		
+		std::stringstream ss;
+		ss << "\tZobrist key: " << std::hex << pos->m_poskey << "\n";
+		os << ss.str();
 		return os;
 	}
 

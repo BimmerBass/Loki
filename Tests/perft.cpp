@@ -36,8 +36,24 @@ namespace loki::tests {
 				for (const auto& node_count : tp.node_counts) {
 					size_t nodes = perft_tester.perform(node_count.first, log_file, false);
 					Assert::IsTrue(nodes == node_count.second);
+
+					m_running_nps.push_back(perft_tester.previous_nps());
 				}
 			}
+
+			// Write the average NPS to the log.
+			std::erase_if(m_running_nps, [](const size_t& x) {return x == static_cast<size_t>(-1); });
+			double running_avg = 0.0;
+			double count = static_cast<double>(m_running_nps.size());
+
+			for (auto nps : m_running_nps) {
+				//running_avg = ((count / (count + 1.0)) * (running_avg / (count + 1.0))) + (nps / (count + 1.0));
+				running_avg += nps;
+			}
+			running_avg /= count;
+
+			log_file << "\n\tRunning average NPS: " << running_avg << std::endl;
+			log_file.close();
 		}
 
 	private:
@@ -45,7 +61,8 @@ namespace loki::tests {
 			std::string fen = "";
 			std::vector<std::pair<DEPTH, size_t>> node_counts{};
 		};
-		std::vector<perft_test_point> m_test_points;
+		std::vector<perft_test_point>	m_test_points;
+		std::vector<size_t>				m_running_nps;
 
 		void read_perft_file() {
 			auto perft_file = std::ifstream("data/perft.fen");

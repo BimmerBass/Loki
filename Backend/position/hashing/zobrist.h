@@ -24,26 +24,26 @@ namespace loki::position {
 	private:
 		static std::array<
 			std::array<
-			std::unique_ptr<bitboard_t[]>, // 64 squares.
+			std::unique_ptr<hashkey_t[]>, // 64 squares.
 			PIECE_NB>,
 			SIDE_NB>							piece_hashes;
-		static std::unique_ptr<bitboard_t[]>	ep_hashes;
-		static std::unique_ptr<bitboard_t[]>	castling_hashes;
-		static bitboard_t						stm_hash;
+		static std::unique_ptr<hashkey_t[]>	ep_hashes;
+		static std::unique_ptr<hashkey_t[]>	castling_hashes;
+		static hashkey_t						stm_hash;
 
 	public:
 		zobrist();
 
-		inline void toggle_piece(bitboard_t& key, SIDE s, PIECE pce, SQUARE sq) const noexcept {
+		inline void toggle_piece(hashkey_t& key, SIDE s, PIECE pce, size_t sq) const noexcept {
 			key ^= piece_hashes[s][pce][sq];
 		}
-		inline void toggle_ep(bitboard_t& key, SQUARE ep_sq) const noexcept {
+		inline void toggle_ep(hashkey_t& key, size_t ep_sq) const noexcept {
 			key ^= ep_hashes[ep_sq];
 		}
-		inline void toggle_castling(bitboard_t& key, castle_rights& cr) {
-			key ^= castling_hashes[cr.get()];
+		inline void toggle_castling(hashkey_t& key, uint8_t cr) {
+			key ^= castling_hashes[cr];
 		}
-		inline void toggle_stm(bitboard_t& key) {
+		inline void toggle_stm(hashkey_t& key) {
 			key ^= stm_hash;
 		}
 

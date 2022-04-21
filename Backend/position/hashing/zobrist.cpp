@@ -22,12 +22,12 @@ namespace loki::position {
 
 	std::array<
 		std::array<
-		std::unique_ptr<bitboard_t[]>, // 64 squares.
+		std::unique_ptr<hashkey_t[]>, // 64 squares.
 		PIECE_NB>,
 		SIDE_NB>					zobrist::piece_hashes{};
-	std::unique_ptr<bitboard_t[]>	zobrist::ep_hashes{};
-	std::unique_ptr<bitboard_t[]>	zobrist::castling_hashes{};
-	bitboard_t						zobrist::stm_hash{};
+	std::unique_ptr<hashkey_t[]>	zobrist::ep_hashes{};
+	std::unique_ptr<hashkey_t[]>	zobrist::castling_hashes{};
+	hashkey_t						zobrist::stm_hash{};
 
 	zobrist::zobrist() {
 		static std::mutex mtx;
@@ -48,13 +48,13 @@ namespace loki::position {
 	void zobrist::init() {
 		std::mt19937_64 rng(0x1234);
 
-		ep_hashes		= std::make_unique<bitboard_t[]>(SQ_NB);
-		castling_hashes = std::make_unique<bitboard_t[]>(16);
+		ep_hashes		= std::make_unique<hashkey_t[]>(SQ_NB);
+		castling_hashes = std::make_unique<hashkey_t[]>(16);
 		stm_hash = rng();
 
 		for (size_t pce = PAWN; pce <= KING; pce++) {
-			piece_hashes[WHITE][pce] = std::make_unique<bitboard_t[]>(SQ_NB);
-			piece_hashes[BLACK][pce] = std::make_unique<bitboard_t[]>(SQ_NB);
+			piece_hashes[WHITE][pce] = std::make_unique<hashkey_t[]>(SQ_NB);
+			piece_hashes[BLACK][pce] = std::make_unique<hashkey_t[]>(SQ_NB);
 
 			for (size_t sq = A1; sq <= H8; sq++) {
 				piece_hashes[WHITE][pce][sq] = rng();

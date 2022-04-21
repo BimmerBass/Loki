@@ -11,7 +11,7 @@ int main() {
 	*m_pos << start_fen;
 	std::cout << m_pos << std::endl;
 
-	//loki::utility::perft pft(start_fen);
-	//
-	//pft.perform(loki::DEPTH(6), std::cout, true);
+	loki::utility::perft pft(start_fen);
+	
+	pft.perform(loki::DEPTH(6), std::cout, true);
 }
