@@ -113,5 +113,8 @@
     <ClInclude Include="position\hashing\zobrist.h">
       <Filter>Header Files\position\hashing</Filter>
     </ClInclude>
+    <ClInclude Include="utility\fast_stack.h">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

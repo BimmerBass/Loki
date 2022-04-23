@@ -304,7 +304,7 @@ namespace loki {
 #endif
 	}
 
-	inline size_t scan_forward(bitboard_t bb) { // Find the LS1B
+	inline size_t scan_forward(const bitboard_t& bb) { // Find the LS1B
 		assert(bb != 0);
 
 #if defined(__GNUC__) // GCC intrinsic.
@@ -354,7 +354,7 @@ namespace loki {
 
 	// Shifts the bitboard one square in some direction. From white's perspective.
 	template <DIRECTION d>
-	constexpr inline bitboard_t shift(bitboard_t bb) {
+	constexpr inline bitboard_t shift(const bitboard_t& bb) {
 		return d == NORTH ? bb << 8
 			: d == SOUTH ? bb >> 8
 			: d == EAST ? (bb & ~bitmasks::file_masks[FILE_H]) << 1
@@ -407,6 +407,9 @@ namespace loki {
 
 namespace loki::utility {
 	class perft;
+
+	template<typename _Ty, size_t _Size> requires (_Size > 0)
+	class fast_stack;
 }
 
 namespace loki::movegen {
@@ -441,7 +444,7 @@ namespace loki::movegen {
 		return static_cast<move_t>((to_sq << 10) | (from_sq << 4) | (promotion_piece << 2) | (special));
 	}
 
-	template<size_t _Size>
+	template<size_t _Size> requires (_Size > 0)
 	class move_stack;
 	template<size_t _Size> requires(_Size > 0)
 	class move_list;
@@ -483,6 +486,7 @@ namespace loki::position {
 #include "movegen/move_list.h"
 #include "movegen/move_generator.h"
 
+#include "utility/fast_stack.h"
 #include "utility/perft.h"
 
 #endif

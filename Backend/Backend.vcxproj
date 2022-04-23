@@ -192,6 +192,7 @@
     <ClInclude Include="position\gamestate.h" />
     <ClInclude Include="position\hashing\zobrist.h" />
     <ClInclude Include="position\position.h" />
+    <ClInclude Include="utility\fast_stack.h" />
     <ClInclude Include="utility\perft.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

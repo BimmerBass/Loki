@@ -42,16 +42,10 @@ namespace loki::movegen {
 	};
 
 	/// <summary>
-	/// A simple implementation of a stack-allocated stack.
+	/// move_stack has all the methods of fast_stack but a slightly optimized insert method for just this type of data.
 	/// </summary>
-	template<size_t _Size>
-	class move_stack {
-	public:
-		using value_t = std::pair<move_t, lost_move_info>;
-	private:
-		value_t m_stack[_Size] = {};
-		size_t m_current_size = 0;
-
+	template<size_t _S> requires (_S > 0)
+	class move_stack : public utility::fast_stack<std::pair<move_t, lost_move_info>, _S> {
 	public:
 		/// <summary>
 		/// Insert an entry into the stack.
@@ -59,82 +53,16 @@ namespace loki::movegen {
 		/// </summary>
 		/// <param name="move"></param>
 		/// <param name="info"></param>
-		void insert(move_t move, std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info) {
-			if (m_current_size >= _Size) {
+		inline void insert(move_t move, std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info) {
+			if (this->m_current_size >= this->max_size) {
 				throw std::out_of_range("insert() called on a full stack. Limit exceeded.");
 			}
-			m_stack[m_current_size].first = move;
-			m_stack[m_current_size].second.set(std::move(info));
+			this->m_stack[this->m_current_size].first = move;
+			this->m_stack[this->m_current_size].second.set(std::move(info));
 
-			m_current_size++;
-		}
-
-		/// <summary>
-		/// Remove the latest inserted entry from the stack.
-		/// Note: Throws std::out_of_range if the container is empty.
-		/// </summary>
-		/// <returns></returns>
-		const value_t& pop() {
-			if (m_current_size <= 0) {
-				throw std::out_of_range("pop() called on an empty stack");
-			}
-			return m_stack[--m_current_size];
-		}
-
-		/// <summary>
-		/// Returns the latest inserted entry from the stack, but in contrast to pop(), it doesn't alter the internal state.
-		/// Note: Throws std::out_of_range if the container is empty.
-		/// </summary>
-		/// <returns></returns>
-		const value_t& top() const {
-			if (m_current_size <= 0) {
-				throw std::out_of_range("top() called on an empty stack");
-			}
-			return m_stack[m_current_size - 1];
-		}
-
-		/// <summary>
-		/// Retrieve the current size of the container
-		/// </summary>
-		/// <returns></returns>
-		size_t size() const noexcept {
-			return m_current_size;
-		}
-
-		/// <summary>
-		/// Clear the container.
-		/// </summary>
-		/// <returns></returns>
-		void clear() noexcept {
-			m_current_size = 0;
-		}
-
-		// Constructor/destructor.
-		move_stack() = default;
-		virtual ~move_stack() = default;
-
-		// copy constructor/operator.
-		move_stack(const move_stack& _src) {
-			std::copy(
-				std::begin(_src.m_stack),
-				std::end(_src.m_stack),
-				std::begin(m_stack)
-			);
-			m_current_size = _src.m_current_size;
-		}
-		move_stack& operator=(const move_stack& _src) {
-			if (this != &_src) {
-				std::copy(
-					std::begin(_src.m_stack),
-					std::end(_src.m_stack),
-					std::begin(m_stack)
-				);
-				m_current_size = _src.m_current_size;
-			}
-			return *this;
+			this->m_current_size++;
 		}
 	};
-
 }
 
 #endif
