@@ -65,6 +65,8 @@ namespace loki::movegen {
 		template<SIDE _S, MOVE_TYPE _Ty>
 		void get_king_moves();
 
+		// initialization methods.
+		friend class ::loki::utility::initializer;
 		static void init_knight_attacks() noexcept;
 		static void init_king_attacks() noexcept;
 

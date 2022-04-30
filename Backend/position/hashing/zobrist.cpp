@@ -29,19 +29,6 @@ namespace loki::position {
 	std::unique_ptr<hashkey_t[]>	zobrist::castling_hashes{};
 	hashkey_t						zobrist::stm_hash{};
 
-	zobrist::zobrist() {
-		static std::mutex mtx;
-		static std::atomic_bool entries_initialized = false;
-
-		{
-			std::lock_guard<std::mutex> lock(mtx);
-			if (!entries_initialized) {
-				init();
-				entries_initialized = true;
-			}
-		}
-	}
-
 	/// <summary>
 	/// Initialize the tables of random numbers used by the hashing algorithm.
 	/// </summary>

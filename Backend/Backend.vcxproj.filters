@@ -78,6 +78,12 @@
     <ClCompile Include="position\hashing\zobrist.cpp">
       <Filter>Source Files\position\hashing</Filter>
     </ClCompile>
+    <ClCompile Include="utility\initializer.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\slider_generator.cpp">
+      <Filter>Source Files\movegen\magics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.h">
@@ -114,6 +120,9 @@
       <Filter>Header Files\position\hashing</Filter>
     </ClInclude>
     <ClInclude Include="utility\fast_stack.h">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\initializer.h">
       <Filter>Header Files\utility</Filter>
     </ClInclude>
   </ItemGroup>

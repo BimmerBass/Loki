@@ -21,6 +21,7 @@
 namespace loki::position {
 
 	class zobrist {
+		friend class ::loki::utility::initializer;
 	private:
 		static std::array<
 			std::array<
@@ -32,8 +33,6 @@ namespace loki::position {
 		static hashkey_t						stm_hash;
 
 	public:
-		zobrist();
-
 		inline void toggle_piece(hashkey_t& key, SIDE s, PIECE pce, size_t sq) const noexcept {
 			key ^= piece_hashes[s][pce][sq];
 		}
@@ -48,7 +47,7 @@ namespace loki::position {
 		}
 
 	private:
-		void init();
+		static void init();
 	};
 
 }

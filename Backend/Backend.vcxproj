@@ -176,9 +176,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="movegen\magics\magics_index.cpp" />
+    <ClCompile Include="movegen\magics\slider_generator.cpp" />
     <ClCompile Include="movegen\move_generator.cpp" />
     <ClCompile Include="position\hashing\zobrist.cpp" />
     <ClCompile Include="position\position.cpp" />
+    <ClCompile Include="utility\initializer.cpp" />
     <ClCompile Include="utility\perft.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +195,7 @@
     <ClInclude Include="position\hashing\zobrist.h" />
     <ClInclude Include="position\position.h" />
     <ClInclude Include="utility\fast_stack.h" />
+    <ClInclude Include="utility\initializer.h" />
     <ClInclude Include="utility\perft.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -410,6 +410,8 @@ namespace loki::utility {
 
 	template<typename _Ty, size_t _Size> requires (_Size > 0)
 	class fast_stack;
+
+	class initializer;
 }
 
 namespace loki::movegen {
@@ -488,5 +490,6 @@ namespace loki::position {
 
 #include "utility/fast_stack.h"
 #include "utility/perft.h"
+#include "utility/initializer.h"
 
 #endif

@@ -24,16 +24,17 @@ namespace loki::movegen::magics {
 	/// Just a wrapper for both the rook and bishop indexes.
 	/// </summary>
 	class slider_generator {
+		friend class ::loki::utility::initializer;
 	private:
-		magics_index_t<BISHOP>	m_bishop_index;
-		magics_index_t<ROOK>	m_rook_index;
+		static magics_index_t<BISHOP>	m_bishop_index;
+		static magics_index_t<ROOK>		m_rook_index;
 
-	public:
-		slider_generator() {
+		// Called only once.
+		static void init() {
 			m_bishop_index = std::make_unique<magics_index<BISHOP>>();
 			m_rook_index = std::make_unique<magics_index<ROOK>>();
 		}
-
+	public:
 		inline bitboard_t rook_attacks(size_t sq, bitboard_t occupancy) const noexcept {
 			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
 		}
@@ -44,7 +45,6 @@ namespace loki::movegen::magics {
 			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy) | m_bishop_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
 		}
 	};
-
 }
 
 #endif

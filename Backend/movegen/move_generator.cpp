@@ -26,20 +26,7 @@ namespace loki::movegen {
 	move_generator::move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept :
 		m_position(pos),
 		m_slider_generator(slider_generator),
-		m_moves(nullptr) {
-
-		static std::mutex mtx;
-		static std::atomic_bool tables_initialized = false;
-		{
-			std::lock_guard<std::mutex> lock(mtx);
-			if (!tables_initialized) {
-				init_knight_attacks();
-				init_king_attacks();
-
-				tables_initialized = true;
-			}
-		}
-	}
+		m_moves(nullptr) {	}
 
 	/// <summary>
 	/// Generate a list of pseudo-legal moves in the position.
