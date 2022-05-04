@@ -13,10 +13,39 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\uci">
+      <UniqueIdentifier>{dd6ceb97-b74e-4428-ae04-5c166a5fa2d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\uci\individual_parsers">
+      <UniqueIdentifier>{a38ea15b-6d99-458b-b17d-0886fa2384a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\uci">
+      <UniqueIdentifier>{d335a81c-aeab-4df6-bd0b-fb2ae86ce1b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\uci\individual_parsers">
+      <UniqueIdentifier>{ba1bcf15-139e-429d-b4bf-7ef8c9eed043}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="uci\command_parser.cpp">
+      <Filter>Source Files\uci</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\tokenizer.cpp">
+      <Filter>Source Files\uci</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="uci\command_parser.h">
+      <Filter>Header Files\uci</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\tokenizer.h">
+      <Filter>Header Files\uci</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\individual_parsers\position_parser.h">
+      <Filter>Header Files\uci\individual_parsers</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

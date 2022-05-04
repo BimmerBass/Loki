@@ -125,5 +125,8 @@
     <ClInclude Include="utility\initializer.h">
       <Filter>Header Files\utility</Filter>
     </ClInclude>
+    <ClInclude Include="search\limits.h">
+      <Filter>Header Files\search</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

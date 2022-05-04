@@ -492,4 +492,6 @@ namespace loki::position {
 #include "utility/perft.h"
 #include "utility/initializer.h"
 
+#include "search/limits.h"
+
 #endif

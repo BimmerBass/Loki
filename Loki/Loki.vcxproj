@@ -160,11 +160,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="uci\command_parser.cpp" />
+    <ClCompile Include="uci\tokenizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Backend\Backend.vcxproj">
       <Project>{484bfad5-8adf-4d19-b8f9-550db0d4e58a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="uci\command_parser.h" />
+    <ClInclude Include="uci\individual_parsers\position_parser.h" />
+    <ClInclude Include="uci\tokenizer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
