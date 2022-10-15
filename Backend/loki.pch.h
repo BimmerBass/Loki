@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <format>
 #include <random>
+#include <sstream>
 
 #if (defined(_MSC_VER) || defined(__INTEL_COMPILER))
 #include <nmmintrin.h> // Used for count_bits

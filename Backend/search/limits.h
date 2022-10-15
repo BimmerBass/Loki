@@ -20,26 +20,7 @@
 
 namespace loki::search {
 
-	class limits {
-		using time_point = std::chrono::duration<std::chrono::milliseconds>;
-	private:
-		// All constant values are private.
-
-		time_point			m_start_time;		/* The time the search started */
-		time_point			m_time[SIDE_NB];	/* The time white and black has left. */
-		DEPTH				m_max_depth;		/* The maximum depth to search to. */
-		size_t				m_moves_togo;		/* The number of moves until next time control. */
-		bool				m_should_quit;		/* Flag signalling Loki to quit. */
-		bool				m_should_stop;		/* Flag signalling Loki to stop searching. */
-		std::vector<move_t> m_moves;			/* The list of moves we're asked to search. */
-	public:
-		inline bool has_time_limit() const noexcept;
-		inline bool time_exceeded() const noexcept;
-
-		// Values that the search function can alter.
-		DEPTH	selective_depth;				/* The max depth we've reached due to extensions/reductions. */
-		size_t	nodes_searched;					/* The amount of nodes we've encountered during the search. */
-	};
+	
 }
 
 #endif
