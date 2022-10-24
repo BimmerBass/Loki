@@ -26,6 +26,8 @@ namespace loki::position
 	/// </summary>
 	struct game_state
 	{
+		EXCEPTION_CLASS(e_gameState, e_lokiError);
+
 		// Piece positions.
 		bitboard_t piece_placements[SIDE::SIDE_NB][PIECE::PIECE_NB];
 		SIDE side_to_move;

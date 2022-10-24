@@ -36,7 +36,11 @@
 #endif
 #endif
 
+#include "utility/exception.h"
+
 namespace loki {
+	EXCEPTION(e_lokiError);
+
 	// General type definitions.
 	// Note: A move is stored in a 16-bit integer, and the data is saved as follows (from lsb to msb):
 	// bit 0..5 -> to square (0 to 63)

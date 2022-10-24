@@ -198,6 +198,7 @@
     <ClInclude Include="position\hashing\zobrist.h" />
     <ClInclude Include="position\position.h" />
     <ClInclude Include="search\limits.h" />
+    <ClInclude Include="utility\exception.h" />
     <ClInclude Include="utility\fast_stack.h" />
     <ClInclude Include="utility\initializer.h" />
     <ClInclude Include="utility\perft.h" />

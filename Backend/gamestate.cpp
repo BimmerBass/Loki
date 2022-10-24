@@ -24,6 +24,8 @@ namespace loki::position
 #pragma region FEN-Parsing helpers
 	namespace
 	{
+		EXCEPTION_CLASS(e_invalidFen, game_state::e_gameState);
+
 		std::vector<std::stringstream> split_string(std::stringstream& ss, char delim = ' ')
 		{
 			std::vector<std::stringstream> output;
@@ -162,7 +164,7 @@ namespace loki::position
 
 				if (ranks.size() != RANK_NB)
 				{
-					throw std::runtime_error("Invalid FEN: There should be exactly eight fields separated by '/' to describe the piece placements.");
+					throw e_invalidFen("Invalid FEN: There should be exactly eight fields separated by '/' to describe the piece placements.");
 				}
 
 				for (auto r = 0; r < ranks.size(); r++)
@@ -196,7 +198,7 @@ namespace loki::position
 							case 'q': pos->piece_placements[BLACK][QUEEN] |= (bitboard_t(1) << get_square(internal_rank, f)); break;
 							case 'k': pos->piece_placements[BLACK][KING] |= (bitboard_t(1) << get_square(internal_rank, f)); break;
 							default:
-								throw std::runtime_error("Invalid FEN: Illegal character found while parsing piece placements.");
+								throw e_invalidFen("Invalid FEN: Illegal character found while parsing piece placements.");
 							}
 						}
 						current_token_inx++;
@@ -206,7 +208,7 @@ namespace loki::position
 			void side_to_move(game_state* pos, std::stringstream& ss)
 			{
 				if (ss.str().size() != 1 || (std::tolower(ss.str()[0]) != 'w' && std::tolower(ss.str()[0]) != 'b'))
-					throw std::runtime_error("Invalid FEN: Side to move is ill-formed");
+					throw e_invalidFen("Invalid FEN: Side to move is ill-formed");
 				pos->side_to_move = std::tolower(ss.str()[0]) == 'w' ? WHITE : BLACK;
 			}
 			void castling(game_state* pos, std::stringstream& ss)
@@ -214,7 +216,7 @@ namespace loki::position
 				auto castling_str = ss.str();
 
 				if (castling_str.find_first_not_of("KQkq-") != std::string::npos)
-					throw std::runtime_error("Invalid FEN: Castling rights are ill-formed");
+					throw e_invalidFen("Invalid FEN: Castling rights are ill-formed");
 
 				if (castling_str == "-")
 				{
@@ -248,7 +250,7 @@ namespace loki::position
 					return;
 				}
 				if (!is_algebraic(ss.str()))
-					throw std::runtime_error("Invalid FEN: En-passant square was not null, while also not being in algebraic notation.");
+					throw e_invalidFen("Invalid FEN: En-passant square was not null, while also not being in algebraic notation.");
 				pos->en_passant_square = from_algebraic(ss.str());
 			}
 			void move_clocks(game_state* pos, std::stringstream& half_ss, std::stringstream& full_ss)
@@ -260,7 +262,7 @@ namespace loki::position
 				}
 				catch (std::exception& e)
 				{
-					throw std::runtime_error("Invalid FEN: Error parsing move clocks (message: )" + std::string(e.what()));
+					throw e_invalidFen("Invalid FEN: Error parsing move clocks (message: )" + std::string(e.what()));
 				}
 			}
 		}
@@ -275,7 +277,7 @@ namespace loki::position
 		auto fen_fields = split_string(ss);
 
 		if (fen_fields.size() < 4) // piece placement, side to move, castling rights and en passant square are required.
-			throw std::runtime_error("Invalid FEN: piece placement, side to move, castling rights and en passant square are required.");
+			throw e_invalidFen("Invalid FEN: piece placement, side to move, castling rights and en passant square are required.");
 		read::position(this, fen_fields[0]);
 		read::side_to_move(this, fen_fields[1]);
 		read::castling(this, fen_fields[2]);

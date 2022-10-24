@@ -28,6 +28,7 @@ namespace loki::utility
 	template<typename _Ty, size_t _Size> requires (_Size > 0)
 		class fast_stack
 	{
+		EXCEPTION_CLASS(e_fastStack, e_lokiError);
 	public:
 		using value_t = _Ty;
 		using reference_t = _Ty&;
@@ -46,7 +47,7 @@ namespace loki::utility
 		void insert(value_t&& element)
 		{
 			if (m_current_size >= max_size)
-				throw std::out_of_range("insert() was attempted on a full fast_stack object.");
+				throw e_fastStack("insert() was attempted on a full fast_stack object.");
 
 			m_stack[m_current_size] = element;
 			m_current_size++;
@@ -59,7 +60,7 @@ namespace loki::utility
 		reference_t pop()
 		{
 			if (m_current_size <= 0)
-				throw std::out_of_range("pop() was called on an empty fast_stack object.");
+				throw e_fastStack("pop() was called on an empty fast_stack object.");
 			return m_stack[--m_current_size];
 		}
 
@@ -70,7 +71,7 @@ namespace loki::utility
 		const_reference_t top() const
 		{
 			if (m_current_size <= 0)
-				throw std::out_of_range("top() was called on an empty fast_stack object.");
+				throw e_fastStack("top() was called on an empty fast_stack object.");
 			return m_stack[m_current_size - 1];
 		}
 

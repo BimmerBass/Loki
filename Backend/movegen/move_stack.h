@@ -50,10 +50,11 @@ namespace loki::movegen
 	template<size_t _S> requires (_S > 0)
 		class move_stack : public utility::fast_stack<std::pair<move_t, lost_move_info>, _S>
 	{
+		EXCEPTION_CLASS(e_moveStack, e_lokiError);
 	public:
 		/// <summary>
 		/// Insert an entry into the stack.
-		/// Note: Throws std::out_of_range if the container size limit is exceeded.
+		/// Note: Throws an exception if the container size limit is exceeded.
 		/// </summary>
 		/// <param name="move"></param>
 		/// <param name="info"></param>
@@ -61,7 +62,7 @@ namespace loki::movegen
 		{
 			if (this->m_current_size >= this->max_size)
 			{
-				throw std::out_of_range("insert() called on a full stack. Limit exceeded.");
+				throw e_moveStack("insert() called on a full stack. Limit exceeded.");
 			}
 			this->m_stack[this->m_current_size].first = move;
 			this->m_stack[this->m_current_size].second.set(std::move(info));

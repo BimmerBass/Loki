@@ -24,6 +24,7 @@ namespace loki::movegen
 
 	class move_generator
 	{
+		EXCEPTION_CLASS(e_moveGenerator, e_lokiError);
 	private:
 		using attack_table_t = std::array<bitboard_t, 64>;
 

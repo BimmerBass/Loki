@@ -24,6 +24,7 @@ namespace loki::movegen
 	template<size_t _Size> requires(_Size > 0)
 		class move_list
 	{
+		EXCEPTION_CLASS(e_moveList, e_lokiError);
 	public:
 		struct scored_move
 		{
@@ -45,7 +46,7 @@ namespace loki::movegen
 		{
 			if (m_size >= _Size)
 			{
-				throw std::runtime_error("move_list capacity exceeded");
+				throw e_moveList("move_list capacity exceeded");
 			}
 			m_movelist[m_size].move = move;
 			m_movelist[m_size].score = score;
@@ -56,7 +57,7 @@ namespace loki::movegen
 		{
 			if (m_size >= _Size)
 			{
-				throw std::runtime_error("move_list capacity exceeded");
+				throw e_moveList("move_list capacity exceeded");
 			}
 			m_movelist[m_size].move = create_move(from_sq, to_sq, special, promotion_piece);
 			m_movelist[m_size].score = score;
@@ -76,7 +77,7 @@ namespace loki::movegen
 		{
 			if (idx >= m_size)
 			{
-				throw std::out_of_range("Index requested was bigger than the list.");
+				throw e_moveList("Index requested was bigger than the list.");
 			}
 			return m_movelist[idx];
 		}

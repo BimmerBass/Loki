@@ -125,5 +125,8 @@
     <ClInclude Include="search\limits.h">
       <Filter>Header Files\search</Filter>
     </ClInclude>
+    <ClInclude Include="utility\exception.h">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
