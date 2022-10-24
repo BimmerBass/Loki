@@ -46,7 +46,7 @@ namespace loki::movegen
 		{
 			if (m_size >= _Size)
 			{
-				throw e_moveList("move_list capacity exceeded");
+				throw e_moveList(FORMAT_EXCEPTION_MESSAGE("move_list capacity exceeded"));
 			}
 			m_movelist[m_size].move = move;
 			m_movelist[m_size].score = score;
@@ -57,7 +57,7 @@ namespace loki::movegen
 		{
 			if (m_size >= _Size)
 			{
-				throw e_moveList("move_list capacity exceeded");
+				throw e_moveList(FORMAT_EXCEPTION_MESSAGE("move_list capacity exceeded"));
 			}
 			m_movelist[m_size].move = create_move(from_sq, to_sq, special, promotion_piece);
 			m_movelist[m_size].score = score;
@@ -77,7 +77,7 @@ namespace loki::movegen
 		{
 			if (idx >= m_size)
 			{
-				throw e_moveList("Index requested was bigger than the list.");
+				throw e_moveList(FORMAT_EXCEPTION_MESSAGE("Index requested was bigger than the list."));
 			}
 			return m_movelist[idx];
 		}

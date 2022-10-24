@@ -159,12 +159,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Loki\uci.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Backend\Backend.vcxproj">
       <Project>{484bfad5-8adf-4d19-b8f9-550db0d4e58a}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Loki\contexts\position_context.h" />
+    <ClInclude Include="Loki\contexts\search_context.h" />
+    <ClInclude Include="Loki\uci.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

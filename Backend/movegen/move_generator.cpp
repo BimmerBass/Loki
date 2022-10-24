@@ -65,7 +65,7 @@ namespace loki::movegen
 				get_king_moves<BLACK, _Ty>();
 				break;
 			default:
-				throw e_moveGenerator("An illegal value for the side to generate moves for were passed.");
+				throw e_moveGenerator(FORMAT_EXCEPTION_MESSAGE("An illegal value for the side to generate moves for were passed."));
 			}
 		}
 		else

@@ -62,7 +62,7 @@ namespace loki::movegen
 		{
 			if (this->m_current_size >= this->max_size)
 			{
-				throw e_moveStack("insert() called on a full stack. Limit exceeded.");
+				throw e_moveStack(FORMAT_EXCEPTION_MESSAGE("insert() called on a full stack. Limit exceeded."));
 			}
 			this->m_stack[this->m_current_size].first = move;
 			this->m_stack[this->m_current_size].second.set(std::move(info));
