@@ -18,16 +18,21 @@
 #include "loki.pch.h"
 
 
-namespace loki::movegen::magics {
+namespace loki::movegen::magics
+{
 
-	namespace {
+	namespace
+	{
 
 		// Return blockers bitboard from a mask and an iteration number.
-		bitboard_t blockers_permutation(size_t iteration, bitboard_t mask) noexcept {
+		bitboard_t blockers_permutation(size_t iteration, bitboard_t mask) noexcept
+		{
 			bitboard_t blockers = 0;
 
-			while (iteration != 0) {
-				if ((iteration & 1) != 0) {
+			while (iteration != 0)
+			{
+				if ((iteration & 1) != 0)
+				{
 					auto shift = scan_forward(mask);
 					blockers |= (bitboard_t(1) << shift);
 				}
@@ -37,7 +42,8 @@ namespace loki::movegen::magics {
 			return blockers;
 		}
 
-		inline size_t transform_to_key(bitboard_t blockers, bitboard_t magic, size_t shift) noexcept {
+		inline size_t transform_to_key(bitboard_t blockers, bitboard_t magic, size_t shift) noexcept
+		{
 			return static_cast<size_t>((blockers * magic) >> (64 - shift));
 		}
 
@@ -45,33 +51,39 @@ namespace loki::movegen::magics {
 		/// Generate attacks from a specific square  with a given set of blockers.
 		/// </summary>
 		template<PIECE _Pce>
-		bitboard_t generate_attack(SQUARE sq, bitboard_t blockers) noexcept {
+		bitboard_t generate_attack(SQUARE sq, bitboard_t blockers) noexcept
+		{
 			return 0;
 		}
 
 		// For bishops
 		template<>
-		bitboard_t generate_attack<BISHOP>(SQUARE sq, bitboard_t blockers) noexcept {
+		bitboard_t generate_attack<BISHOP>(SQUARE sq, bitboard_t blockers) noexcept
+		{
 			bitboard_t attacks = 0;
 			int cr = rank(sq);
 			int cf = file(sq);
 
-			for (int r = cr + 1, f = cf + 1; r <= RANK_8 && f <= FILE_H; r++, f++) {
+			for (int r = cr + 1, f = cf + 1; r <= RANK_8 && f <= FILE_H; r++, f++)
+			{
 				attacks |= (bitboard_t(1) << get_square(r, f));
 				if (((bitboard_t(1) << get_square(r, f)) & blockers) != 0)
 					break;
 			}
-			for (int r = cr + 1, f = cf - 1; r <= RANK_8 && f >= FILE_A; r++, f--) {
+			for (int r = cr + 1, f = cf - 1; r <= RANK_8 && f >= FILE_A; r++, f--)
+			{
 				attacks |= (bitboard_t(1) << get_square(r, f));
 				if (((bitboard_t(1) << get_square(r, f)) & blockers) != 0)
 					break;
 			}
-			for (int r = cr - 1, f = cf + 1; r >= RANK_1 && f <= FILE_H; r--, f++) {
+			for (int r = cr - 1, f = cf + 1; r >= RANK_1 && f <= FILE_H; r--, f++)
+			{
 				attacks |= (bitboard_t(1) << get_square(r, f));
 				if (((bitboard_t(1) << get_square(r, f)) & blockers) != 0)
 					break;
 			}
-			for (int r = cr - 1, f = cf - 1; r >= RANK_1 && f >= FILE_A; r--, f--) {
+			for (int r = cr - 1, f = cf - 1; r >= RANK_1 && f >= FILE_A; r--, f--)
+			{
 				attacks |= (bitboard_t(1) << get_square(r, f));
 				if (((bitboard_t(1) << get_square(r, f)) & blockers) != 0)
 					break;
@@ -82,27 +94,32 @@ namespace loki::movegen::magics {
 
 		// For rooks.
 		template<>
-		bitboard_t generate_attack<ROOK>(SQUARE sq, bitboard_t blockers) noexcept {
+		bitboard_t generate_attack<ROOK>(SQUARE sq, bitboard_t blockers) noexcept
+		{
 			bitboard_t attacks = 0;
 			int cr = rank(sq);
 			int cf = file(sq);
 
-			for (int r = cr + 1; r <= RANK_8; r++) {
+			for (int r = cr + 1; r <= RANK_8; r++)
+			{
 				attacks |= (bitboard_t(1) << get_square(r, cf));
 				if (((bitboard_t(1) << get_square(r, cf)) & blockers) != 0)
 					break;
 			}
-			for (int r = cr - 1; r >= RANK_1; r--) {
+			for (int r = cr - 1; r >= RANK_1; r--)
+			{
 				attacks |= (bitboard_t(1) << get_square(r, cf));
 				if (((bitboard_t(1) << get_square(r, cf)) & blockers) != 0)
 					break;
 			}
-			for (int f = cf + 1; f <= FILE_H; f++) {
+			for (int f = cf + 1; f <= FILE_H; f++)
+			{
 				attacks |= (bitboard_t(1) << get_square(cr, f));
 				if (((bitboard_t(1) << get_square(cr, f)) & blockers) != 0)
 					break;
 			}
-			for (int f = cf - 1; f >= FILE_A; f--) {
+			for (int f = cf - 1; f >= FILE_A; f--)
+			{
 				attacks |= (bitboard_t(1) << get_square(cr, f));
 				if (((bitboard_t(1) << get_square(cr, f)) & blockers) != 0)
 					break;
@@ -129,7 +146,8 @@ namespace loki::movegen::magics {
 	/// <param name="occupancy"></param>
 	/// <returns></returns>
 	template<PIECE _Pce>
-	bitboard_t magics_index<_Pce>::attacks_bb(SQUARE sq, bitboard_t occupancy) const noexcept {
+	bitboard_t magics_index<_Pce>::attacks_bb(SQUARE sq, bitboard_t occupancy) const noexcept
+	{
 		occupancy &= m_magic_entries[sq].mask;
 		occupancy *= m_magic_entries[sq].magic;
 		occupancy >>= 64 - m_magic_entries[sq].shift;
@@ -142,15 +160,18 @@ namespace loki::movegen::magics {
 	/// </summary>
 	/// <returns></returns>
 	template<PIECE _Pce>
-	void magics_index<_Pce>::init() noexcept {
+	void magics_index<_Pce>::init() noexcept
+	{
 		initialize_entry_table();
 
-		for (SQUARE sq = A1; sq <= H8; sq++) {
+		for (SQUARE sq = A1; sq <= H8; sq++)
+		{
 			magic_entry& current_entry = m_magic_entries[sq];
 
 			size_t permutations = bitboard_t(1) << count_bits(current_entry.mask);
 
-			for (size_t i = 0; i < permutations; i++) {
+			for (size_t i = 0; i < permutations; i++)
+			{
 				bitboard_t blockers = blockers_permutation(i, current_entry.mask);
 				bitboard_t attacks = generate_attack<_Pce>(sq, blockers);
 
@@ -161,8 +182,10 @@ namespace loki::movegen::magics {
 	}
 
 	template<>
-	void magics_index<BISHOP>::initialize_entry_table() noexcept {
-		for (SQUARE sq = A1; sq <= H8; sq++) {
+	void magics_index<BISHOP>::initialize_entry_table() noexcept
+	{
+		for (SQUARE sq = A1; sq <= H8; sq++)
+		{
 			bitboard_t attacks = 0;
 			int cr = rank(sq);
 			int cf = file(sq);
@@ -183,8 +206,10 @@ namespace loki::movegen::magics {
 	}
 
 	template<>
-	void magics_index<ROOK>::initialize_entry_table() noexcept {
-		for (SQUARE sq = A1; sq <= H8; sq++) {
+	void magics_index<ROOK>::initialize_entry_table() noexcept
+	{
+		for (SQUARE sq = A1; sq <= H8; sq++)
+		{
 			bitboard_t attacks = 0;
 			int cr = rank(sq);
 			int cf = file(sq);

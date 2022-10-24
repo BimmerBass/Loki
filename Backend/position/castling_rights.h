@@ -18,25 +18,28 @@
 #ifndef CASTLING_RIGHTS_H
 #define CASTLING_RIGHTS_H
 
-namespace loki::position {
+namespace loki::position
+{
 
 	/// <summary>
 	/// Holds data about the castling rights for both sides.
 	/// </summary>
-	class castle_rights {
+	class castle_rights
+	{
 	private:
 		uint8_t m_rights;
 	public:
-		castle_rights() : m_rights(0) {
-		}
-		castle_rights(uint8_t state) : m_rights(state) {
-		}
+		castle_rights() : m_rights(0)
+		{}
+		castle_rights(uint8_t state) : m_rights(state)
+		{}
 
 		/// <summary>
 		/// Return whether or not the side to move can castle to the given side.
 		/// </summary>
 		template<CASTLING_RIGHTS _Ss>
-		inline bool operator()() const noexcept {
+		inline bool operator()() const noexcept
+		{
 			return ((m_rights >> _Ss) & uint8_t(1)) != 0;
 		}
 
@@ -44,7 +47,8 @@ namespace loki::position {
 		/// Enable castling for a given side.
 		/// </summary>
 		/// <param name="_Ss"></param>
-		inline void operator+=(CASTLING_RIGHTS _Ss) {
+		inline void operator+=(CASTLING_RIGHTS _Ss)
+		{
 			m_rights |= (uint8_t(1) << _Ss);
 		}
 
@@ -52,21 +56,26 @@ namespace loki::position {
 		/// Disable castling for a given side.
 		/// </summary>
 		/// <param name="_Ss"></param>
-		inline void operator-=(CASTLING_RIGHTS _Ss) {
+		inline void operator-=(CASTLING_RIGHTS _Ss)
+		{
 			if (((m_rights >> _Ss) & uint8_t(1)) != 0) // Only if we can castle.
 				m_rights &= ~(uint8_t(1) << _Ss);
 		}
 
-		inline bool any() const noexcept {
+		inline bool any() const noexcept
+		{
 			return m_rights != 0;
 		}
-		inline void clear() noexcept {
+		inline void clear() noexcept
+		{
 			m_rights = 0;
 		}
-		inline uint8_t get() const noexcept {
+		inline uint8_t get() const noexcept
+		{
 			return m_rights;
 		}
-		inline void load(uint8_t r) noexcept {
+		inline void load(uint8_t r) noexcept
+		{
 			m_rights = r;
 		}
 	};

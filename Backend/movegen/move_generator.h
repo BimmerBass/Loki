@@ -19,18 +19,20 @@
 #define MOVE_GENERATOR_H
 
 
-namespace loki::movegen {
+namespace loki::movegen
+{
 
-	class move_generator {
+	class move_generator
+	{
 	private:
-		using attack_table_t	= std::array<bitboard_t, 64>;
+		using attack_table_t = std::array<bitboard_t, 64>;
 
 		position::position_t					m_position;
 		magics::slider_generator_t				m_slider_generator;
 		static attack_table_t					knight_attacks;
 		static attack_table_t					king_attacks;
 		std::array<move_list_t, MAX_GAME_MOVES>	m_movelists;
-		move_list_t*							m_moves;
+		move_list_t* m_moves;
 	public:
 		// No default constructor since a reference to the position object is required.
 		move_generator() = delete;
@@ -71,25 +73,28 @@ namespace loki::movegen {
 		static void init_king_attacks() noexcept;
 
 		template<SIDE _S, CASTLING_RIGHTS _Cr>
-		inline bool can_castle() const {
-			constexpr SQUARE relative_e1				= _S == WHITE ? E1 : E8;
-			constexpr SQUARE relative_f1				= _S == WHITE ? F1 : F8;
-			constexpr SQUARE relative_g1				= _S == WHITE ? G1 : G8;
-			constexpr SQUARE relative_d1				= _S == WHITE ? D1 : D8;
-			constexpr SQUARE relative_c1				= _S == WHITE ? C1 : C8;
+		inline bool can_castle() const
+		{
+			constexpr SQUARE relative_e1 = _S == WHITE ? E1 : E8;
+			constexpr SQUARE relative_f1 = _S == WHITE ? F1 : F8;
+			constexpr SQUARE relative_g1 = _S == WHITE ? G1 : G8;
+			constexpr SQUARE relative_d1 = _S == WHITE ? D1 : D8;
+			constexpr SQUARE relative_c1 = _S == WHITE ? C1 : C8;
 			constexpr bitboard_t key_queenside_squares = bitmasks::rank_masks[_S == WHITE ? RANK_1 : RANK_8]
 				& (bitmasks::file_masks[FILE_C] | bitmasks::file_masks[FILE_D] | bitmasks::file_masks[FILE_B]);
 			constexpr bitboard_t key_kingside_squares = bitmasks::rank_masks[_S == WHITE ? RANK_1 : RANK_8] & (bitmasks::file_masks[FILE_G] | bitmasks::file_masks[FILE_F]);
 
-			if (_Cr == WKCA || _Cr == BKCA) {
-				return m_position->m_state_info->castling_rights.operator()<_Cr>() &&
+			if (_Cr == WKCA || _Cr == BKCA)
+			{
+				return m_position->m_state_info->castling_rights.operator() < _Cr > () &&
 					((m_position->m_all_pieces[WHITE] | m_position->m_all_pieces[BLACK]) & key_kingside_squares) == 0 &&
 					!m_position->square_attacked<!_S>(relative_e1) &&
 					!m_position->square_attacked<!_S>(relative_f1) &&
 					!m_position->square_attacked<!_S>(relative_g1);
 			}
-			else {
-				return m_position->m_state_info->castling_rights.operator()<_Cr>() &&
+			else
+			{
+				return m_position->m_state_info->castling_rights.operator() < _Cr > () &&
 					((m_position->m_all_pieces[WHITE] | m_position->m_all_pieces[BLACK]) & key_queenside_squares) == 0 &&
 					!m_position->square_attacked<!_S>(relative_e1) &&
 					!m_position->square_attacked<!_S>(relative_d1) &&

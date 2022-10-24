@@ -18,11 +18,13 @@
 #ifndef PERFT_H
 #define PERFT_H
 
-namespace loki::utility {
+namespace loki::utility
+{
 	/// <summary>
 	/// class for performing a perft evaluation of a position. 
 	/// </summary>
-	class perft {
+	class perft
+	{
 	public:
 		perft() = delete;
 		perft(const std::string& fen);
@@ -35,7 +37,8 @@ namespace loki::utility {
 		size_t perform(DEPTH d, std::ostream& os, bool debug);
 		void load(const std::string& new_fen);
 
-		inline auto previous_nps() const noexcept {
+		inline auto previous_nps() const noexcept
+		{
 			return m_nps;
 		}
 	private:

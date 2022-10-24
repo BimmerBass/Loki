@@ -47,13 +47,15 @@ namespace loki {
 	using bitboard_t	= uint64_t;
 	using hashkey_t		= uint64_t;
 
-	enum SIDE : int64_t {
+	enum SIDE : int64_t
+	{
 		WHITE = 0,
 		BLACK = 1,
 		SIDE_NB = 2
 	};
 
-	enum PIECE : int64_t {
+	enum PIECE : int64_t
+	{
 		PAWN = 0,
 		KNIGHT = 1,
 		BISHOP = 2,
@@ -64,7 +66,8 @@ namespace loki {
 		PIECE_NB_TOTAL = 12
 	};
 
-	enum SQUARE : int64_t {
+	enum SQUARE : int64_t
+	{
 		A1 = 0, B1 = 1, C1 = 2, D1 = 3, E1 = 4, F1 = 5, G1 = 6, H1 = 7,
 		A2 = 8, B2 = 9, C2 = 10, D2 = 11, E2 = 12, F2 = 13, G2 = 14, H2 = 15,
 		A3 = 16, B3 = 17, C3 = 18, D3 = 19, E3 = 20, F3 = 21, G3 = 22, H3 = 23,
@@ -75,14 +78,16 @@ namespace loki {
 		A8 = 56, B8 = 57, C8 = 58, D8 = 59, E8 = 60, F8 = 61, G8 = 62, H8 = 63, SQ_NB = 64, NO_SQ = 65
 	};
 
-	enum CASTLING_RIGHTS : uint8_t {
+	enum CASTLING_RIGHTS : uint8_t
+	{
 		WKCA = 0,
 		WQCA = 1,
 		BKCA = 2,
 		BQCA = 3
 	};
 
-	enum RANK : int64_t {
+	enum RANK : int64_t
+	{
 		RANK_1 = 0,
 		RANK_2 = 1,
 		RANK_3 = 2,
@@ -94,7 +99,8 @@ namespace loki {
 		RANK_NB = 8,
 		NO_RANK = 9
 	};
-	enum FILE : int64_t {
+	enum FILE : int64_t
+	{
 		FILE_A = 0,
 		FILE_B = 1,
 		FILE_C = 2,
@@ -107,7 +113,8 @@ namespace loki {
 		NO_FILE = 9
 	};
 
-	enum DIRECTION :size_t {
+	enum DIRECTION :size_t
+	{
 		NORTH = 0,
 		SOUTH = 1,
 		EAST = 2,
@@ -118,45 +125,53 @@ namespace loki {
 		SOUTHEAST = 7
 	};
 
-	enum DEPTH : size_t {
+	enum DEPTH : size_t
+	{
 		MAX_DEPTH = 100
 	};
 
 	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr DEPTH operator-(DEPTH d, T rhs) {
+	inline constexpr DEPTH operator-(DEPTH d, T rhs)
+	{
 		return static_cast<DEPTH>(static_cast<T>(d) - rhs);
 	}
 	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr DEPTH operator+(DEPTH d, T rhs) {
+	inline constexpr DEPTH operator+(DEPTH d, T rhs)
+	{
 		return static_cast<DEPTH>(static_cast<T>(d) + rhs);
 	}
 	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr DEPTH operator--(DEPTH& d, T) {
+	inline constexpr DEPTH operator--(DEPTH& d, T)
+	{
 		auto rval = static_cast<T>(d);
 		rval--;
 		d = static_cast<DEPTH>(rval);
 		return d;
 	}
 	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr DEPTH operator++(DEPTH& d, T) {
+	inline constexpr DEPTH operator++(DEPTH& d, T)
+	{
 		auto rval = static_cast<T>(d);
 		rval++;
 		d = static_cast<DEPTH>(rval);
 		return d;
 	}
 
-	inline constexpr SQUARE& operator++(SQUARE& orig, int) {
+	inline constexpr SQUARE& operator++(SQUARE& orig, int)
+	{
 		auto rval = static_cast<int64_t>(orig);
 		rval++;
-		
+
 		orig = static_cast<SQUARE>(rval);
 		return orig;
 	}
-	inline constexpr SQUARE operator--(SQUARE& orig, int) {
+	inline constexpr SQUARE operator--(SQUARE& orig, int)
+	{
 		return static_cast<SQUARE>(static_cast<int64_t>(orig) - 1);
 	}
 
-	inline constexpr SIDE operator!(SIDE s) {
+	inline constexpr SIDE operator!(SIDE s)
+	{
 		return (s == WHITE) ? BLACK : WHITE;
 	}
 
@@ -165,7 +180,8 @@ namespace loki {
 	constexpr size_t MAX_GAME_MOVES			= 1024; // Maximum amount of moves in a game.  TODO: Remove this restraint.
 
 	// Bit masks.
-	namespace bitmasks {
+	namespace bitmasks
+	{
 
 		constexpr bitboard_t rank_masks[8] =/*from rank1 to rank8*/
 		{
@@ -204,7 +220,8 @@ namespace loki {
 	/// <param name="idx"></param>
 	/// <returns></returns>
 	template<typename _Ty, typename _IdxT> requires(std::is_arithmetic_v<_Ty> && std::is_arithmetic_v<_IdxT>)
-	inline constexpr bool is_set(const _Ty& x, _IdxT idx) noexcept {
+	inline constexpr bool is_set(const _Ty& x, _IdxT idx) noexcept
+	{
 		return ((x >> idx) & 1) != 0;
 	}
 
@@ -217,7 +234,8 @@ namespace loki {
 	/// <param name="idx"></param>
 	/// <returns></returns>
 	template<typename _Ty, typename _IdxT> requires(std::is_arithmetic_v<_Ty>&& std::is_arithmetic_v<_IdxT>)
-	inline constexpr _Ty set_bit(const _Ty& x, _IdxT idx) noexcept {
+	inline constexpr _Ty set_bit(const _Ty& x, _IdxT idx) noexcept
+	{
 		return (x | (_Ty(1) << idx));
 	}
 
@@ -230,7 +248,8 @@ namespace loki {
 	/// <param name="idx"></param>
 	/// <returns></returns>
 	template<typename _Ty, typename _IdxT> requires(std::is_arithmetic_v<_Ty>&& std::is_arithmetic_v<_IdxT>)
-	inline constexpr _Ty toggle_bit(const _Ty& x, _IdxT idx) noexcept {
+	inline constexpr _Ty toggle_bit(const _Ty& x, _IdxT idx) noexcept
+	{
 		return (x ^ (_Ty(1) << idx));
 	}
 
@@ -240,7 +259,8 @@ namespace loki {
 	/// </summary>
 	/// <param name="x"></param>
 	/// <returns></returns>
-	inline size_t count_bits(bitboard_t x) noexcept {
+	inline size_t count_bits(bitboard_t x) noexcept
+	{
 #if ((defined(__INTEL_COMPILER) || defined(_MSC_VER)) && defined(_WIN64)) && defined(USE_POPCNT)
 		return (size_t)_mm_popcnt_u64(x);
 #elif (defined(__GNUC__) && defined(USE_POPCNT))
@@ -258,7 +278,8 @@ namespace loki {
 #endif
 	}
 
-	inline size_t scan_reverse(bitboard_t bb) { // Find the MS1B
+	inline size_t scan_reverse(bitboard_t bb)
+	{ // Find the MS1B
 		assert(bb != 0);
 
 #if defined(__GNUC__) // GCC
@@ -272,11 +293,13 @@ namespace loki {
 #else // Windows 32-bit
 		unsigned long idx;
 
-		if (bb >> 32) {
+		if (bb >> 32)
+		{
 			_BitScanReverse(&idx, int32_t(bb >> 32));
 			return size_t(idx + 32);
 		}
-		else {
+		else
+		{
 			_BitScanReverse(&idx, int32_t(bb));
 			return size_t(idx);
 		}
@@ -305,7 +328,8 @@ namespace loki {
 #endif
 	}
 
-	inline size_t scan_forward(const bitboard_t& bb) { // Find the LS1B
+	inline size_t scan_forward(const bitboard_t& bb)
+	{ // Find the LS1B
 		assert(bb != 0);
 
 #if defined(__GNUC__) // GCC intrinsic.
@@ -319,11 +343,13 @@ namespace loki {
 #else  // Windows 32-bit
 		unsigned long idx;
 
-		if (bb & 0xffffffff) {
+		if (bb & 0xffffffff)
+		{
 			_BitScanForward(&idx, int32_t(bb));
 			return size_t(idx);
 		}
-		else {
+		else
+		{
 			_BitScanForward(&idx, int32_t(bb >> 32));
 			return size_t(idx + 32);
 		}
@@ -347,7 +373,8 @@ namespace loki {
 	}
 
 	// Find the least significant 1 bit, set it to zero and return the placement.
-	inline size_t pop_bit(bitboard_t& bb) noexcept {
+	inline size_t pop_bit(bitboard_t& bb) noexcept
+	{
 		auto i = scan_forward(bb);
 		bb ^= (uint64_t(1) << i);
 		return i;
@@ -355,7 +382,8 @@ namespace loki {
 
 	// Shifts the bitboard one square in some direction. From white's perspective.
 	template <DIRECTION d>
-	constexpr inline bitboard_t shift(const bitboard_t& bb) {
+	constexpr inline bitboard_t shift(const bitboard_t& bb)
+	{
 		return d == NORTH ? bb << 8
 			: d == SOUTH ? bb >> 8
 			: d == EAST ? (bb & ~bitmasks::file_masks[FILE_H]) << 1
@@ -369,23 +397,28 @@ namespace loki {
 
 	// Other commonly used functions.
 
-	inline constexpr RANK rank(SQUARE sq) noexcept {
+	inline constexpr RANK rank(SQUARE sq) noexcept
+	{
 		return static_cast<RANK>(sq / 8);
 	}
-	inline constexpr RANK rank(size_t sq) noexcept {
+	inline constexpr RANK rank(size_t sq) noexcept
+	{
 		return rank(static_cast<SQUARE>(sq));
 	}
 
-	inline constexpr FILE file(SQUARE sq) noexcept {
+	inline constexpr FILE file(SQUARE sq) noexcept
+	{
 		return static_cast<FILE>(sq % 8);
 	}
 
-	inline constexpr SQUARE get_square(RANK r, FILE f) noexcept {
+	inline constexpr SQUARE get_square(RANK r, FILE f) noexcept
+	{
 		return static_cast<SQUARE>((r * 8) + f);
 	}
 
 	// Simple overload.
-	inline constexpr SQUARE get_square(int64_t r, int64_t f) noexcept {
+	inline constexpr SQUARE get_square(int64_t r, int64_t f) noexcept
+	{
 		return get_square(
 			static_cast<RANK>(r),
 			static_cast<FILE>(f));
@@ -397,7 +430,8 @@ namespace loki {
 	/// </summary>
 	/// <param name="sq"></param>
 	/// <returns></returns>
-	inline std::string to_algebraic(SQUARE sq) {
+	inline std::string to_algebraic(SQUARE sq)
+	{
 		const static std::array<std::string, FILE_NB> file_names = { "a", "b", "c", "d", "e", "f", "g", "h" };
 		size_t f = file(sq);
 		size_t r = rank(sq) + 1;
@@ -406,51 +440,60 @@ namespace loki {
 	}
 }
 
-namespace loki::utility {
+namespace loki::utility
+{
 	class perft;
 
 	template<typename _Ty, size_t _Size> requires (_Size > 0)
-	class fast_stack;
+		class fast_stack;
 
 	class initializer;
 }
 
-namespace loki::movegen {
+namespace loki::movegen
+{
 	// Constants and type declarations.
-	enum MOVE_TYPE : size_t {
+	enum MOVE_TYPE : size_t
+	{
 		ACTIVES,	/* All active moves; captures, promotions etc.. */
 		QUIET,		/* All quiet moves. */
 		ALL			/* All moves. */
 	};
 
-	enum SPECIAL_MOVE : size_t {
-		PROMOTION	= 0,
-		ENPASSANT	= 1,
-		CASTLE		= 2,
-		NOT_SPECIAL	= 3
+	enum SPECIAL_MOVE : size_t
+	{
+		PROMOTION = 0,
+		ENPASSANT = 1,
+		CASTLE = 2,
+		NOT_SPECIAL = 3
 	};
 
 	// Inline functions.
-	inline constexpr SQUARE from_sq(move_t move) noexcept {
+	inline constexpr SQUARE from_sq(move_t move) noexcept
+	{
 		return static_cast<SQUARE>((move >> 4) & 63);
 	}
-	inline constexpr SQUARE to_sq(move_t move) noexcept {
+	inline constexpr SQUARE to_sq(move_t move) noexcept
+	{
 		return static_cast<SQUARE>(move >> 10);
 	}
-	inline constexpr SPECIAL_MOVE special(move_t move) noexcept {
+	inline constexpr SPECIAL_MOVE special(move_t move) noexcept
+	{
 		return static_cast<SPECIAL_MOVE>(move & 3);
 	}
-	inline constexpr PIECE promotion_piece(move_t move) noexcept {
+	inline constexpr PIECE promotion_piece(move_t move) noexcept
+	{
 		return static_cast<PIECE>((move >> 2) & 3);
 	}
-	inline constexpr move_t create_move(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece) noexcept {
+	inline constexpr move_t create_move(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece) noexcept
+	{
 		return static_cast<move_t>((to_sq << 10) | (from_sq << 4) | (promotion_piece << 2) | (special));
 	}
 
 	template<size_t _Size> requires (_Size > 0)
-	class move_stack;
+		class move_stack;
 	template<size_t _Size> requires(_Size > 0)
-	class move_list;
+		class move_list;
 	class move_generator;
 
 	template<size_t _Size>
@@ -459,23 +502,25 @@ namespace loki::movegen {
 
 	using move_list_t = move_list<MAX_POSITION_MOVES>;
 
-	namespace magics {
+	namespace magics
+	{
 		class slider_generator;
 
 		using slider_generator_t = std::shared_ptr<slider_generator>;
 	}
 }
 
-namespace loki::position {
+namespace loki::position
+{
 	class castling_rights;
 	class zobrist;
 	struct game_state;
 	class position;
 
-	using zobrist_t			= std::unique_ptr<zobrist>;
-	using game_state_t		= std::shared_ptr<game_state>;
-	using position_t		= std::shared_ptr<position>;
-	using weak_position_t	= std::weak_ptr<position>;
+	using zobrist_t = std::unique_ptr<zobrist>;
+	using game_state_t = std::shared_ptr<game_state>;
+	using position_t = std::shared_ptr<position>;
+	using weak_position_t = std::weak_ptr<position>;
 }
 
 #include "position/castling_rights.h"

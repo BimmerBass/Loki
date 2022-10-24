@@ -18,9 +18,10 @@
 #ifndef LIMITS_H
 #define LIMITS_H
 
-namespace loki::search {
+namespace loki::search
+{
 
-	
+
 }
 
 #endif

@@ -18,13 +18,15 @@
 #ifndef POSITION_H
 #define POSITION_H
 
-namespace loki::position {
+namespace loki::position
+{
 
 	/// <summary>
 	/// The position class is the central object describing the game state. It is the one responsible for changing a game_state object in a legal way while also optimizing the
 	/// data-extraction from a position. This is for example done by indexing where all pieces are in both arrays and bitboards, and where the kings are.
 	/// </summary>
-	class position {
+	class position
+	{
 		friend class movegen::move_generator;
 	private:
 		movegen::move_stack_t<MAX_GAME_MOVES>	m_move_history;					/* The stack of moves that has led to this position. */
@@ -66,9 +68,9 @@ namespace loki::position {
 
 		// Checks if a square is attacked by one of the sides.
 		template<SIDE _Si> requires (_Si == WHITE || _Si == BLACK)
-		bool square_attacked(SQUARE sq) const noexcept;
+			bool square_attacked(SQUARE sq) const noexcept;
 		bool in_check() const noexcept;
-		
+
 		/// <summary>
 		/// Load a FEN.
 		/// </summary>

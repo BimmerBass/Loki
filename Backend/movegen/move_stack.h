@@ -18,12 +18,14 @@
 #ifndef MOVE_STACK_H
 #define MOVE_STACK_H
 
-namespace loki::movegen {
+namespace loki::movegen
+{
 
 	/// <summary>
 	/// All info that is lost when a move is made.
 	/// </summary>
-	struct lost_move_info {
+	struct lost_move_info
+	{
 		PIECE		piece_captured;
 		PIECE		piece_moved;
 		uint8_t		castling_rights;
@@ -31,13 +33,14 @@ namespace loki::movegen {
 		SQUARE		en_passant_square;
 		bitboard_t	position_hash;
 
-		void set(std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info) {
-			piece_captured		= std::get<0>(info);
-			piece_moved			= std::get<1>(info);
-			castling_rights		= std::get<2>(info);
-			fifty_moves_count	= std::get<3>(info);
-			en_passant_square	= std::get<4>(info);
-			position_hash		= std::get<5>(info);
+		void set(std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info)
+		{
+			piece_captured = std::get<0>(info);
+			piece_moved = std::get<1>(info);
+			castling_rights = std::get<2>(info);
+			fifty_moves_count = std::get<3>(info);
+			en_passant_square = std::get<4>(info);
+			position_hash = std::get<5>(info);
 		}
 	};
 
@@ -45,7 +48,8 @@ namespace loki::movegen {
 	/// move_stack has all the methods of fast_stack but a slightly optimized insert method for just this type of data.
 	/// </summary>
 	template<size_t _S> requires (_S > 0)
-	class move_stack : public utility::fast_stack<std::pair<move_t, lost_move_info>, _S> {
+		class move_stack : public utility::fast_stack<std::pair<move_t, lost_move_info>, _S>
+	{
 	public:
 		/// <summary>
 		/// Insert an entry into the stack.
@@ -53,8 +57,10 @@ namespace loki::movegen {
 		/// </summary>
 		/// <param name="move"></param>
 		/// <param name="info"></param>
-		inline void insert(move_t move, std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info) {
-			if (this->m_current_size >= this->max_size) {
+		inline void insert(move_t move, std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info)
+		{
+			if (this->m_current_size >= this->max_size)
+			{
 				throw std::out_of_range("insert() called on a full stack. Limit exceeded.");
 			}
 			this->m_stack[this->m_current_size].first = move;

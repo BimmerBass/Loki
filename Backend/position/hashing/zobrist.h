@@ -18,9 +18,11 @@
 #ifndef ZOBRIST_H
 #define ZOBRIST_H
 
-namespace loki::position {
+namespace loki::position
+{
 
-	class zobrist {
+	class zobrist
+	{
 		friend class ::loki::utility::initializer;
 	private:
 		static std::array<
@@ -33,16 +35,20 @@ namespace loki::position {
 		static hashkey_t						stm_hash;
 
 	public:
-		inline void toggle_piece(hashkey_t& key, SIDE s, PIECE pce, size_t sq) const noexcept {
+		inline void toggle_piece(hashkey_t& key, SIDE s, PIECE pce, size_t sq) const noexcept
+		{
 			key ^= piece_hashes[s][pce][sq];
 		}
-		inline void toggle_ep(hashkey_t& key, size_t ep_sq) const noexcept {
+		inline void toggle_ep(hashkey_t& key, size_t ep_sq) const noexcept
+		{
 			key ^= ep_hashes[ep_sq];
 		}
-		inline void toggle_castling(hashkey_t& key, uint8_t cr) {
+		inline void toggle_castling(hashkey_t& key, uint8_t cr)
+		{
 			key ^= castling_hashes[cr];
 		}
-		inline void toggle_stm(hashkey_t& key) {
+		inline void toggle_stm(hashkey_t& key)
+		{
 			key ^= stm_hash;
 		}
 

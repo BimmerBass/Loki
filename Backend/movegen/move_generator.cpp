@@ -18,7 +18,8 @@
 #include "loki.pch.h"
 
 
-namespace loki::movegen {
+namespace loki::movegen
+{
 
 	move_generator::attack_table_t	move_generator::knight_attacks{ 0 };
 	move_generator::attack_table_t	move_generator::king_attacks{ 0 };
@@ -26,7 +27,8 @@ namespace loki::movegen {
 	move_generator::move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept :
 		m_position(pos),
 		m_slider_generator(slider_generator),
-		m_moves(nullptr) {	}
+		m_moves(nullptr)
+	{}
 
 	/// <summary>
 	/// Generate a list of pseudo-legal moves in the position.
@@ -35,14 +37,17 @@ namespace loki::movegen {
 	/// </summary>
 	/// <returns></returns>
 	template<MOVE_TYPE _Ty, SIDE _Si>
-	const move_list_t& move_generator::generate() {
+	const move_list_t& move_generator::generate()
+	{
 		// Make the generator ready to generate moves.
 		m_moves = &m_movelists[m_position->m_ply];
 		m_moves->clear();
 
 		// FIXME: Ugly implementation...
-		if constexpr (_Si == SIDE_NB) {
-			switch (m_position->m_state_info->side_to_move) {
+		if constexpr (_Si == SIDE_NB)
+		{
+			switch (m_position->m_state_info->side_to_move)
+			{
 			case WHITE:
 				get_pawn_moves<WHITE, _Ty>();
 				get_knight_moves<WHITE, _Ty>();
@@ -63,7 +68,8 @@ namespace loki::movegen {
 				throw std::runtime_error("An illegal value for the side to generate moves for were passed.");
 			}
 		}
-		else {
+		else
+		{
 			get_pawn_moves<_Si, _Ty>();
 			get_knight_moves<_Si, _Ty>();
 			get_bishop_moves<_Si, _Ty>();
@@ -81,16 +87,18 @@ namespace loki::movegen {
 	/// <param name="sq"></param>
 	/// <returns></returns>
 	template<SIDE _Si, PIECE _Pce>
-	bitboard_t move_generator::attackers_to(SQUARE sq) const noexcept {
-		constexpr DIRECTION up_left		= (_Si == BLACK) ? NORTHWEST : SOUTHWEST;
-		constexpr DIRECTION up_right	= (_Si == BLACK) ? NORTHEAST : SOUTHEAST;
+	bitboard_t move_generator::attackers_to(SQUARE sq) const noexcept
+	{
+		constexpr DIRECTION up_left = (_Si == BLACK) ? NORTHWEST : SOUTHWEST;
+		constexpr DIRECTION up_right = (_Si == BLACK) ? NORTHEAST : SOUTHEAST;
 
 		bitboard_t occupancy = m_position->m_all_pieces[WHITE] | m_position->m_all_pieces[BLACK];
 		bitboard_t attacks = 0;
 
 		bitboard_t sq_bb;
-		switch (_Pce) {
-		case PAWN: 
+		switch (_Pce)
+		{
+		case PAWN:
 			sq_bb = bitboard_t(1) << sq;
 			attacks = shift<up_left>(sq_bb) | shift<up_right>(sq_bb);
 			break;
@@ -111,7 +119,8 @@ namespace loki::movegen {
 	/// <param name="sq"></param>
 	/// <returns></returns>
 	template<SIDE _Si>
-	bitboard_t move_generator::all_attackers_to(SQUARE sq) const noexcept {
+	bitboard_t move_generator::all_attackers_to(SQUARE sq) const noexcept
+	{
 		return (
 			attackers_to<_Si, PAWN>(sq) |
 			attackers_to<_Si, KNIGHT>(sq) |
@@ -127,79 +136,91 @@ namespace loki::movegen {
 	/// TODO: Perhaps it would be a good idea to have a pre-calculated table of possible pawn moves..?
 	/// </summary>
 	template<SIDE _S, MOVE_TYPE _Ty>
-	void move_generator::get_pawn_moves() {
+	void move_generator::get_pawn_moves()
+	{
 
-		constexpr DIRECTION up				= (_S == WHITE) ? NORTH : SOUTH;
-		constexpr DIRECTION up_left			= (_S == WHITE) ? NORTHWEST : SOUTHWEST;
-		constexpr DIRECTION down_left		= (_S == WHITE) ? SOUTHWEST : NORTHWEST;
-		constexpr DIRECTION up_right		= (_S == WHITE) ? NORTHEAST : SOUTHEAST;
-		constexpr DIRECTION down_right		= (_S == WHITE) ? SOUTHEAST : NORTHEAST;
-		constexpr bitboard_t relative_r3	= bitmasks::rank_masks[_S == WHITE ? RANK_3 : RANK_6];
-		constexpr bitboard_t relative_r8	= bitmasks::rank_masks[_S == WHITE ? RANK_8 : RANK_1];
-		constexpr RANK relative_top_rank	= _S == WHITE ? RANK_8 : RANK_1;
-		constexpr int left_attack_origin	= (_S == WHITE) ? 7 : -9;
-		constexpr int right_attack_origin	= (_S == WHITE) ? 9 : -7;		
-		constexpr int left_ep_origin		= (_S == WHITE) ? 9 : -7;
-		constexpr int right_ep_origin		= (_S == WHITE) ? 7 : -9;
-		
+		constexpr DIRECTION up = (_S == WHITE) ? NORTH : SOUTH;
+		constexpr DIRECTION up_left = (_S == WHITE) ? NORTHWEST : SOUTHWEST;
+		constexpr DIRECTION down_left = (_S == WHITE) ? SOUTHWEST : NORTHWEST;
+		constexpr DIRECTION up_right = (_S == WHITE) ? NORTHEAST : SOUTHEAST;
+		constexpr DIRECTION down_right = (_S == WHITE) ? SOUTHEAST : NORTHEAST;
+		constexpr bitboard_t relative_r3 = bitmasks::rank_masks[_S == WHITE ? RANK_3 : RANK_6];
+		constexpr bitboard_t relative_r8 = bitmasks::rank_masks[_S == WHITE ? RANK_8 : RANK_1];
+		constexpr RANK relative_top_rank = _S == WHITE ? RANK_8 : RANK_1;
+		constexpr int left_attack_origin = (_S == WHITE) ? 7 : -9;
+		constexpr int right_attack_origin = (_S == WHITE) ? 9 : -7;
+		constexpr int left_ep_origin = (_S == WHITE) ? 9 : -7;
+		constexpr int right_ep_origin = (_S == WHITE) ? 7 : -9;
 
-		bitboard_t pawns			= m_position->m_state_info->piece_placements[_S][PAWN];
-		bitboard_t opponent_pieces	= m_position->m_all_pieces[!_S];
-		bitboard_t occupied			= m_position->m_all_pieces[WHITE] | m_position->m_all_pieces[BLACK];
+
+		bitboard_t pawns = m_position->m_state_info->piece_placements[_S][PAWN];
+		bitboard_t opponent_pieces = m_position->m_all_pieces[!_S];
+		bitboard_t occupied = m_position->m_all_pieces[WHITE] | m_position->m_all_pieces[BLACK];
 
 		if (pawns == 0)
 			return;
 
 		size_t idx;
-		if constexpr (_Ty == QUIET) {
+		if constexpr (_Ty == QUIET)
+		{
 			bitboard_t one_up = shift<up>(pawns) & ~(occupied | relative_r8); // No promotions here.
 			bitboard_t two_up = shift<up>(one_up & relative_r3) & ~occupied;
 
-			while (one_up) {
+			while (one_up)
+			{
 				idx = pop_bit(one_up);
 
 				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, NOT_SPECIAL, 0, 0);
 			}
-			while (two_up) {
+			while (two_up)
+			{
 				idx = pop_bit(two_up);
 				m_moves->add(_S == WHITE ? idx - 16 : idx + 16, idx, NOT_SPECIAL, 0, 0);
 			}
 		}
-		else if constexpr (_Ty == ACTIVES) {
+		else if constexpr (_Ty == ACTIVES)
+		{
 			// 1: Attacks.
-			bitboard_t left_attacks		= shift<up_left>(pawns) & opponent_pieces;
-			bitboard_t right_attacks	= shift<up_right>(pawns) & opponent_pieces;
-			bitboard_t promotions		= shift<up>(pawns) & relative_r8 & ~occupied;
+			bitboard_t left_attacks = shift<up_left>(pawns) & opponent_pieces;
+			bitboard_t right_attacks = shift<up_right>(pawns) & opponent_pieces;
+			bitboard_t promotions = shift<up>(pawns) & relative_r8 & ~occupied;
 
-			while (left_attacks) {
+			while (left_attacks)
+			{
 				idx = pop_bit(left_attacks);
 
-				if (rank(idx) == relative_top_rank) { // Promotion capture.
+				if (rank(idx) == relative_top_rank)
+				{ // Promotion capture.
 					m_moves->add(idx - left_attack_origin, idx, PROMOTION, KNIGHT - 1, 0);
 					m_moves->add(idx - left_attack_origin, idx, PROMOTION, BISHOP - 1, 0);
 					m_moves->add(idx - left_attack_origin, idx, PROMOTION, ROOK - 1, 0);
 					m_moves->add(idx - left_attack_origin, idx, PROMOTION, QUEEN - 1, 0);
 				}
-				else { // Regular capture.
+				else
+				{ // Regular capture.
 					m_moves->add(idx - left_attack_origin, idx, NOT_SPECIAL, 0, 0);
 				}
 			}
-			while (right_attacks) {
+			while (right_attacks)
+			{
 				idx = pop_bit(right_attacks);
 
-				if (rank(idx) == relative_top_rank) { // Promotion capture.
+				if (rank(idx) == relative_top_rank)
+				{ // Promotion capture.
 					m_moves->add(idx - right_attack_origin, idx, PROMOTION, KNIGHT - 1, 0);
 					m_moves->add(idx - right_attack_origin, idx, PROMOTION, BISHOP - 1, 0);
 					m_moves->add(idx - right_attack_origin, idx, PROMOTION, ROOK - 1, 0);
 					m_moves->add(idx - right_attack_origin, idx, PROMOTION, QUEEN - 1, 0);
 				}
-				else { // Regular capture.
+				else
+				{ // Regular capture.
 					m_moves->add(idx - right_attack_origin, idx, NOT_SPECIAL, 0, 0);
 				}
 			}
 
 			// 2. Regular promotions.
-			while (promotions) {
+			while (promotions)
+			{
 				idx = pop_bit(promotions);
 
 				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, KNIGHT - 1, 0);
@@ -209,19 +230,23 @@ namespace loki::movegen {
 			}
 
 			// 3. En-passant.
-			if (m_position->m_state_info->en_passant_square != NO_SQ) {
-				auto ep_square		= m_position->m_state_info->en_passant_square;
+			if (m_position->m_state_info->en_passant_square != NO_SQ)
+			{
+				auto ep_square = m_position->m_state_info->en_passant_square;
 				bitboard_t ep_board = bitboard_t(1) << ep_square;
 
-				if ((shift<down_left>(ep_board) & pawns) != 0) {
+				if ((shift<down_left>(ep_board) & pawns) != 0)
+				{
 					m_moves->add(ep_square - left_ep_origin, ep_square, ENPASSANT, 0, 0);
 				}
-				if ((shift<down_right>(ep_board) & pawns) != 0) {
+				if ((shift<down_right>(ep_board) & pawns) != 0)
+				{
 					m_moves->add(ep_square - right_ep_origin, ep_square, ENPASSANT, 0, 0);
 				}
 			}
 		}
-		else {
+		else
+		{
 			// Call this function for active moves as well as quiets.
 			get_pawn_moves<_S, QUIET>();
 			get_pawn_moves<_S, ACTIVES>();
@@ -232,24 +257,27 @@ namespace loki::movegen {
 	/// Generate knight moves.
 	/// </summary>
 	template<SIDE _S, MOVE_TYPE _Ty>
-	void move_generator::get_knight_moves() {
+	void move_generator::get_knight_moves()
+	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
-		bitboard_t friendly_pieces		= m_position->m_all_pieces[_S];
-		bitboard_t opponent_pieces		= m_position->m_all_pieces[!_S];
-		bitboard_t knight_board			= m_position->m_state_info->piece_placements[_S][KNIGHT];
-		
+		bitboard_t friendly_pieces = m_position->m_all_pieces[_S];
+		bitboard_t opponent_pieces = m_position->m_all_pieces[!_S];
+		bitboard_t knight_board = m_position->m_state_info->piece_placements[_S][KNIGHT];
+
 		if (knight_board == 0)
 			return;
 
-		while (knight_board) {
+		while (knight_board)
+		{
 			auto idx = pop_bit(knight_board);
-			bitboard_t attacks = 
-				knight_attacks[idx] & 
-				(_Ty == ACTIVES ? opponent_pieces : full_board) & 
-				(_Ty == QUIET ? ~opponent_pieces : full_board) & 
+			bitboard_t attacks =
+				knight_attacks[idx] &
+				(_Ty == ACTIVES ? opponent_pieces : full_board) &
+				(_Ty == QUIET ? ~opponent_pieces : full_board) &
 				~friendly_pieces;
 
-			while (attacks) {
+			while (attacks)
+			{
 				auto to_sq = pop_bit(attacks);
 				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
 			}
@@ -257,21 +285,24 @@ namespace loki::movegen {
 	}
 
 	template<SIDE _S, MOVE_TYPE _Ty>
-	void move_generator::get_bishop_moves() {
+	void move_generator::get_bishop_moves()
+	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
-		bitboard_t friendly_pieces	= m_position->m_all_pieces[_S];
-		bitboard_t opponent_pieces	= m_position->m_all_pieces[!_S];
-		bitboard_t bishops			= m_position->m_state_info->piece_placements[_S][BISHOP];
+		bitboard_t friendly_pieces = m_position->m_all_pieces[_S];
+		bitboard_t opponent_pieces = m_position->m_all_pieces[!_S];
+		bitboard_t bishops = m_position->m_state_info->piece_placements[_S][BISHOP];
 
-		while (bishops) {
+		while (bishops)
+		{
 			auto idx = pop_bit(bishops);
 			bitboard_t attacks =
 				m_slider_generator->bishop_attacks(idx, friendly_pieces | opponent_pieces) &
 				(_Ty == ACTIVES ? opponent_pieces : full_board) &
 				(_Ty == QUIET ? ~opponent_pieces : full_board) &
 				~friendly_pieces;
-			
-			while (attacks) {
+
+			while (attacks)
+			{
 				auto to_sq = pop_bit(attacks);
 				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
 			}
@@ -279,13 +310,15 @@ namespace loki::movegen {
 	}
 
 	template<SIDE _S, MOVE_TYPE _Ty>
-	void move_generator::get_rook_moves() {
+	void move_generator::get_rook_moves()
+	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
-		bitboard_t friendly_pieces	= m_position->m_all_pieces[_S];
-		bitboard_t opponent_pieces	= m_position->m_all_pieces[!_S];
-		bitboard_t rooks			= m_position->m_state_info->piece_placements[_S][ROOK];
+		bitboard_t friendly_pieces = m_position->m_all_pieces[_S];
+		bitboard_t opponent_pieces = m_position->m_all_pieces[!_S];
+		bitboard_t rooks = m_position->m_state_info->piece_placements[_S][ROOK];
 
-		while (rooks) {
+		while (rooks)
+		{
 			auto idx = pop_bit(rooks);
 			bitboard_t attacks =
 				m_slider_generator->rook_attacks(idx, friendly_pieces | opponent_pieces) &
@@ -293,7 +326,8 @@ namespace loki::movegen {
 				(_Ty == QUIET ? ~opponent_pieces : full_board) &
 				~friendly_pieces;
 
-			while (attacks) {
+			while (attacks)
+			{
 				auto to_sq = pop_bit(attacks);
 				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
 			}
@@ -301,13 +335,15 @@ namespace loki::movegen {
 	}
 
 	template<SIDE _S, MOVE_TYPE _Ty>
-	void move_generator::get_queen_moves() {
+	void move_generator::get_queen_moves()
+	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
-		bitboard_t friendly_pieces	= m_position->m_all_pieces[_S];
-		bitboard_t opponent_pieces	= m_position->m_all_pieces[!_S];
-		bitboard_t queens			= m_position->m_state_info->piece_placements[_S][QUEEN];
+		bitboard_t friendly_pieces = m_position->m_all_pieces[_S];
+		bitboard_t opponent_pieces = m_position->m_all_pieces[!_S];
+		bitboard_t queens = m_position->m_state_info->piece_placements[_S][QUEEN];
 
-		while (queens) {
+		while (queens)
+		{
 			auto idx = pop_bit(queens);
 			bitboard_t attacks =
 				m_slider_generator->queen_attacks(idx, friendly_pieces | opponent_pieces) &
@@ -315,7 +351,8 @@ namespace loki::movegen {
 				(_Ty == QUIET ? ~opponent_pieces : full_board) &
 				~friendly_pieces;
 
-			while (attacks) {
+			while (attacks)
+			{
 				auto to_sq = pop_bit(attacks);
 				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
 			}
@@ -323,38 +360,46 @@ namespace loki::movegen {
 	}
 
 	template<SIDE _S, MOVE_TYPE _Ty>
-	void move_generator::get_king_moves() {
-		constexpr SQUARE kingside_castling_dest		= _S == WHITE ? G1 : G8;
-		constexpr SQUARE queenside_castling_dest	= _S == WHITE ? C1 : C8;
-		SQUARE king_sq								= m_position->m_king_squares[_S];
-		bitboard_t friendly_pieces					= m_position->m_all_pieces[_S];
-		bitboard_t opponent_pieces					= m_position->m_all_pieces[!_S];
+	void move_generator::get_king_moves()
+	{
+		constexpr SQUARE kingside_castling_dest = _S == WHITE ? G1 : G8;
+		constexpr SQUARE queenside_castling_dest = _S == WHITE ? C1 : C8;
+		SQUARE king_sq = m_position->m_king_squares[_S];
+		bitboard_t friendly_pieces = m_position->m_all_pieces[_S];
+		bitboard_t opponent_pieces = m_position->m_all_pieces[!_S];
 
-		if constexpr (_Ty == ACTIVES) {
+		if constexpr (_Ty == ACTIVES)
+		{
 			bitboard_t attacks = king_attacks[king_sq] & ~friendly_pieces & opponent_pieces;
 
-			while (attacks) {
+			while (attacks)
+			{
 				auto idx = pop_bit(attacks);
 				m_moves->add(king_sq, idx, NOT_SPECIAL, 0, 0);
 			}
 		}
-		else if constexpr (_Ty == QUIET) {
+		else if constexpr (_Ty == QUIET)
+		{
 			bitboard_t attacks = king_attacks[king_sq] & ~(friendly_pieces | opponent_pieces);
 
-			while (attacks) {
+			while (attacks)
+			{
 				auto idx = pop_bit(attacks);
 				m_moves->add(king_sq, idx, NOT_SPECIAL, 0, 0);
 			}
 
 			// FIXME: Should castling be considered a QUIET or an ACTIVE move?
-			if (can_castle<_S, _S == WHITE ? WKCA : BKCA>()) {
+			if (can_castle<_S, _S == WHITE ? WKCA : BKCA>())
+			{
 				m_moves->add(king_sq, kingside_castling_dest, CASTLE, 0, 0);
 			}
-			if (can_castle<_S, _S == WHITE ? WQCA : BQCA>()) {
+			if (can_castle<_S, _S == WHITE ? WQCA : BQCA>())
+			{
 				m_moves->add(king_sq, queenside_castling_dest, CASTLE, 0, 0);
 			}
 		}
-		else {
+		else
+		{
 			get_king_moves<_S, QUIET>();
 			get_king_moves<_S, ACTIVES>();
 		}
@@ -365,9 +410,11 @@ namespace loki::movegen {
 	/// Initialize the table of attacks for knights.
 	/// </summary>
 	/// <returns></returns>
-	void move_generator::init_knight_attacks() noexcept {
+	void move_generator::init_knight_attacks() noexcept
+	{
 
-		for (auto sq = 0; sq < 64; sq++) {
+		for (auto sq = 0; sq < 64; sq++)
+		{
 			bitboard_t current_attack_mask = 0;
 
 			current_attack_mask |= ((uint64_t(1) << sq) & ~bitmasks::file_masks[FILE_H]) << 17;
@@ -387,8 +434,10 @@ namespace loki::movegen {
 	/// Initialize the table of king attacks.
 	/// </summary>
 	/// <returns></returns>
-	void move_generator::init_king_attacks() noexcept {
-		for (auto sq = 0; sq < 64; sq++) {
+	void move_generator::init_king_attacks() noexcept
+	{
+		for (auto sq = 0; sq < 64; sq++)
+		{
 			bitboard_t current_attack_mask = 0;
 			bitboard_t sq_board = uint64_t(1) << sq;
 
@@ -408,14 +457,16 @@ namespace loki::movegen {
 
 	// Note: For the move-constructors, we don't need to check for table initialization since it is guaranteed to have been done before the move ctor was called.
 	move_generator::move_generator(move_generator&& _src) noexcept
-		:	m_position(std::move(_src.m_position)),
-			m_slider_generator(std::move(_src.m_slider_generator)),
-			m_movelists(_src.m_movelists),
-			m_moves(m_movelists.data() + (_src.m_moves - _src.m_movelists.data())) {
-	}
+		: m_position(std::move(_src.m_position)),
+		m_slider_generator(std::move(_src.m_slider_generator)),
+		m_movelists(_src.m_movelists),
+		m_moves(m_movelists.data() + (_src.m_moves - _src.m_movelists.data()))
+	{}
 
-	move_generator& move_generator::operator=(move_generator&& _src) noexcept {
-		if (this != &_src) {
+	move_generator& move_generator::operator=(move_generator&& _src) noexcept
+	{
+		if (this != &_src)
+		{
 			m_position = position::position_t(std::move(_src.m_position));
 			m_slider_generator = magics::slider_generator_t(std::move(_src.m_slider_generator));
 

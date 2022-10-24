@@ -18,12 +18,14 @@
 #include "loki.pch.h"
 
 
-namespace loki::utility {
+namespace loki::utility
+{
 
 	/// <summary>
 	/// Call all initialization methods.
 	/// </summary>
-	initializer::initializer() {
+	initializer::initializer()
+	{
 		movegen::magics::slider_generator::init();
 		movegen::move_generator::init_king_attacks();
 		movegen::move_generator::init_knight_attacks();

@@ -18,12 +18,14 @@
 #ifndef INITIALIZER_H
 #define INITIALIZER_H
 
-namespace loki::utility {
+namespace loki::utility
+{
 
 	/// <summary>
 	/// Initializer class is responsible for creating a static object upon startup (before main) which will call all initialization methods in its constructor.
 	/// </summary>
-	class initializer {
+	class initializer
+	{
 	public:
 		initializer();
 	};

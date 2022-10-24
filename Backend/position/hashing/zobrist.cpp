@@ -18,7 +18,8 @@
 #include "loki.pch.h"
 
 
-namespace loki::position {
+namespace loki::position
+{
 
 	std::array<
 		std::array<
@@ -32,26 +33,31 @@ namespace loki::position {
 	/// <summary>
 	/// Initialize the tables of random numbers used by the hashing algorithm.
 	/// </summary>
-	void zobrist::init() {
+	void zobrist::init()
+	{
 		std::mt19937_64 rng(0x1234);
 
-		ep_hashes		= std::make_unique<hashkey_t[]>(SQ_NB);
+		ep_hashes = std::make_unique<hashkey_t[]>(SQ_NB);
 		castling_hashes = std::make_unique<hashkey_t[]>(16);
 		stm_hash = rng();
 
-		for (size_t pce = PAWN; pce <= KING; pce++) {
+		for (size_t pce = PAWN; pce <= KING; pce++)
+		{
 			piece_hashes[WHITE][pce] = std::make_unique<hashkey_t[]>(SQ_NB);
 			piece_hashes[BLACK][pce] = std::make_unique<hashkey_t[]>(SQ_NB);
 
-			for (size_t sq = A1; sq <= H8; sq++) {
+			for (size_t sq = A1; sq <= H8; sq++)
+			{
 				piece_hashes[WHITE][pce][sq] = rng();
 				piece_hashes[BLACK][pce][sq] = rng();
 			}
 		}
-		for (size_t sq = A1; sq <= H8; sq++) {
+		for (size_t sq = A1; sq <= H8; sq++)
+		{
 			ep_hashes[sq] = rng();
 		}
-		for (size_t i = 0; i < 16; i++) {
+		for (size_t i = 0; i < 16; i++)
+		{
 			castling_hashes[i] = rng();
 		}
 	}

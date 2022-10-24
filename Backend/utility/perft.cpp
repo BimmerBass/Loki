@@ -17,14 +17,16 @@
 //
 #include "loki.pch.h"
 
-namespace loki::utility {
+namespace loki::utility
+{
 
 
 	/// <summary>
 	/// Set the FEN and create a new position object.
 	/// </summary>
 	/// <param name="fen"></param>
-	perft::perft(const std::string& fen) : m_initial_fen(fen), m_nodes(0) {
+	perft::perft(const std::string& fen) : m_initial_fen(fen), m_nodes(0)
+	{
 		m_pos = position::position::create_position(
 			std::make_shared<position::game_state>(),
 			std::make_shared<movegen::magics::slider_generator>());
@@ -35,7 +37,8 @@ namespace loki::utility {
 	/// </summary>
 	/// <param name="d"></param>
 	/// <returns></returns>
-	size_t perft::perform(DEPTH d, std::ostream& os, bool debug) {
+	size_t perft::perform(DEPTH d, std::ostream& os, bool debug)
+	{
 		*m_pos << m_initial_fen;
 		m_nodes = 0;
 		m_nps = 0.0;
@@ -47,11 +50,13 @@ namespace loki::utility {
 	/// Set a new fen.
 	/// </summary>
 	/// <param name="new_fen"></param>
-	void perft::load(const std::string& new_fen) {
+	void perft::load(const std::string& new_fen)
+	{
 		m_initial_fen = new_fen;
 	}
 
-	size_t perft::perft_test(DEPTH d, std::ostream& os, bool debug) {
+	size_t perft::perft_test(DEPTH d, std::ostream& os, bool debug)
+	{
 		os << "Starting perft test for depth " << static_cast<size_t>(d) << ".\n";
 		os << "[FEN]: " << m_initial_fen << "\n";
 		size_t legal = 0;
@@ -63,7 +68,8 @@ namespace loki::utility {
 
 		const auto& moves = m_pos->generate_moves<movegen::ALL>();
 
-		for (size_t i = 0; i < moves.size(); i++) {
+		for (size_t i = 0; i < moves.size(); i++)
+		{
 			if (!m_pos->make_move(moves[i].move))
 				continue;
 			legal++;
@@ -92,9 +98,11 @@ namespace loki::utility {
 	/// </summary>
 	/// <param name="d"></param>
 	/// <returns></returns>
-	void perft::perft_internal(DEPTH d) {
+	void perft::perft_internal(DEPTH d)
+	{
 
-		if (d <= 0) {
+		if (d <= 0)
+		{
 			m_nodes++;
 			return;
 		}
@@ -102,9 +110,10 @@ namespace loki::utility {
 
 		const auto& moves = m_pos->generate_moves<movegen::ALL>();
 
-		for (auto i = 0; i < moves.size(); i++) {
+		for (auto i = 0; i < moves.size(); i++)
+		{
 			auto move = moves[i];
-			
+
 			if (!m_pos->make_move(move.move))
 				continue;
 			perft_internal(d - 1);

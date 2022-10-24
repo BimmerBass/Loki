@@ -18,27 +18,33 @@
 #include "loki.pch.h"
 #include <map>
 
-namespace loki::position {
+namespace loki::position
+{
 
 #pragma region FEN-Parsing helpers
-	namespace {
-		std::vector<std::stringstream> split_string(std::stringstream& ss, char delim = ' ') {
+	namespace
+	{
+		std::vector<std::stringstream> split_string(std::stringstream& ss, char delim = ' ')
+		{
 			std::vector<std::stringstream> output;
 			std::string token;
 
-			while (std::getline(ss, token, delim)) {
+			while (std::getline(ss, token, delim))
+			{
 				output.push_back(std::stringstream(token));
 			}
 			return output;
 		}
 
-		bool is_algebraic(std::string sq) {
-			return (sq.size() == 2 && 
-					std::string("abcdefgh").find(sq[0]) != std::string::npos && 
-					std::string("12345678").find(sq[1]) != std::string::npos);
+		bool is_algebraic(std::string sq)
+		{
+			return (sq.size() == 2 &&
+				std::string("abcdefgh").find(sq[0]) != std::string::npos &&
+				std::string("12345678").find(sq[1]) != std::string::npos);
 		}
 
-		SQUARE from_algebraic(std::string str) {
+		SQUARE from_algebraic(std::string str)
+		{
 			static std::map<char, FILE> file_mappings = {
 				{'a', FILE_A},
 				{'b', FILE_B},
@@ -55,73 +61,91 @@ namespace loki::position {
 			return get_square((rank - '0') - 1, file_mappings[std::tolower(file)]);
 		}
 
-		namespace write {
-			void position(const game_state* pos, std::stringstream& ss) {
+		namespace write
+		{
+			void position(const game_state* pos, std::stringstream& ss)
+			{
 				// Firstly, create an array for all piece placements.
 				char piece_list[6] = { 'p', 'n', 'b', 'r', 'q', 'k' };
 				std::array<char, SQ_NB> piece_array;
 				piece_array.fill('0');
 
-				for (size_t pce = PAWN; pce <= KING; pce++) {
+				for (size_t pce = PAWN; pce <= KING; pce++)
+				{
 					bitboard_t whites = pos->piece_placements[WHITE][pce];
 					bitboard_t blacks = pos->piece_placements[BLACK][pce];
 
-					while (whites) {
+					while (whites)
+					{
 						auto inx = pop_bit(whites);
 						piece_array[inx] = std::toupper(piece_list[pce]);
 					}
-					while (blacks) {
+					while (blacks)
+					{
 						auto inx = pop_bit(blacks);
 						piece_array[inx] = piece_list[pce];
 					}
 				}
 
 				std::array<std::string, RANK_NB> rank_piece_placements;
-				for (size_t r = RANK_1; r <= RANK_8; r++) {
+				for (size_t r = RANK_1; r <= RANK_8; r++)
+				{
 					size_t fen_rank = RANK_8 - r;
 					size_t skipped_files = 0;
 
-					for (size_t f = FILE_A; f <= FILE_H; f++) {
-						if (piece_array[get_square(r, f)] == '0') {
+					for (size_t f = FILE_A; f <= FILE_H; f++)
+					{
+						if (piece_array[get_square(r, f)] == '0')
+						{
 							skipped_files++;
 
-							if (f == FILE_H) {
+							if (f == FILE_H)
+							{
 								rank_piece_placements[fen_rank] += std::to_string(skipped_files);
 							}
 							continue;
 						}
-						if (skipped_files) {
+						if (skipped_files)
+						{
 							rank_piece_placements[fen_rank] += std::to_string(skipped_files);
 						}
 						rank_piece_placements[fen_rank] += piece_array[get_square(r, f)];
 						skipped_files = 0;
 					}
 				}
-				
-				for (size_t i = 0; i < RANK_NB; i++) {
+
+				for (size_t i = 0; i < RANK_NB; i++)
+				{
 					ss << (i == 0 ? "" : "/") << rank_piece_placements[i];
 				}
 			}
-			std::string castling(const game_state* pos) {
-				if (!pos->castling_rights.any()) {
+			std::string castling(const game_state* pos)
+			{
+				if (!pos->castling_rights.any())
+				{
 					return "-";
 				}
 
-				return (pos->castling_rights.operator()<WKCA>() ? "K" : "") +
-					std::string((pos->castling_rights.operator()<WQCA>() ? "Q" : "")) +
-					std::string((pos->castling_rights.operator()<BKCA>() ? "k" : "")) +
-					std::string((pos->castling_rights.operator()<BQCA>() ? "q" : ""));
+				return (pos->castling_rights.operator() < WKCA > () ? "K" : "") +
+					std::string((pos->castling_rights.operator() < WQCA > () ? "Q" : "")) +
+					std::string((pos->castling_rights.operator() < BKCA > () ? "k" : "")) +
+					std::string((pos->castling_rights.operator() < BQCA > () ? "q" : ""));
 			}
-			std::string en_passant(const game_state* pos) {
-				if (pos->en_passant_square == NO_SQ) {
+			std::string en_passant(const game_state* pos)
+			{
+				if (pos->en_passant_square == NO_SQ)
+				{
 					return "-";
 				}
 				return to_algebraic(pos->en_passant_square);
 			}
 		}
-		namespace read {
-			void clear_gamestate(game_state* pos) {
-				for (size_t pce = PAWN; pce <= KING; pce++) {
+		namespace read
+		{
+			void clear_gamestate(game_state* pos)
+			{
+				for (size_t pce = PAWN; pce <= KING; pce++)
+				{
 					pos->piece_placements[WHITE][pce] = 0;
 					pos->piece_placements[BLACK][pce] = 0;
 				}
@@ -132,26 +156,33 @@ namespace loki::position {
 				pos->castling_rights.clear();
 			}
 
-			void position(game_state* pos, std::stringstream& ss) {
+			void position(game_state* pos, std::stringstream& ss)
+			{
 				auto ranks = split_string(ss, '/');
-				
-				if (ranks.size() != RANK_NB) {
+
+				if (ranks.size() != RANK_NB)
+				{
 					throw std::runtime_error("Invalid FEN: There should be exactly eight fields separated by '/' to describe the piece placements.");
 				}
 
-				for (auto r = 0; r < ranks.size(); r++) {
+				for (auto r = 0; r < ranks.size(); r++)
+				{
 					auto rank_pieces = ranks[r].str();
 
 					size_t internal_rank = RANK_8 - r; // Since the position description starts at the eighth rank, we need to invert this.
 					size_t current_token_inx = 0;
 					size_t skipped_files = 0;
 
-					for (size_t f = FILE_A; f <= FILE_H; f++) {
-						if (std::isdigit(rank_pieces[current_token_inx])) {
+					for (size_t f = FILE_A; f <= FILE_H; f++)
+					{
+						if (std::isdigit(rank_pieces[current_token_inx]))
+						{
 							f += (static_cast<size_t>(rank_pieces[current_token_inx] - '0') - 1);
 						}
-						else {
-							switch (rank_pieces[current_token_inx]) {
+						else
+						{
+							switch (rank_pieces[current_token_inx])
+							{
 							case 'P': pos->piece_placements[WHITE][PAWN] |= (bitboard_t(1) << get_square(internal_rank, f)); break;
 							case 'N': pos->piece_placements[WHITE][KNIGHT] |= (bitboard_t(1) << get_square(internal_rank, f)); break;
 							case 'B': pos->piece_placements[WHITE][BISHOP] |= (bitboard_t(1) << get_square(internal_rank, f)); break;
@@ -172,37 +203,47 @@ namespace loki::position {
 					}
 				}
 			}
-			void side_to_move(game_state* pos, std::stringstream& ss) {
+			void side_to_move(game_state* pos, std::stringstream& ss)
+			{
 				if (ss.str().size() != 1 || (std::tolower(ss.str()[0]) != 'w' && std::tolower(ss.str()[0]) != 'b'))
 					throw std::runtime_error("Invalid FEN: Side to move is ill-formed");
 				pos->side_to_move = std::tolower(ss.str()[0]) == 'w' ? WHITE : BLACK;
 			}
-			void castling(game_state* pos, std::stringstream& ss) {
+			void castling(game_state* pos, std::stringstream& ss)
+			{
 				auto castling_str = ss.str();
 
 				if (castling_str.find_first_not_of("KQkq-") != std::string::npos)
 					throw std::runtime_error("Invalid FEN: Castling rights are ill-formed");
 
-				if (castling_str == "-") {
+				if (castling_str == "-")
+				{
 					pos->castling_rights.clear();
 				}
-				else {
-					if (castling_str.find('K') != std::string::npos) {
+				else
+				{
+					if (castling_str.find('K') != std::string::npos)
+					{
 						pos->castling_rights += WKCA;
 					}
-					if (castling_str.find('Q') != std::string::npos) {
+					if (castling_str.find('Q') != std::string::npos)
+					{
 						pos->castling_rights += WQCA;
 					}
-					if (castling_str.find('k') != std::string::npos) {
+					if (castling_str.find('k') != std::string::npos)
+					{
 						pos->castling_rights += BKCA;
 					}
-					if (castling_str.find('q') != std::string::npos) {
+					if (castling_str.find('q') != std::string::npos)
+					{
 						pos->castling_rights += BQCA;
 					}
 				}
 			}
-			void en_passant(game_state* pos, std::stringstream& ss) {
-				if (ss.str() == "-") {
+			void en_passant(game_state* pos, std::stringstream& ss)
+			{
+				if (ss.str() == "-")
+				{
 					pos->en_passant_square = NO_SQ;
 					return;
 				}
@@ -210,12 +251,15 @@ namespace loki::position {
 					throw std::runtime_error("Invalid FEN: En-passant square was not null, while also not being in algebraic notation.");
 				pos->en_passant_square = from_algebraic(ss.str());
 			}
-			void move_clocks(game_state* pos, std::stringstream& half_ss, std::stringstream& full_ss) {
-				try {
+			void move_clocks(game_state* pos, std::stringstream& half_ss, std::stringstream& full_ss)
+			{
+				try
+				{
 					pos->fifty_move_counter = std::stoi(half_ss.str());
 					pos->full_move_counter = std::stoi(full_ss.str());
 				}
-				catch (std::exception& e) {
+				catch (std::exception& e)
+				{
 					throw std::runtime_error("Invalid FEN: Error parsing move clocks (message: )" + std::string(e.what()));
 				}
 			}
@@ -223,7 +267,8 @@ namespace loki::position {
 	}
 #pragma endregion
 
-	void game_state::operator<<(const std::string& fen) {
+	void game_state::operator<<(const std::string& fen)
+	{
 		read::clear_gamestate(this);
 
 		std::stringstream ss(fen);
@@ -236,13 +281,15 @@ namespace loki::position {
 		read::castling(this, fen_fields[2]);
 		read::en_passant(this, fen_fields[3]);
 
-		if (fen_fields.size() >= 6) {
+		if (fen_fields.size() >= 6)
+		{
 			read::move_clocks(this, fen_fields[4], fen_fields[5]);
 		}
 	}
 
-	void game_state::operator>>(std::string& fen) const {
-		
+	void game_state::operator>>(std::string& fen) const
+	{
+
 		std::stringstream fen_ss("");
 		write::position(this, fen_ss);
 
@@ -250,7 +297,8 @@ namespace loki::position {
 			side_to_move == WHITE ? "w" : "b",
 			write::castling(this),
 			write::en_passant(this));
-		if (fifty_move_counter > 0 || full_move_counter > 0) {
+		if (fifty_move_counter > 0 || full_move_counter > 0)
+		{
 			fen_ss << " " << fifty_move_counter;
 			fen_ss << " " << full_move_counter;
 		}
@@ -258,29 +306,35 @@ namespace loki::position {
 		fen = fen_ss.str();
 	}
 
-	
-	std::ostream& operator<<(std::ostream& os, const game_state& gs) {
+
+	std::ostream& operator<<(std::ostream& os, const game_state& gs)
+	{
 		const static std::array<char, PIECE_NB> piece_letters = { 'p', 'n', 'b', 'r', 'q', 'k' };
 		std::string output = "................................................................";
 
-		for (size_t pce = PAWN; pce <= KING; pce++) {
+		for (size_t pce = PAWN; pce <= KING; pce++)
+		{
 			bitboard_t whites = gs.piece_placements[WHITE][pce];
 			bitboard_t blacks = gs.piece_placements[BLACK][pce];
 
-			while (whites) {
+			while (whites)
+			{
 				auto inx = pop_bit(whites);
 				output[inx] = std::toupper(piece_letters[pce]);
 			}
-			while (blacks) {
+			while (blacks)
+			{
 				auto inx = pop_bit(blacks);
 				output[inx] = piece_letters[pce];
 			}
 		}
 
 		os << "\nGame state:\n\n";
-		for (int r = RANK_8; r >= RANK_1; r--) {
+		for (int r = RANK_8; r >= RANK_1; r--)
+		{
 			os << "\t" << r + 1 << "  ";
-			for (size_t f = FILE_A; f <= FILE_H; f++) {
+			for (size_t f = FILE_A; f <= FILE_H; f++)
+			{
 				os << output[get_square(r, f)] << " ";
 			}
 			os << "\n";

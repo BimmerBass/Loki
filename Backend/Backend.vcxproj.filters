@@ -81,9 +81,6 @@
     <ClCompile Include="utility\initializer.cpp">
       <Filter>Source Files\utility</Filter>
     </ClCompile>
-    <ClCompile Include="movegen\magics\slider_generator.cpp">
-      <Filter>Source Files\movegen\magics</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.h">

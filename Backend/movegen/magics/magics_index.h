@@ -18,14 +18,16 @@
 #ifndef MAGICS_INDEX_H
 #define MAGICS_INDEX_H
 
-namespace loki::movegen::magics {
+namespace loki::movegen::magics
+{
 
 	/// <summary>
 	/// Implementation of a plain magic bitboards index
 	/// (see https://www.chessprogramming.org/Magic_Bitboards#Plain)
 	/// </summary>
 	template<PIECE _Pce>
-	class magics_index {
+	class magics_index
+	{
 	private:
 		static_assert(_Pce == BISHOP || _Pce == ROOK, "piece type must be a bishop or rook.");
 
@@ -40,7 +42,8 @@ namespace loki::movegen::magics {
 		}();
 
 		// Even though nested classes/structs are bad, it'll be okay here since only magics_index should be able to see it anyways.
-		struct magic_entry {
+		struct magic_entry
+		{
 			bitboard_t mask;
 			bitboard_t magic;
 			size_t shift;
@@ -50,7 +53,7 @@ namespace loki::movegen::magics {
 			std::array<bitboard_t, index_size>,
 			64
 		>;
-		
+
 		// All attacks.
 		std::unique_ptr<index_t> m_attack_index{ nullptr };
 
@@ -68,7 +71,8 @@ namespace loki::movegen::magics {
 	private:
 #pragma region Pre-initialized magics array
 		inline static constexpr std::array<bitboard_t, 64> magics = [] {
-			if constexpr (_Pce == BISHOP) {
+			if constexpr (_Pce == BISHOP)
+			{
 				return std::array<bitboard_t, 64> {
 					0x4151002060840ULL, 0x403060403020001ULL, 0x1800c400800010ULL, 0x2848c100080024ULL,
 						0x84050420e00001ULL, 0x4406090460180001ULL, 0x4014120846090024ULL, 0x4808150c01044004ULL,
@@ -88,7 +92,8 @@ namespace loki::movegen::magics {
 						0x4000004004904400ULL, 0x10200a1408104101ULL, 0x48004002184200a0ULL, 0x2041000850100ULL
 				};
 			}
-			else {
+			else
+			{
 				return std::array<bitboard_t, 64> {
 					0x2380004000201080ULL, 0x2040100020004001ULL, 0x180086002100080ULL, 0x4080048008021000ULL,
 						0xa00086004100200ULL, 0x80018004004200ULL, 0x400640810030082ULL, 0x4280014100102080ULL,

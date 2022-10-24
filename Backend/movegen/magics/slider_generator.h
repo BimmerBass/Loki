@@ -18,30 +18,36 @@
 #ifndef SLIDER_GENERATOR_H
 #define SLIDER_GENERATOR_H
 
-namespace loki::movegen::magics {
+namespace loki::movegen::magics
+{
 
 	/// <summary>
 	/// Just a wrapper for both the rook and bishop indexes.
 	/// </summary>
-	class slider_generator {
+	class slider_generator
+	{
 		friend class ::loki::utility::initializer;
 	private:
-		static magics_index_t<BISHOP>	m_bishop_index;
-		static magics_index_t<ROOK>		m_rook_index;
+		inline static magics_index_t<BISHOP>	m_bishop_index{ nullptr };
+		inline static magics_index_t<ROOK>		m_rook_index{ nullptr };
 
 		// Called only once.
-		static void init() {
+		static void init()
+		{
 			m_bishop_index = std::make_unique<magics_index<BISHOP>>();
 			m_rook_index = std::make_unique<magics_index<ROOK>>();
 		}
 	public:
-		inline bitboard_t rook_attacks(size_t sq, bitboard_t occupancy) const noexcept {
+		inline bitboard_t rook_attacks(size_t sq, bitboard_t occupancy) const noexcept
+		{
 			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
 		}
-		inline bitboard_t bishop_attacks(size_t sq, bitboard_t occupancy) const noexcept {
+		inline bitboard_t bishop_attacks(size_t sq, bitboard_t occupancy) const noexcept
+		{
 			return m_bishop_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
 		}
-		inline bitboard_t queen_attacks(size_t sq, bitboard_t occupancy) const noexcept {
+		inline bitboard_t queen_attacks(size_t sq, bitboard_t occupancy) const noexcept
+		{
 			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy) | m_bishop_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
 		}
 	};
