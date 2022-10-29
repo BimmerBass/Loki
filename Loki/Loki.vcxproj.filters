@@ -35,5 +35,8 @@
     <ClInclude Include="Loki\contexts\search_context.h">
       <Filter>Header Files\contexts</Filter>
     </ClInclude>
+    <ClInclude Include="Loki\contexts\uci_context.h">
+      <Filter>Header Files\contexts</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

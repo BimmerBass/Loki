@@ -5,7 +5,7 @@
 namespace loki::uci
 {
 
-	struct search_context
+	class search_context : public context
 	{
 		position_context position;
 		search::search_limits limits;

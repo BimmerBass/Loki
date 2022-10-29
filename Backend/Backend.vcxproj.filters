@@ -128,5 +128,8 @@
     <ClInclude Include="utility\exception.h">
       <Filter>Header Files\utility</Filter>
     </ClInclude>
+    <ClInclude Include="utility\textutil.h">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

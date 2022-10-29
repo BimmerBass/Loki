@@ -170,6 +170,7 @@
   <ItemGroup>
     <ClInclude Include="Loki\contexts\position_context.h" />
     <ClInclude Include="Loki\contexts\search_context.h" />
+    <ClInclude Include="Loki\contexts\uci_context.h" />
     <ClInclude Include="Loki\uci.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

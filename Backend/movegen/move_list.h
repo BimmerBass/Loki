@@ -82,6 +82,41 @@ namespace loki::movegen
 			return m_movelist[idx];
 		}
 
+		inline move_t find(std::string move) const
+		{
+			if (move.length() < 4 || move.length() > 5)
+				throw e_moveList(FORMAT_EXCEPTION_MESSAGE("Invalid move notation passed"));
+			auto from = from_algebraic(move.substr(0, 2));
+			auto to = from_algebraic(move.substr(2, 2));
+			auto prom = PIECE_NB;
+			if (move.length() > 4)
+			{
+				switch (std::tolower(move[4]))
+				{
+				case 'n': prom = KNIGHT; break;
+				case 'b': prom = BISHOP; break;
+				case 'r': prom = ROOK; break;
+				case 'q': prom = QUEEN; break;
+				default:
+					throw e_moveList(FORMAT_EXCEPTION_MESSAGE("Invalid promotion piece"));
+				}
+			}
+
+			for (auto i = 0; i < m_size; i++)
+			{
+				auto internalMove = m_movelist[i].move;
+
+				if (from_sq(internalMove) == from && to_sq(internalMove) == to)
+				{
+					if (special(internalMove) == PROMOTION && promotion_piece(internalMove) == prom)
+						return internalMove;
+					else if (special(internalMove) != PROMOTION)
+						return internalMove;
+				}
+			}
+			return MOVE_NULL;
+		}
+
 		inline move_list(const move_list& _src) : m_size(_src.m_size)
 		{
 			std::copy(_src.m_movelist.begin(), _src.m_movelist.end(), m_movelist.begin());

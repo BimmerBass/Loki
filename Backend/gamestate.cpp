@@ -38,31 +38,6 @@ namespace loki::position
 			return output;
 		}
 
-		bool is_algebraic(std::string sq)
-		{
-			return (sq.size() == 2 &&
-				std::string("abcdefgh").find(sq[0]) != std::string::npos &&
-				std::string("12345678").find(sq[1]) != std::string::npos);
-		}
-
-		SQUARE from_algebraic(std::string str)
-		{
-			static std::map<char, FILE> file_mappings = {
-				{'a', FILE_A},
-				{'b', FILE_B},
-				{'c', FILE_C},
-				{'d', FILE_D},
-				{'e', FILE_E},
-				{'f', FILE_F},
-				{'g', FILE_G},
-				{'h', FILE_H},
-			};
-			auto file = str[0];
-			auto rank = str[1];
-
-			return get_square((rank - '0') - 1, file_mappings[std::tolower(file)]);
-		}
-
 		namespace write
 		{
 			void position(const game_state* pos, std::stringstream& ss)

@@ -24,10 +24,15 @@ namespace loki::uci
 		return true;
 	}
 
-	engine_manager::command_type engine_manager::get_type(std::string cmd)
+	void engine_manager::parse_cmd(const std::string& cmd)
 	{
+		// Extract command type.
 		auto token_length = cmd.find_first_of(' ');
-		auto token = token_length == std::string::npos ?
-			cmd : cmd.substr(0, token_length);
+		auto first_token = textutil::lowercase(token_length == std::string::npos ?
+			cmd : cmd.substr(0, token_length));
+		
+		command_type cmd_type = UCI_NONE;
+		if (command_map.find(first_token) != command_map.end())
+			cmd_type = command_map.at(first_token);
 	}
 }

@@ -28,6 +28,7 @@
 #include <format>
 #include <random>
 #include <sstream>
+#include <map>
 
 #if (defined(_MSC_VER) || defined(__INTEL_COMPILER))
 #include <nmmintrin.h> // Used for count_bits
@@ -50,6 +51,8 @@ namespace loki {
 	using move_t		= uint16_t;
 	using bitboard_t	= uint64_t;
 	using hashkey_t		= uint64_t;
+
+	inline static constexpr move_t MOVE_NULL = 0;
 
 	enum SIDE : int64_t
 	{
@@ -428,6 +431,17 @@ namespace loki {
 			static_cast<FILE>(f));
 	}
 
+	/// <summary>
+	/// Check whether or not a string describes a square in algebraic notation.
+	/// </summary>
+	/// <param name="sq"></param>
+	/// <returns></returns>
+	inline bool is_algebraic(std::string sq)
+	{
+		return (sq.size() == 2 &&
+			std::string("abcdefgh").find(sq[0]) != std::string::npos &&
+			std::string("12345678").find(sq[1]) != std::string::npos);
+	}
 
 	/// <summary>
 	/// Convert a square to algebraic notation.
@@ -441,6 +455,29 @@ namespace loki {
 		size_t r = rank(sq) + 1;
 
 		return file_names[f] + std::to_string(r);
+	}
+
+	/// <summary>
+	/// Convert a string of algebraic notation to an internal square representation.
+	/// </summary>
+	/// <param name="str"></param>
+	/// <returns></returns>
+	inline SQUARE from_algebraic(std::string str)
+	{
+		static std::map<char, FILE> file_mappings = {
+			{'a', FILE_A},
+			{'b', FILE_B},
+			{'c', FILE_C},
+			{'d', FILE_D},
+			{'e', FILE_E},
+			{'f', FILE_F},
+			{'g', FILE_G},
+			{'h', FILE_H},
+		};
+		auto file = str[0];
+		auto rank = str[1];
+
+		return get_square((rank - '0') - 1, file_mappings[std::tolower(file)]);
 	}
 }
 
@@ -541,6 +578,7 @@ namespace loki::position
 #include "utility/fast_stack.h"
 #include "utility/perft.h"
 #include "utility/initializer.h"
+#include "utility/textutil.h"
 
 #include "search/limits.h"
 
