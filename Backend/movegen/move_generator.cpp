@@ -21,14 +21,14 @@
 namespace loki::movegen
 {
 
-	move_generator::attack_table_t	move_generator::knight_attacks{ 0 };
-	move_generator::attack_table_t	move_generator::king_attacks{ 0 };
-
 	move_generator::move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept :
 		m_position(pos),
 		m_slider_generator(slider_generator),
 		m_moves(nullptr)
-	{}
+	{
+		init_king_attacks();
+		init_knight_attacks();
+	}
 
 	/// <summary>
 	/// Generate a list of pseudo-legal moves in the position.

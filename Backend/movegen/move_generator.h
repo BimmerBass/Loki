@@ -29,11 +29,12 @@ namespace loki::movegen
 		using attack_table_t = std::array<bitboard_t, 64>;
 
 		position::position_t					m_position;
+
 		magics::slider_generator_t				m_slider_generator;
-		static attack_table_t					knight_attacks;
-		static attack_table_t					king_attacks;
+		attack_table_t							knight_attacks;
+		attack_table_t							king_attacks;
 		std::array<move_list_t, MAX_GAME_MOVES>	m_movelists;
-		move_list_t* m_moves;
+		move_list_t*							m_moves;
 	public:
 		// No default constructor since a reference to the position object is required.
 		move_generator() = delete;
@@ -69,9 +70,8 @@ namespace loki::movegen
 		void get_king_moves();
 
 		// initialization methods.
-		friend class ::loki::utility::initializer;
-		static void init_knight_attacks() noexcept;
-		static void init_king_attacks() noexcept;
+		void init_knight_attacks() noexcept;
+		void init_king_attacks() noexcept;
 
 		template<SIDE _S, CASTLING_RIGHTS _Cr>
 		inline bool can_castle() const

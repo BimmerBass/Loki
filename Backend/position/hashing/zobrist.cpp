@@ -21,44 +21,36 @@
 namespace loki::position
 {
 
-	std::array<
-		std::array<
-		std::unique_ptr<hashkey_t[]>, // 64 squares.
-		PIECE_NB>,
-		SIDE_NB>					zobrist::piece_hashes{};
-	std::unique_ptr<hashkey_t[]>	zobrist::ep_hashes{};
-	std::unique_ptr<hashkey_t[]>	zobrist::castling_hashes{};
-	hashkey_t						zobrist::stm_hash{};
-
 	/// <summary>
 	/// Initialize the tables of random numbers used by the hashing algorithm.
+	/// Note: even though all positions should hash the same way, we can achieve this by using a fixed seed for the PRNG.
 	/// </summary>
-	void zobrist::init()
+	zobrist::zobrist()
 	{
 		std::mt19937_64 rng(0x1234);
 
-		ep_hashes = std::make_unique<hashkey_t[]>(SQ_NB);
-		castling_hashes = std::make_unique<hashkey_t[]>(16);
-		stm_hash = rng();
+		m_ep_hashes = std::make_unique<hashkey_t[]>(SQ_NB);
+		m_castling_hashes = std::make_unique<hashkey_t[]>(16);
+		m_stm_hash = rng();
 
 		for (size_t pce = PAWN; pce <= KING; pce++)
 		{
-			piece_hashes[WHITE][pce] = std::make_unique<hashkey_t[]>(SQ_NB);
-			piece_hashes[BLACK][pce] = std::make_unique<hashkey_t[]>(SQ_NB);
+			m_piece_hashes[WHITE][pce] = std::make_unique<hashkey_t[]>(SQ_NB);
+			m_piece_hashes[BLACK][pce] = std::make_unique<hashkey_t[]>(SQ_NB);
 
 			for (size_t sq = A1; sq <= H8; sq++)
 			{
-				piece_hashes[WHITE][pce][sq] = rng();
-				piece_hashes[BLACK][pce][sq] = rng();
+				m_piece_hashes[WHITE][pce][sq] = rng();
+				m_piece_hashes[BLACK][pce][sq] = rng();
 			}
 		}
 		for (size_t sq = A1; sq <= H8; sq++)
 		{
-			ep_hashes[sq] = rng();
+			m_ep_hashes[sq] = rng();
 		}
 		for (size_t i = 0; i < 16; i++)
 		{
-			castling_hashes[i] = rng();
+			m_castling_hashes[i] = rng();
 		}
 	}
 

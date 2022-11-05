@@ -25,35 +25,34 @@ namespace loki::position
 	{
 		friend class ::loki::utility::initializer;
 	private:
-		static std::array<
+		std::array<
 			std::array<
 			std::unique_ptr<hashkey_t[]>, // 64 squares.
 			PIECE_NB>,
-			SIDE_NB>							piece_hashes;
-		static std::unique_ptr<hashkey_t[]>	ep_hashes;
-		static std::unique_ptr<hashkey_t[]>	castling_hashes;
-		static hashkey_t						stm_hash;
+			SIDE_NB>							m_piece_hashes;
+		std::unique_ptr<hashkey_t[]>			m_ep_hashes;
+		std::unique_ptr<hashkey_t[]>			m_castling_hashes;
+		hashkey_t								m_stm_hash;
 
 	public:
+		zobrist();
+
 		inline void toggle_piece(hashkey_t& key, SIDE s, PIECE pce, size_t sq) const noexcept
 		{
-			key ^= piece_hashes[s][pce][sq];
+			key ^= m_piece_hashes[s][pce][sq];
 		}
 		inline void toggle_ep(hashkey_t& key, size_t ep_sq) const noexcept
 		{
-			key ^= ep_hashes[ep_sq];
+			key ^= m_ep_hashes[ep_sq];
 		}
 		inline void toggle_castling(hashkey_t& key, uint8_t cr)
 		{
-			key ^= castling_hashes[cr];
+			key ^= m_castling_hashes[cr];
 		}
 		inline void toggle_stm(hashkey_t& key)
 		{
-			key ^= stm_hash;
+			key ^= m_stm_hash;
 		}
-
-	private:
-		static void init();
 	};
 
 }

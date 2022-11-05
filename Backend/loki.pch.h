@@ -577,7 +577,6 @@ namespace loki::position
 
 #include "utility/fast_stack.h"
 #include "utility/perft.h"
-#include "utility/initializer.h"
 #include "utility/textutil.h"
 
 #include "search/limits.h"

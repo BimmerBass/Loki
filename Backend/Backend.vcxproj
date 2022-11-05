@@ -183,7 +183,6 @@
     <ClCompile Include="movegen\move_generator.cpp" />
     <ClCompile Include="position\hashing\zobrist.cpp" />
     <ClCompile Include="position\position.cpp" />
-    <ClCompile Include="utility\initializer.cpp" />
     <ClCompile Include="utility\perft.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -200,7 +199,6 @@
     <ClInclude Include="search\limits.h" />
     <ClInclude Include="utility\exception.h" />
     <ClInclude Include="utility\fast_stack.h" />
-    <ClInclude Include="utility\initializer.h" />
     <ClInclude Include="utility\perft.h" />
     <ClInclude Include="utility\textutil.h" />
   </ItemGroup>

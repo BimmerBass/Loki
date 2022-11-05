@@ -26,18 +26,18 @@ namespace loki::movegen::magics
 	/// </summary>
 	class slider_generator
 	{
-		friend class ::loki::utility::initializer;
 	private:
-		inline static magics_index_t<BISHOP>	m_bishop_index{ nullptr };
-		inline static magics_index_t<ROOK>		m_rook_index{ nullptr };
+		magics_index_t<BISHOP>	m_bishop_index{ nullptr };
+		magics_index_t<ROOK>	m_rook_index{ nullptr };
 
-		// Called only once.
-		static void init()
+	public:
+		// Will initialize the indexes, but beware that they are quite big, and since this object is practically read-only, its best to only use one object between positions.
+		slider_generator()
 		{
 			m_bishop_index = std::make_unique<magics_index<BISHOP>>();
 			m_rook_index = std::make_unique<magics_index<ROOK>>();
 		}
-	public:
+
 		inline bitboard_t rook_attacks(size_t sq, bitboard_t occupancy) const noexcept
 		{
 			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
