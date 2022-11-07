@@ -3,6 +3,21 @@
 namespace loki::uci
 {
 
+	engine_manager::engine_manager()
+	{
+		REGISTER_CALLBACK(parse_uci);
+		REGISTER_CALLBACK(parse_debug);
+		REGISTER_CALLBACK(parse_isready);
+		REGISTER_CALLBACK(parse_setoption);
+		REGISTER_CALLBACK(parse_register);
+		REGISTER_CALLBACK(parse_ucinewgame);
+		REGISTER_CALLBACK(parse_position);
+		REGISTER_CALLBACK(parse_go);
+		REGISTER_CALLBACK(parse_stop);
+		REGISTER_CALLBACK(parse_ponderhit);
+		REGISTER_CALLBACK(parse_quit);
+	}
+
 	bool engine_manager::run() noexcept
 	{
 		try
@@ -11,7 +26,13 @@ namespace loki::uci
 
 			while (std::getline(std::cin, command))
 			{
-				parse_cmd(command);
+				//parse_cmd(command);
+				auto token_length = command.find_first_of(' ');
+				auto first_token = textutil::lowercase(token_length == std::string::npos ?
+					command : command.substr(0, token_length));
+
+				if (m_callbackMap.find(first_token) != m_callbackMap.end())
+					m_callbackMap[first_token](command);
 			}
 		}
 		catch (std::exception& e)
@@ -24,15 +45,15 @@ namespace loki::uci
 		return true;
 	}
 
-	void engine_manager::parse_cmd(const std::string& cmd)
+	void engine_manager::parse_uci(const std::string& /* unused */)
 	{
-		// Extract command type.
-		auto token_length = cmd.find_first_of(' ');
-		auto first_token = textutil::lowercase(token_length == std::string::npos ?
-			cmd : cmd.substr(0, token_length));
-		
-		command_type cmd_type = UCI_NONE;
-		if (command_map.find(first_token) != command_map.end())
-			cmd_type = command_map.at(first_token);
+		std::cout << "id name " << NAME << " " << VERSION << "\n";
+		std::cout << "id author " << AUTHOR << "\n";
+		std::cout << "uciok\n";
+	}
+
+	void engine_manager::parse_isready(const std::string& uci)
+	{
+		std::cout << "readyok\n";
 	}
 }

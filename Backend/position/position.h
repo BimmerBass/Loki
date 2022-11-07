@@ -45,7 +45,7 @@ namespace loki::position
 		/// </summary>
 		/// <param name="generator"></param>
 		/// <returns></returns>
-		static position_t create_position(game_state_t internal_state, movegen::magics::slider_generator_t magic_index);
+		static position_t create_position(game_state_t& internal_state, movegen::magics::slider_generator_t magic_index);
 
 		/// <summary>
 		/// Make a move.
@@ -63,7 +63,7 @@ namespace loki::position
 		/// Generate moves of the given type, for the side to move.
 		/// </summary>
 		/// <returns></returns>
-		template<movegen::MOVE_TYPE _Ty>
+		template<movegen::MOVE_TYPE _Ty = movegen::ALL>
 		const movegen::move_list_t& generate_moves();
 
 		// Checks if a square is attacked by one of the sides.
@@ -92,7 +92,7 @@ namespace loki::position
 		friend std::ostream& operator<<(std::ostream& os, const position& pos);
 		friend std::ostream& operator<<(std::ostream& os, const position_t& pos);
 	private:
-		position(game_state_t internal_state, movegen::magics::slider_generator_t magic_index);
+		position(game_state_t&& internal_state, movegen::magics::slider_generator_t magic_index);
 
 		/// <summary>
 		/// Move the rook during a castling move

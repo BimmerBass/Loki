@@ -27,9 +27,8 @@ namespace loki::utility
 	/// <param name="fen"></param>
 	perft::perft(const std::string& fen) : m_initial_fen(fen), m_nodes(0)
 	{
-		m_pos = position::position::create_position(
-			std::make_shared<position::game_state>(),
-			std::make_shared<movegen::magics::slider_generator>());
+		auto gs = std::make_unique<position::game_state>();
+		m_pos = position::position::create_position(gs, std::make_shared<movegen::magics::slider_generator>());
 	}
 
 	/// <summary>

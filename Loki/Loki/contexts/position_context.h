@@ -11,13 +11,10 @@ namespace loki::uci
 	private:
 		std::string fen;
 		std::vector<std::string> moves;
-		position::position_t position;
 
 	public:
 		position_context(std::string parms) : context(POSITION, parms)
 		{
-			auto game_state = std::make_shared<position::game_state>();
-
 			size_t pos = std::string::npos;
 			if (parms.find("startpos") != std::string::npos)
 				fen = START_FEN;
@@ -29,24 +26,39 @@ namespace loki::uci
 			}
 			else
 				throw e_positionContext(FORMAT_EXCEPTION_MESSAGE("Neither 'startpos' nor 'fen' was specified in 'position' command."));
-			(*game_state) << fen;
-			position = position::position::create_position(game_state, std::make_shared<movegen::magics::slider_generator>());
-
+			
 			if ((pos = parms.find(" moves ")) != std::string::npos)
 			{
 				auto moves_start = pos + 7;
 				moves = textutil::split(parms.substr(moves_start));
 			}
+		}
 
-			for (auto& m : moves)
+		/// <summary>
+		/// Create N position objects. (One for each thread)
+		/// </summary>
+		std::vector<position::position_t> create_positions(size_t n)
+		{
+			if (n <= 0)
+				throw e_positionContext(FORMAT_EXCEPTION_MESSAGE("create_position was called with an invalid amount of positions to create."));
+			std::vector<position::position_t> positions;
+			auto sg = std::make_shared<movegen::magics::slider_generator>();
+			for (auto i = 0; i < n; i++)
 			{
-				auto& pseudoMoves = position->generate_moves<movegen::ALL>();
-				move_t move;
-				if ((move = pseudoMoves.find(m)) != MOVE_NULL)
-					position->make_move(move);
-			}
+				auto game_state = std::make_unique<position::game_state>();
+				*game_state << fen;
+				
+				positions.emplace_back(position::position::create_position(game_state, sg));
 
-			std::cout << position << std::endl;
+				move_t move;
+				for (auto& strMove : moves)
+				{
+					auto& movelist = positions.back()->generate_moves();
+					if ((move = movelist.find(strMove)) != MOVE_NULL)
+						positions.back()->make_move(move);
+				}
+			}
+			return positions;
 		}
 	};
 }

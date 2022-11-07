@@ -29,20 +29,20 @@ namespace loki::position
 	/// <param name="internal_state"></param>
 	/// <param name="magic_index"></param>
 	/// <returns></returns>
-	position_t position::create_position(game_state_t internal_state, movegen::magics::slider_generator_t magic_index)
+	position_t position::create_position(game_state_t& internal_state, movegen::magics::slider_generator_t magic_index)
 	{
-		auto pos = position_t(new position(internal_state, magic_index));
+		auto pos = position_t(new position(std::move(internal_state), magic_index));
 		pos->m_self = pos;
 		pos->m_generator = std::make_unique<movegen::move_generator>(pos, magic_index);
 
 		return pos;
 	}
 
-	position::position(game_state_t internal_state, movegen::magics::slider_generator_t magics_index)
+	position::position(game_state_t&& internal_state, movegen::magics::slider_generator_t magics_index)
 	{
 		m_move_history = std::make_unique<movegen::move_stack<MAX_GAME_MOVES>>();
 		m_hashing_generator = std::make_unique<zobrist>();
-		m_state_info = internal_state;
+		m_state_info = std::move(internal_state);
 		reload();
 	}
 
