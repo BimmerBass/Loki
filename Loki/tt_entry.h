@@ -45,7 +45,7 @@ inline int16_t value_from_tt(int score, int ply) {
 /// <summary>
 /// The different kinds of flags an entry can have.
 /// </summary>
-enum ttFlag :int { ALPHA = 0, BETA = 1, EXACT = 2, NO_FLAG = 3 };
+enum ttFlag :int { NO_FLAG = -1, ALPHA = 0, BETA = 1, EXACT = 2 };
 
 
 

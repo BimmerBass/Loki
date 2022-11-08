@@ -18,6 +18,7 @@
 #ifndef EVALTABLE_H
 #define EVALTABLE_H
 #include <cstdint>
+#include <cstddef>
 
 /// <summary>
 /// The default size of the evaluation hash table in bytes. It is 128KB.

@@ -1,0 +1,36 @@
+name: Non regression tests for Loki
+on:
+  workflow_dispatch:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  non_regression_linux:
+    name: Non regression tests on Linux
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Compile Loki
+        run: |
+          make -j`nproc --all`
+
+  non_regression_macos:
+    name: Non regression tests on MacOS X
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Compile Loki
+        run: |
+          make -j`sysctl -n hw.logicalcpu`
