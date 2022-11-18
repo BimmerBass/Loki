@@ -15,7 +15,7 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#include "loki.pch.h"
+#include "loki.pch.hpp"
 
 namespace loki::utility
 {
@@ -83,7 +83,7 @@ namespace loki::utility
 		std::chrono::time_point<std::chrono::high_resolution_clock> end_time = std::chrono::high_resolution_clock::now();
 		auto start = std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch().count();
 		auto end = std::chrono::time_point_cast<std::chrono::milliseconds>(end_time).time_since_epoch().count();
-		m_nps = static_cast<size_t>(double(m_nodes) / (double(end - start) / 1000.0));
+		m_nps = double(m_nodes) / (double(end - start) / 1000.0);
 
 		os << "\nPerft test completed after: " << (end - start) << "ms.\n";
 		os << std::fixed << "Nodes/second: " << m_nps << "\n";
@@ -111,7 +111,7 @@ namespace loki::utility
 
 		for (auto i = 0; i < moves.size(); i++)
 		{
-			auto move = moves[i];
+			auto& move = moves[i];
 
 			if (!m_pos->make_move(move.move))
 				continue;

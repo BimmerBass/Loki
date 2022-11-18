@@ -1,4 +1,4 @@
-#include "uci.h"
+#include "loki.pch.hpp"
 
 namespace loki::uci
 {
@@ -26,7 +26,6 @@ namespace loki::uci
 
 			while (std::getline(std::cin, command))
 			{
-				//parse_cmd(command);
 				auto token_length = command.find_first_of(' ');
 				auto first_token = textutil::lowercase(token_length == std::string::npos ?
 					command : command.substr(0, token_length));

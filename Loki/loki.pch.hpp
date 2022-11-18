@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <array>
 #include <mutex>
@@ -37,7 +38,7 @@
 #endif
 #endif
 
-#include "utility/exception.h"
+#include "utility/exception.hpp"
 
 namespace loki {
 	EXCEPTION(e_lokiError);
@@ -564,21 +565,23 @@ namespace loki::position
 	using weak_position_t = std::weak_ptr<position>;
 }
 
-#include "position/castling_rights.h"
-#include "position/hashing/zobrist.h"
-#include "position/gamestate.h"
-#include "position/position.h"
+#include "position/castling_rights.hpp"
+#include "position/hashing/zobrist.hpp"
+#include "position/gamestate.hpp"
+#include "position/position.hpp"
 
-#include "movegen/magics/magics_index.h"
-#include "movegen/magics/slider_generator.h"
-#include "movegen/move_stack.h"
-#include "movegen/move_list.h"
-#include "movegen/move_generator.h"
+#include "movegen/magics/magics_index.hpp"
+#include "movegen/magics/slider_generator.hpp"
+#include "movegen/move_stack.hpp"
+#include "movegen/move_list.hpp"
+#include "movegen/move_generator.hpp"
 
-#include "utility/fast_stack.h"
-#include "utility/perft.h"
-#include "utility/textutil.h"
+#include "utility/fast_stack.hpp"
+#include "utility/perft.hpp"
+#include "utility/textutil.hpp"
 
-#include "search/limits.h"
+#include "search/limits.hpp"
+
+#include "uci/uci.hpp"
 
 #endif

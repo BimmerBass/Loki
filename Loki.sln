@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30330.147
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32714.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{32241FE4-8A56-497C-9120-BEB6F321D580}"
 	ProjectSection(SolutionItems) = preProject
@@ -17,11 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{CA90CD45
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Legacy", "Legacy\Legacy.vcxproj", "{2931032C-3758-44A9-9A49-2268D3A3941E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Backend", "Backend\Backend.vcxproj", "{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Loki", "Loki\Loki.vcxproj", "{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tests", "Tests\Tests.vcxproj", "{46562749-FE73-467A-8D44-849A1D996573}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Loki", "Loki\Loki.vcxproj", "{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,22 +37,6 @@ Global
 		{2931032C-3758-44A9-9A49-2268D3A3941E}.Release|x64.Build.0 = Release|x64
 		{2931032C-3758-44A9-9A49-2268D3A3941E}.Release|x86.ActiveCfg = Release|Win32
 		{2931032C-3758-44A9-9A49-2268D3A3941E}.Release|x86.Build.0 = Release|Win32
-		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Debug|x64.ActiveCfg = Debug|x64
-		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Debug|x64.Build.0 = Debug|x64
-		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Debug|x86.ActiveCfg = Debug|Win32
-		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Debug|x86.Build.0 = Debug|Win32
-		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Release|x64.ActiveCfg = Release|x64
-		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Release|x64.Build.0 = Release|x64
-		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Release|x86.ActiveCfg = Release|Win32
-		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Release|x86.Build.0 = Release|Win32
-		{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}.Debug|x64.ActiveCfg = Debug|x64
-		{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}.Debug|x64.Build.0 = Debug|x64
-		{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}.Debug|x86.ActiveCfg = Debug|Win32
-		{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}.Debug|x86.Build.0 = Debug|Win32
-		{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}.Release|x64.ActiveCfg = Release|x64
-		{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}.Release|x64.Build.0 = Release|x64
-		{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}.Release|x86.ActiveCfg = Release|Win32
-		{531B96DC-9E69-4FF4-856B-81A5BEA6D6BD}.Release|x86.Build.0 = Release|Win32
 		{46562749-FE73-467A-8D44-849A1D996573}.Debug|x64.ActiveCfg = Debug|x64
 		{46562749-FE73-467A-8D44-849A1D996573}.Debug|x64.Build.0 = Debug|x64
 		{46562749-FE73-467A-8D44-849A1D996573}.Debug|x86.ActiveCfg = Debug|Win32
@@ -63,6 +45,14 @@ Global
 		{46562749-FE73-467A-8D44-849A1D996573}.Release|x64.Build.0 = Release|x64
 		{46562749-FE73-467A-8D44-849A1D996573}.Release|x86.ActiveCfg = Release|Win32
 		{46562749-FE73-467A-8D44-849A1D996573}.Release|x86.Build.0 = Release|Win32
+		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Debug|x64.ActiveCfg = Debug|x64
+		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Debug|x64.Build.0 = Debug|x64
+		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Debug|x86.ActiveCfg = Debug|Win32
+		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Debug|x86.Build.0 = Debug|Win32
+		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Release|x64.ActiveCfg = Release|x64
+		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Release|x64.Build.0 = Release|x64
+		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Release|x86.ActiveCfg = Release|Win32
+		{484BFAD5-8ADF-4D19-B8F9-550DB0D4E58A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

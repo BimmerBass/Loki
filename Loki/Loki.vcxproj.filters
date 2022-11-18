@@ -13,30 +13,129 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\contexts">
-      <UniqueIdentifier>{7019029c-d37b-49d1-b525-fae81b2a56e3}</UniqueIdentifier>
+    <Filter Include="Header Files\movegen">
+      <UniqueIdentifier>{084cd0c2-1226-4014-88c7-9b829cd25265}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\movegen">
+      <UniqueIdentifier>{4fea60f3-0084-49f5-bfcb-1adde8a4afe8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\position">
+      <UniqueIdentifier>{5cdf8b68-ec4e-4cc0-925f-1993ab3bc14d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\position">
+      <UniqueIdentifier>{78f4d0d3-2254-4668-bc23-36587241e0f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\search">
+      <UniqueIdentifier>{3e701253-533d-4de1-8550-0ae4669fee82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\search">
+      <UniqueIdentifier>{47edc1e8-fe1a-4e4e-99d0-4a82540c23d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\evaluation">
+      <UniqueIdentifier>{ccb4a615-abe8-4530-91e0-4ab8953f60f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\evaluation">
+      <UniqueIdentifier>{4cd2bed0-8cda-40cd-b15f-ebd09cddd9e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\movegen\magics">
+      <UniqueIdentifier>{398ca193-246c-466d-aa19-81fa76b70fed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\movegen\magics">
+      <UniqueIdentifier>{e908232d-3b43-41a5-8cd5-475adf4008dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\utility">
+      <UniqueIdentifier>{f815738a-c516-4369-bafa-bea8670bd348}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\utility">
+      <UniqueIdentifier>{25848668-45d6-4d1f-8dd5-22aa061292cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\position\hashing">
+      <UniqueIdentifier>{f7467651-2c8a-4a13-a7e6-4ef558244a2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\position\hashing">
+      <UniqueIdentifier>{c1d8dfea-d757-458a-a169-6d0e00ac086d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\uci">
+      <UniqueIdentifier>{1921ac78-cef0-455b-8a43-e183431d4dea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\uci">
+      <UniqueIdentifier>{92c67d5f-b2e4-48fe-90de-564cd52cc7af}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="position\position.cpp">
+      <Filter>Source Files\position</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\move_generator.cpp">
+      <Filter>Source Files\movegen</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\magics_index.cpp">
+      <Filter>Source Files\movegen\magics</Filter>
+    </ClCompile>
+    <ClCompile Include="utility\perft.cpp">
+      <Filter>Source Files\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="position\hashing\zobrist.cpp">
+      <Filter>Source Files\position\hashing</Filter>
+    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Loki\uci.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="uci\uci.cpp">
+      <Filter>Source Files\uci</Filter>
+    </ClCompile>
+    <ClCompile Include="position\gamestate.cpp">
+      <Filter>Source Files\position</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Loki\uci.h">
+    <ClInclude Include="loki.pch.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Loki\contexts\position_context.h">
-      <Filter>Header Files\contexts</Filter>
+    <ClInclude Include="position\gamestate.hpp">
+      <Filter>Header Files\position</Filter>
     </ClInclude>
-    <ClInclude Include="Loki\contexts\search_context.h">
-      <Filter>Header Files\contexts</Filter>
+    <ClInclude Include="movegen\move_stack.hpp">
+      <Filter>Header Files\movegen</Filter>
     </ClInclude>
-    <ClInclude Include="Loki\contexts\uci_context.h">
-      <Filter>Header Files\contexts</Filter>
+    <ClInclude Include="position\castling_rights.hpp">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="position\position.hpp">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_generator.hpp">
+      <Filter>Header Files\movegen</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\magics_index.hpp">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_list.hpp">
+      <Filter>Header Files\movegen</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\slider_generator.hpp">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\perft.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="position\hashing\zobrist.hpp">
+      <Filter>Header Files\position\hashing</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\fast_stack.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="search\limits.hpp">
+      <Filter>Header Files\search</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\exception.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\textutil.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\uci.hpp">
+      <Filter>Header Files\uci</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

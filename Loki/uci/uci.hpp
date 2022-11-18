@@ -1,6 +1,4 @@
 #pragma once
-#include "contexts/search_context.h"
-#include <functional>
 
 #define REGISTER_CALLBACK(func) m_callbackMap[std::string(#func).substr(6)] = [this](const std::string& s) { func(s);}
 
