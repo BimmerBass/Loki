@@ -29,7 +29,7 @@ namespace loki::position
 	/// <param name="internal_state"></param>
 	/// <param name="magic_index"></param>
 	/// <returns></returns>
-	position_t position::create_position(game_state_t& internal_state, movegen::magics::slider_generator_t magic_index)
+	position_t position::create_position(game_state_t&& internal_state, movegen::magics::slider_generator_t magic_index)
 	{
 		auto pos = position_t(new position(std::move(internal_state), magic_index));
 		pos->m_self = pos;

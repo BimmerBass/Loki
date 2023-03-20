@@ -27,6 +27,7 @@
 #include <iostream>
 #include <assert.h>
 #include <format>
+#include <regex>
 #include <random>
 #include <sstream>
 #include <map>
@@ -49,11 +50,12 @@ namespace loki {
 	// bit 6..11 -> from square (0 to 63)
 	// bit 12..13 -> promotion piece ((0) knight = 00, (1) bishop = 01, (2) rook = 10, (3) queen = 11)
 	// bit 14..16 -> special move flag ((0) promotion = 00, (1) en-passant = 01, (2) castling = 2, (3) neither = 11)
-	using move_t		= uint16_t;
+	enum move_t : uint16_t
+	{
+		MOVE_NULL = 0
+	};
 	using bitboard_t	= uint64_t;
 	using hashkey_t		= uint64_t;
-
-	inline static constexpr move_t MOVE_NULL = 0;
 
 	enum SIDE : int64_t
 	{
@@ -531,6 +533,13 @@ namespace loki::movegen
 	{
 		return static_cast<move_t>((to_sq << 10) | (from_sq << 4) | (promotion_piece << 2) | (special));
 	}
+	// Check if a move is in algebraic notation
+	inline bool is_algebraic_move(const std::string& move)
+	{
+		return move.length() == 4 &&
+			is_algebraic(move.substr(0, 2)) && 
+			is_algebraic(move.substr(2));
+	}
 
 	template<size_t _Size> requires (_Size > 0)
 		class move_stack;
@@ -560,7 +569,7 @@ namespace loki::position
 	class position;
 
 	using zobrist_t = std::unique_ptr<zobrist>;
-	using game_state_t = std::unique_ptr<game_state>;
+	using game_state_t = std::shared_ptr<game_state>;
 	using position_t = std::shared_ptr<position>;
 	using weak_position_t = std::weak_ptr<position>;
 }
@@ -581,6 +590,7 @@ namespace loki::position
 #include "utility/textutil.hpp"
 
 #include "search/limits.hpp"
+#include "search/search_context.hpp"
 
 #include "uci/uci.hpp"
 

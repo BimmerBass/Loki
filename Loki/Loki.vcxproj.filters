@@ -87,6 +87,9 @@
     <ClCompile Include="position\gamestate.cpp">
       <Filter>Source Files\position</Filter>
     </ClCompile>
+    <ClCompile Include="search\search_context.cpp">
+      <Filter>Source Files\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.hpp">
@@ -137,5 +140,11 @@
     <ClInclude Include="uci\uci.hpp">
       <Filter>Header Files\uci</Filter>
     </ClInclude>
+    <ClInclude Include="search\search_context.hpp">
+      <Filter>Header Files\search</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="DebugInfo.natvis" />
   </ItemGroup>
 </Project>

@@ -37,7 +37,7 @@ namespace loki::movegen
 		std::array<scored_move, _Size> m_movelist;
 		size_t m_size;
 	public:
-		move_list() : m_movelist{ 0 }
+		move_list() : m_movelist{ MOVE_NULL }
 		{
 			m_size = 0;
 		}
@@ -129,6 +129,18 @@ namespace loki::movegen
 				std::copy(_src.m_movelist.begin(), _src.m_movelist.end(), m_movelist.begin());
 			}
 			return *this;
+		}
+
+		/*
+		Implement begin and end to allow for range-based for loops.
+		*/
+		const_iterator begin() const noexcept
+		{
+			return m_movelist.begin();
+		}
+		const_iterator end() const noexcept
+		{
+			return m_movelist.begin() + m_size;
 		}
 	};
 

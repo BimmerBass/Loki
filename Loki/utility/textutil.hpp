@@ -31,6 +31,9 @@ namespace loki
 					tmp = "";
 				}
 			}
+			if (!tmp.empty())
+				splitted.push_back(tmp);
+
 			return splitted;
 		}
 	};

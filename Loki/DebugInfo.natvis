@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+//	Loki, a UCI-compliant chess playing software
+//	Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+//	Loki is free software: you can redistribute it and/or modify
+//	it under the terms of the GNU General Public License as published by
+//	the Free Software Foundation, either version 3 of the License, or
+//	(at your option) any later version.
+//
+//	Loki is distributed in the hope that it will be useful,
+//	but WITHOUT ANY WARRANTY; without even the implied warranty of
+//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//	GNU General Public License for more details.
+//
+//	You should have received a copy of the GNU General Public License
+//	along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="loki::movegen::move_list&lt;*&gt;">
+		<DisplayString>{{ size={m_size} }}</DisplayString>
+	</Type>
+	<Type Name="loki::movegen::move_list&lt;*&gt;::scored_move">
+		<DisplayString Condition="move==move_t::MOVE_NULL">NULL</DisplayString>
+		<DisplayString Condition="(move &amp; 3)==PROMOTION">
+			{{from_sq={loki::movegen::from_sq(move),en}, to_sq={loki::movegen::to_sq(move),en}, prom={loki::movegen::promotion_piece(move),en}, score={score} }}
+		</DisplayString>
+		<DisplayString Condition="(move &amp; 3)==ENPASSANT">
+			{{from_sq={loki::movegen::from_sq(move),en}, to_sq={loki::movegen::to_sq(move),en}, en-passant, score={score} }}
+		</DisplayString>
+		<DisplayString Condition="(move &amp; 3)==CASTLE">
+			{{from_sq={loki::movegen::from_sq(move),en}, to_sq={loki::movegen::to_sq(move),en}, castle, score={score} }}
+		</DisplayString>
+		<DisplayString>
+			{{from_sq={loki::movegen::from_sq(move),en}, to_sq={loki::movegen::to_sq(move),en}, score={score} }}
+		</DisplayString>
+	</Type>
+</AutoVisualizer>

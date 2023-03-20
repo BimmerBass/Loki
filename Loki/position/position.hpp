@@ -45,7 +45,7 @@ namespace loki::position
 		/// </summary>
 		/// <param name="generator"></param>
 		/// <returns></returns>
-		static position_t create_position(game_state_t& internal_state, movegen::magics::slider_generator_t magic_index);
+		static position_t create_position(game_state_t&& internal_state, movegen::magics::slider_generator_t magic_index);
 
 		/// <summary>
 		/// Make a move.

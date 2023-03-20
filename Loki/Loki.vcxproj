@@ -183,6 +183,7 @@
     <ClCompile Include="position\gamestate.cpp" />
     <ClCompile Include="position\hashing\zobrist.cpp" />
     <ClCompile Include="position\position.cpp" />
+    <ClCompile Include="search\search_context.cpp" />
     <ClCompile Include="uci\uci.cpp" />
     <ClCompile Include="utility\perft.cpp" />
   </ItemGroup>
@@ -198,11 +199,15 @@
     <ClInclude Include="position\hashing\zobrist.hpp" />
     <ClInclude Include="position\position.hpp" />
     <ClInclude Include="search\limits.hpp" />
+    <ClInclude Include="search\search_context.hpp" />
     <ClInclude Include="uci\uci.hpp" />
     <ClInclude Include="utility\exception.hpp" />
     <ClInclude Include="utility\fast_stack.hpp" />
     <ClInclude Include="utility\perft.hpp" />
     <ClInclude Include="utility\textutil.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="DebugInfo.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

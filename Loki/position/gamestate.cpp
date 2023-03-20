@@ -235,9 +235,13 @@ namespace loki::position
 					pos->fifty_move_counter = std::stoi(half_ss.str());
 					pos->full_move_counter = std::stoi(full_ss.str());
 				}
-				catch (std::exception& e)
+				catch (const std::invalid_argument& e)
 				{
-					throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("Invalid FEN: Error parsing move clocks (message: )" + std::string(e.what())));
+					throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("Invalid FEN: Error parsing move clocks (std::invalid_argument: )" + std::string(e.what())));
+				}
+				catch (const std::out_of_range& e)
+				{
+					throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("Invalid FEN: Error parsing move clocks (std::out_of_range: )" + std::string(e.what())));
 				}
 			}
 		}
@@ -246,18 +250,22 @@ namespace loki::position
 
 	void game_state::operator<<(const std::string& fen)
 	{
+		if (fen.empty())
+			throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("FEN was an empty string"));
 		read::clear_gamestate(this);
 
 		std::stringstream ss(fen);
 		auto fen_fields = split_string(ss);
+		if (fen_fields.size() < 3)
+			throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("piece placement, side to move and castling rights are strictly required according to the Forsyth-Edwards Notation."));
 
-		if (fen_fields.size() < 4) // piece placement, side to move, castling rights and en passant square are required.
-			throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("Invalid FEN: piece placement, side to move, castling rights and en passant square are required."));
+		// There will always be at least one field
 		read::position(this, fen_fields[0]);
 		read::side_to_move(this, fen_fields[1]);
 		read::castling(this, fen_fields[2]);
-		read::en_passant(this, fen_fields[3]);
 
+		// En-passant square and move clocks aren't strictly needed in order for a position to be valid, so Loki doesn't require them.
+		if (fen_fields.size() >= 4) read::en_passant(this, fen_fields[3]);
 		if (fen_fields.size() >= 6)
 		{
 			read::move_clocks(this, fen_fields[4], fen_fields[5]);

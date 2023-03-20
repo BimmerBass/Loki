@@ -22,18 +22,24 @@ namespace loki::search
 {
 	using tp_t = std::chrono::milliseconds::rep;
 
+	inline tp_t now()
+	{
+		return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+	}
+
 	struct search_limits
 	{
-		tp_t m_time[SIDE_NB];			/* The amount of time each side has left on the clock. */
-		tp_t m_inc[SIDE_NB];			/* Increment of both sides. */
-		tp_t m_movetime;				/* The max time we can use searching. */
-		tp_t m_start_time;				/* The search's start time. */
-		movegen::move_list_t m_moves;	/* An optional list of moves we're restricted to search. */
-		int m_movestogo;				/* The amount of moves until the next time control. */
-		int m_depth;					/* The max depth (plies) we're allowed to search to. */
-		uint64_t m_nodes;				/* The max amount of nodes we're allowed to search. */
-		bool m_ponder;					/* Whether or not we should ponder. */
-		bool m_infinite;				/* Whether or not we should search infinitely (until "stop" command) */
+		tp_t time[SIDE_NB] = { {0} };		/* The amount of time each side has left on the clock. */
+		tp_t inc[SIDE_NB] = { {0} };		/* Increment of both sides. */
+		tp_t movetime = 0;					/* The max time we can use searching. */
+		tp_t start_time = now();			/* The search's start time. */
+		movegen::move_list_t searchmoves{};	/* An optional list of moves we're restricted to search. */
+		int movestogo = 0;					/* The amount of moves until the next time control. */
+		int depth = -1;						/* The max depth (plies) we're allowed to search to. */
+		int perft = -1;						/* The perft depth to search (Not official UCI) */
+		uint64_t nodes = 0;					/* The max amount of nodes we're allowed to search. */
+		bool ponder = false;				/* Whether or not we should ponder. */
+		bool infinite = false;				/* Whether or not we should search infinitely (until "stop" command) */
 	};
 
 }
