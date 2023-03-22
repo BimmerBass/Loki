@@ -47,40 +47,40 @@ namespace loki::movegen
 		move_generator(move_generator&& _src) noexcept;
 		move_generator& operator=(move_generator&& _src) noexcept;
 
-		template<MOVE_TYPE _Ty, SIDE _Si = SIDE_NB>
+		template<MOVE_TYPE _Ty, eSide _Si = SIDE_NB>
 		const move_list_t& generate();
 
-		template<SIDE _Si, PIECE _Pce>
-		bitboard_t attackers_to(SQUARE sq) const noexcept;
+		template<eSide _Si, ePiece _Pce>
+		bitboard_t attackers_to(eSquare sq) const noexcept;
 
-		template<SIDE _Si>
-		bitboard_t all_attackers_to(SQUARE sq) const noexcept;
+		template<eSide _Si>
+		bitboard_t all_attackers_to(eSquare sq) const noexcept;
 	private:
-		template<SIDE _S, MOVE_TYPE _Ty>
+		template<eSide _S, MOVE_TYPE _Ty>
 		void get_pawn_moves();
-		template<SIDE _S, MOVE_TYPE _Ty>
+		template<eSide _S, MOVE_TYPE _Ty>
 		void get_knight_moves();
-		template<SIDE _S, MOVE_TYPE _Ty>
+		template<eSide _S, MOVE_TYPE _Ty>
 		void get_bishop_moves();
-		template<SIDE _S, MOVE_TYPE _Ty>
+		template<eSide _S, MOVE_TYPE _Ty>
 		void get_rook_moves();
-		template<SIDE _S, MOVE_TYPE _Ty>
+		template<eSide _S, MOVE_TYPE _Ty>
 		void get_queen_moves();
-		template<SIDE _S, MOVE_TYPE _Ty>
+		template<eSide _S, MOVE_TYPE _Ty>
 		void get_king_moves();
 
 		// initialization methods.
 		void init_knight_attacks() noexcept;
 		void init_king_attacks() noexcept;
 
-		template<SIDE _S, CASTLING_RIGHTS _Cr>
+		template<eSide _S, eCastlingRights _Cr>
 		inline bool can_castle() const
 		{
-			constexpr SQUARE relative_e1 = _S == WHITE ? E1 : E8;
-			constexpr SQUARE relative_f1 = _S == WHITE ? F1 : F8;
-			constexpr SQUARE relative_g1 = _S == WHITE ? G1 : G8;
-			constexpr SQUARE relative_d1 = _S == WHITE ? D1 : D8;
-			constexpr SQUARE relative_c1 = _S == WHITE ? C1 : C8;
+			constexpr eSquare relative_e1 = _S == WHITE ? E1 : E8;
+			constexpr eSquare relative_f1 = _S == WHITE ? F1 : F8;
+			constexpr eSquare relative_g1 = _S == WHITE ? G1 : G8;
+			constexpr eSquare relative_d1 = _S == WHITE ? D1 : D8;
+			constexpr eSquare relative_c1 = _S == WHITE ? C1 : C8;
 			constexpr bitboard_t key_queenside_squares = bitmasks::rank_masks[_S == WHITE ? RANK_1 : RANK_8]
 				& (bitmasks::file_masks[FILE_C] | bitmasks::file_masks[FILE_D] | bitmasks::file_masks[FILE_B]);
 			constexpr bitboard_t key_kingside_squares = bitmasks::rank_masks[_S == WHITE ? RANK_1 : RANK_8] & (bitmasks::file_masks[FILE_G] | bitmasks::file_masks[FILE_F]);

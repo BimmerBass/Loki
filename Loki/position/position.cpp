@@ -70,7 +70,7 @@ namespace loki::position
 		size_t origin = movegen::from_sq(move);
 		size_t destination = movegen::to_sq(move);
 		auto special_props = movegen::special(move);
-		auto promotion_piece = static_cast<PIECE>(static_cast<int64_t>(movegen::promotion_piece(move)) + 1);
+		auto promotion_piece = static_cast<ePiece>(static_cast<int64_t>(movegen::promotion_piece(move)) + 1);
 		auto piece_moved = m_piece_list[m_state_info->side_to_move][origin];
 		auto piece_captured = m_piece_list[them][destination];
 
@@ -109,7 +109,7 @@ namespace loki::position
 			m_hashing_generator->toggle_piece(m_poskey, me, piece_moved, destination);
 
 			if (piece_moved == KING)
-				m_king_squares[me] = static_cast<SQUARE>(destination);
+				m_king_squares[me] = static_cast<eSquare>(destination);
 		};
 
 		// handle moved piece
@@ -182,7 +182,7 @@ namespace loki::position
 		if (piece_moved == PAWN &&
 			((me == WHITE && destination == origin + 16) || (me == BLACK && destination == origin - 16)))
 		{
-			m_state_info->en_passant_square = static_cast<SQUARE>(me == WHITE ? destination - 8 : destination + 8);
+			m_state_info->en_passant_square = static_cast<eSquare>(me == WHITE ? destination - 8 : destination + 8);
 			m_hashing_generator->toggle_ep(m_poskey, m_state_info->en_passant_square);
 		}
 
@@ -215,7 +215,7 @@ namespace loki::position
 		size_t origin = movegen::from_sq(move_info.first);
 		size_t destination = movegen::to_sq(move_info.first);
 		auto special_props = movegen::special(move_info.first);
-		auto promotion_piece = static_cast<PIECE>(static_cast<int64_t>(movegen::promotion_piece(move_info.first)) + 1);
+		auto promotion_piece = static_cast<ePiece>(static_cast<int64_t>(movegen::promotion_piece(move_info.first)) + 1);
 		auto lost_info = move_info.second;
 
 		// toggle side to move.
@@ -240,7 +240,7 @@ namespace loki::position
 
 		if (lost_info.piece_moved == KING)
 		{
-			m_king_squares[me] = static_cast<SQUARE>(origin);
+			m_king_squares[me] = static_cast<eSquare>(origin);
 		}
 
 		// handle special moves other than promotion.
@@ -286,7 +286,7 @@ namespace loki::position
 		auto stm = m_state_info->side_to_move;
 		bool is_kingside = dest > orig;
 		auto castling_side = is_kingside ? (stm == WHITE ? WKCA : BKCA) : (stm == WHITE ? WQCA : BQCA);
-		SQUARE rook_orig, rook_dest;
+		eSquare rook_orig, rook_dest;
 
 		switch (castling_side)
 		{
@@ -363,8 +363,8 @@ namespace loki::position
 	/// </summary>
 	/// <param name="sq"></param>
 	/// <returns></returns>
-	template<SIDE _Si> requires (_Si == WHITE || _Si == BLACK)
-		bool position::square_attacked(SQUARE sq) const noexcept
+	template<eSide _Si> requires (_Si == WHITE || _Si == BLACK)
+		bool position::square_attacked(eSquare sq) const noexcept
 	{
 		// Note: We go from king to pawns because they are a little (negligible) more expensive to look up.
 		if (m_generator->attackers_to<_Si, KING>(sq) != 0)
@@ -421,21 +421,21 @@ namespace loki::position
 			while (whites)
 			{
 				inx = pop_bit(whites);
-				m_piece_list[WHITE][inx] = static_cast<PIECE>(pce);
+				m_piece_list[WHITE][inx] = static_cast<ePiece>(pce);
 
 				if (pce == KING)
 				{
-					m_king_squares[WHITE] = static_cast<SQUARE>(inx);
+					m_king_squares[WHITE] = static_cast<eSquare>(inx);
 				}
 			}
 			while (blacks)
 			{
 				inx = pop_bit(blacks);
-				m_piece_list[BLACK][inx] = static_cast<PIECE>(pce);
+				m_piece_list[BLACK][inx] = static_cast<ePiece>(pce);
 
 				if (pce == KING)
 				{
-					m_king_squares[BLACK] = static_cast<SQUARE>(inx);
+					m_king_squares[BLACK] = static_cast<eSquare>(inx);
 				}
 			}
 		}
@@ -463,9 +463,9 @@ namespace loki::position
 			for (size_t pce = PAWN; pce <= KING; pce++)
 			{
 				if (m_piece_list[WHITE][sq] == pce)
-					m_hashing_generator->toggle_piece(poskey, WHITE, static_cast<PIECE>(pce), static_cast<SQUARE>(sq));
+					m_hashing_generator->toggle_piece(poskey, WHITE, static_cast<ePiece>(pce), static_cast<eSquare>(sq));
 				if (m_piece_list[BLACK][sq] == pce)
-					m_hashing_generator->toggle_piece(poskey, BLACK, static_cast<PIECE>(pce), static_cast<SQUARE>(sq));
+					m_hashing_generator->toggle_piece(poskey, BLACK, static_cast<ePiece>(pce), static_cast<eSquare>(sq));
 			}
 		}
 
@@ -518,8 +518,8 @@ namespace loki::position
 	}
 
 #pragma region Explicit instantiations
-	template bool position::square_attacked<WHITE>(SQUARE) const noexcept;
-	template bool position::square_attacked<BLACK>(SQUARE) const noexcept;
+	template bool position::square_attacked<WHITE>(eSquare) const noexcept;
+	template bool position::square_attacked<BLACK>(eSquare) const noexcept;
 
 	template const movegen::move_list_t& position::generate_moves<movegen::ACTIVES>();
 	template const movegen::move_list_t& position::generate_moves<movegen::QUIET>();

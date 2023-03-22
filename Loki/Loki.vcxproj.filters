@@ -90,6 +90,9 @@
     <ClCompile Include="search\search_context.cpp">
       <Filter>Source Files\search</Filter>
     </ClCompile>
+    <ClCompile Include="search\search_thread.cpp">
+      <Filter>Source Files\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.hpp">
@@ -141,6 +144,9 @@
       <Filter>Header Files\uci</Filter>
     </ClInclude>
     <ClInclude Include="search\search_context.hpp">
+      <Filter>Header Files\search</Filter>
+    </ClInclude>
+    <ClInclude Include="search\search_thread.hpp">
       <Filter>Header Files\search</Filter>
     </ClInclude>
   </ItemGroup>

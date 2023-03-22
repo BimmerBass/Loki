@@ -40,15 +40,15 @@ namespace loki::movegen::magics
 
 		inline bitboard_t rook_attacks(size_t sq, bitboard_t occupancy) const noexcept
 		{
-			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
+			return m_rook_index->attacks_bb(static_cast<eSquare>(sq), occupancy);
 		}
 		inline bitboard_t bishop_attacks(size_t sq, bitboard_t occupancy) const noexcept
 		{
-			return m_bishop_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
+			return m_bishop_index->attacks_bb(static_cast<eSquare>(sq), occupancy);
 		}
 		inline bitboard_t queen_attacks(size_t sq, bitboard_t occupancy) const noexcept
 		{
-			return m_rook_index->attacks_bb(static_cast<SQUARE>(sq), occupancy) | m_bishop_index->attacks_bb(static_cast<SQUARE>(sq), occupancy);
+			return m_rook_index->attacks_bb(static_cast<eSquare>(sq), occupancy) | m_bishop_index->attacks_bb(static_cast<eSquare>(sq), occupancy);
 		}
 	};
 }

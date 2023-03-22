@@ -37,7 +37,7 @@ namespace loki::position
 	public:
 		zobrist();
 
-		inline void toggle_piece(hashkey_t& key, SIDE s, PIECE pce, size_t sq) const noexcept
+		inline void toggle_piece(hashkey_t& key, eSide s, ePiece pce, size_t sq) const noexcept
 		{
 			key ^= m_piece_hashes[s][pce][sq];
 		}

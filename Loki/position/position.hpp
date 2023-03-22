@@ -32,9 +32,9 @@ namespace loki::position
 		movegen::move_stack_t<MAX_GAME_MOVES>	m_move_history;					/* The stack of moves that has led to this position. */
 		movegen::move_generator_t				m_generator;					/* The object responsible for finding all pseudo-legal moves in the position. */
 		game_state_t							m_state_info;					/* Our basic state-describing object. */
-		PIECE									m_piece_list[SIDE_NB][SQ_NB];	/* An array to easier look up pieces on specific squares. */
+		ePiece									m_piece_list[SIDE_NB][SQ_NB];	/* An array to easier look up pieces on specific squares. */
 		bitboard_t								m_all_pieces[SIDE_NB];			/* Two bitboards containing all pieces on the respective sides. */
-		SQUARE									m_king_squares[SIDE_NB];		/* The two squares where the kings are. */
+		eSquare									m_king_squares[SIDE_NB];		/* The two squares where the kings are. */
 		size_t									m_ply;							/* The ply-depth we're at from the base position. */
 		weak_position_t							m_self;							/* Shared-ptr to this object. */
 		hashkey_t								m_poskey;						/* Position (zobrist) hash key. */
@@ -67,8 +67,8 @@ namespace loki::position
 		const movegen::move_list_t& generate_moves();
 
 		// Checks if a square is attacked by one of the sides.
-		template<SIDE _Si> requires (_Si == WHITE || _Si == BLACK)
-			bool square_attacked(SQUARE sq) const noexcept;
+		template<eSide _Si> requires (_Si == WHITE || _Si == BLACK)
+			bool square_attacked(eSquare sq) const noexcept;
 		bool in_check() const noexcept;
 
 		/// <summary>

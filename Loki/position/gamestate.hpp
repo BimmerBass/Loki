@@ -29,12 +29,12 @@ namespace loki::position
 		EXCEPTION_CLASS(e_gameState, e_lokiError);
 
 		// Piece positions.
-		bitboard_t piece_placements[SIDE::SIDE_NB][PIECE::PIECE_NB] = { {0} };
-		SIDE side_to_move = WHITE;
+		bitboard_t piece_placements[eSide::SIDE_NB][ePiece::PIECE_NB] = { {0} };
+		eSide side_to_move = WHITE;
 
 		size_t fifty_move_counter = 0;
 		size_t full_move_counter = 0;
-		SQUARE en_passant_square = NO_SQ;
+		eSquare en_passant_square = NO_SQ;
 		castle_rights castling_rights = 0;
 
 		/// <summary>

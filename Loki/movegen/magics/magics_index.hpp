@@ -25,7 +25,7 @@ namespace loki::movegen::magics
 	/// Implementation of a plain magic bitboards index
 	/// (see https://www.chessprogramming.org/Magic_Bitboards#Plain)
 	/// </summary>
-	template<PIECE _Pce>
+	template<ePiece _Pce>
 	class magics_index
 	{
 	private:
@@ -62,7 +62,7 @@ namespace loki::movegen::magics
 	public:
 		magics_index();
 
-		bitboard_t attacks_bb(SQUARE sq, bitboard_t occupancy) const noexcept;
+		bitboard_t attacks_bb(eSquare sq, bitboard_t occupancy) const noexcept;
 
 	private:
 		void init() noexcept;
@@ -117,7 +117,7 @@ namespace loki::movegen::magics
 #pragma endregion
 	};
 
-	template<PIECE _Pce>
+	template<ePiece _Pce>
 	using magics_index_t = std::unique_ptr<magics_index<_Pce>>;
 }
 

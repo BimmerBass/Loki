@@ -43,6 +43,7 @@
 
 namespace loki {
 	EXCEPTION(e_lokiError);
+	EXCEPTION_CLASS(e_notImplementedError, e_lokiError);
 
 	// General type definitions.
 	// Note: A move is stored in a 16-bit integer, and the data is saved as follows (from lsb to msb):
@@ -57,14 +58,14 @@ namespace loki {
 	using bitboard_t	= uint64_t;
 	using hashkey_t		= uint64_t;
 
-	enum SIDE : int64_t
+	enum eSide : int64_t
 	{
 		WHITE = 0,
 		BLACK = 1,
 		SIDE_NB = 2
 	};
 
-	enum PIECE : int64_t
+	enum ePiece : int64_t
 	{
 		PAWN = 0,
 		KNIGHT = 1,
@@ -76,7 +77,7 @@ namespace loki {
 		PIECE_NB_TOTAL = 12
 	};
 
-	enum SQUARE : int64_t
+	enum eSquare : int64_t
 	{
 		A1 = 0, B1 = 1, C1 = 2, D1 = 3, E1 = 4, F1 = 5, G1 = 6, H1 = 7,
 		A2 = 8, B2 = 9, C2 = 10, D2 = 11, E2 = 12, F2 = 13, G2 = 14, H2 = 15,
@@ -88,7 +89,7 @@ namespace loki {
 		A8 = 56, B8 = 57, C8 = 58, D8 = 59, E8 = 60, F8 = 61, G8 = 62, H8 = 63, SQ_NB = 64, NO_SQ = 65
 	};
 
-	enum CASTLING_RIGHTS : uint8_t
+	enum eCastlingRights : uint8_t
 	{
 		WKCA = 0,
 		WQCA = 1,
@@ -96,7 +97,7 @@ namespace loki {
 		BQCA = 3
 	};
 
-	enum RANK : int64_t
+	enum eRank : int64_t
 	{
 		RANK_1 = 0,
 		RANK_2 = 1,
@@ -109,7 +110,7 @@ namespace loki {
 		RANK_NB = 8,
 		NO_RANK = 9
 	};
-	enum FILE : int64_t
+	enum eFile : int64_t
 	{
 		FILE_A = 0,
 		FILE_B = 1,
@@ -123,7 +124,7 @@ namespace loki {
 		NO_FILE = 9
 	};
 
-	enum DIRECTION :size_t
+	enum eDirection :size_t
 	{
 		NORTH = 0,
 		SOUTH = 1,
@@ -135,52 +136,59 @@ namespace loki {
 		SOUTHEAST = 7
 	};
 
-	enum DEPTH : size_t
+	enum eDepth : size_t
 	{
 		MAX_DEPTH = 100
 	};
+	
+	enum eValue : long
+	{
+		VALUE_INF = 40000,
+		VALUE_NONE = 50000,
+		VALUE_MATE = VALUE_INF - static_cast<long>(MAX_DEPTH)
+	};
 
 	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr DEPTH operator-(DEPTH d, T rhs)
+	inline constexpr eDepth operator-(eDepth d, T rhs)
 	{
-		return static_cast<DEPTH>(static_cast<T>(d) - rhs);
+		return static_cast<eDepth>(static_cast<T>(d) - rhs);
 	}
 	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr DEPTH operator+(DEPTH d, T rhs)
+	inline constexpr eDepth operator+(eDepth d, T rhs)
 	{
-		return static_cast<DEPTH>(static_cast<T>(d) + rhs);
+		return static_cast<eDepth>(static_cast<T>(d) + rhs);
 	}
 	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr DEPTH operator--(DEPTH& d, T)
+	inline constexpr eDepth operator--(eDepth& d, T)
 	{
 		auto rval = static_cast<T>(d);
 		rval--;
-		d = static_cast<DEPTH>(rval);
+		d = static_cast<eDepth>(rval);
 		return d;
 	}
 	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr DEPTH operator++(DEPTH& d, T)
+	inline constexpr eDepth operator++(eDepth& d, T)
 	{
 		auto rval = static_cast<T>(d);
 		rval++;
-		d = static_cast<DEPTH>(rval);
+		d = static_cast<eDepth>(rval);
 		return d;
 	}
 
-	inline constexpr SQUARE& operator++(SQUARE& orig, int)
+	inline constexpr eSquare& operator++(eSquare& orig, int)
 	{
 		auto rval = static_cast<int64_t>(orig);
 		rval++;
 
-		orig = static_cast<SQUARE>(rval);
+		orig = static_cast<eSquare>(rval);
 		return orig;
 	}
-	inline constexpr SQUARE operator--(SQUARE& orig, int)
+	inline constexpr eSquare operator--(eSquare& orig, int)
 	{
-		return static_cast<SQUARE>(static_cast<int64_t>(orig) - 1);
+		return static_cast<eSquare>(static_cast<int64_t>(orig) - 1);
 	}
 
-	inline constexpr SIDE operator!(SIDE s)
+	inline constexpr eSide operator!(eSide s)
 	{
 		return (s == WHITE) ? BLACK : WHITE;
 	}
@@ -391,7 +399,7 @@ namespace loki {
 	}
 
 	// Shifts the bitboard one square in some direction. From white's perspective.
-	template <DIRECTION d>
+	template <eDirection d>
 	constexpr inline bitboard_t shift(const bitboard_t& bb)
 	{
 		return d == NORTH ? bb << 8
@@ -407,31 +415,31 @@ namespace loki {
 
 	// Other commonly used functions.
 
-	inline constexpr RANK rank(SQUARE sq) noexcept
+	inline constexpr eRank rank(eSquare sq) noexcept
 	{
-		return static_cast<RANK>(sq / 8);
+		return static_cast<eRank>(sq / 8);
 	}
-	inline constexpr RANK rank(size_t sq) noexcept
+	inline constexpr eRank rank(size_t sq) noexcept
 	{
-		return rank(static_cast<SQUARE>(sq));
-	}
-
-	inline constexpr FILE file(SQUARE sq) noexcept
-	{
-		return static_cast<FILE>(sq % 8);
+		return rank(static_cast<eSquare>(sq));
 	}
 
-	inline constexpr SQUARE get_square(RANK r, FILE f) noexcept
+	inline constexpr eFile file(eSquare sq) noexcept
 	{
-		return static_cast<SQUARE>((r * 8) + f);
+		return static_cast<eFile>(sq % 8);
+	}
+
+	inline constexpr eSquare get_square(eRank r, eFile f) noexcept
+	{
+		return static_cast<eSquare>((r * 8) + f);
 	}
 
 	// Simple overload.
-	inline constexpr SQUARE get_square(int64_t r, int64_t f) noexcept
+	inline constexpr eSquare get_square(int64_t r, int64_t f) noexcept
 	{
 		return get_square(
-			static_cast<RANK>(r),
-			static_cast<FILE>(f));
+			static_cast<eRank>(r),
+			static_cast<eFile>(f));
 	}
 
 	/// <summary>
@@ -451,7 +459,7 @@ namespace loki {
 	/// </summary>
 	/// <param name="sq"></param>
 	/// <returns></returns>
-	inline std::string to_algebraic(SQUARE sq)
+	inline std::string to_algebraic(eSquare sq)
 	{
 		const static std::array<std::string, FILE_NB> file_names = { "a", "b", "c", "d", "e", "f", "g", "h" };
 		size_t f = file(sq);
@@ -465,9 +473,9 @@ namespace loki {
 	/// </summary>
 	/// <param name="str"></param>
 	/// <returns></returns>
-	inline SQUARE from_algebraic(std::string str)
+	inline eSquare from_algebraic(std::string str)
 	{
-		static std::map<char, FILE> file_mappings = {
+		static std::map<char, eFile> file_mappings = {
 			{'a', FILE_A},
 			{'b', FILE_B},
 			{'c', FILE_C},
@@ -513,21 +521,21 @@ namespace loki::movegen
 	};
 
 	// Inline functions.
-	inline constexpr SQUARE from_sq(move_t move) noexcept
+	inline constexpr eSquare from_sq(move_t move) noexcept
 	{
-		return static_cast<SQUARE>((move >> 4) & 63);
+		return static_cast<eSquare>((move >> 4) & 63);
 	}
-	inline constexpr SQUARE to_sq(move_t move) noexcept
+	inline constexpr eSquare to_sq(move_t move) noexcept
 	{
-		return static_cast<SQUARE>(move >> 10);
+		return static_cast<eSquare>(move >> 10);
 	}
 	inline constexpr SPECIAL_MOVE special(move_t move) noexcept
 	{
 		return static_cast<SPECIAL_MOVE>(move & 3);
 	}
-	inline constexpr PIECE promotion_piece(move_t move) noexcept
+	inline constexpr ePiece promotion_piece(move_t move) noexcept
 	{
-		return static_cast<PIECE>((move >> 2) & 3);
+		return static_cast<ePiece>((move >> 2) & 3);
 	}
 	inline constexpr move_t create_move(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece) noexcept
 	{
@@ -590,6 +598,7 @@ namespace loki::position
 #include "utility/textutil.hpp"
 
 #include "search/limits.hpp"
+#include "search/search_thread.hpp"
 #include "search/search_context.hpp"
 
 #include "uci/uci.hpp"

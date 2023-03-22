@@ -36,7 +36,7 @@ namespace loki::movegen
 	/// _Si: The side to generate the moves for (WHITE: Generate white's pseudo-legal moves, BLACK: Generate black's pseudo-legal moves, SIDE_NB: Generate pseudo-legal moves for the side to move)
 	/// </summary>
 	/// <returns></returns>
-	template<MOVE_TYPE _Ty, SIDE _Si>
+	template<MOVE_TYPE _Ty, eSide _Si>
 	const move_list_t& move_generator::generate()
 	{
 		// Make the generator ready to generate moves.
@@ -86,11 +86,11 @@ namespace loki::movegen
 	/// </summary>
 	/// <param name="sq"></param>
 	/// <returns></returns>
-	template<SIDE _Si, PIECE _Pce>
-	bitboard_t move_generator::attackers_to(SQUARE sq) const noexcept
+	template<eSide _Si, ePiece _Pce>
+	bitboard_t move_generator::attackers_to(eSquare sq) const noexcept
 	{
-		constexpr DIRECTION up_left = (_Si == BLACK) ? NORTHWEST : SOUTHWEST;
-		constexpr DIRECTION up_right = (_Si == BLACK) ? NORTHEAST : SOUTHEAST;
+		constexpr eDirection up_left = (_Si == BLACK) ? NORTHWEST : SOUTHWEST;
+		constexpr eDirection up_right = (_Si == BLACK) ? NORTHEAST : SOUTHEAST;
 
 		bitboard_t occupancy = m_position->m_all_pieces[WHITE] | m_position->m_all_pieces[BLACK];
 		bitboard_t attacks = 0;
@@ -118,8 +118,8 @@ namespace loki::movegen
 	/// </summary>
 	/// <param name="sq"></param>
 	/// <returns></returns>
-	template<SIDE _Si>
-	bitboard_t move_generator::all_attackers_to(SQUARE sq) const noexcept
+	template<eSide _Si>
+	bitboard_t move_generator::all_attackers_to(eSquare sq) const noexcept
 	{
 		return (
 			attackers_to<_Si, PAWN>(sq) |
@@ -135,18 +135,18 @@ namespace loki::movegen
 	/// Generate pawn moves.
 	/// TODO: Perhaps it would be a good idea to have a pre-calculated table of possible pawn moves..?
 	/// </summary>
-	template<SIDE _S, MOVE_TYPE _Ty>
+	template<eSide _S, MOVE_TYPE _Ty>
 	void move_generator::get_pawn_moves()
 	{
 
-		constexpr DIRECTION up = (_S == WHITE) ? NORTH : SOUTH;
-		constexpr DIRECTION up_left = (_S == WHITE) ? NORTHWEST : SOUTHWEST;
-		constexpr DIRECTION down_left = (_S == WHITE) ? SOUTHWEST : NORTHWEST;
-		constexpr DIRECTION up_right = (_S == WHITE) ? NORTHEAST : SOUTHEAST;
-		constexpr DIRECTION down_right = (_S == WHITE) ? SOUTHEAST : NORTHEAST;
+		constexpr eDirection up = (_S == WHITE) ? NORTH : SOUTH;
+		constexpr eDirection up_left = (_S == WHITE) ? NORTHWEST : SOUTHWEST;
+		constexpr eDirection down_left = (_S == WHITE) ? SOUTHWEST : NORTHWEST;
+		constexpr eDirection up_right = (_S == WHITE) ? NORTHEAST : SOUTHEAST;
+		constexpr eDirection down_right = (_S == WHITE) ? SOUTHEAST : NORTHEAST;
 		constexpr bitboard_t relative_r3 = bitmasks::rank_masks[_S == WHITE ? RANK_3 : RANK_6];
 		constexpr bitboard_t relative_r8 = bitmasks::rank_masks[_S == WHITE ? RANK_8 : RANK_1];
-		constexpr RANK relative_top_rank = _S == WHITE ? RANK_8 : RANK_1;
+		constexpr eRank relative_top_rank = _S == WHITE ? RANK_8 : RANK_1;
 		constexpr int left_attack_origin = (_S == WHITE) ? 7 : -9;
 		constexpr int right_attack_origin = (_S == WHITE) ? 9 : -7;
 		constexpr int left_ep_origin = (_S == WHITE) ? 9 : -7;
@@ -256,7 +256,7 @@ namespace loki::movegen
 	/// <summary>
 	/// Generate knight moves.
 	/// </summary>
-	template<SIDE _S, MOVE_TYPE _Ty>
+	template<eSide _S, MOVE_TYPE _Ty>
 	void move_generator::get_knight_moves()
 	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
@@ -284,7 +284,7 @@ namespace loki::movegen
 		}
 	}
 
-	template<SIDE _S, MOVE_TYPE _Ty>
+	template<eSide _S, MOVE_TYPE _Ty>
 	void move_generator::get_bishop_moves()
 	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
@@ -309,7 +309,7 @@ namespace loki::movegen
 		}
 	}
 
-	template<SIDE _S, MOVE_TYPE _Ty>
+	template<eSide _S, MOVE_TYPE _Ty>
 	void move_generator::get_rook_moves()
 	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
@@ -334,7 +334,7 @@ namespace loki::movegen
 		}
 	}
 
-	template<SIDE _S, MOVE_TYPE _Ty>
+	template<eSide _S, MOVE_TYPE _Ty>
 	void move_generator::get_queen_moves()
 	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
@@ -359,12 +359,12 @@ namespace loki::movegen
 		}
 	}
 
-	template<SIDE _S, MOVE_TYPE _Ty>
+	template<eSide _S, MOVE_TYPE _Ty>
 	void move_generator::get_king_moves()
 	{
-		constexpr SQUARE kingside_castling_dest = _S == WHITE ? G1 : G8;
-		constexpr SQUARE queenside_castling_dest = _S == WHITE ? C1 : C8;
-		SQUARE king_sq = m_position->m_king_squares[_S];
+		constexpr eSquare kingside_castling_dest = _S == WHITE ? G1 : G8;
+		constexpr eSquare queenside_castling_dest = _S == WHITE ? C1 : C8;
+		eSquare king_sq = m_position->m_king_squares[_S];
 		bitboard_t friendly_pieces = m_position->m_all_pieces[_S];
 		bitboard_t opponent_pieces = m_position->m_all_pieces[!_S];
 
@@ -530,21 +530,21 @@ namespace loki::movegen
 	template const move_list_t& move_generator::generate<QUIET, SIDE_NB>();
 	template const move_list_t& move_generator::generate<ALL, SIDE_NB>();
 
-	template bitboard_t move_generator::attackers_to<WHITE, PAWN>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<WHITE, KNIGHT>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<WHITE, BISHOP>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<WHITE, ROOK>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<WHITE, QUEEN>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<WHITE, KING>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<BLACK, PAWN>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<BLACK, KNIGHT>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<BLACK, BISHOP>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<BLACK, ROOK>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<BLACK, QUEEN>(SQUARE) const noexcept;
-	template bitboard_t move_generator::attackers_to<BLACK, KING>(SQUARE) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, PAWN>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, KNIGHT>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, BISHOP>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, ROOK>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, QUEEN>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<WHITE, KING>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, PAWN>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, KNIGHT>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, BISHOP>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, ROOK>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, QUEEN>(eSquare) const noexcept;
+	template bitboard_t move_generator::attackers_to<BLACK, KING>(eSquare) const noexcept;
 
-	template bitboard_t move_generator::all_attackers_to<WHITE>(SQUARE) const noexcept;
-	template bitboard_t move_generator::all_attackers_to<BLACK>(SQUARE) const noexcept;
+	template bitboard_t move_generator::all_attackers_to<WHITE>(eSquare) const noexcept;
+	template bitboard_t move_generator::all_attackers_to<BLACK>(eSquare) const noexcept;
 
 #pragma endregion
 }

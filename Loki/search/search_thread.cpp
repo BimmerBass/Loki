@@ -15,41 +15,17 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#ifndef PERFT_H
-#define PERFT_H
+#include "loki.pch.hpp"
 
-namespace loki::utility
+namespace loki::search
 {
-	/// <summary>
-	/// class for performing a perft evaluation of a position. 
-	/// </summary>
-	class perft
+	search_thread::search_thread(
+		position::game_state_t&& state,
+		movegen::magics::slider_generator_t& magicsInx,
+		std::unique_ptr<search_limits>&& limPtr) : m_limits(std::move(limPtr))
 	{
-	public:
-		perft() = delete;
-		perft(const std::string& fen);
+		m_position = position::position::create_position(std::move(state), magicsInx);
+	}
 
-		perft(const perft&) = delete;
-		perft& operator=(const perft&) = delete;
-		perft(perft&&) = delete;
-		perft& operator=(perft&&) = delete;
-
-		size_t perform(eDepth d, std::ostream& os, bool debug);
-		void load(const std::string& new_fen);
-
-		inline auto previous_nps() const noexcept
-		{
-			return m_nps;
-		}
-	private:
-		std::string				m_initial_fen;
-		position::position_t	m_pos;
-		size_t					m_nodes;
-		double					m_nps;
-
-		size_t perft_test(eDepth d, std::ostream& os, bool debug);
-		void perft_internal(eDepth d);
-	};
+	
 }
-
-#endif

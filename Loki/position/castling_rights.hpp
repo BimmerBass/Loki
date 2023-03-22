@@ -37,7 +37,7 @@ namespace loki::position
 		/// <summary>
 		/// Return whether or not the side to move can castle to the given side.
 		/// </summary>
-		template<CASTLING_RIGHTS _Ss>
+		template<eCastlingRights _Ss>
 		inline bool operator()() const noexcept
 		{
 			return ((m_rights >> _Ss) & uint8_t(1)) != 0;
@@ -47,7 +47,7 @@ namespace loki::position
 		/// Enable castling for a given side.
 		/// </summary>
 		/// <param name="_Ss"></param>
-		inline void operator+=(CASTLING_RIGHTS _Ss)
+		inline void operator+=(eCastlingRights _Ss)
 		{
 			m_rights |= (uint8_t(1) << _Ss);
 		}
@@ -56,7 +56,7 @@ namespace loki::position
 		/// Disable castling for a given side.
 		/// </summary>
 		/// <param name="_Ss"></param>
-		inline void operator-=(CASTLING_RIGHTS _Ss)
+		inline void operator-=(eCastlingRights _Ss)
 		{
 			if (((m_rights >> _Ss) & uint8_t(1)) != 0) // Only if we can castle.
 				m_rights &= ~(uint8_t(1) << _Ss);

@@ -29,12 +29,14 @@ namespace loki::search
 	{
 		EXCEPTION_CLASS(e_Search, e_lokiError);
 	public:
+		static constexpr const char* START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq";
+	public:
 		search_context();
 
 		/// <summary>
 		/// Will load the starting FEN and clear all search-related data structures.
 		/// </summary>
-		void reset() {};
+		void reset();
 
 		/// <summary>
 		/// Will set m_state with the given FEN, but won't execute the moves before "go" is received

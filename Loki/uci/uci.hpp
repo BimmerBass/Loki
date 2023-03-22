@@ -24,8 +24,8 @@ namespace loki::uci
 	class engine_manager
 	{
 		EXCEPTION_CLASS(e_engineManager, e_lokiError);
+		EXCEPTION_CLASS(e_quitException, e_engineManager);
 	private:
-		static constexpr const char* START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq";
 		inline static std::map<std::string, std::string> sOptions = {
 			{ "VERSION", "4.0" },
 			{ "NAME", "Loki" },
@@ -46,13 +46,16 @@ namespace loki::uci
 		void parse_ucinewgame(const std::string& cmd);
 		void parse_position(const std::string& cmd);
 		void parse_go(const std::string& cmd);
-		void parse_stop(const std::string& cmd) {};
-		void parse_quit(const std::string& cmd) {};
+		void parse_stop(const std::string& cmd) { throw std::runtime_error("Not implemented"); };
+		void parse_quit(const std::string& cmd)
+		{
+			throw e_quitException();
+		}
 
 		// Parse methods that are intentionally not implemented, but may be in the future.
-		void parse_debug(const std::string& cmd) {};
+		void parse_debug(const std::string& cmd) { };
 		void parse_register(const std::string& cmd) {};
-		void parse_ponderhit(const std::string& cmd) {};
+		void parse_ponderhit(const std::string& cmd) { throw e_notImplementedError("Pondering is not (yet) implemented!"); };
 	private:
 		bool has_position;
 	};

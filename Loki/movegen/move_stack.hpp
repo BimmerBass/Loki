@@ -26,14 +26,14 @@ namespace loki::movegen
 	/// </summary>
 	struct lost_move_info
 	{
-		PIECE		piece_captured;
-		PIECE		piece_moved;
+		ePiece		piece_captured;
+		ePiece		piece_moved;
 		uint8_t		castling_rights;
 		size_t		fifty_moves_count;
-		SQUARE		en_passant_square;
+		eSquare		en_passant_square;
 		bitboard_t	position_hash;
 
-		void set(std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info)
+		void set(std::tuple<ePiece, ePiece, uint8_t, size_t, eSquare, bitboard_t>&& info)
 		{
 			piece_captured = std::get<0>(info);
 			piece_moved = std::get<1>(info);
@@ -58,7 +58,7 @@ namespace loki::movegen
 		/// </summary>
 		/// <param name="move"></param>
 		/// <param name="info"></param>
-		inline void insert(move_t move, std::tuple<PIECE, PIECE, uint8_t, size_t, SQUARE, bitboard_t>&& info)
+		inline void insert(move_t move, std::tuple<ePiece, ePiece, uint8_t, size_t, eSquare, bitboard_t>&& info)
 		{
 			if (this->m_current_size >= this->max_size)
 			{

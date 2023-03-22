@@ -24,6 +24,13 @@ namespace loki::search
 		m_slider_generator = std::make_shared<movegen::magics::slider_generator>();
 	}
 
+	void search_context::reset()
+	{
+		m_movesToMake.clear();
+		m_state << START_FEN;
+		generate_legals();
+	}
+
 	void search_context::set_position(const std::string& fen, const std::vector<std::string>& moves)
 	{
 		m_movesToMake = moves;

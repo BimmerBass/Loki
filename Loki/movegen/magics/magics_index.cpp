@@ -50,15 +50,15 @@ namespace loki::movegen::magics
 		/// <summary>
 		/// Generate attacks from a specific square  with a given set of blockers.
 		/// </summary>
-		template<PIECE _Pce>
-		bitboard_t generate_attack(SQUARE sq, bitboard_t blockers) noexcept
+		template<ePiece _Pce>
+		bitboard_t generate_attack(eSquare sq, bitboard_t blockers) noexcept
 		{
 			return 0;
 		}
 
 		// For bishops
 		template<>
-		bitboard_t generate_attack<BISHOP>(SQUARE sq, bitboard_t blockers) noexcept
+		bitboard_t generate_attack<BISHOP>(eSquare sq, bitboard_t blockers) noexcept
 		{
 			bitboard_t attacks = 0;
 			int cr = rank(sq);
@@ -94,7 +94,7 @@ namespace loki::movegen::magics
 
 		// For rooks.
 		template<>
-		bitboard_t generate_attack<ROOK>(SQUARE sq, bitboard_t blockers) noexcept
+		bitboard_t generate_attack<ROOK>(eSquare sq, bitboard_t blockers) noexcept
 		{
 			bitboard_t attacks = 0;
 			int cr = rank(sq);
@@ -133,7 +133,7 @@ namespace loki::movegen::magics
 	template class magics_index<BISHOP>;
 	template class magics_index<ROOK>;
 
-	template<PIECE _Pce>
+	template<ePiece _Pce>
 	magics_index<_Pce>::magics_index() : m_attack_index(nullptr), m_magic_entries{ 0 } {
 		m_attack_index = std::make_unique<index_t>();
 		init();
@@ -145,8 +145,8 @@ namespace loki::movegen::magics
 	/// <param name="sq"></param>
 	/// <param name="occupancy"></param>
 	/// <returns></returns>
-	template<PIECE _Pce>
-	bitboard_t magics_index<_Pce>::attacks_bb(SQUARE sq, bitboard_t occupancy) const noexcept
+	template<ePiece _Pce>
+	bitboard_t magics_index<_Pce>::attacks_bb(eSquare sq, bitboard_t occupancy) const noexcept
 	{
 		occupancy &= m_magic_entries[sq].mask;
 		occupancy *= m_magic_entries[sq].magic;
@@ -159,12 +159,12 @@ namespace loki::movegen::magics
 	/// Initialize the magics lookup table.
 	/// </summary>
 	/// <returns></returns>
-	template<PIECE _Pce>
+	template<ePiece _Pce>
 	void magics_index<_Pce>::init() noexcept
 	{
 		initialize_entry_table();
 
-		for (SQUARE sq = A1; sq <= H8; sq++)
+		for (eSquare sq = A1; sq <= H8; sq++)
 		{
 			magic_entry& current_entry = m_magic_entries[sq];
 
@@ -184,7 +184,7 @@ namespace loki::movegen::magics
 	template<>
 	void magics_index<BISHOP>::initialize_entry_table() noexcept
 	{
-		for (SQUARE sq = A1; sq <= H8; sq++)
+		for (eSquare sq = A1; sq <= H8; sq++)
 		{
 			bitboard_t attacks = 0;
 			int cr = rank(sq);
@@ -208,7 +208,7 @@ namespace loki::movegen::magics
 	template<>
 	void magics_index<ROOK>::initialize_entry_table() noexcept
 	{
-		for (SQUARE sq = A1; sq <= H8; sq++)
+		for (eSquare sq = A1; sq <= H8; sq++)
 		{
 			bitboard_t attacks = 0;
 			int cr = rank(sq);

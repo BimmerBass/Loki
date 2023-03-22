@@ -15,41 +15,28 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#ifndef PERFT_H
-#define PERFT_H
+#pragma once
 
-namespace loki::utility
+namespace loki::search
 {
 	/// <summary>
-	/// class for performing a perft evaluation of a position. 
+	/// search_thread simply holds all thread-local resources required for a search, as well as references to shared ones.
 	/// </summary>
-	class perft
+	class search_thread
 	{
-	public:
-		perft() = delete;
-		perft(const std::string& fen);
-
-		perft(const perft&) = delete;
-		perft& operator=(const perft&) = delete;
-		perft(perft&&) = delete;
-		perft& operator=(perft&&) = delete;
-
-		size_t perform(eDepth d, std::ostream& os, bool debug);
-		void load(const std::string& new_fen);
-
-		inline auto previous_nps() const noexcept
-		{
-			return m_nps;
-		}
 	private:
-		std::string				m_initial_fen;
-		position::position_t	m_pos;
-		size_t					m_nodes;
-		double					m_nps;
+		position::position_t m_position;
+		std::unique_ptr<search_limits> m_limits;
+	protected:
+		search_thread(
+			position::game_state_t&& state,
+			movegen::magics::slider_generator_t& magicsInx,
+			std::unique_ptr<search_limits>&& limPtr);
 
-		size_t perft_test(eDepth d, std::ostream& os, bool debug);
-		void perft_internal(eDepth d);
+		virtual eValue search();
+
+	private:
+		eValue alpha_beta_search(eDepth depth, eValue alpha, eValue beta);
 	};
-}
 
-#endif
+}

@@ -56,7 +56,11 @@ namespace loki::uci
 					m_callbackMap[first_token](command);
 			}
 		}
-		catch (std::exception& e)
+		catch (const e_quitException&)
+		{
+			return true;
+		}
+		catch (const std::exception& e)
 		{
 			// Output the exception message as a UCI info command.
 			std::cout << "info string " << e.what() << std::endl;
@@ -92,7 +96,7 @@ namespace loki::uci
 		}
 	}
 
-	void engine_manager::parse_ucinewgame(const std::string&)
+	void engine_manager::parse_ucinewgame(const std::string& /* unused */)
 	{
 		m_context.reset();
 	}
@@ -103,7 +107,7 @@ namespace loki::uci
 		std::string fen;
 		std::vector<std::string> moves;
 		if (cmd.find("startpos") != std::string::npos)
-			fen = START_FEN;
+			fen = m_context.START_FEN;
 		else if ((pos = cmd.find("fen ")) != std::string::npos)
 		{
 			auto f_start = pos + 4;
