@@ -3,8 +3,7 @@
 </p>
 
 ## Introduction
-Loki is a UCI-compliant chess engine written in C++. At the moment it has been tested to have a strength of 2490 (version 3.5.0 on CCRL 40/15) elo.
-
+Loki is a UCI-compliant chess engine written in C++20. At this moment, Loki is undergoing an extensive refactoring, which is explained below.
 
 ## Elo history
 | Version   | Elo   | TC   |
@@ -16,15 +15,30 @@ Loki is a UCI-compliant chess engine written in C++. At the moment it has been t
 | 3.5.0     | 2490  | 40/15|
 
 ## Implementation
-Loki uses bitboards as its main board representation
+The upcoming version, Loki 4.0, has been re-written to feature a faster, safer and more
+modern design philosophy. The goal of the refactor is two-fold:
+- Firstly, to improve the codebase's maintainability by making the implementation more object-oriented,
+removing global variables, etc.. Additionally, the experience gathered during the development of 
+previous versions of Loki provides an opportunity to design an architecture that solves earlier problems.
+- Secondly, to remove bugs and thus making the chess engine stronger and faster.
+
+#### Board representation
+Loki uses bitboards at its main board representation, but also holds piece lists to make
+piece and square lookup faster.
+
 #### Move generation
 - Magic Bitboards, as implemented by maksimKorzh, for generation of sliding piece attacks.
 - Pseudo-legal move generator with legality check in the make move function.
-- Overall **Perft @ depth = 5 speed of 290ms** from starting position, without bulk-counting.
+
+The move generator achieves around 30 million nodes per second on a perft test to a depth of six plies
+from the initial position (*approx. 25-30% faster than Loki 3.5.0*), without bulk-counting.
 
 #### Evaluation
-The evaluation considers the following characteristics of a given position:
-- Material.
+Due to the early stage of refactoring, the evaluation currently only consists of the following term(s):
+- Material
+
+Later on, the following terms (which Loki 3.5.0 has) will be tested and added if they prove to
+offer a strength gain (in no particular order):
 - Piece-square tables.
 - Material imbalances.
 - Pawn structure and passed pawns.
@@ -32,63 +46,55 @@ The evaluation considers the following characteristics of a given position:
 - Safe piece mobility evaluation.
 - King safety evaluation.
 - Specialized piece evaluation. This has been implemented, but lost elo, so it is disabled at the moment. I will experiment with it in the future.
+- Evaluation tapering between middlegame and endgame
+- Evaluation hash table and pawn hash table.
 
-A tapered eval is used to interpolate between game phases. Additionally, each thread's evaluation function object has its own evaluation hash table (128KB).
-
-The evaluation function is tuned using an SPSA-texel tuning framework. This will later be changed though.
+Tuning will also be added, which will be much better than previous versions. 
+This is because Loki will have the ability to load its evaluation parameters from an XML file
+allowing more knowledge of each term by itself of the tuner.
 
 #### Search
-- Lazy SMP supporting up to 8 threads.
-- Two-bucket transposition table supporting sizes from 1MB to 1000MB.
+As with the evaluation, the early stage of refactoring means that the search is very limited at this point.
+It consists of the following:
+- Fail-hard principal variation search
+
+Again, the following techniques provided strength gains for earlier Loki versions, so they will
+be tested:
+- Lazy SMP
+- Transposition table.
 - Iterative deepening.
 - Aspiration windows.
 - Fail-hard principal variation search.
-    - Killer moves.
-    - History heuristic.
-    - ~~Countermove heuristic~~.
-    - Mvv/Lva for capture sorting.
-    - Static Exchange evaluation for move ordering.
     - Staged move generation.
     - Mate distance pruning.
     - Adaptive Null move pruning.
     - Enhanced futility pruning.
     - Reverse futility pruning.
     - Razoring.
-    - ~~Internal iterative deepening if no hash move has been found~~.
-    - In check extensions ~~and castling extensions~~.
+    - In check extensions
     - Late move pruning.
     - Late move reductions.
 - Quiescence search to resolve captures
-    - ~~Delta pruning~~.
-    - ~~Futility pruning for individual moves~~.
     - SEE pruning of bad captures.
 
-With all the above mentioned move ordering techniques, Loki achieves a cutoff on the first move around 85%-90% of the time.
-##### Note: **Features with a striketrough (line through the text) are disabled at the moment due to missing elo gains. These will hopefully be successfully implemented in the future.**
+With all the above mentioned move ordering techniques, Loki 3.5.0 achieves a cutoff on the first move around 85%-90% of the time.
+
+##### Move ordering
+Loki 3.5.0's move ordering techniques consists of:
+1. Transposition table move (*if applicable*)
+2. Capture sorting:
+    - Static Exchange Evaluation
+    - Mvv/Lva
+3. Sorting of quiet moves:
+    - Killer moves
+    - History heuristic
+
+The move scoring is combined with a staged move generation to improve speed.
 
 ## Building Loki
-Loki has been tested to build without errors on both MSVC and GCC (with some warnings by the former). If Loki should be compiled to a non-native popcount version one will have to either:
+**A build-guide for Loki will be written when the refactoring is done.**
 
-- If compiling on MSVC, the global preprocessor variable USE_POPCNT should be removed in the project properties.
-- If compiling on GCC, `use_popcount=no` should be added when running make.
-
-Additionally, a 32-bit compilation in GCC needs `BIT=32` when running make. It should be noted however, that 32-bit compilation on 64-bit systems is unstable and should be avoided at the moment.
-
-It is also possible to change the amount of optimizations with both compilers by (if MSVC) going to the project properties or (if GCC) using `optimize=no` when running make.
-##### TO-DO
-- Try the following additions:
-    - Singular extensions.
-    - Multi-Cut.
-    - ProbCut.
-    - Null move reductions.
-    - Null move threat extensions.
-- Make a real gradient-based (in contrast to SPSA that only has gradient directions) evaluation tuner.
-- Make a search-tuner that uses self-play.
-- Make the evaluation term for pieces work.
-- I am very amazed of Stockfish's NNUE evaluation, and if I ever get Loki to play descent chess on CCRL, I will look into creating a new evaluation with some sort of Machine Learning.
-- Create my own magic bitboard implementation. Early in the development of Loki, I didn't want to spend too much time with move generation since my primary goal was to get it to play chess. Therefore, I took the easy way, which is unsatisfactory now... 
-
-#### Special thanks to
+## Special thanks to
 - The [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) which has been used extensively throughout the creation of Loki.
 - [BlueFeverSoft](https://github.com/bluefeversoft), the creator of the Vice chess engine. Some of the code in Loki have been inspired from Vice. This is especially true for the UCI-implementation, which has nearly been copied.
 - The Stockfish source code and community, which has been used where the wiki fell short.
