@@ -86,13 +86,17 @@ The move scoring is combined with a staged move generation to improve speed.
 **A build-guide for Loki will be written when the refactoring is done.**
 
 ## Elo history
+The numbers in this table are taken from the [CCRL index](https://ccrl.chessdom.com/ccrl/ "Computer Chess Rating Lists")
+
 | Version   | Elo   | TC   |
 |-----------|-------|------|
-| 1.0.2    | 1766  | 2'+1"|
-| 1.2.0     | 1821  | 2'+1"|
-| 2.0.0     | 2036  | 2'+1"|
-| 3.0.0     | 2466  | 2'+1"|
-| 3.5.0     | 2490  | 40/15|
+| 1.0.2    | 1804  | 2'+1"|
+| 1.2.0     | 1883  | 2'+1"|
+| 2.0.0     | 2083  | 2'+1"|
+| 3.0.0     | 2505  | 2'+1"|
+| 3.5.0     | 2500  | 40/15|
+
+**Last updated:** 24th of march, 2023 
 
 ## Special thanks to
 - The [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) which has been used extensively throughout the creation of Loki.
