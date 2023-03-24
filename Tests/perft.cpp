@@ -34,7 +34,7 @@ namespace loki::tests {
 				perft_tester.load(tp.fen);
 
 				for (const auto& node_count : tp.node_counts) {
-					size_t nodes = perft_tester.perform(node_count.first, log_file, false);
+					size_t nodes = perft_tester.perform(node_count.first, log_file);
 					Assert::IsTrue(nodes == node_count.second);
 
 					m_running_nps.push_back(perft_tester.previous_nps());
@@ -59,7 +59,7 @@ namespace loki::tests {
 	private:
 		struct perft_test_point {
 			std::string fen = "";
-			std::vector<std::pair<DEPTH, size_t>> node_counts{};
+			std::vector<std::pair<eDepth, size_t>> node_counts{};
 		};
 		std::vector<perft_test_point>	m_test_points;
 		std::vector<size_t>				m_running_nps;
@@ -90,7 +90,7 @@ namespace loki::tests {
 
 				tp.node_counts.push_back(
 					std::make_pair(
-						static_cast<DEPTH>(std::stoi(depth_and_count[0].substr(1))),
+						static_cast<eDepth>(std::stoi(depth_and_count[0].substr(1))),
 						std::stoi(depth_and_count[1])));
 			}
 

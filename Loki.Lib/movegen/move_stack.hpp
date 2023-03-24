@@ -31,9 +31,9 @@ namespace loki::movegen
 		uint8_t		castling_rights;
 		size_t		fifty_moves_count;
 		eSquare		en_passant_square;
-		bitboard_t	position_hash;
+		hashkey_t	position_hash;
 
-		void set(std::tuple<ePiece, ePiece, uint8_t, size_t, eSquare, bitboard_t>&& info)
+		void set(std::tuple<ePiece, ePiece, uint8_t, size_t, eSquare, hashkey_t>&& info)
 		{
 			piece_captured = std::get<0>(info);
 			piece_moved = std::get<1>(info);
@@ -58,7 +58,7 @@ namespace loki::movegen
 		/// </summary>
 		/// <param name="move"></param>
 		/// <param name="info"></param>
-		inline void insert(move_t move, std::tuple<ePiece, ePiece, uint8_t, size_t, eSquare, bitboard_t>&& info)
+		inline void insert(move_t move, std::tuple<ePiece, ePiece, uint8_t, size_t, eSquare, hashkey_t>&& info)
 		{
 			if (this->m_current_size >= this->max_size)
 			{

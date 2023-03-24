@@ -22,6 +22,7 @@ namespace loki::search
 	search_context::search_context() : m_movesToMake{}, m_state{}, m_legal_moves{}
 	{
 		m_slider_generator = std::make_shared<movegen::magics::slider_generator>();
+		m_eval_parameters = evaluation::make_params<evaluation::hardcoded_params>();
 	}
 
 	void search_context::reset()
@@ -56,5 +57,14 @@ namespace loki::search
 				pos->undo_move();
 			}
 		}
+	}
+
+	void search_context::do_perft(eDepth d)
+	{
+		std::string fen;
+		m_state >> fen;
+		utility::perft p(fen);
+
+		p.perform(d, std::cout);
 	}
 }

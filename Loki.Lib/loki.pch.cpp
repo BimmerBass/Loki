@@ -16,16 +16,3 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "loki.pch.hpp"
-
-namespace loki::search
-{
-	search_thread::search_thread(
-		position::game_state_t&& state,
-		movegen::magics::slider_generator_t& magicsInx,
-		std::unique_ptr<search_limits>&& limPtr) : m_limits(std::move(limPtr))
-	{
-		m_position = position::position::create_position(std::move(state), magicsInx);
-	}
-
-	
-}

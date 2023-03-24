@@ -33,6 +33,8 @@ namespace loki::uci
 		REGISTER_CALLBACK(parse_stop);
 		REGISTER_CALLBACK(parse_ponderhit);
 		REGISTER_CALLBACK(parse_quit);
+
+		REGISTER_CALLBACK(parse_perft);
 	}
 
 	/// @brief Run the command parsing loop responsible for communicating over the UCI protocol (ref: https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
@@ -162,5 +164,21 @@ namespace loki::uci
 				}
 			}
 		}
+	}
+
+	void engine_manager::parse_perft(const std::string& cmd)
+	{
+		if (!has_position)
+			throw e_engineManager("A 'perft' command was received before the first 'position command'");
+
+		long depth = 1;
+		size_t pos;
+		if ((pos = cmd.find(" depth ")) != std::string::npos)
+			depth = std::stol(cmd.substr(pos + 7, std::string::npos));
+
+		if (depth <= 0)
+			throw e_engineManager("'depth' was less than or equal to zero");
+
+		m_context.do_perft(static_cast<eDepth>(depth));
 	}
 }

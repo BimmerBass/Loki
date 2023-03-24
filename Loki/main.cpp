@@ -15,9 +15,10 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#include "loki.pch.hpp"
+#include "Loki.Lib/loki.pch.hpp"
 
-int main() {
+int main()
+{
 	loki::uci::engine_manager manager;
 	manager.run();
 }

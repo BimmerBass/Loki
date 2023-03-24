@@ -72,6 +72,36 @@ namespace loki::position
 		bool in_check() const noexcept;
 
 		/// <summary>
+		/// Will check if the current position has already been reached.
+		/// </summary>
+		bool is_repetition() const;
+
+		/// <summary>
+		/// Determine how many pieces of type _Pi side _Si has on the board.
+		/// </summary>
+		template<eSide _Si, ePiece _Pi> requires (_Si == WHITE || _Si == BLACK) && (_Pi >= 0 && _Pi <= 4)
+			inline size_t piece_count() const noexcept
+		{
+			return count_bits(m_state_info->piece_placements[_Si][_Pi]);
+		}
+
+		/// <summary>
+		/// Determine the side to move.
+		/// </summary>
+		/// <returns></returns>
+		inline eSide side_to_move() const noexcept
+		{
+			return m_state_info->side_to_move;
+		}
+
+		/// <summary>
+		/// Get the ply we're at.
+		/// </summary>
+		inline size_t ply() const noexcept { return m_ply; }
+
+		inline bool is_draw() const { return m_state_info->fifty_move_counter >= 100 || is_repetition(); }
+
+		/// <summary>
 		/// Load a FEN.
 		/// </summary>
 		/// <param name="fen"></param>

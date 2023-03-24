@@ -40,6 +40,7 @@
 #endif
 
 #include "utility/exception.hpp"
+#include "utility/operators.hpp"
 
 namespace loki {
 	EXCEPTION(e_lokiError);
@@ -64,6 +65,10 @@ namespace loki {
 		BLACK = 1,
 		SIDE_NB = 2
 	};
+	inline constexpr eSide operator!(eSide s)
+	{
+		return (s == WHITE) ? BLACK : WHITE;
+	}
 
 	enum ePiece : int64_t
 	{
@@ -88,6 +93,7 @@ namespace loki {
 		A7 = 48, B7 = 49, C7 = 50, D7 = 51, E7 = 52, F7 = 53, G7 = 54, H7 = 55,
 		A8 = 56, B8 = 57, C8 = 58, D8 = 59, E8 = 60, F8 = 61, G8 = 62, H8 = 63, SQ_NB = 64, NO_SQ = 65
 	};
+	ENABLE_INCR_OPERATORS_ON(eSquare);
 
 	enum eCastlingRights : uint8_t
 	{
@@ -140,58 +146,22 @@ namespace loki {
 	{
 		MAX_DEPTH = 100
 	};
+	ENABLE_BASE_OPERATORS_ON(eDepth);
+	ENABLE_INCR_OPERATORS_ON(eDepth);
 	
-	enum eValue : long
+	/// <summary>
+	/// eValue describes the value of a given position in Loki's internal units (1 unit = 1 / 512 * pawn-value)
+	/// </summary>
+	enum eValue : int64_t
 	{
+		VALUE_ZERO = 0,
 		VALUE_INF = 40000,
 		VALUE_NONE = 50000,
 		VALUE_MATE = VALUE_INF - static_cast<long>(MAX_DEPTH)
 	};
+	ENABLE_FULL_OPERATORS_ON(eValue);
+	enum eCentipawnValue : int64_t {}; /* eCentipawnValue is defined so as to distinguish between Loki's internal units and the centi-pawn (one 100'th of a pawn) units that the UCI protocol requires. */
 
-	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr eDepth operator-(eDepth d, T rhs)
-	{
-		return static_cast<eDepth>(static_cast<T>(d) - rhs);
-	}
-	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr eDepth operator+(eDepth d, T rhs)
-	{
-		return static_cast<eDepth>(static_cast<T>(d) + rhs);
-	}
-	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr eDepth operator--(eDepth& d, T)
-	{
-		auto rval = static_cast<T>(d);
-		rval--;
-		d = static_cast<eDepth>(rval);
-		return d;
-	}
-	template<typename T> requires std::is_fundamental_v<T>
-	inline constexpr eDepth operator++(eDepth& d, T)
-	{
-		auto rval = static_cast<T>(d);
-		rval++;
-		d = static_cast<eDepth>(rval);
-		return d;
-	}
-
-	inline constexpr eSquare& operator++(eSquare& orig, int)
-	{
-		auto rval = static_cast<int64_t>(orig);
-		rval++;
-
-		orig = static_cast<eSquare>(rval);
-		return orig;
-	}
-	inline constexpr eSquare operator--(eSquare& orig, int)
-	{
-		return static_cast<eSquare>(static_cast<int64_t>(orig) - 1);
-	}
-
-	inline constexpr eSide operator!(eSide s)
-	{
-		return (s == WHITE) ? BLACK : WHITE;
-	}
 
 	// Constant declarations.
 	constexpr size_t MAX_POSITION_MOVES		= 256; // The maximum amount of pseudo-legal moves in a given position. TODO: Remove this restraint.
@@ -582,6 +552,20 @@ namespace loki::position
 	using weak_position_t = std::weak_ptr<position>;
 }
 
+namespace loki::evaluation
+{
+	class evaluation_params;
+	using evaluation_params_t = std::shared_ptr<evaluation_params>;
+
+	class restricted_t
+	{
+		template<typename _Ty, typename... _TArgs> requires std::is_base_of_v<evaluation_params, _Ty>
+		friend evaluation_params_t make_params(_TArgs&&...);
+
+		restricted_t() = default;
+	};
+}
+
 #include "position/castling_rights.hpp"
 #include "position/hashing/zobrist.hpp"
 #include "position/gamestate.hpp"
@@ -596,6 +580,9 @@ namespace loki::position
 #include "utility/fast_stack.hpp"
 #include "utility/perft.hpp"
 #include "utility/textutil.hpp"
+
+#include "evaluation/parameters/evaluation_params.hpp"
+#include "evaluation/evaluation.hpp"
 
 #include "search/limits.hpp"
 #include "search/search_thread.hpp"

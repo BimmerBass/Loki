@@ -473,6 +473,20 @@ namespace loki::position
 	}
 
 	/// <summary>
+	/// Will check if the current position has already been reached.
+	/// </summary>
+	bool position::is_repetition() const
+	{
+		int i = 0;
+		while (i < m_ply)
+		{
+			if ((m_move_history->cbegin() + i)->second.position_hash == m_poskey)
+				return true;
+		}
+		return false;
+	}
+
+	/// <summary>
 	/// Load a FEN.
 	/// </summary>
 	/// <param name="fen"></param>

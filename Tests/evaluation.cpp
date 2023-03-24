@@ -22,36 +22,35 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace loki::tests
 {
-	TEST_CLASS(fen_parser_tests), public fen_reader
+	TEST_CLASS(evaluator_tests), public fen_reader
 	{
+	private:
+		position::position_t m_pos;
+		std::unique_ptr<evaluation::evaluator> m_eval;
+
 	public:
-		fen_parser_tests() : fen_reader("data/test_fens.fen") {}
-
-		TEST_METHOD(test_fen_parser) {
-			read_fen_file();
-			loki::position::game_state_t pos = std::make_shared<loki::position::game_state>();
-			std::string generated;
-			size_t i = 0;
-
-			for (auto fen : m_fens) {
-				*pos << fen;
-				*pos >> generated;
-
-				Assert::AreEqual(fen, generated);
-				i++;
-			}
-
-			std::cout << "Tested " << i << " FENs" << std::endl;
+		evaluator_tests() : fen_reader("data/test_fens.fen")
+		{
+			m_pos = position::position::create_position(
+				std::make_shared<position::game_state>(),
+				std::make_shared<movegen::magics::slider_generator>());
+			auto params = evaluation::make_params<evaluation::hardcoded_params>();
+			m_eval = std::make_unique<evaluation::evaluator>(m_pos, params);
 		}
 
-		TEST_METHOD(test_fen_flipper)
+		TEST_METHOD(eval_balance)
 		{
 			read_fen_file();
 
-			for (auto& f : m_fens)
+			for (const auto& fen : m_fens)
 			{
-				auto flipped = textutil::flip_fen(f);
-				Assert::AreEqual(f, textutil::flip_fen(flipped));
+				*m_pos << fen;
+				auto original = m_eval->score_position();
+
+				*m_pos << textutil::flip_fen(fen);
+				auto flipped = m_eval->score_position();
+
+				Assert::IsTrue(original == flipped);
 			}
 		}
 	};

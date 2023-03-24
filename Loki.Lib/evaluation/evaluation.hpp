@@ -17,26 +17,32 @@
 //
 #pragma once
 
-namespace loki::search
+namespace loki::evaluation
 {
-	/// <summary>
-	/// search_thread simply holds all thread-local resources required for a search, as well as references to shared ones.
-	/// </summary>
-	class search_thread
+	class evaluator
 	{
 	private:
-		position::position_t m_position;
-		std::unique_ptr<search_limits> m_limits;
-	protected:
-		search_thread(
-			position::game_state_t&& state,
-			movegen::magics::slider_generator_t& magicsInx,
-			std::unique_ptr<search_limits>&& limPtr);
+		position::position_t m_pos;
+		evaluation_params_t m_params;
+		
+		eValue m_currentVal;
+	public:
+		// Can't evaluate without a postion..
+		evaluator() = delete;
+		evaluator(const position::position_t& pos, evaluation_params_t& params);
 
-		virtual eValue search();
-
+		eValue score_position();
+	
 	private:
-		eValue alpha_beta_search(eDepth depth, eValue alpha, eValue beta);
+		void clear();
+		
+		template<eSide S>
+		eValue material() const;
 	};
+
+#pragma region Explicit template instantiations
+	template eValue evaluator::material<WHITE>() const;
+	template eValue evaluator::material<BLACK>() const;
+#pragma endregion
 
 }

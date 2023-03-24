@@ -26,7 +26,30 @@
 #define PCH_H
 
 // add headers that you want to pre-compile here
-#include <Backend/loki.pch.h>
+#include "Loki.Lib/loki.pch.hpp"
 #include <fstream>
+
+class fen_reader
+{
+public:
+	fen_reader(std::string filename) : m_filename(filename) {}
+private:
+	std::string m_filename;
+protected:
+	std::vector<std::string> m_fens;
+
+	void read_fen_file()
+	{
+		m_fens.clear();
+		auto fen_file = std::ifstream(m_filename);
+		std::string current_fen;
+
+		while (std::getline(fen_file, current_fen))
+		{
+			m_fens.push_back(current_fen);
+		}
+		fen_file.close();
+	}
+};
 
 #endif //PCH_H

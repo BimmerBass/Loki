@@ -35,6 +35,7 @@ namespace loki::utility
 		using const_reference_t = const _Ty&;
 		static constexpr size_t max_size = _Size;
 
+		using const_iterator_t = std::array<value_t, max_size>::const_iterator;
 	protected:
 		std::array<value_t, max_size>	m_stack;
 		size_t						m_current_size;
@@ -119,6 +120,11 @@ namespace loki::utility
 			}
 			return *this;
 		}
+
+		inline const_iterator_t cbegin() const noexcept { return m_stack.cbegin(); }
+		inline const_iterator_t cend() const noexcept { return m_stack.cbegin() + m_current_size; }
+
+		virtual ~fast_stack() {}
 	};
 }
 

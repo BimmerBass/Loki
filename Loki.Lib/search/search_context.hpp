@@ -30,6 +30,15 @@ namespace loki::search
 		EXCEPTION_CLASS(e_Search, e_lokiError);
 	public:
 		static constexpr const char* START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq";
+	
+	private:
+		std::vector<std::string> m_movesToMake;
+		position::game_state m_state;
+		movegen::move_list_t m_legal_moves;
+
+		// "Global" resources.
+		movegen::magics::slider_generator_t m_slider_generator;
+		evaluation::evaluation_params_t m_eval_parameters;
 	public:
 		search_context();
 
@@ -55,13 +64,13 @@ namespace loki::search
 		/// <param name="limits"></param>
 		void search(search_limits limits) {};
 
+		/// <summary>
+		/// Perform a perft test on the current position.
+		/// </summary>
+		void do_perft(eDepth d);
+
 		// Return legal moves.
 		inline const movegen::move_list_t& legal_moves() const noexcept { return m_legal_moves; }
-	private:
-		std::vector<std::string> m_movesToMake;
-		position::game_state m_state;
-		movegen::magics::slider_generator_t m_slider_generator;
-		movegen::move_list_t m_legal_moves;
 
 	private:
 		void generate_legals();

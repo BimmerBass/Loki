@@ -35,13 +35,13 @@ namespace loki::utility
 	/// </summary>
 	/// <param name="d"></param>
 	/// <returns></returns>
-	size_t perft::perform(eDepth d, std::ostream& os, bool debug)
+	size_t perft::perform(eDepth d, std::ostream& os)
 	{
 		*m_pos << m_initial_fen;
 		m_nodes = 0;
 		m_nps = 0.0;
 
-		return perft_test(d, os, debug);
+		return perft_test(d, os);
 	}
 
 	/// <summary>
@@ -53,7 +53,7 @@ namespace loki::utility
 		m_initial_fen = new_fen;
 	}
 
-	size_t perft::perft_test(eDepth d, std::ostream& os, bool debug)
+	size_t perft::perft_test(eDepth d, std::ostream& os)
 	{
 		os << "Starting perft test for depth " << static_cast<size_t>(d) << ".\n";
 		os << "[FEN]: " << m_initial_fen << "\n";

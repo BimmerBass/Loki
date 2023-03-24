@@ -34,7 +34,7 @@ namespace loki::utility
 		perft(perft&&) = delete;
 		perft& operator=(perft&&) = delete;
 
-		size_t perform(eDepth d, std::ostream& os, bool debug);
+		size_t perform(eDepth d, std::ostream& os);
 		void load(const std::string& new_fen);
 
 		inline auto previous_nps() const noexcept
@@ -47,7 +47,7 @@ namespace loki::utility
 		size_t					m_nodes;
 		double					m_nps;
 
-		size_t perft_test(eDepth d, std::ostream& os, bool debug);
+		size_t perft_test(eDepth d, std::ostream& os);
 		void perft_internal(eDepth d);
 	};
 }
