@@ -5,15 +5,6 @@
 ## Introduction
 Loki is a UCI-compliant chess engine written in C++20. At this moment, Loki is undergoing an extensive refactoring, which is explained below.
 
-## Elo history
-| Version   | Elo   | TC   |
-|-----------|-------|------|
-| 1.0.2    | 1766  | 2'+1"|
-| 1.2.0     | 1821  | 2'+1"|
-| 2.0.0     | 2036  | 2'+1"|
-| 3.0.0     | 2466  | 2'+1"|
-| 3.5.0     | 2490  | 40/15|
-
 ## Implementation
 The upcoming version, Loki 4.0, has been re-written to feature a faster, safer and more
 modern design philosophy. The goal of the refactor is two-fold:
@@ -93,6 +84,15 @@ The move scoring is combined with a staged move generation to improve speed.
 
 ## Building Loki
 **A build-guide for Loki will be written when the refactoring is done.**
+
+## Elo history
+| Version   | Elo   | TC   |
+|-----------|-------|------|
+| 1.0.2    | 1766  | 2'+1"|
+| 1.2.0     | 1821  | 2'+1"|
+| 2.0.0     | 2036  | 2'+1"|
+| 3.0.0     | 2466  | 2'+1"|
+| 3.5.0     | 2490  | 40/15|
 
 ## Special thanks to
 - The [Chessprogramming Wiki](https://www.chessprogramming.org/Main_Page) which has been used extensively throughout the creation of Loki.
