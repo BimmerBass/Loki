@@ -1,4 +1,6 @@
-<img src="Logo.png" align="center"/>
+<p align="center">
+    <img src="Logo.png"/>
+</p>
 
 ## Introduction
 Loki is a UCI-compliant chess engine written in C++. At the moment it has been tested to have a strength of 2490 (version 3.5.0 on CCRL 40/15) elo.
