@@ -29,15 +29,21 @@ namespace loki::evaluation
 	public:
 		// Can't evaluate without a postion..
 		evaluator() = delete;
-		evaluator(const position::position_t& pos, evaluation_params_t& params);
+		evaluator(const position::position_t& pos, const evaluation_params_t& params);
 
 		eValue score_position();
 	
 	private:
 		void clear();
 		
-		template<eSide S>
+		template<eSide _S> requires (_S == WHITE || _S == BLACK)
 		eValue material() const;
+
+		template<eSide _S> requires (_S == WHITE || _S == BLACK)
+		eValue psqt() const;
+
+		template<eSide _S, ePiece _Pce> requires (_S == WHITE || _S == BLACK) && (_Pce >= PAWN && _Pce <= QUEEN)
+		void psqt(eValue& v) const;
 	};
 
 #pragma region Explicit template instantiations

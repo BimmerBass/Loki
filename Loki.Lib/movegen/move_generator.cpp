@@ -21,7 +21,7 @@
 namespace loki::movegen
 {
 
-	move_generator::move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept :
+	move_generator::move_generator(position::position* pos, magics::slider_generator_t slider_generator) noexcept :
 		m_position(pos),
 		m_slider_generator(slider_generator),
 		m_moves(nullptr)
@@ -467,7 +467,7 @@ namespace loki::movegen
 	{
 		if (this != &_src)
 		{
-			m_position = position::position_t(std::move(_src.m_position));
+			m_position = std::move(_src.m_position);
 			m_slider_generator = magics::slider_generator_t(std::move(_src.m_slider_generator));
 
 			// move_list is just a wrapped static array, so we can only copy it..

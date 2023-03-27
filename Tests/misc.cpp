@@ -15,35 +15,31 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
+#include "pch.h"
+#include "CppUnitTest.h"
 
-#ifndef PCH_H
-#define PCH_H
+using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
-// add headers that you want to pre-compile here
-#include "Loki.Lib/loki.pch.hpp"
-#include <fstream>
-
-class fen_reader
+namespace loki::tests
 {
-public:
-	fen_reader(std::string filename) : m_filename(filename) {}
-private:
-	std::string m_filename;
-protected:
-	std::vector<std::string> m_fens;
-
-	void read_fen_file()
+	TEST_CLASS(misc_tests)
 	{
-		m_fens.clear();
-		auto fen_file = std::ifstream(m_filename);
-		std::string current_fen;
-
-		while (std::getline(fen_file, current_fen))
+	private:
+		const wchar_t* GetWC(const char* c)
 		{
-			m_fens.push_back(current_fen);
-		}
-		fen_file.close();
-	}
-};
+			const size_t cSize = strlen(c) + 1;
+			wchar_t* wc = new wchar_t[cSize];
+			mbstowcs(wc, c, cSize);
 
-#endif //PCH_H
+			return wc;
+		}
+	public:
+		TEST_METHOD(square_mirroring)
+		{
+			for (auto sq = A1; sq <= H8; sq++)
+				Assert::IsTrue(
+					make_side_relative<WHITE>(make_side_relative<WHITE>(sq)) == sq &&
+					make_side_relative<BLACK>(make_side_relative<BLACK>(sq)) == sq);
+		}
+	};
+}

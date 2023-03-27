@@ -334,4 +334,19 @@ namespace loki::position
 
 		return os;
 	}
+
+	game_state::game_state(const game_state& _Other)
+		: piece_placements{ {0} },
+		side_to_move{ _Other.side_to_move },
+		fifty_move_counter{ _Other.fifty_move_counter },
+		full_move_counter{ _Other.full_move_counter },
+		en_passant_square{ _Other.en_passant_square },
+		castling_rights{ _Other.castling_rights }
+	{
+		for (auto pce = PAWN; pce <= KING; pce++)
+		{
+			piece_placements[WHITE][pce] = _Other.piece_placements[WHITE][pce];
+			piece_placements[BLACK][pce] = _Other.piece_placements[BLACK][pce];
+		}
+	}
 }

@@ -32,7 +32,7 @@ namespace loki::search
 		static constexpr const char* START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq";
 	
 	private:
-		std::vector<std::string> m_movesToMake;
+		std::unique_ptr<main_thread> m_mainThread;
 		position::game_state m_state;
 		movegen::move_list_t m_legal_moves;
 
@@ -53,16 +53,16 @@ namespace loki::search
 		/// </summary>
 		/// <param name="fen"></param>
 		/// <param name="moves"></param>
-		void set_position(const std::string& fen, const std::vector<std::string>& moves);
+		void set_position(std::string fen, const std::vector<std::string>& moves);
 
 		// Sets an option
-		void set_option(const std::string& name, const std::string& value) {};
+		void set_option(const std::string& /* unused */, const std::string& /* unused */) {};
 
 		/// <summary>
 		/// This is the main search function of Loki, and will be called by the engine manager.
 		/// </summary>
 		/// <param name="limits"></param>
-		void search(search_limits limits) {};
+		void search(std::shared_ptr<const search_limits> limits);
 
 		/// <summary>
 		/// Perform a perft test on the current position.
@@ -71,9 +71,9 @@ namespace loki::search
 
 		// Return legal moves.
 		inline const movegen::move_list_t& legal_moves() const noexcept { return m_legal_moves; }
-
+		inline const position::game_state& game_state() const noexcept { return m_state; }
 	private:
-		void generate_legals();
+		void generate_legals(position::position_t pos);
 	};
 
 }

@@ -17,6 +17,7 @@
 //
 #pragma once
 
+
 namespace loki::evaluation
 {
 	/// <summary>
@@ -31,13 +32,19 @@ namespace loki::evaluation
 		// No-one other than make_params can instantiate a restricted_t object, which 
 		evaluation_params(restricted_t/*unused*/) {}
 
+		// Material values
 		eValue pawn = VALUE_ZERO;
 		eValue knight = VALUE_ZERO;
 		eValue bishop = VALUE_ZERO;
 		eValue rook = VALUE_ZERO;
 		eValue queen = VALUE_ZERO;
 
+		// Piece-square tables.
+		PieceSquareTables piece_square_tables;
+
+		// Value for the side to move.
 		eValue tempo = VALUE_ZERO;
+
 
 	protected:
 		virtual void initialize() = 0;
@@ -52,16 +59,7 @@ namespace loki::evaluation
 		hardcoded_params(restricted_t r) : evaluation_params(r) {}
 
 	private:
-		void initialize() override
-		{
-			pawn = static_cast<eValue>(512);
-			knight = static_cast<eValue>(1536);
-			bishop = static_cast<eValue>(1536);
-			rook = static_cast<eValue>(2560);
-			queen = static_cast<eValue>(4608);
-
-			tempo = static_cast<eValue>(26);
-		}
+		void initialize() override;
 	};
 
 	/// <summary>

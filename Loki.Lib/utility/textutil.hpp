@@ -11,7 +11,7 @@ namespace loki
 		{
 			std::string lc = "";
 			for (auto c : caseSensitive)
-				lc += std::tolower(c);
+				lc += (char)std::tolower(c);
 			return lc;
 		}
 
@@ -39,7 +39,7 @@ namespace loki
 
 		inline static char toggle_case(char c)
 		{
-			return isupper(c) ? tolower(c) : toupper(c);
+			return static_cast<char>(isupper(c) ? tolower(c) : toupper(c));
 		}
 
 		inline static std::string flip_fen(const std::string& fen)

@@ -24,6 +24,7 @@ namespace loki::uci
 	class engine_manager
 	{
 		EXCEPTION_CLASS(e_engineManager, e_lokiError);
+	public:
 		EXCEPTION_CLASS(e_quitException, e_engineManager);
 	private:
 		inline static std::map<std::string, std::string> sOptions = {
@@ -53,11 +54,12 @@ namespace loki::uci
 		}
 
 		void parse_perft(const std::string& cmd);
+		void parse_printpos(const std::string& cmd);
 
 		// Parse methods that are intentionally not implemented, but may be in the future.
-		void parse_debug(const std::string& cmd) { };
-		void parse_register(const std::string& cmd) {};
-		void parse_ponderhit(const std::string& cmd) { throw e_notImplementedError("Pondering is not (yet) implemented!"); };
+		void parse_debug(const std::string& /* unused */) {};
+		void parse_register(const std::string& /* unused */) {};
+		void parse_ponderhit(const std::string& /* unused */) { throw e_notImplementedError("Pondering is not (yet) implemented!"); };
 	private:
 		bool has_position;
 	};

@@ -81,7 +81,9 @@ namespace loki {
 		PIECE_NB = 6,
 		PIECE_NB_TOTAL = 12
 	};
+	ENABLE_INCR_OPERATORS_ON(ePiece);
 
+	// Loki uses a little-endian rank-file mapping (see https://www.chessprogramming.org/Square_Mapping_Considerations)
 	enum eSquare : int64_t
 	{
 		A1 = 0, B1 = 1, C1 = 2, D1 = 3, E1 = 4, F1 = 5, G1 = 6, H1 = 7,
@@ -412,6 +414,19 @@ namespace loki {
 			static_cast<eFile>(f));
 	}
 
+	template<eSide _S>
+	inline constexpr eRank relative_rank(eSquare sq) noexcept
+	{
+		return (_S == WHITE) ? rank(sq) : static_cast<eRank>(RANK_8 - rank(sq));
+	}
+
+	// Get the square as seen from the side evaluated.
+	template<eSide _S>
+	inline constexpr eSquare make_side_relative(eSquare sq) noexcept
+	{
+		return get_square(relative_rank<_S>(sq), file(sq));
+	}
+
 	/// <summary>
 	/// Check whether or not a string describes a square in algebraic notation.
 	/// </summary>
@@ -429,37 +444,14 @@ namespace loki {
 	/// </summary>
 	/// <param name="sq"></param>
 	/// <returns></returns>
-	inline std::string to_algebraic(eSquare sq)
-	{
-		const static std::array<std::string, FILE_NB> file_names = { "a", "b", "c", "d", "e", "f", "g", "h" };
-		size_t f = file(sq);
-		size_t r = rank(sq) + 1;
-
-		return file_names[f] + std::to_string(r);
-	}
+	std::string to_algebraic(eSquare sq);
 
 	/// <summary>
 	/// Convert a string of algebraic notation to an internal square representation.
 	/// </summary>
 	/// <param name="str"></param>
 	/// <returns></returns>
-	inline eSquare from_algebraic(std::string str)
-	{
-		static std::map<char, eFile> file_mappings = {
-			{'a', FILE_A},
-			{'b', FILE_B},
-			{'c', FILE_C},
-			{'d', FILE_D},
-			{'e', FILE_E},
-			{'f', FILE_F},
-			{'g', FILE_G},
-			{'h', FILE_H},
-		};
-		auto file = str[0];
-		auto rank = str[1];
-
-		return get_square((rank - '0') - 1, file_mappings[std::tolower(file)]);
-	}
+	eSquare from_algebraic(std::string str);
 }
 
 namespace loki::utility
@@ -505,7 +497,7 @@ namespace loki::movegen
 	}
 	inline constexpr ePiece promotion_piece(move_t move) noexcept
 	{
-		return static_cast<ePiece>((move >> 2) & 3);
+		return static_cast<ePiece>(((move >> 2) & 3) + 1);
 	}
 	inline constexpr move_t create_move(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece) noexcept
 	{
@@ -517,6 +509,29 @@ namespace loki::movegen
 		return move.length() == 4 &&
 			is_algebraic(move.substr(0, 2)) && 
 			is_algebraic(move.substr(2));
+	}
+
+	inline std::string to_string(const move_t& move)
+	{
+		if (move == MOVE_NULL)
+			return "NULL";
+		auto to = to_sq(move);
+		auto from = from_sq(move);
+
+		auto moveStr = to_algebraic(from) + to_algebraic(to);
+		if (special(move) == PROMOTION)
+		{
+			switch (promotion_piece(move))
+			{
+			case KNIGHT: moveStr += "n"; break;
+			case BISHOP: moveStr += "b"; break;
+			case ROOK: moveStr += "r"; break;
+			case QUEEN: moveStr += "q"; break;
+			default:
+				break;
+			}
+		}
+		return moveStr;
 	}
 
 	template<size_t _Size> requires (_Size > 0)
@@ -581,9 +596,11 @@ namespace loki::evaluation
 #include "utility/perft.hpp"
 #include "utility/textutil.hpp"
 
+#include "evaluation/piece_square_table.hpp"
 #include "evaluation/parameters/evaluation_params.hpp"
 #include "evaluation/evaluation.hpp"
 
+#include "search/pv_table.hpp"
 #include "search/limits.hpp"
 #include "search/search_thread.hpp"
 #include "search/search_context.hpp"

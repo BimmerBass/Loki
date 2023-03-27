@@ -31,11 +31,10 @@ namespace loki::position
 	/// <returns></returns>
 	position_t position::create_position(game_state_t&& internal_state, movegen::magics::slider_generator_t magic_index)
 	{
-		auto pos = position_t(new position(std::move(internal_state), magic_index));
-		pos->m_self = pos;
+		auto pos = new position(std::move(internal_state), magic_index);
 		pos->m_generator = std::make_unique<movegen::move_generator>(pos, magic_index);
 
-		return pos;
+		return position_t(pos);
 	}
 
 	position::position(game_state_t&& internal_state, movegen::magics::slider_generator_t magics_index)
@@ -70,7 +69,7 @@ namespace loki::position
 		size_t origin = movegen::from_sq(move);
 		size_t destination = movegen::to_sq(move);
 		auto special_props = movegen::special(move);
-		auto promotion_piece = static_cast<ePiece>(static_cast<int64_t>(movegen::promotion_piece(move)) + 1);
+		auto promotion_piece = movegen::promotion_piece(move);
 		auto piece_moved = m_piece_list[m_state_info->side_to_move][origin];
 		auto piece_captured = m_piece_list[them][destination];
 
@@ -193,6 +192,10 @@ namespace loki::position
 		update_occupancies();
 		m_hashing_generator->toggle_stm(m_poskey);
 
+		// If the move is a capture or a pawn move, the fifty move counter is reset to zero.
+		if (piece_captured != PIECE_NB || piece_moved == PAWN)
+			m_state_info->fifty_move_counter = 0;
+
 		// if we're in check, undo the move since it was illegal
 		if (in_check())
 		{
@@ -215,7 +218,7 @@ namespace loki::position
 		size_t origin = movegen::from_sq(move_info.first);
 		size_t destination = movegen::to_sq(move_info.first);
 		auto special_props = movegen::special(move_info.first);
-		auto promotion_piece = static_cast<ePiece>(static_cast<int64_t>(movegen::promotion_piece(move_info.first)) + 1);
+		auto promotion_piece = movegen::promotion_piece(move_info.first);
 		auto lost_info = move_info.second;
 
 		// toggle side to move.
@@ -482,8 +485,19 @@ namespace loki::position
 		{
 			if ((m_move_history->cbegin() + i)->second.position_hash == m_poskey)
 				return true;
+			i++;
 		}
 		return false;
+	}
+
+	/// <summary>
+	/// Get a copy of the internal state.
+	/// NOTE: Use this function sparingly because the copy is expensive.
+	/// </summary>
+	game_state_t position::get_state_copy() const
+	{
+		const auto& state_ref = *m_state_info.get();
+		return std::make_shared<game_state>(state_ref);
 	}
 
 	/// <summary>

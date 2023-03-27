@@ -35,11 +35,43 @@ namespace loki::search
 		tp_t start_time = now();			/* The search's start time. */
 		movegen::move_list_t searchmoves{};	/* An optional list of moves we're restricted to search. */
 		int movestogo = 0;					/* The amount of moves until the next time control. */
-		int depth = -1;						/* The max depth (plies) we're allowed to search to. */
-		int perft = -1;						/* The perft depth to search (Not official UCI) */
+		int depth = MAX_DEPTH;				/* The max depth (plies) we're allowed to search to. */
 		uint64_t nodes = 0;					/* The max amount of nodes we're allowed to search. */
 		bool ponder = false;				/* Whether or not we should ponder. */
 		bool infinite = false;				/* Whether or not we should search infinitely (until "stop" command) */
+
+		// Keep a buffer to subtract from total time since it takes a little time to parse the 
+		// go command and set up a new search
+		inline static constexpr tp_t PARSING_BUFFER = 50;
+		/// <summary>
+		/// Determine whether or not Loki should use time management, given these limits.
+		/// </summary>
+		/// <param name="side">The side we're interested in. (Typically side-to-move)</param>
+		/// <returns>true if yes, false if no.</returns>
+		bool use_time_management(eSide side) const
+		{
+			return movetime > 0 || time[side] > 0 || inc[side] > 0;
+		}
+		/// <summary>
+		/// Calculate a timepoint to end the search at.
+		/// This is the only time management Loki has until a proper time management scheme has been implemented.
+		/// <param name="side">The side we're interested in. (Typically side-to-move)</param>
+		/// </summary>
+		tp_t end_time(eSide side) const
+		{
+			// movetime has max precedence, so if that is set, we just return that.
+			if (movetime > 0)
+				return start_time + movetime;
+
+			// Estimate movestogo, if it hasn't been specified.
+			auto mtg_tmp = movestogo <= 0 ? 30 : movestogo;
+			auto total_time = (time[side] / mtg_tmp) + inc[side] - PARSING_BUFFER;
+
+			// Sometimes our calculated time is below 50ms, which makes total_time < 0, so we'll handle this here.
+			if (total_time <= 0)
+				total_time = 5;
+			return start_time + total_time;
+		}
 	};
 
 }

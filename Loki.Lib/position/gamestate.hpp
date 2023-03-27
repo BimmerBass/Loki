@@ -53,6 +53,9 @@ namespace loki::position
 		/// Print the position to a given stream.
 		/// </summary>
 		friend std::ostream& operator<<(std::ostream& os, const game_state& gs);
+
+		game_state() = default;
+		game_state(const game_state& _Other);
 	};
 
 }

@@ -19,35 +19,50 @@
 
 namespace loki::search
 {
-	search_context::search_context() : m_movesToMake{}, m_state{}, m_legal_moves{}
+	search_context::search_context() : m_state{}, m_legal_moves{}
 	{
 		m_slider_generator = std::make_shared<movegen::magics::slider_generator>();
 		m_eval_parameters = evaluation::make_params<evaluation::hardcoded_params>();
+		m_mainThread = std::make_unique<main_thread>(m_slider_generator, m_eval_parameters);
 	}
 
 	void search_context::reset()
 	{
-		m_movesToMake.clear();
-		m_state << START_FEN;
-		generate_legals();
+		set_position(START_FEN, {});
 	}
 
-	void search_context::set_position(const std::string& fen, const std::vector<std::string>& moves)
+	void search_context::set_position(std::string fen, const std::vector<std::string>& moves)
 	{
-		m_movesToMake = moves;
 		m_state << fen;
-
-		// Generate a new set of legal moves.
-		generate_legals();
-	}
-
-	void search_context::generate_legals()
-	{
-		m_legal_moves.clear();
 		auto pos = position::position::create_position(
 			std::make_shared<position::game_state>(m_state),
 			m_slider_generator);
-		auto moves = pos->generate_moves();
+
+		// Perform moves checking for legality
+		auto move = MOVE_NULL;
+		for (auto& moveStr : moves)
+		{
+			generate_legals(pos);
+			if ((move = m_legal_moves.find(moveStr)) == MOVE_NULL)
+				break;
+			pos->make_move(move);
+		}
+		// Get the new state.
+		m_state = *pos->get_state_copy();
+
+		// Generate a new set of legal moves.
+		generate_legals(pos);
+	}
+
+	void search_context::search(std::shared_ptr<const search_limits> limits)
+	{
+		m_mainThread->search(m_state, limits);
+	}
+
+	void search_context::generate_legals(position::position_t pos)
+	{
+		m_legal_moves.clear();
+		auto& moves = pos->generate_moves();
 
 		for (auto& move : moves)
 		{

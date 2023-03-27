@@ -28,7 +28,7 @@ namespace loki::movegen
 	private:
 		using attack_table_t = std::array<bitboard_t, 64>;
 
-		position::position_t					m_position;
+		position::position*					m_position;
 
 		magics::slider_generator_t				m_slider_generator;
 		attack_table_t							knight_attacks;
@@ -38,7 +38,7 @@ namespace loki::movegen
 	public:
 		// No default constructor since a reference to the position object is required.
 		move_generator() = delete;
-		move_generator(position::position_t pos, magics::slider_generator_t slider_generator) noexcept;
+		move_generator(position::position* pos, magics::slider_generator_t slider_generator) noexcept;
 
 		// No copying, only moving allowed.
 		move_generator(const move_generator&) = delete;

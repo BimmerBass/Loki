@@ -173,6 +173,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="evaluation\evaluation.cpp" />
+    <ClCompile Include="evaluation\parameters\hardcoded_params.cpp" />
     <ClCompile Include="loki.pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -184,6 +185,7 @@
     <ClCompile Include="position\gamestate.cpp" />
     <ClCompile Include="position\hashing\zobrist.cpp" />
     <ClCompile Include="position\position.cpp" />
+    <ClCompile Include="search\main_thread.cpp" />
     <ClCompile Include="search\search_context.cpp" />
     <ClCompile Include="search\search_thread.cpp" />
     <ClCompile Include="uci\uci.cpp" />
@@ -192,6 +194,7 @@
   <ItemGroup>
     <ClInclude Include="evaluation\evaluation.hpp" />
     <ClInclude Include="evaluation\parameters\evaluation_params.hpp" />
+    <ClInclude Include="evaluation\piece_square_table.hpp" />
     <ClInclude Include="loki.pch.hpp" />
     <ClInclude Include="movegen\magics\magics_index.hpp" />
     <ClInclude Include="movegen\magics\slider_generator.hpp" />
@@ -203,9 +206,11 @@
     <ClInclude Include="position\hashing\zobrist.hpp" />
     <ClInclude Include="position\position.hpp" />
     <ClInclude Include="search\limits.hpp" />
+    <ClInclude Include="search\pv_table.hpp" />
     <ClInclude Include="search\search_context.hpp" />
     <ClInclude Include="search\search_thread.hpp" />
     <ClInclude Include="uci\uci.hpp" />
+    <ClInclude Include="utility\check_input.hpp" />
     <ClInclude Include="utility\exception.hpp" />
     <ClInclude Include="utility\fast_stack.hpp" />
     <ClInclude Include="utility\operators.hpp" />

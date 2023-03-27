@@ -9,12 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{CA90CD45-8DC7-4A91-A920-619F08716444}"
-	ProjectSection(SolutionItems) = preProject
-		tests\perft.epd = tests\perft.epd
-		tests\perft.py = tests\perft.py
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Legacy", "Legacy\Legacy.vcxproj", "{2931032C-3758-44A9-9A49-2268D3A3941E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tests", "Tests\Tests.vcxproj", "{46562749-FE73-467A-8D44-849A1D996573}"
@@ -66,9 +60,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{CA90CD45-8DC7-4A91-A920-619F08716444} = {32241FE4-8A56-497C-9120-BEB6F321D580}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9D4D3C4B-9471-47FE-953B-40A84B01B801}

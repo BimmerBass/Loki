@@ -16,3 +16,35 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "loki.pch.hpp"
+
+namespace loki
+{
+	namespace
+	{
+		std::map<char, eFile> file_mappings = {
+			{'a', FILE_A},
+			{'b', FILE_B},
+			{'c', FILE_C},
+			{'d', FILE_D},
+			{'e', FILE_E},
+			{'f', FILE_F},
+			{'g', FILE_G},
+			{'h', FILE_H},
+		};
+		std::array<std::string, FILE_NB> file_names = { "a", "b", "c", "d", "e", "f", "g", "h" };
+
+	}
+
+	eSquare from_algebraic(std::string str)
+	{
+		auto file = str[0];
+		auto rank = str[1];
+		return get_square((rank - '0') - 1, file_mappings[(char)std::tolower(file)]);
+	}
+	std::string to_algebraic(eSquare sq)
+	{
+		size_t f = file(sq);
+		size_t r = rank(sq) + 1;
+		return file_names[f] + std::to_string(r);
+	}
+}

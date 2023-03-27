@@ -35,6 +35,7 @@ namespace loki::uci
 		REGISTER_CALLBACK(parse_quit);
 
 		REGISTER_CALLBACK(parse_perft);
+		REGISTER_CALLBACK(parse_printpos);
 	}
 
 	/// @brief Run the command parsing loop responsible for communicating over the UCI protocol (ref: https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
@@ -74,14 +75,14 @@ namespace loki::uci
 
 	void engine_manager::parse_uci(const std::string& /* unused */)
 	{
-		std::cout << "id name " << sOptions["NAME"] << " " << sOptions["VERSION"] << "\n";
-		std::cout << "id author " << sOptions["AUTHOR"] << "\n";
-		std::cout << "uciok\n";
+		std::cout << "id name " << sOptions["NAME"] << " " << sOptions["VERSION"] << std::endl;
+		std::cout << "id author " << sOptions["AUTHOR"] << std::endl;
+		std::cout << "uciok" << std::endl;
 	}
 
 	void engine_manager::parse_isready(const std::string& /* unused */)
 	{
-		std::cout << "readyok\n";
+		std::cout << "readyok" << std::endl;
 	}
 
 	void engine_manager::parse_setoption(const std::string& cmd)
@@ -132,24 +133,23 @@ namespace loki::uci
 	{
 		if (!has_position)
 			throw e_engineManager("A 'go' command was received before the first 'position command'");
-		search::search_limits limits;
+		auto limits = std::make_shared<search::search_limits>();
 		std::string tk;
 		std::stringstream ss(cmd);
 
 		while (ss >> tk)
 		{
 			// NOTE: The "mate" command has intentionally not been implemented due to its rare usage.
-			if (tk == "wtime") ss >> limits.time[WHITE];
-			else if (tk == "btime") ss >> limits.time[BLACK];
-			else if (tk == "winc") ss >> limits.inc[WHITE];
-			else if (tk == "binc") ss >> limits.inc[BLACK];
-			else if (tk == "movestogo") ss >> limits.movestogo;
-			else if (tk == "depth") ss >> limits.depth;
-			else if (tk == "nodes") ss >> limits.nodes;
-			else if (tk == "movetime") ss >> limits.movetime;
-			else if (tk == "perft") ss >> limits.perft;
-			else if (tk == "infinite") limits.infinite = true;
-			else if (tk == "ponder") limits.ponder = true;
+			if (tk == "wtime") ss >> limits->time[WHITE];
+			else if (tk == "btime") ss >> limits->time[BLACK];
+			else if (tk == "winc") ss >> limits->inc[WHITE];
+			else if (tk == "binc") ss >> limits->inc[BLACK];
+			else if (tk == "movestogo") ss >> limits->movestogo;
+			else if (tk == "depth") ss >> limits->depth;
+			else if (tk == "nodes") ss >> limits->nodes;
+			else if (tk == "movetime") ss >> limits->movetime;
+			else if (tk == "infinite") limits->infinite = true;
+			else if (tk == "ponder") limits->ponder = true;
 			else if (tk == "searchmoves")
 			{
 				std::stringstream tmp(cmd);
@@ -160,10 +160,11 @@ namespace loki::uci
 					movegen::is_algebraic_move(tk) &&
 					(move = m_context.legal_moves().find(tk)) != MOVE_NULL)
 				{
-					limits.searchmoves.add(move, 0);
+					limits->searchmoves.add(move, 0);
 				}
 			}
 		}
+		m_context.search(limits);
 	}
 
 	void engine_manager::parse_perft(const std::string& cmd)
@@ -180,5 +181,13 @@ namespace loki::uci
 			throw e_engineManager("'depth' was less than or equal to zero");
 
 		m_context.do_perft(static_cast<eDepth>(depth));
+	}
+
+	void engine_manager::parse_printpos(const std::string& /* unused */)
+	{
+		if (!has_position)
+			throw e_engineManager("A 'printpos' command was received before the first 'position command'");
+
+		std::cout << m_context.game_state() << std::endl;
 	}
 }

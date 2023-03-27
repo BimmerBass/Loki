@@ -36,7 +36,6 @@ namespace loki::position
 		bitboard_t								m_all_pieces[SIDE_NB];			/* Two bitboards containing all pieces on the respective sides. */
 		eSquare									m_king_squares[SIDE_NB];		/* The two squares where the kings are. */
 		size_t									m_ply;							/* The ply-depth we're at from the base position. */
-		weak_position_t							m_self;							/* Shared-ptr to this object. */
 		hashkey_t								m_poskey;						/* Position (zobrist) hash key. */
 		zobrist_t								m_hashing_generator;			/* Object to alter the position's hash. */
 	public:
@@ -85,6 +84,17 @@ namespace loki::position
 			return count_bits(m_state_info->piece_placements[_Si][_Pi]);
 		}
 
+		template<eSide _Si, ePiece _Pce> requires (_Si == WHITE || _Si == BLACK) && (_Pce >= PAWN && _Pce <= KING)
+			inline bitboard_t get_piece_bb() const noexcept
+		{
+			return m_state_info->piece_placements[_Si][_Pce];
+		}
+		template<eSide _Si> requires (_Si == WHITE || _Si == BLACK)
+			inline eSquare king_square() const noexcept
+		{
+			return m_king_squares[_Si];
+		}
+
 		/// <summary>
 		/// Determine the side to move.
 		/// </summary>
@@ -100,6 +110,12 @@ namespace loki::position
 		inline size_t ply() const noexcept { return m_ply; }
 
 		inline bool is_draw() const { return m_state_info->fifty_move_counter >= 100 || is_repetition(); }
+
+		/// <summary>
+		/// Get a copy of the internal state.
+		/// NOTE: Use this function sparingly because the copy is expensive.
+		/// </summary>
+		game_state_t get_state_copy() const;
 
 		/// <summary>
 		/// Load a FEN.

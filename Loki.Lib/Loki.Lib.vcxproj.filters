@@ -64,6 +64,9 @@
     <Filter Include="Header Files\evaluation\parameters">
       <UniqueIdentifier>{2b7a97e0-1f20-46b9-8b57-83faed29f69a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\evaluation\parameters">
+      <UniqueIdentifier>{77901abf-b5ef-4f4e-95a6-18a8c488c0c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="position\position.cpp">
@@ -98,6 +101,12 @@
     </ClCompile>
     <ClCompile Include="evaluation\evaluation.cpp">
       <Filter>Source Files\evaluation</Filter>
+    </ClCompile>
+    <ClCompile Include="search\main_thread.cpp">
+      <Filter>Source Files\search</Filter>
+    </ClCompile>
+    <ClCompile Include="evaluation\parameters\hardcoded_params.cpp">
+      <Filter>Source Files\evaluation\parameters</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -163,6 +172,15 @@
     </ClInclude>
     <ClInclude Include="utility\operators.hpp">
       <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="search\pv_table.hpp">
+      <Filter>Header Files\search</Filter>
+    </ClInclude>
+    <ClInclude Include="utility\check_input.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="evaluation\piece_square_table.hpp">
+      <Filter>Header Files\evaluation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -17,8 +17,23 @@
 //
 #include "Loki.Lib/loki.pch.hpp"
 
+inline std::string info()
+{
+	const std::string version = "4.0";
+	std::stringstream ss, date(__DATE__);
+	std::string day, month, yr;
+	date >> month >> day >> yr;
+	ss << "Loki v" << version << " (build: "
+		<< day << " "
+		<< month << " "
+		<< yr << ") by Niels Abildskov (github: BimmerBass)";
+	return ss.str();
+}
+
 int main()
 {
+	std::cout << info() << std::endl;
 	loki::uci::engine_manager manager;
 	manager.run();
+	return 0;
 }

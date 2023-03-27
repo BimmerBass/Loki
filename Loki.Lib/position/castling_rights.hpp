@@ -33,6 +33,8 @@ namespace loki::position
 		{}
 		castle_rights(uint8_t state) : m_rights(state)
 		{}
+		castle_rights(const castle_rights& _O) : m_rights(_O.m_rights)
+		{}
 
 		/// <summary>
 		/// Return whether or not the side to move can castle to the given side.

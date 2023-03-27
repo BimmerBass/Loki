@@ -59,9 +59,6 @@ namespace loki::utility
 		os << "[FEN]: " << m_initial_fen << "\n";
 		size_t legal = 0;
 
-		auto print_move = [](move_t m) {
-			return to_algebraic(movegen::from_sq(m)) + to_algebraic(movegen::to_sq(m));
-		};
 		std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();
 
 		const auto& moves = m_pos->generate_moves<movegen::ALL>();
@@ -76,7 +73,7 @@ namespace loki::utility
 			perft_internal(d - 1);
 			m_pos->undo_move();
 
-			os << std::format("[{}] {}\t---> {} nodes.\n", legal, print_move(moves[i].move), std::to_string(m_nodes - old_nodes));
+			os << std::format("[{}] {}\t---> {} nodes.\n", legal, movegen::to_string(moves[i].move), std::to_string(m_nodes - old_nodes));
 		}
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> end_time = std::chrono::high_resolution_clock::now();
