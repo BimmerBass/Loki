@@ -188,6 +188,8 @@
     <ClCompile Include="search\functions\alpha_beta.cpp" />
     <ClCompile Include="search\functions\quiescence.cpp" />
     <ClCompile Include="search\main_thread.cpp" />
+    <ClCompile Include="search\root_search.cpp" />
+    <ClCompile Include="search\search.cpp" />
     <ClCompile Include="search\search_context.cpp" />
     <ClCompile Include="search\search_thread.cpp" />
     <ClCompile Include="uci\uci.cpp" />

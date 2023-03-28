@@ -117,6 +117,12 @@
     <ClCompile Include="search\functions\quiescence.cpp">
       <Filter>Source Files\search\functions</Filter>
     </ClCompile>
+    <ClCompile Include="search\search.cpp">
+      <Filter>Source Files\search</Filter>
+    </ClCompile>
+    <ClCompile Include="search\root_search.cpp">
+      <Filter>Source Files\search\functions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.hpp">
