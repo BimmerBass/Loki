@@ -185,6 +185,8 @@
     <ClCompile Include="position\gamestate.cpp" />
     <ClCompile Include="position\hashing\zobrist.cpp" />
     <ClCompile Include="position\position.cpp" />
+    <ClCompile Include="search\functions\alpha_beta.cpp" />
+    <ClCompile Include="search\functions\quiescence.cpp" />
     <ClCompile Include="search\main_thread.cpp" />
     <ClCompile Include="search\search_context.cpp" />
     <ClCompile Include="search\search_thread.cpp" />
@@ -207,6 +209,7 @@
     <ClInclude Include="position\position.hpp" />
     <ClInclude Include="search\limits.hpp" />
     <ClInclude Include="search\pv_table.hpp" />
+    <ClInclude Include="search\search.hpp" />
     <ClInclude Include="search\search_context.hpp" />
     <ClInclude Include="search\search_thread.hpp" />
     <ClInclude Include="uci\uci.hpp" />

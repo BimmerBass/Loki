@@ -30,7 +30,6 @@ namespace loki::uci
 		REGISTER_CALLBACK(parse_ucinewgame);
 		REGISTER_CALLBACK(parse_position);
 		REGISTER_CALLBACK(parse_go);
-		REGISTER_CALLBACK(parse_stop);
 		REGISTER_CALLBACK(parse_ponderhit);
 		REGISTER_CALLBACK(parse_quit);
 

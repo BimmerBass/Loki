@@ -107,7 +107,7 @@ namespace loki::position
 		/// <summary>
 		/// Get the ply we're at.
 		/// </summary>
-		inline size_t ply() const noexcept { return m_ply; }
+		inline eDepth ply() const noexcept { return static_cast<eDepth>(m_ply); }
 
 		inline bool is_draw() const { return m_state_info->fifty_move_counter >= 100 || is_repetition(); }
 

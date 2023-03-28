@@ -146,6 +146,7 @@ namespace loki {
 
 	enum eDepth : size_t
 	{
+		ZERO_DEPTH = 0,
 		MAX_DEPTH = 100
 	};
 	ENABLE_BASE_OPERATORS_ON(eDepth);
@@ -581,6 +582,15 @@ namespace loki::evaluation
 	};
 }
 
+namespace loki::search
+{
+	enum eThreadId : size_t
+	{
+		MAIN_THREAD = 0
+	};
+	ENABLE_INCR_OPERATORS_ON(eThreadId);
+}
+
 #include "position/castling_rights.hpp"
 #include "position/hashing/zobrist.hpp"
 #include "position/gamestate.hpp"
@@ -602,6 +612,7 @@ namespace loki::evaluation
 
 #include "search/pv_table.hpp"
 #include "search/limits.hpp"
+#include "search/search.hpp"
 #include "search/search_thread.hpp"
 #include "search/search_context.hpp"
 

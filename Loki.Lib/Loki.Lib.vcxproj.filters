@@ -67,6 +67,9 @@
     <Filter Include="Source Files\evaluation\parameters">
       <UniqueIdentifier>{77901abf-b5ef-4f4e-95a6-18a8c488c0c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\search\functions">
+      <UniqueIdentifier>{9e812af1-403a-416c-8da1-c057032bb4f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="position\position.cpp">
@@ -107,6 +110,12 @@
     </ClCompile>
     <ClCompile Include="evaluation\parameters\hardcoded_params.cpp">
       <Filter>Source Files\evaluation\parameters</Filter>
+    </ClCompile>
+    <ClCompile Include="search\functions\alpha_beta.cpp">
+      <Filter>Source Files\search\functions</Filter>
+    </ClCompile>
+    <ClCompile Include="search\functions\quiescence.cpp">
+      <Filter>Source Files\search\functions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +190,9 @@
     </ClInclude>
     <ClInclude Include="evaluation\piece_square_table.hpp">
       <Filter>Header Files\evaluation</Filter>
+    </ClInclude>
+    <ClInclude Include="search\search.hpp">
+      <Filter>Header Files\search</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

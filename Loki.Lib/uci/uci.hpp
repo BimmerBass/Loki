@@ -47,7 +47,6 @@ namespace loki::uci
 		void parse_ucinewgame(const std::string& cmd);
 		void parse_position(const std::string& cmd);
 		void parse_go(const std::string& cmd);
-		void parse_stop(const std::string& /* unused */) { throw std::runtime_error("Not implemented"); };
 		void parse_quit(const std::string& /* unused */)
 		{
 			throw e_quitException();
