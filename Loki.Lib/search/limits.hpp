@@ -46,18 +46,16 @@ namespace loki::search
 		/// <summary>
 		/// Determine whether or not Loki should use time management, given these limits.
 		/// </summary>
-		/// <param name="side">The side we're interested in. (Typically side-to-move)</param>
 		/// <returns>true if yes, false if no.</returns>
-		bool use_time_management(eSide side) const
+		bool use_time_management() const
 		{
-			return movetime > 0 || time[side] > 0 || inc[side] > 0;
+			return movetime > 0 || time[m_stm] > 0 || inc[m_stm] > 0;
 		}
 		/// <summary>
 		/// Calculate a timepoint to end the search at.
 		/// This is the only time management Loki has until a proper time management scheme has been implemented.
-		/// <param name="side">The side we're interested in. (Typically side-to-move)</param>
 		/// </summary>
-		tp_t end_time(eSide side) const
+		tp_t end_time() const
 		{
 			// movetime has max precedence, so if that is set, we just return that.
 			if (movetime > 0)
@@ -65,13 +63,18 @@ namespace loki::search
 
 			// Estimate movestogo, if it hasn't been specified.
 			auto mtg_tmp = movestogo <= 0 ? 30 : movestogo;
-			auto total_time = (time[side] / mtg_tmp) + inc[side] - PARSING_BUFFER;
+			auto total_time = (time[m_stm] / mtg_tmp) + inc[m_stm] - PARSING_BUFFER;
 
 			// Sometimes our calculated time is below 50ms, which makes total_time < 0, so we'll handle this here.
 			if (total_time <= 0)
 				total_time = 5;
 			return start_time + total_time;
 		}
+	private:
+		friend class search_admin;
+		eSide m_stm = WHITE;
+
+		void set_stm(eSide s) { m_stm = s; }
 	};
 
 }

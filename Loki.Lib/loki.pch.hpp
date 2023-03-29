@@ -613,8 +613,8 @@ namespace loki::search
 #include "search/pv_table.hpp"
 #include "search/limits.hpp"
 #include "search/search.hpp"
-#include "search/search_thread.hpp"
-#include "search/search_context.hpp"
+#include "search/thread.hpp"
+#include "search/admin.hpp"
 
 #include "uci/uci.hpp"
 

@@ -80,7 +80,7 @@ namespace loki::search
 				}
 			}
 
-			if (m_stop)
+			if (m_stop->load(std::memory_order_relaxed))
 				return VALUE_ZERO;
 		}
 

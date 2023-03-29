@@ -28,9 +28,11 @@ namespace loki::search
 		m_info.nodes++;
 		if ((m_info.nodes & 2047) == 0)
 			check_stopped_search();
+		if (m_stop->load(std::memory_order_relaxed))
+			return VALUE_ZERO;
 
 		// Check if we've been ordered to stop, or if the position is drawn.
-		if ((m_pos->is_draw() && m_pos->ply() > 0) || m_stop)
+		if ((m_pos->is_draw() && m_pos->ply() > 0) || m_stop->load(std::memory_order_relaxed))
 			return VALUE_ZERO;
 
 		// Protect our internal structures from invalid access.
@@ -60,7 +62,7 @@ namespace loki::search
 			score = -quiescence(-beta, -alpha);
 			m_pos->undo_move();
 
-			if (m_stop)
+			if (m_stop->load(std::memory_order_relaxed))
 				return VALUE_ZERO;
 
 			if (score >= beta)

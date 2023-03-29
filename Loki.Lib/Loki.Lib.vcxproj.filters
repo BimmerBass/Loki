@@ -96,16 +96,13 @@
     <ClCompile Include="position\gamestate.cpp">
       <Filter>Source Files\position</Filter>
     </ClCompile>
-    <ClCompile Include="search\search_context.cpp">
-      <Filter>Source Files\search</Filter>
-    </ClCompile>
-    <ClCompile Include="search\search_thread.cpp">
+    <ClCompile Include="search\admin.cpp">
       <Filter>Source Files\search</Filter>
     </ClCompile>
     <ClCompile Include="evaluation\evaluation.cpp">
       <Filter>Source Files\evaluation</Filter>
     </ClCompile>
-    <ClCompile Include="search\main_thread.cpp">
+    <ClCompile Include="search\thread.cpp">
       <Filter>Source Files\search</Filter>
     </ClCompile>
     <ClCompile Include="evaluation\parameters\hardcoded_params.cpp">
@@ -120,7 +117,7 @@
     <ClCompile Include="search\search.cpp">
       <Filter>Source Files\search</Filter>
     </ClCompile>
-    <ClCompile Include="search\root_search.cpp">
+    <ClCompile Include="search\functions\root_search.cpp">
       <Filter>Source Files\search\functions</Filter>
     </ClCompile>
   </ItemGroup>
@@ -173,10 +170,10 @@
     <ClInclude Include="uci\uci.hpp">
       <Filter>Header Files\uci</Filter>
     </ClInclude>
-    <ClInclude Include="search\search_context.hpp">
+    <ClInclude Include="search\admin.hpp">
       <Filter>Header Files\search</Filter>
     </ClInclude>
-    <ClInclude Include="search\search_thread.hpp">
+    <ClInclude Include="search\thread.hpp">
       <Filter>Header Files\search</Filter>
     </ClInclude>
     <ClInclude Include="evaluation\evaluation.hpp">

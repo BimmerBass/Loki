@@ -17,7 +17,6 @@
 //
 #pragma once
 
-#define REGISTER_CALLBACK(func) m_callbackMap[std::string(#func).substr(6)] = [this](const std::string& s) { func(s);}
 
 namespace loki::uci
 {
@@ -34,7 +33,7 @@ namespace loki::uci
 		};
 
 		std::map<std::string, std::function<void(const std::string&)>> m_callbackMap;
-		search::search_context m_context;
+		search::search_admin m_admin;
 	public:
 		engine_manager();
 

@@ -44,7 +44,7 @@ namespace loki::search
 		if ((m_info.nodes & 2047) == 0)
 			check_stopped_search();
 
-		if (m_stop)
+		if (m_stop->load(std::memory_order_relaxed))
 			return VALUE_ZERO;
 
 		auto is_root = (m_pos->ply() == 0);
@@ -91,7 +91,7 @@ namespace loki::search
 			moves_searched++;
 
 			// If the recursive call set our stop flag, we will just return.
-			if (m_stop)
+			if (m_stop->load(std::memory_order_relaxed))
 				return VALUE_ZERO;
 
 			if (score >= beta) /* Fail-hard beta cutoff */

@@ -38,35 +38,33 @@ namespace loki::search
 		};
 		inline static constexpr _search_info ZeroInfo{ static_cast<eDepth>(0), 0, 0, 0 };
 
+		// Ctor params
+	protected:
+		const eThreadId								m_threadId;
 	private:
 		const movegen::magics::slider_generator_t	m_sliderGenerator;
 		const evaluation::evaluation_params_t		m_evalParams;
-		const eThreadId								m_threadId;
+		std::shared_ptr<std::atomic_bool>			m_stop; /* Controlled by the main-thread */
 
+		// The thread's own params
 		position::position_t						m_pos;
 		std::unique_ptr<evaluation::evaluator>		m_eval;
 		std::shared_ptr<const search_limits>		m_limits;
 		_search_info								m_info;
 		util::tri_pv_table<>						m_pvTable;
-		std::atomic_bool							m_stop;
 	protected:
 		searcher() = delete;
 		searcher(
 			eThreadId threadId,
 			const movegen::magics::slider_generator_t& sliderGen,
-			const evaluation::evaluation_params_t& params);
+			const evaluation::evaluation_params_t& params,
+			std::shared_ptr<std::atomic_bool> stop);
 
 		void search(
 			const position::game_state& state,
 			std::shared_ptr<const search_limits>& limits);
 	private:
-		/// <summary>
-		/// Check if we should stop the search.
-		/// Only the main thread will query stdin, whereas the other threads will check for time and whether or not main has requested a stop.
-		/// </summary>
-		void check_stopped_search();
-
-		
+		void check_stopped_search();	
 		void preprocess_search(
 			const position::game_state& state,
 			std::shared_ptr<const search_limits>& limits);
@@ -74,6 +72,7 @@ namespace loki::search
 		eValue alpha_beta(eDepth depth, eValue alpha, eValue beta);
 		eValue quiescence(eValue alpha, eValue beta);
 		const movegen::move_list_t& generate_quiescence_moves();
+		eDepth depth_for_thread(eDepth d) const;
 
 	public:
 		inline static constexpr double InternalToCpConversionFactor = 100.0 / 512.0;
@@ -88,6 +87,8 @@ namespace loki::search
 
 			return valueInternal > VALUE_MATE ? score : -score;
 		}
+
+		virtual ~searcher() {}
 	};
 
 }

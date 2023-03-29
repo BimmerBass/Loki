@@ -16,6 +16,7 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "loki.pch.hpp"
+#include "utility/check_input.hpp"
 
 using namespace loki::movegen;
 
@@ -24,7 +25,7 @@ namespace loki::search
 	/// <summary>
 	/// Initialize an empty searcher, and make sure the parameters are valid.
 	/// </summary>
-	searcher::searcher(eThreadId threadId, const movegen::magics::slider_generator_t& sliderGen, const evaluation::evaluation_params_t& params)
+	searcher::searcher(eThreadId threadId, const movegen::magics::slider_generator_t& sliderGen, const evaluation::evaluation_params_t& params, std::shared_ptr<std::atomic_bool> stop)
 		: m_threadId(threadId), 
 		m_sliderGenerator(sliderGen),
 		m_evalParams(params),
@@ -33,7 +34,7 @@ namespace loki::search
 		m_limits{nullptr},
 		m_info{ZeroInfo},
 		m_pvTable{},
-		m_stop{true}
+		m_stop{stop}
 	{
 		if (m_sliderGenerator == nullptr)
 			throw e_searcherError("Parameter 'sliderGen' was nullptr");
@@ -54,15 +55,14 @@ namespace loki::search
 		// Start the search
 		auto best_move = MOVE_NULL;
 		std::stringstream ss;
-
-		for (auto current_depth = ZERO_DEPTH; current_depth <= static_cast<eDepth>(m_limits->depth); current_depth++)
+		for (auto current_depth = (eDepth)1; current_depth <= m_limits->depth; current_depth++)
 		{
 			// Clear the previous search's selective depth.
 			m_info.selective_depth = ZERO_DEPTH;
 
-			auto score = root_search(current_depth, -VALUE_INF, VALUE_INF);
+			auto score = root_search(depth_for_thread(current_depth), -VALUE_INF, VALUE_INF);
 
-			if (m_stop)
+			if (m_stop->load(std::memory_order_relaxed))
 			{
 				if (current_depth == 1) /* If this is the first iteration we need to fetch the best move here. */
 					best_move = m_pvTable.get_for_depth(m_pos->ply()).second[0];
@@ -80,6 +80,7 @@ namespace loki::search
 				best_move = pv.second[0];
 
 				// Print info.
+				ss.str("");
 				ss.clear();
 				ss << "info score ";
 				if (std::abs(score) > VALUE_MATE)
@@ -102,7 +103,10 @@ namespace loki::search
 			}
 		}
 		if (m_threadId == MAIN_THREAD)
-			std::cout << "bestmove " << movegen::to_string(best_move);
+		{
+			std::cout << "bestmove " << movegen::to_string(best_move) << std::endl;
+			m_stop->store(true, std::memory_order_relaxed);
+		}
 	}
 
 	/// <summary>
@@ -120,7 +124,9 @@ namespace loki::search
 
 		m_info = ZeroInfo;
 		m_pvTable.clear();
-		m_stop = false;
+
+		if (m_threadId == MAIN_THREAD)
+			m_stop->store(false, std::memory_order_relaxed);
 	}
 
 	/// <summary>
@@ -131,5 +137,35 @@ namespace loki::search
 		if (m_pos->in_check())
 			return m_pos->generate_moves<movegen::ALL>();
 		return m_pos->generate_moves<movegen::ACTIVES>();
+	}
+
+	/// <summary>
+	/// Check if we should stop the search.
+	/// Only the main thread will query stdin, whereas the other threads will check for time and whether or not main has requested a stop.
+	/// </summary>
+	void searcher::check_stopped_search()
+	{
+		if (m_threadId == MAIN_THREAD)
+		{
+			bool quit = false, stop = false;
+			auto time_up = m_limits->use_time_management() && now() >= m_limits->end_time();
+			utility::ReadInput(stop, quit);
+
+			if (stop || quit || time_up)
+				m_stop->store(true, std::memory_order_relaxed);
+
+			if (quit)
+				throw uci::engine_manager::e_quitException();
+		}
+	}
+
+	/// <summary>
+	/// Calculate a good search depth based on the thread's ID and the depth specified in the UCI limits.
+	/// </summary>
+	eDepth searcher::depth_for_thread(eDepth d) const
+	{
+		if (m_threadId % 2 != 0 && m_threadId != MAIN_THREAD) // Uneven thread-id's get changed depth
+			return static_cast<eDepth>(d + (m_threadId / 2) + 1);
+		return d;
 	}
 }

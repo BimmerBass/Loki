@@ -19,19 +19,19 @@
 
 namespace loki::search
 {
-	search_context::search_context() : m_state{}, m_legal_moves{}
+	search_admin::search_admin() : m_state{}, m_legal_moves{}
 	{
 		m_slider_generator = std::make_shared<movegen::magics::slider_generator>();
 		m_eval_parameters = evaluation::make_params<evaluation::hardcoded_params>();
 		m_mainThread = std::make_unique<main_thread>(m_slider_generator, m_eval_parameters);
 	}
 
-	void search_context::reset()
+	void search_admin::reset()
 	{
 		set_position(START_FEN, {});
 	}
 
-	void search_context::set_position(std::string fen, const std::vector<std::string>& moves)
+	void search_admin::set_position(std::string fen, const std::vector<std::string>& moves)
 	{
 		m_state << fen;
 		auto pos = position::position::create_position(
@@ -54,12 +54,13 @@ namespace loki::search
 		generate_legals(pos);
 	}
 
-	void search_context::search(std::shared_ptr<const search_limits> limits)
+	void search_admin::search(std::shared_ptr<search_limits>& limits)
 	{
-		m_mainThread->search(m_state, limits);
+		limits.get()->set_stm(m_state.side_to_move);
+		m_mainThread->begin_search(m_state, limits);
 	}
 
-	void search_context::generate_legals(position::position_t pos)
+	void search_admin::generate_legals(position::position_t pos)
 	{
 		m_legal_moves.clear();
 		auto& moves = pos->generate_moves();
@@ -74,7 +75,7 @@ namespace loki::search
 		}
 	}
 
-	void search_context::do_perft(eDepth d)
+	void search_admin::do_perft(eDepth d)
 	{
 		std::string fen;
 		m_state >> fen;

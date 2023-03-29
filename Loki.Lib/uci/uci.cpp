@@ -19,6 +19,7 @@
 
 namespace loki::uci
 {
+#define REGISTER_CALLBACK(func) m_callbackMap[std::string(#func).substr(6)] = [this](const std::string& s) { func(s);}
 
 	engine_manager::engine_manager() : has_position(false)
 	{
@@ -36,9 +37,12 @@ namespace loki::uci
 		REGISTER_CALLBACK(parse_perft);
 		REGISTER_CALLBACK(parse_printpos);
 	}
+#undef REGISTER_CALLBACK
 
-	/// @brief Run the command parsing loop responsible for communicating over the UCI protocol (ref: https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
-	/// @return true if no unexpected error occurs, false otherwise
+	/// <summary>
+	/// Run the command parsing loop responsible for communicating over the UCI protocol (ref: https://www.wbec-ridderkerk.nl/html/UCIProtocol.html)
+	/// </summary>
+	/// <returns>true if no unexpected error occurs, false otherwise</returns>
 	bool engine_manager::run() noexcept
 	{
 		try
@@ -65,7 +69,7 @@ namespace loki::uci
 		catch (const std::exception& e)
 		{
 			// Output the exception message as a UCI info command.
-			std::cout << "info string " << e.what() << std::endl;
+			std::cout << "info string Exception thrown: " << e.what() << std::endl;
 			return false;
 		}
 
@@ -86,21 +90,19 @@ namespace loki::uci
 
 	void engine_manager::parse_setoption(const std::string& cmd)
 	{
-		auto name_reg = std::regex("name\\W+(\\w+)", std::regex_constants::ECMAScript);
-		auto value_reg = std::regex("value\\W+(\\w+)", std::regex_constants::ECMAScript);
-		std::smatch match;
-		
-		if (std::regex_search(cmd, match, name_reg) && match.size() >= 2)
-		{
-			auto name = match[1].str();
-			if (std::regex_search(cmd, match, value_reg) && match.size() >= 2)
-				m_context.set_option(name, match[1].str());
-		}
+		std::string name = "", value = "", token = "";
+		std::stringstream ss(cmd);
+		ss >> token >> token;
+		while (ss >> token && token != "value")
+			name += (name.size() > 0 ? " " : "") + token;
+		while (ss >> token)
+			value += (value.size() > 0 ? " " : "") + token;
+		m_admin.set_option(name, value);
 	}
 
 	void engine_manager::parse_ucinewgame(const std::string& /* unused */)
 	{
-		m_context.reset();
+		m_admin.reset();
 	}
 
 	void engine_manager::parse_position(const std::string& cmd)
@@ -109,7 +111,7 @@ namespace loki::uci
 		std::string fen;
 		std::vector<std::string> moves;
 		if (cmd.find("startpos") != std::string::npos)
-			fen = m_context.START_FEN;
+			fen = m_admin.START_FEN;
 		else if ((pos = cmd.find("fen ")) != std::string::npos)
 		{
 			auto f_start = pos + 4;
@@ -124,7 +126,7 @@ namespace loki::uci
 			moves = textutil::split(cmd.substr(moves_start));
 		}
 
-		m_context.set_position(fen, moves);
+		m_admin.set_position(fen, moves);
 		has_position = true;
 	}
 
@@ -157,13 +159,13 @@ namespace loki::uci
 
 				while (tmp >> tk &&
 					movegen::is_algebraic_move(tk) &&
-					(move = m_context.legal_moves().find(tk)) != MOVE_NULL)
+					(move = m_admin.legal_moves().find(tk)) != MOVE_NULL)
 				{
 					limits->searchmoves.add(move, 0);
 				}
 			}
 		}
-		m_context.search(limits);
+		m_admin.search(limits);
 	}
 
 	void engine_manager::parse_perft(const std::string& cmd)
@@ -179,7 +181,7 @@ namespace loki::uci
 		if (depth <= 0)
 			throw e_engineManager("'depth' was less than or equal to zero");
 
-		m_context.do_perft(static_cast<eDepth>(depth));
+		m_admin.do_perft(static_cast<eDepth>(depth));
 	}
 
 	void engine_manager::parse_printpos(const std::string& /* unused */)
@@ -187,6 +189,6 @@ namespace loki::uci
 		if (!has_position)
 			throw e_engineManager("A 'printpos' command was received before the first 'position command'");
 
-		std::cout << m_context.game_state() << std::endl;
+		std::cout << m_admin.game_state() << std::endl;
 	}
 }

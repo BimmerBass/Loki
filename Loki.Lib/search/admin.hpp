@@ -20,12 +20,12 @@
 namespace loki::search
 {
 	/// <summary>
-	/// search_context holds all data that is to be shared between the searchers. This will include things like slider generator, transposition table and so on.
+	/// search_admin holds all data that is to be shared between the searchers. This will include things like slider generator, transposition table and so on.
 	/// It is also responsible for managing the engine's options.
 	/// 
-	/// This makes search_context, in essence, the engine itself.
+	/// This makes search_admin, in essence, the engine itself.
 	/// </summary>
-	class search_context
+	class search_admin
 	{
 		EXCEPTION_CLASS(e_Search, e_lokiError);
 	public:
@@ -40,7 +40,7 @@ namespace loki::search
 		movegen::magics::slider_generator_t m_slider_generator;
 		evaluation::evaluation_params_t m_eval_parameters;
 	public:
-		search_context();
+		search_admin();
 
 		/// <summary>
 		/// Will load the starting FEN and clear all search-related data structures.
@@ -55,14 +55,16 @@ namespace loki::search
 		/// <param name="moves"></param>
 		void set_position(std::string fen, const std::vector<std::string>& moves);
 
-		// Sets an option
-		void set_option(const std::string& /* unused */, const std::string& /* unused */) {};
+		/// <summary>
+		/// Set a registered option.
+		/// </summary>
+		void set_option(const std::string& /* unused */, const std::string& /* unused */) {}
 
 		/// <summary>
 		/// This is the main search function of Loki, and will be called by the engine manager.
 		/// </summary>
 		/// <param name="limits"></param>
-		void search(std::shared_ptr<const search_limits> limits);
+		void search(std::shared_ptr<search_limits>& limits);
 
 		/// <summary>
 		/// Perform a perft test on the current position.
