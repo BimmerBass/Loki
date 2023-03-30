@@ -197,6 +197,9 @@
     <ClInclude Include="search\search.hpp">
       <Filter>Header Files\search</Filter>
     </ClInclude>
+    <ClInclude Include="search\option.hpp">
+      <Filter>Header Files\search</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="DebugInfo.natvis" />

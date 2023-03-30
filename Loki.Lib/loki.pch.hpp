@@ -614,6 +614,7 @@ namespace loki::search
 #include "search/limits.hpp"
 #include "search/search.hpp"
 #include "search/thread.hpp"
+#include "search/option.hpp"
 #include "search/admin.hpp"
 
 #include "uci/uci.hpp"

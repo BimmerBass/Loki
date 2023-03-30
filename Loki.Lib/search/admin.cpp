@@ -24,6 +24,7 @@ namespace loki::search
 		m_slider_generator = std::make_shared<movegen::magics::slider_generator>();
 		m_eval_parameters = evaluation::make_params<evaluation::hardcoded_params>();
 		m_mainThread = std::make_unique<main_thread>(m_slider_generator, m_eval_parameters);
+		m_optManager = std::unique_ptr<const options_manager>(register_options());
 	}
 
 	void search_admin::reset()
@@ -82,5 +83,28 @@ namespace loki::search
 		utility::perft p(fen);
 
 		p.perform(d, std::cout);
+	}
+
+	void search_admin::set_option(const std::string& name, const std::string& value)
+	{
+		m_optManager->perform(name, value);
+	}
+
+	std::vector<std::string> search_admin::get_options() const
+	{
+		return m_optManager->option_strings_for_gui();
+	}
+
+	options_manager* search_admin::register_options() const
+	{
+		auto optsMan = new options_manager();
+		// Thread count.
+		optsMan->register_option(
+			"Threads",
+			main_thread::default_thread_count,
+			main_thread::min_thread_count,
+			main_thread::max_thread_count(),
+			[&](int v) { m_mainThread->set_thread_count((size_t)v); });
+		return optsMan;
 	}
 }

@@ -209,6 +209,7 @@
     <ClInclude Include="position\hashing\zobrist.hpp" />
     <ClInclude Include="position\position.hpp" />
     <ClInclude Include="search\limits.hpp" />
+    <ClInclude Include="search\option.hpp" />
     <ClInclude Include="search\pv_table.hpp" />
     <ClInclude Include="search\search.hpp" />
     <ClInclude Include="search\admin.hpp" />

@@ -182,6 +182,16 @@ namespace loki::search
 		m_workerThreads.erase(m_workerThreads.end() - n, m_workerThreads.end());
 	}
 
+	/// <summary>
+	/// Get the maximum amount of separate threads the system can spawn.
+	/// If the value can't be fetched, fall back to a default of eight.
+	/// </summary>
+	int main_thread::max_thread_count()
+	{
+		auto cnt = std::thread::hardware_concurrency();
+		return cnt <= 0 ? 8 : cnt;
+	}
+
 	void main_thread::search_internal(
 		const position::game_state& state,
 		std::shared_ptr<const search_limits> limits)

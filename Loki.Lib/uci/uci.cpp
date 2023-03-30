@@ -80,6 +80,10 @@ namespace loki::uci
 	{
 		std::cout << "id name " << sOptions["NAME"] << " " << sOptions["VERSION"] << std::endl;
 		std::cout << "id author " << sOptions["AUTHOR"] << std::endl;
+		auto opts = m_admin.get_options();
+		for (auto& opt : opts)
+			std::cout << opt << std::endl;
+
 		std::cout << "uciok" << std::endl;
 	}
 

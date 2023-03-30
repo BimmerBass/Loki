@@ -39,6 +39,7 @@ namespace loki::search
 		// "Global" resources.
 		movegen::magics::slider_generator_t m_slider_generator;
 		evaluation::evaluation_params_t m_eval_parameters;
+		std::unique_ptr<const options_manager> m_optManager;
 	public:
 		search_admin();
 
@@ -58,7 +59,7 @@ namespace loki::search
 		/// <summary>
 		/// Set a registered option.
 		/// </summary>
-		void set_option(const std::string& /* unused */, const std::string& /* unused */) {}
+		void set_option(const std::string& name, const std::string& value);
 
 		/// <summary>
 		/// This is the main search function of Loki, and will be called by the engine manager.
@@ -71,11 +72,17 @@ namespace loki::search
 		/// </summary>
 		void do_perft(eDepth d);
 
+		/// <summary>
+		/// Get a list of all option string that we should print to the uci.
+		/// </summary>
+		std::vector<std::string> get_options() const;
+
 		// Return legal moves.
 		inline const movegen::move_list_t& legal_moves() const noexcept { return m_legal_moves; }
 		inline const position::game_state& game_state() const noexcept { return m_state; }
 	private:
 		void generate_legals(position::position_t pos);
+		options_manager* register_options() const;
 	};
 
 }

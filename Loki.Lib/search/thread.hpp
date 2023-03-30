@@ -115,6 +115,11 @@ namespace loki::search
 		/// When waiting for the main thread to stop, we should also wait for the workers to stop.
 		/// </summary>
 		void wait_for_finished_search() override;
+
+		// Default amount of threads used for searching.
+		inline static constexpr int default_thread_count = 1;
+		inline static constexpr int min_thread_count = 1;
+		static int max_thread_count();
 	private:
 		void kill_last_n(size_t n);
 
