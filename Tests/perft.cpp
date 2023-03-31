@@ -16,9 +16,6 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "pch.h"
-#include "CppUnitTest.h"
-
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace loki::tests {
 
@@ -42,17 +39,20 @@ namespace loki::tests {
 			}
 
 			// Write the average NPS to the log.
-			std::erase_if(m_running_nps, [](const size_t& x) {return x == static_cast<size_t>(-1); });
-			double running_avg = 0.0;
+			size_t accumulated = 0;
 			double count = static_cast<double>(m_running_nps.size());
 
 			for (auto nps : m_running_nps) {
 				//running_avg = ((count / (count + 1.0)) * (running_avg / (count + 1.0))) + (nps / (count + 1.0));
-				running_avg += nps;
+				accumulated += nps;
 			}
-			running_avg /= count;
+			auto running_avg = static_cast<int64_t>((double)accumulated / count);
+			double spread = 0.0;
+			for (auto nps : m_running_nps)
+				spread += std::pow(static_cast<double>(nps) - static_cast<double>(running_avg), 2.0);
+			spread /= (double)m_running_nps.size();
 
-			log_file << "\n\tRunning average NPS: " << running_avg << std::endl;
+			log_file << std::fixed << "\n\tRunning average NPS: " << running_avg << " (Var: " << std::pow(spread, 2.0) << ", spread = " << spread << ")" << std::endl;
 			log_file.close();
 		}
 

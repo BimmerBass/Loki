@@ -62,7 +62,7 @@ namespace loki::position
 		/// Generate moves of the given type, for the side to move.
 		/// </summary>
 		/// <returns></returns>
-		template<movegen::MOVE_TYPE _Ty = movegen::ALL>
+		template<movegen::eMoveType _Ty = movegen::ALL>
 		const movegen::move_list_t& generate_moves();
 
 		// Checks if a square is attacked by one of the sides.

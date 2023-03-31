@@ -36,7 +36,7 @@ namespace loki::movegen
 	/// _Si: The side to generate the moves for (WHITE: Generate white's pseudo-legal moves, BLACK: Generate black's pseudo-legal moves, SIDE_NB: Generate pseudo-legal moves for the side to move)
 	/// </summary>
 	/// <returns></returns>
-	template<MOVE_TYPE _Ty, eSide _Si>
+	template<eMoveType _Ty, eSide _Si>
 	const move_list_t& move_generator::generate()
 	{
 		// Make the generator ready to generate moves.
@@ -135,7 +135,7 @@ namespace loki::movegen
 	/// Generate pawn moves.
 	/// TODO: Perhaps it would be a good idea to have a pre-calculated table of possible pawn moves..?
 	/// </summary>
-	template<eSide _S, MOVE_TYPE _Ty>
+	template<eSide _S, eMoveType _Ty>
 	void move_generator::get_pawn_moves()
 	{
 
@@ -170,12 +170,12 @@ namespace loki::movegen
 			{
 				idx = pop_bit(one_up);
 
-				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, NOT_SPECIAL, 0, 0);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 			while (two_up)
 			{
 				idx = pop_bit(two_up);
-				m_moves->add(_S == WHITE ? idx - 16 : idx + 16, idx, NOT_SPECIAL, 0, 0);
+				m_moves->add(_S == WHITE ? idx - 16 : idx + 16, idx, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 		}
 		else if constexpr (_Ty == ACTIVES)
@@ -191,14 +191,14 @@ namespace loki::movegen
 
 				if (rank(idx) == relative_top_rank)
 				{ // Promotion capture.
-					m_moves->add(idx - left_attack_origin, idx, PROMOTION, KNIGHT - 1, 0);
-					m_moves->add(idx - left_attack_origin, idx, PROMOTION, BISHOP - 1, 0);
-					m_moves->add(idx - left_attack_origin, idx, PROMOTION, ROOK - 1, 0);
-					m_moves->add(idx - left_attack_origin, idx, PROMOTION, QUEEN - 1, 0);
+					m_moves->add(idx - left_attack_origin, idx, PROMOTION, KNIGHT - 1, VALUE_ZERO);
+					m_moves->add(idx - left_attack_origin, idx, PROMOTION, BISHOP - 1, VALUE_ZERO);
+					m_moves->add(idx - left_attack_origin, idx, PROMOTION, ROOK - 1, VALUE_ZERO);
+					m_moves->add(idx - left_attack_origin, idx, PROMOTION, QUEEN - 1, VALUE_ZERO);
 				}
 				else
 				{ // Regular capture.
-					m_moves->add(idx - left_attack_origin, idx, NOT_SPECIAL, 0, 0);
+					m_moves->add(idx - left_attack_origin, idx, NOT_SPECIAL, 0, VALUE_ZERO);
 				}
 			}
 			while (right_attacks)
@@ -207,14 +207,14 @@ namespace loki::movegen
 
 				if (rank(idx) == relative_top_rank)
 				{ // Promotion capture.
-					m_moves->add(idx - right_attack_origin, idx, PROMOTION, KNIGHT - 1, 0);
-					m_moves->add(idx - right_attack_origin, idx, PROMOTION, BISHOP - 1, 0);
-					m_moves->add(idx - right_attack_origin, idx, PROMOTION, ROOK - 1, 0);
-					m_moves->add(idx - right_attack_origin, idx, PROMOTION, QUEEN - 1, 0);
+					m_moves->add(idx - right_attack_origin, idx, PROMOTION, KNIGHT - 1, VALUE_ZERO);
+					m_moves->add(idx - right_attack_origin, idx, PROMOTION, BISHOP - 1, VALUE_ZERO);
+					m_moves->add(idx - right_attack_origin, idx, PROMOTION, ROOK - 1, VALUE_ZERO);
+					m_moves->add(idx - right_attack_origin, idx, PROMOTION, QUEEN - 1, VALUE_ZERO);
 				}
 				else
 				{ // Regular capture.
-					m_moves->add(idx - right_attack_origin, idx, NOT_SPECIAL, 0, 0);
+					m_moves->add(idx - right_attack_origin, idx, NOT_SPECIAL, 0, VALUE_ZERO);
 				}
 			}
 
@@ -223,10 +223,10 @@ namespace loki::movegen
 			{
 				idx = pop_bit(promotions);
 
-				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, KNIGHT - 1, 0);
-				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, BISHOP - 1, 0);
-				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, ROOK - 1, 0);
-				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, QUEEN - 1, 0);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, KNIGHT - 1, VALUE_ZERO);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, BISHOP - 1, VALUE_ZERO);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, ROOK - 1, VALUE_ZERO);
+				m_moves->add(_S == WHITE ? idx - 8 : idx + 8, idx, PROMOTION, QUEEN - 1, VALUE_ZERO);
 			}
 
 			// 3. En-passant.
@@ -237,11 +237,11 @@ namespace loki::movegen
 
 				if ((shift<down_left>(ep_board) & pawns) != 0)
 				{
-					m_moves->add(ep_square - left_ep_origin, ep_square, ENPASSANT, 0, 0);
+					m_moves->add(ep_square - left_ep_origin, ep_square, ENPASSANT, 0, VALUE_ZERO);
 				}
 				if ((shift<down_right>(ep_board) & pawns) != 0)
 				{
-					m_moves->add(ep_square - right_ep_origin, ep_square, ENPASSANT, 0, 0);
+					m_moves->add(ep_square - right_ep_origin, ep_square, ENPASSANT, 0, VALUE_ZERO);
 				}
 			}
 		}
@@ -256,7 +256,7 @@ namespace loki::movegen
 	/// <summary>
 	/// Generate knight moves.
 	/// </summary>
-	template<eSide _S, MOVE_TYPE _Ty>
+	template<eSide _S, eMoveType _Ty>
 	void move_generator::get_knight_moves()
 	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
@@ -279,12 +279,12 @@ namespace loki::movegen
 			while (attacks)
 			{
 				auto to_sq = pop_bit(attacks);
-				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
+				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 		}
 	}
 
-	template<eSide _S, MOVE_TYPE _Ty>
+	template<eSide _S, eMoveType _Ty>
 	void move_generator::get_bishop_moves()
 	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
@@ -304,12 +304,12 @@ namespace loki::movegen
 			while (attacks)
 			{
 				auto to_sq = pop_bit(attacks);
-				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
+				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 		}
 	}
 
-	template<eSide _S, MOVE_TYPE _Ty>
+	template<eSide _S, eMoveType _Ty>
 	void move_generator::get_rook_moves()
 	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
@@ -329,12 +329,12 @@ namespace loki::movegen
 			while (attacks)
 			{
 				auto to_sq = pop_bit(attacks);
-				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
+				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 		}
 	}
 
-	template<eSide _S, MOVE_TYPE _Ty>
+	template<eSide _S, eMoveType _Ty>
 	void move_generator::get_queen_moves()
 	{
 		constexpr bitboard_t full_board = ~bitboard_t(0);
@@ -354,12 +354,12 @@ namespace loki::movegen
 			while (attacks)
 			{
 				auto to_sq = pop_bit(attacks);
-				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, 0);
+				m_moves->add(idx, to_sq, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 		}
 	}
 
-	template<eSide _S, MOVE_TYPE _Ty>
+	template<eSide _S, eMoveType _Ty>
 	void move_generator::get_king_moves()
 	{
 		constexpr eSquare kingside_castling_dest = _S == WHITE ? G1 : G8;
@@ -375,7 +375,7 @@ namespace loki::movegen
 			while (attacks)
 			{
 				auto idx = pop_bit(attacks);
-				m_moves->add(king_sq, idx, NOT_SPECIAL, 0, 0);
+				m_moves->add(king_sq, idx, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 		}
 		else if constexpr (_Ty == QUIET)
@@ -385,17 +385,17 @@ namespace loki::movegen
 			while (attacks)
 			{
 				auto idx = pop_bit(attacks);
-				m_moves->add(king_sq, idx, NOT_SPECIAL, 0, 0);
+				m_moves->add(king_sq, idx, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 
 			// FIXME: Should castling be considered a QUIET or an ACTIVE move?
 			if (can_castle<_S, _S == WHITE ? WKCA : BKCA>())
 			{
-				m_moves->add(king_sq, kingside_castling_dest, CASTLE, 0, 0);
+				m_moves->add(king_sq, kingside_castling_dest, CASTLE, 0, VALUE_ZERO);
 			}
 			if (can_castle<_S, _S == WHITE ? WQCA : BQCA>())
 			{
-				m_moves->add(king_sq, queenside_castling_dest, CASTLE, 0, 0);
+				m_moves->add(king_sq, queenside_castling_dest, CASTLE, 0, VALUE_ZERO);
 			}
 		}
 		else

@@ -29,7 +29,7 @@ namespace loki::movegen
 		struct scored_move
 		{
 			move_t move;
-			int score;
+			eValue score;
 		};
 
 		using const_iterator = std::array<scored_move, _Size>::const_iterator;
@@ -42,7 +42,7 @@ namespace loki::movegen
 			m_size = 0;
 		}
 
-		inline void add(move_t move, int score)
+		inline void add(move_t move, eValue score)
 		{
 			if (m_size >= _Size)
 			{
@@ -53,7 +53,7 @@ namespace loki::movegen
 			m_size++;
 		}
 
-		inline void add(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece, int score)
+		inline void add(size_t from_sq, size_t to_sq, size_t special, size_t promotion_piece, eValue score)
 		{
 			if (m_size >= _Size)
 			{
@@ -73,13 +73,31 @@ namespace loki::movegen
 		{
 			return m_size;
 		}
-		const scored_move& operator[](size_t idx) const
+		inline const scored_move& operator[](size_t idx) const
 		{
 			if (idx >= m_size)
 			{
 				throw e_moveList(FORMAT_EXCEPTION_MESSAGE("Index requested was bigger than the list."));
 			}
 			return m_movelist[idx];
+		}
+		inline const scored_move& at(size_t inx) const
+		{
+			if (inx >= m_size)
+				return m_movelist[m_movelist.size() - 1];
+			return m_movelist[inx];
+		}
+		inline void swap(size_t inx1, size_t inx2)
+		{
+			if (inx1 >= m_size || inx2 >= m_size)
+				throw e_moveList(FORMAT_EXCEPTION_MESSAGE(std::format("One of the requested indeces was bigger than the list. inx1 = '{}', inx2 = '{}', m_size = '{}'", inx1, inx2, m_size)));
+			auto tmp_move = m_movelist[inx1].move;
+			auto tmp_score = m_movelist[inx1].score;
+			
+			m_movelist[inx1].move = m_movelist[inx2].move;
+			m_movelist[inx1].score = m_movelist[inx2].score;
+			m_movelist[inx2].move = tmp_move;
+			m_movelist[inx2].score = tmp_score;
 		}
 
 		inline move_t find(std::string move) const

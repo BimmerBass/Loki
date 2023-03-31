@@ -70,6 +70,12 @@
     <Filter Include="Source Files\search\functions">
       <UniqueIdentifier>{9e812af1-403a-416c-8da1-c057032bb4f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ordering">
+      <UniqueIdentifier>{7b20055b-e079-48c2-97e7-6bc333989bf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ordering">
+      <UniqueIdentifier>{ff70b63d-e76f-440b-954b-c7d18a83a922}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="position\position.cpp">
@@ -119,6 +125,9 @@
     </ClCompile>
     <ClCompile Include="search\functions\root_search.cpp">
       <Filter>Source Files\search\functions</Filter>
+    </ClCompile>
+    <ClCompile Include="ordering\move_sorter.cpp">
+      <Filter>Source Files\ordering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -199,6 +208,9 @@
     </ClInclude>
     <ClInclude Include="search\option.hpp">
       <Filter>Header Files\search</Filter>
+    </ClInclude>
+    <ClInclude Include="ordering\move_sorter.hpp">
+      <Filter>Header Files\ordering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

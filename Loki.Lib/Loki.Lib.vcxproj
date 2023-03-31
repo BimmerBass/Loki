@@ -182,6 +182,7 @@
     </ClCompile>
     <ClCompile Include="movegen\magics\magics_index.cpp" />
     <ClCompile Include="movegen\move_generator.cpp" />
+    <ClCompile Include="ordering\move_sorter.cpp" />
     <ClCompile Include="position\gamestate.cpp" />
     <ClCompile Include="position\hashing\zobrist.cpp" />
     <ClCompile Include="position\position.cpp" />
@@ -204,6 +205,7 @@
     <ClInclude Include="movegen\move_generator.hpp" />
     <ClInclude Include="movegen\move_list.hpp" />
     <ClInclude Include="movegen\move_stack.hpp" />
+    <ClInclude Include="ordering\move_sorter.hpp" />
     <ClInclude Include="position\castling_rights.hpp" />
     <ClInclude Include="position\gamestate.hpp" />
     <ClInclude Include="position\hashing\zobrist.hpp" />

@@ -20,8 +20,15 @@
 #define PCH_H
 
 // add headers that you want to pre-compile here
+#include "CppUnitTest.h"
+using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+#define LOG(msg) Logger::WriteMessage(msg)
+#define LOG(msg, ...) Logger::WriteMessage(std::format(msg, __VA_ARGS__).c_str())
+
+
 #include "Loki.Lib/loki.pch.hpp"
 #include <fstream>
+#include <unordered_set>
 
 class fen_reader
 {
@@ -43,6 +50,7 @@ protected:
 			m_fens.push_back(current_fen);
 		}
 		fen_file.close();
+		LOG("Loaded {} fens from {}", m_fens.size(), m_filename);
 	}
 };
 

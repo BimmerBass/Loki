@@ -468,14 +468,14 @@ namespace loki::utility
 namespace loki::movegen
 {
 	// Constants and type declarations.
-	enum MOVE_TYPE : size_t
+	enum eMoveType : size_t
 	{
 		ACTIVES,	/* All active moves; captures, promotions etc.. */
 		QUIET,		/* All quiet moves. */
 		ALL			/* All moves. */
 	};
 
-	enum SPECIAL_MOVE : size_t
+	enum eSpecialMove : size_t
 	{
 		PROMOTION = 0,
 		ENPASSANT = 1,
@@ -492,9 +492,9 @@ namespace loki::movegen
 	{
 		return static_cast<eSquare>(move >> 10);
 	}
-	inline constexpr SPECIAL_MOVE special(move_t move) noexcept
+	inline constexpr eSpecialMove special(move_t move) noexcept
 	{
-		return static_cast<SPECIAL_MOVE>(move & 3);
+		return static_cast<eSpecialMove>(move & 3);
 	}
 	inline constexpr ePiece promotion_piece(move_t move) noexcept
 	{
@@ -609,6 +609,8 @@ namespace loki::search
 #include "evaluation/piece_square_table.hpp"
 #include "evaluation/parameters/evaluation_params.hpp"
 #include "evaluation/evaluation.hpp"
+
+#include "ordering/move_sorter.hpp"
 
 #include "search/pv_table.hpp"
 #include "search/limits.hpp"

@@ -165,7 +165,7 @@ namespace loki::uci
 					movegen::is_algebraic_move(tk) &&
 					(move = m_admin.legal_moves().find(tk)) != MOVE_NULL)
 				{
-					limits->searchmoves.add(move, 0);
+					limits->searchmoves.add(move, VALUE_ZERO);
 				}
 			}
 		}

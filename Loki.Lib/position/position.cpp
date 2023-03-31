@@ -49,7 +49,7 @@ namespace loki::position
 	/// Generate moves of the given type and side.
 	/// </summary>
 	/// <returns></returns>
-	template<movegen::MOVE_TYPE _Ty>
+	template<movegen::eMoveType _Ty>
 	const movegen::move_list_t& position::generate_moves()
 	{
 		return m_state_info->side_to_move == WHITE ?

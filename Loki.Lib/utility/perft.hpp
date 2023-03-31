@@ -45,7 +45,7 @@ namespace loki::utility
 		std::string				m_initial_fen;
 		position::position_t	m_pos;
 		size_t					m_nodes;
-		double					m_nps;
+		int64_t					m_nps;
 
 		size_t perft_test(eDepth d, std::ostream& os);
 		void perft_internal(eDepth d);

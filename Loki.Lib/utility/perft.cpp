@@ -39,7 +39,7 @@ namespace loki::utility
 	{
 		*m_pos << m_initial_fen;
 		m_nodes = 0;
-		m_nps = 0.0;
+		m_nps = 0;
 
 		return perft_test(d, os);
 	}
@@ -60,12 +60,12 @@ namespace loki::utility
 		size_t legal = 0;
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();
-
-		const auto& moves = m_pos->generate_moves<movegen::ALL>();
-
-		for (size_t i = 0; i < moves.size(); i++)
+		
+		ordering::move_sorter sorter(m_pos, false, false);
+		move_t move;
+		while (move = sorter.get_next())
 		{
-			if (!m_pos->make_move(moves[i].move))
+			if (!m_pos->make_move(move))
 				continue;
 			legal++;
 			size_t old_nodes = m_nodes;
@@ -73,16 +73,17 @@ namespace loki::utility
 			perft_internal(d - 1);
 			m_pos->undo_move();
 
-			os << std::format("[{}] {}\t---> {} nodes.\n", legal, movegen::to_string(moves[i].move), std::to_string(m_nodes - old_nodes));
+			os << std::format("[{}] {}\t---> {} nodes.\n", legal, movegen::to_string(move), std::to_string(m_nodes - old_nodes));
 		}
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> end_time = std::chrono::high_resolution_clock::now();
 		auto start = std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch().count();
 		auto end = std::chrono::time_point_cast<std::chrono::milliseconds>(end_time).time_since_epoch().count();
-		m_nps = double(m_nodes) / (double(end - start) / 1000.0);
+		auto elapsed = end - start;
+		m_nps = static_cast<int64_t>(double(m_nodes) / (double(elapsed <= 0 ? 1 : elapsed) / 1000.0));
 
 		os << "\nPerft test completed after: " << (end - start) << "ms.\n";
-		os << std::fixed << "Nodes/second: " << m_nps << "\n";
+		os << "Nodes/second: " << m_nps << "\n";
 		os << "\nNodes visited: " << m_nodes << "\n";
 
 		return m_nodes;
@@ -103,13 +104,11 @@ namespace loki::utility
 		}
 		size_t nodes = 0;
 
-		const auto& moves = m_pos->generate_moves<movegen::ALL>();
-
-		for (auto i = 0; i < moves.size(); i++)
+		ordering::move_sorter sorter(m_pos, false, false);
+		move_t move;
+		while (move = sorter.get_next())
 		{
-			auto& move = moves[i];
-
-			if (!m_pos->make_move(move.move))
+			if (!m_pos->make_move(move))
 				continue;
 			perft_internal(d - 1);
 

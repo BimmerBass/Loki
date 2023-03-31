@@ -47,7 +47,7 @@ namespace loki::movegen
 		move_generator(move_generator&& _src) noexcept;
 		move_generator& operator=(move_generator&& _src) noexcept;
 
-		template<MOVE_TYPE _Ty, eSide _Si = SIDE_NB>
+		template<eMoveType _Ty, eSide _Si = SIDE_NB>
 		const move_list_t& generate();
 
 		template<eSide _Si, ePiece _Pce>
@@ -56,17 +56,17 @@ namespace loki::movegen
 		template<eSide _Si>
 		bitboard_t all_attackers_to(eSquare sq) const noexcept;
 	private:
-		template<eSide _S, MOVE_TYPE _Ty>
+		template<eSide _S, eMoveType _Ty>
 		void get_pawn_moves();
-		template<eSide _S, MOVE_TYPE _Ty>
+		template<eSide _S, eMoveType _Ty>
 		void get_knight_moves();
-		template<eSide _S, MOVE_TYPE _Ty>
+		template<eSide _S, eMoveType _Ty>
 		void get_bishop_moves();
-		template<eSide _S, MOVE_TYPE _Ty>
+		template<eSide _S, eMoveType _Ty>
 		void get_rook_moves();
-		template<eSide _S, MOVE_TYPE _Ty>
+		template<eSide _S, eMoveType _Ty>
 		void get_queen_moves();
-		template<eSide _S, MOVE_TYPE _Ty>
+		template<eSide _S, eMoveType _Ty>
 		void get_king_moves();
 
 		// initialization methods.

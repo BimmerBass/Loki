@@ -16,9 +16,6 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "pch.h"
-#include "CppUnitTest.h"
-
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace loki::tests
 {
@@ -40,10 +37,12 @@ namespace loki::tests
 
 		TEST_METHOD(eval_balance)
 		{
+			LOG("Starting evaluation function balance test...\n");
 			read_fen_file();
 
 			for (const auto& fen : m_fens)
 			{
+
 				*m_pos << fen;
 				auto original = m_eval->score_position();
 
@@ -51,7 +50,9 @@ namespace loki::tests
 				auto flipped = m_eval->score_position();
 
 				Assert::IsTrue(original == flipped);
+				LOG("FEN: '{}'\t\t-->\t\tWhite: {}\t|\tBlack: {}", fen, int(m_pos->side_to_move() == WHITE ? original : flipped), int(m_pos->side_to_move() == WHITE ? flipped : original));
 			}
+			LOG("Evaluation passed all balance tests");
 		}
 	};
 }

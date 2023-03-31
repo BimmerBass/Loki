@@ -16,9 +16,6 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "pch.h"
-#include "CppUnitTest.h"
-
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace loki::tests
 {
@@ -40,8 +37,6 @@ namespace loki::tests
 				Assert::AreEqual(fen, generated);
 				i++;
 			}
-
-			std::cout << "Tested " << i << " FENs" << std::endl;
 		}
 
 		TEST_METHOD(test_fen_flipper)
