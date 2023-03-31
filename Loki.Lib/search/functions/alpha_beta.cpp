@@ -63,7 +63,7 @@ namespace loki::search
 		auto best_move = MOVE_NULL;
 
 		size_t legal = 0, moves_searched = 0;
-		auto new_depth = depth;
+		auto new_depth = depth - 1;
 		auto score = -VALUE_INF, best_score = -VALUE_INF;
 
 		for (const auto& sm : moves)
@@ -73,18 +73,8 @@ namespace loki::search
 				continue;
 			legal++; // Store amount of legal moves so as to not miss check-/stalemates.
 
-			// Principal variation search: Always search first move with full window, and at full depth.
-			new_depth = depth - 1;
-
-			if (moves_searched == 0)
-				score = -alpha_beta(new_depth, -beta, -alpha);
-			else
-			{
-				score = -alpha_beta(new_depth, -(alpha + 1), -alpha);
-
-				if (score > alpha) // for fail-soft: && score < beta
-					score = -alpha_beta(new_depth, -beta, -alpha);
-			}
+			// TODO: Re-implement PVS (Principal-Variation-Search) here
+			score = -alpha_beta(new_depth, -beta, -alpha);
 
 			// undo the latest move after searching.
 			m_pos->undo_move();

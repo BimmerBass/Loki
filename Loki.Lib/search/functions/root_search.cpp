@@ -46,15 +46,9 @@ namespace loki::search
 				continue;
 			legal++;
 
-			if (legal == 1)
-				score = -alpha_beta(new_depth - 1, -beta, -alpha);
-			else
-			{
-				score = -alpha_beta(new_depth - 1, -(alpha + 1), -alpha);
+			// TODO: Re-implement PVS (Principal-Variation-Search) here
+			score = -alpha_beta(new_depth - 1, -beta, -alpha);
 
-				if (score > alpha) // for fail-soft: && score < beta
-					score = -alpha_beta(new_depth - 1, -beta, -alpha);
-			}
 			m_pos->undo_move();
 
 			if (score >= beta) // Fail high
