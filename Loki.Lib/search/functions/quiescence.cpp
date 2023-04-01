@@ -16,6 +16,7 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "loki.pch.hpp"
+using namespace loki::ordering;
 
 namespace loki::search
 {
@@ -48,13 +49,13 @@ namespace loki::search
 		if (stand_pat > alpha)
 			alpha = stand_pat;
 
+		move_sorter sorter(m_pos, true, false);
 		auto score = -VALUE_INF;
-		auto& moves = generate_quiescence_moves();
+		auto move = MOVE_NULL;
 		size_t legal = 0;
 
-		for (auto& sc : moves)
+		while (move = sorter.get_next())
 		{
-			auto move = sc.move;
 			if (!m_pos->make_move(move))
 				continue;
 			legal++;

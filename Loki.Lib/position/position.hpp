@@ -105,6 +105,14 @@ namespace loki::position
 		}
 
 		/// <summary>
+		/// Get the piece on a particular square, of a particular color.
+		/// </summary>
+		inline ePiece piece_on_sq(eSquare sq, eSide s) const noexcept
+		{
+			return m_piece_list[s][sq];
+		}
+
+		/// <summary>
 		/// Get the ply we're at.
 		/// </summary>
 		inline eDepth ply() const noexcept { return static_cast<eDepth>(m_ply); }

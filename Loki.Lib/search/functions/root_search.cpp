@@ -17,6 +17,7 @@
 //
 #include "loki.pch.hpp"
 using namespace loki::movegen;
+using namespace loki::ordering;
 
 namespace loki::search
 {
@@ -29,19 +30,17 @@ namespace loki::search
 		m_info.nodes++;
 		m_pvTable.reset_for_ply(m_pos->ply());
 
-		// Generate all pseudo-legal moves and traverse the list.
-		const move_list_t& moves = m_pos->generate_moves();
-		auto best_move = MOVE_NULL;
-
+		// Setup a move_sorter responsible for generating and scoring moves, while also picking the best one for us.
+		move_sorter sorter(m_pos, false, false);
+		
+		auto move = MOVE_NULL, best_move = MOVE_NULL;
 		size_t legal = 0, moves_searched = 0;
 		auto new_depth = depth;
 		auto score = -VALUE_INF, best_score = -VALUE_INF;
 		auto raised_alpha = false;
 
-		for (const move_list_t::scored_move& sm : moves)
+		while (move = sorter.get_next())
 		{
-			auto move = sm.move;
-
 			if (!m_pos->make_move(move))
 				continue;
 			legal++;

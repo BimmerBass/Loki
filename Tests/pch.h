@@ -30,6 +30,17 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include <fstream>
 #include <unordered_set>
 
+inline const wchar_t* GetWC(const char* c)
+{
+	const size_t cSize = strlen(c) + 1;
+	wchar_t* wc = new wchar_t[cSize];
+	mbstowcs(wc, c, cSize);
+
+	return wc;
+}
+
+#define LK_WCHAR_STR(msg, ...) GetWC(std::format(msg, __VA_ARGS__).c_str())
+
 class fen_reader
 {
 public:

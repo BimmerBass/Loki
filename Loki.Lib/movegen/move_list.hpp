@@ -149,6 +149,20 @@ namespace loki::movegen
 			return *this;
 		}
 
+		/// <summary>
+		/// Check if a move exists in the move-list.
+		/// Note: This method potentially loops over all moves in the list, so use it sparingly.
+		/// </summary>
+		inline bool contains(move_t move) const
+		{
+			for (auto i = 0; i < m_size; i++)
+			{
+				if (m_movelist[i].move == move)
+					return true;
+			}
+			return false;
+		}
+
 		/*
 		Implement begin and end to allow for range-based for loops.
 		*/

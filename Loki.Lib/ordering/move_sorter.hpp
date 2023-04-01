@@ -32,7 +32,7 @@ namespace loki::ordering
 		const bool					m_is_quiescence;
 		const bool					m_perform_scoring;
 
-		size_t					m_currentInx;
+		size_t						m_currentInx;
 	public:
 		move_sorter(const position::position_t& pos, bool isQuiescence = false, bool performScoring = true);
 

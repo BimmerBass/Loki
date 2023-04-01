@@ -14,10 +14,16 @@ namespace loki::ordering
 	template<eMoveType _T>
 	void move_sorter::generate()
 	{
-		// NOTE: Although const_cast is generally considered bad practice, it is deemed okay to do here
-		// This is because position::generate_moves is a public method and we do not want anyone (and their grandma) being able to change the generated moves seeing as the returned reference is part of
-		// position's internal structure, but we trust the move_sorter class since its only objective is to score and return the moves.
-		m_moveList = const_cast<move_list_t*>(&m_pos->generate_moves());
+		// If we are in quiescence, but are in check, we still want to generate all moves in order to not miss a checkmate/stalemate.
+		if (!m_is_quiescence || m_pos->in_check())
+			m_moveList = const_cast<move_list_t*>(&m_pos->generate_moves());
+			// NOTE: Although const_cast is generally considered bad practice, it is deemed okay to do here
+			// This is because position::generate_moves is a public method and we do not want anyone (and their grandma) being able to change the generated moves seeing as the returned reference is part of
+			// position's internal structure, but we trust the move_sorter class since its only objective is to score and return the moves.
+		else
+		{
+			m_moveList = const_cast<move_list_t*>(&m_pos->generate_moves<movegen::ACTIVES>());
+		}
 		m_currentInx = 0;
 	}
 
