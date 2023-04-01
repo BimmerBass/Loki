@@ -31,7 +31,7 @@ namespace loki::search
 		m_pvTable.reset_for_ply(m_pos->ply());
 
 		// Setup a move_sorter responsible for generating and scoring moves, while also picking the best one for us.
-		move_sorter sorter(m_pos, false, false);
+		move_sorter sorter(m_pos);
 		
 		auto move = MOVE_NULL, best_move = MOVE_NULL;
 		size_t legal = 0, moves_searched = 0;

@@ -14,17 +14,19 @@ namespace loki::ordering
 	template<eMoveType _T>
 	void move_sorter::generate()
 	{
+		// NOTE: Although const_cast is generally considered bad practice, it is deemed okay to do here
+		// This is because position::generate_moves is a public method and we do not want anyone (and their grandma) being able to change the generated moves seeing as the returned reference is part of
+		// position's internal structure, but we trust the move_sorter class since its only objective is to score and return the moves.
+
 		// If we are in quiescence, but are in check, we still want to generate all moves in order to not miss a checkmate/stalemate.
 		if (!m_is_quiescence || m_pos->in_check())
 			m_moveList = const_cast<move_list_t*>(&m_pos->generate_moves());
-			// NOTE: Although const_cast is generally considered bad practice, it is deemed okay to do here
-			// This is because position::generate_moves is a public method and we do not want anyone (and their grandma) being able to change the generated moves seeing as the returned reference is part of
-			// position's internal structure, but we trust the move_sorter class since its only objective is to score and return the moves.
 		else
-		{
 			m_moveList = const_cast<move_list_t*>(&m_pos->generate_moves<movegen::ACTIVES>());
-		}
 		m_currentInx = 0;
+
+		if (m_perform_scoring)
+			scoreMoves();
 	}
 
 	move_t move_sorter::get_next()
@@ -54,13 +56,35 @@ namespace loki::ordering
 			if (m_moveList->at(inx).score > bestScore)
 			{
 				bestInx = inx;
-				bestScore = m_moveList->at(m_currentInx).score;
+				bestScore = m_moveList->at(inx).score;
 			}
 		}
 
 		// Now that we know the best index, swap it with the current index, and increment the latter.
 		if (bestInx != m_currentInx)
 			m_moveList->swap(m_currentInx, bestInx);
+	}
+
+	/// <summary>
+	/// Score the moves generated. Right now this only consists of Mvv/Lva for captures.
+	/// </summary>
+	void move_sorter::scoreMoves()
+	{
+		if (m_moveList == nullptr)
+			throw e_moveSorter("scoreMoves was called before moves were generated");
+		const static eValue victimValues[PIECE_NB] = { (eValue)100, (eValue)200, (eValue)300, (eValue)400, (eValue)500, (eValue)600 };
+
+		for (auto i = 0; i < m_moveList->size(); i++)
+		{
+			// If there is a piece of the opposite color on the destination, it is a capture
+			auto dest = to_sq(m_moveList->at(i).move);
+			auto orig = from_sq(m_moveList->at(i).move);
+			auto victim = m_pos->piece_on_sq(dest, !m_pos->side_to_move());
+			if (victim != PIECE_NB)
+				m_moveList->at(i).score = victimValues[victim] + static_cast<eValue>(PIECE_NB - m_pos->piece_on_sq(orig, m_pos->side_to_move()));
+			else if (special(m_moveList->at(i).move) == ENPASSANT) // Just for good measure :))
+				m_moveList->at(i).score = victimValues[PAWN] + static_cast<eValue>(0);
+		}
 	}
 
 #pragma region Template instantiations

@@ -60,7 +60,7 @@ namespace loki::search
 
 
 		// Set up a move_sorter which will generate all our moves, and traverse the list
-		move_sorter sorter(m_pos, false, false);
+		move_sorter sorter(m_pos);
 
 		auto move = MOVE_NULL, best_move = MOVE_NULL;
 		size_t legal = 0, moves_searched = 0;

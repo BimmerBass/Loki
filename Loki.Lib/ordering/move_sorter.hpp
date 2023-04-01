@@ -51,5 +51,6 @@ namespace loki::ordering
 
 	private:
 		void bringBestMoveFront();
+		void scoreMoves();
 	};
 }

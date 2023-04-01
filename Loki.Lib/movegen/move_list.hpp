@@ -81,7 +81,7 @@ namespace loki::movegen
 			}
 			return m_movelist[idx];
 		}
-		inline const scored_move& at(size_t inx) const
+		inline scored_move& at(size_t inx)
 		{
 			if (inx >= m_size)
 				return m_movelist[m_movelist.size() - 1];

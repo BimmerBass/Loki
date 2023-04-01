@@ -49,7 +49,7 @@ namespace loki::search
 		if (stand_pat > alpha)
 			alpha = stand_pat;
 
-		move_sorter sorter(m_pos, true, false);
+		move_sorter sorter(m_pos, true);
 		auto score = -VALUE_INF;
 		auto move = MOVE_NULL;
 		size_t legal = 0;
