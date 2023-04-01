@@ -52,6 +52,7 @@ namespace loki::search
 		std::shared_ptr<const search_limits>		m_limits;
 		_search_info								m_info;
 		util::tri_pv_table<>						m_pvTable;
+
 	protected:
 		searcher() = delete;
 		searcher(

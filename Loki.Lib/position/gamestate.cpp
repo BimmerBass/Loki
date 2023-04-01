@@ -16,7 +16,6 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "loki.pch.hpp"
-#include <map>
 
 namespace loki::position
 {
@@ -131,6 +130,7 @@ namespace loki::position
 				pos->full_move_counter = 0;
 				pos->en_passant_square = NO_SQ;
 				pos->castling_rights.clear();
+				pos->move_history->clear();
 			}
 
 			void position(game_state* pos, std::stringstream& ss)
@@ -335,6 +335,17 @@ namespace loki::position
 		return os;
 	}
 
+	game_state::game_state()
+		: piece_placements{ {0} },
+		side_to_move{ WHITE },
+		fifty_move_counter{ 0 },
+		full_move_counter{ 0 },
+		en_passant_square{ NO_SQ },
+		castling_rights{ 0 }
+	{
+		move_history = std::make_unique<movegen::move_stack<MAX_GAME_MOVES>>();
+	}
+
 	game_state::game_state(const game_state& _Other)
 		: piece_placements{ {0} },
 		side_to_move{ _Other.side_to_move },
@@ -343,10 +354,32 @@ namespace loki::position
 		en_passant_square{ _Other.en_passant_square },
 		castling_rights{ _Other.castling_rights }
 	{
+		move_history = std::make_unique<movegen::move_stack<MAX_GAME_MOVES>>(*_Other.move_history);
 		for (auto pce = PAWN; pce <= KING; pce++)
 		{
 			piece_placements[WHITE][pce] = _Other.piece_placements[WHITE][pce];
 			piece_placements[BLACK][pce] = _Other.piece_placements[BLACK][pce];
 		}
+	}
+
+	game_state& game_state::operator=(const game_state& _Other)
+	{
+		if (this != &_Other)
+		{
+			read::clear_gamestate(this);
+			side_to_move = _Other.side_to_move;
+			fifty_move_counter = _Other.fifty_move_counter;
+			full_move_counter = _Other.full_move_counter;
+			en_passant_square = _Other.en_passant_square;
+			castling_rights = _Other.castling_rights;
+
+			move_history = std::make_unique<movegen::move_stack<MAX_GAME_MOVES>>(*_Other.move_history);
+			for (auto pce = PAWN; pce <= KING; pce++)
+			{
+				piece_placements[WHITE][pce] = _Other.piece_placements[WHITE][pce];
+				piece_placements[BLACK][pce] = _Other.piece_placements[BLACK][pce];
+			}
+		}
+		return *this;
 	}
 }

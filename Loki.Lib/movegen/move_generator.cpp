@@ -40,7 +40,7 @@ namespace loki::movegen
 	const move_list_t& move_generator::generate()
 	{
 		// Make the generator ready to generate moves.
-		m_moves = &m_movelists[m_position->m_ply];
+		m_moves = &m_movelists[m_position->move_count()];
 		m_moves->clear();
 
 		// FIXME: Ugly implementation...
@@ -461,7 +461,10 @@ namespace loki::movegen
 		m_slider_generator(std::move(_src.m_slider_generator)),
 		m_movelists(_src.m_movelists),
 		m_moves(m_movelists.data() + (_src.m_moves - _src.m_movelists.data()))
-	{}
+	{
+		init_king_attacks();
+		init_knight_attacks();
+	}
 
 	move_generator& move_generator::operator=(move_generator&& _src) noexcept
 	{

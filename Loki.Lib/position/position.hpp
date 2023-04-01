@@ -29,7 +29,6 @@ namespace loki::position
 	{
 		friend class movegen::move_generator;
 	private:
-		movegen::move_stack_t<MAX_GAME_MOVES>	m_move_history;					/* The stack of moves that has led to this position. */
 		movegen::move_generator_t				m_generator;					/* The object responsible for finding all pseudo-legal moves in the position. */
 		game_state_t							m_state_info;					/* Our basic state-describing object. */
 		ePiece									m_piece_list[SIDE_NB][SQ_NB];	/* An array to easier look up pieces on specific squares. */
@@ -74,6 +73,11 @@ namespace loki::position
 		/// Will check if the current position has already been reached.
 		/// </summary>
 		bool is_repetition() const;
+
+		/// <summary>
+		/// Returns the number of moves that has been made.
+		/// </summary>
+		size_t move_count() const;
 
 		/// <summary>
 		/// Determine how many pieces of type _Pi side _Si has on the board.
@@ -159,7 +163,7 @@ namespace loki::position
 		/// Re-load this object from our internal state.
 		/// Note: This function is expensive and should only be used for loading a FEN.
 		/// </summary>
-		void reload();
+		void reload(bool clearMoveStack = true);
 
 		/// <summary>
 		/// Update the occupancy bitboards.

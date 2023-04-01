@@ -565,7 +565,6 @@ namespace loki::position
 	using zobrist_t = std::unique_ptr<zobrist>;
 	using game_state_t = std::shared_ptr<game_state>;
 	using position_t = std::shared_ptr<position>;
-	using weak_position_t = std::weak_ptr<position>;
 }
 
 namespace loki::evaluation

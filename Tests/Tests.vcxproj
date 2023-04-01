@@ -192,6 +192,7 @@
     </ClCompile>
     <ClCompile Include="fen_parser.cpp" />
     <ClCompile Include="perft.cpp" />
+    <ClCompile Include="position.cpp" />
     <ClCompile Include="search.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -37,6 +37,9 @@ namespace loki::position
 		eSquare en_passant_square = NO_SQ;
 		castle_rights castling_rights = 0;
 
+		// The moves that has been made on the board
+		movegen::move_stack_t<MAX_GAME_MOVES>	move_history;
+
 		/// <summary>
 		/// Parse a FEN position.
 		/// </summary>
@@ -54,8 +57,9 @@ namespace loki::position
 		/// </summary>
 		friend std::ostream& operator<<(std::ostream& os, const game_state& gs);
 
-		game_state() = default;
+		game_state();
 		game_state(const game_state& _Other);
+		game_state& operator=(const game_state& _Other);
 	};
 
 }

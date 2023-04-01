@@ -39,10 +39,9 @@ namespace loki::position
 
 	position::position(game_state_t&& internal_state, movegen::magics::slider_generator_t magics_index)
 	{
-		m_move_history = std::make_unique<movegen::move_stack<MAX_GAME_MOVES>>();
 		m_hashing_generator = std::make_unique<zobrist>();
 		m_state_info = std::move(internal_state);
-		reload();
+		reload(false);
 	}
 
 	/// <summary>
@@ -89,7 +88,7 @@ namespace loki::position
 		}
 
 		// irreversible data.
-		m_move_history->insert(move,
+		m_state_info->move_history->insert(move,
 			std::make_tuple(
 				piece_captured,
 				piece_moved,
@@ -169,9 +168,9 @@ namespace loki::position
 			m_state_info->castling_rights -= BKCA;
 
 		// If the castling rights has changed, update the position hash.
-		if (m_move_history->top().second.castling_rights != m_state_info->castling_rights.get())
+		if (m_state_info->move_history->top().second.castling_rights != m_state_info->castling_rights.get())
 		{
-			m_hashing_generator->toggle_castling(m_poskey, m_move_history->top().second.castling_rights);
+			m_hashing_generator->toggle_castling(m_poskey, m_state_info->move_history->top().second.castling_rights);
 			m_hashing_generator->toggle_castling(m_poskey, m_state_info->castling_rights.get());
 		}
 
@@ -214,7 +213,7 @@ namespace loki::position
 	/// <returns></returns>
 	void position::undo_move()
 	{
-		const auto& move_info = m_move_history->pop();
+		const auto& move_info = m_state_info->move_history->pop();
 		size_t origin = movegen::from_sq(move_info.first);
 		size_t destination = movegen::to_sq(move_info.first);
 		auto special_props = movegen::special(move_info.first);
@@ -400,7 +399,7 @@ namespace loki::position
 	/// <summary>
 	/// Reload our data from m_state_info
 	/// </summary>
-	void position::reload()
+	void position::reload(bool clearMoveStack)
 	{
 		// Reset all data.
 		std::fill(std::begin(m_piece_list[WHITE]), std::end(m_piece_list[WHITE]), PIECE_NB);
@@ -410,7 +409,8 @@ namespace loki::position
 		m_king_squares[WHITE] = NO_SQ;
 		m_king_squares[BLACK] = NO_SQ;
 		m_ply = 0;
-		m_move_history->clear();
+		if (clearMoveStack)
+			m_state_info->move_history->clear();
 
 		for (size_t pce = PAWN; pce <= KING; pce++)
 		{
@@ -480,14 +480,29 @@ namespace loki::position
 	/// </summary>
 	bool position::is_repetition() const
 	{
-		int i = 0;
-		while (i < m_ply)
+		if (m_state_info->move_history->size() < 3)
+			return false;
+
+		// A repetition cannot happen after the fifty-move counter has been reset.
+		//	This is because either a pawn has been moved - which cannot be undone - or a cature has been performed, which can only be "undone" by promoting a pawn, which therefore requires moving a pawn :)
+		auto start_it = m_state_info->move_history->cend() - 2; // Don't check current position :))
+		auto end_it = start_it - m_state_info->fifty_move_counter;
+		assert(start_it >= end_it);
+		
+		for (auto it = start_it; it != end_it; it--)
 		{
-			if ((m_move_history->cbegin() + i)->second.position_hash == m_poskey)
+			if ((*it).second.position_hash == m_poskey)
 				return true;
-			i++;
 		}
 		return false;
+	}
+
+	/// <summary>
+	/// Returns the number of moves that has been made.
+	/// </summary>
+	size_t position::move_count() const
+	{
+		return m_state_info->move_history->size();
 	}
 
 	/// <summary>

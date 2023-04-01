@@ -51,6 +51,8 @@ namespace loki::movegen
 		class move_stack : public utility::fast_stack<std::pair<move_t, lost_move_info>, _S>
 	{
 		EXCEPTION_CLASS(e_moveStack, e_lokiError);
+	private:
+		using base_t = utility::fast_stack<std::pair<move_t, lost_move_info>, _S>;
 	public:
 		/// <summary>
 		/// Insert an entry into the stack.
@@ -69,6 +71,10 @@ namespace loki::movegen
 
 			this->m_current_size++;
 		}
+
+		move_stack() : base_t() {}
+		move_stack(const move_stack& _O) : base_t(_O) {}
+		move_stack& operator=(const move_stack& _O) { base_t::operator=(_O); return *this; }
 	};
 }
 

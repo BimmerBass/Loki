@@ -80,7 +80,7 @@ namespace loki::utility
 		/// Get the current size of the stack.
 		/// </summary>
 		/// <returns></returns>
-		size_t size() const noexcept
+		inline size_t size() const noexcept
 		{
 			return m_current_size;
 		}

@@ -32,8 +32,14 @@ inline std::string info()
 
 int main()
 {
-	std::cout << info() << std::endl;
-	loki::uci::engine_manager manager;
-	manager.run();
-	return 0;
+	try
+	{
+		std::cout << info() << std::endl;
+		loki::uci::engine_manager manager;
+		manager.run();
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Exception caugh in main(): " << e.what() << std::endl;
+	}
 }
