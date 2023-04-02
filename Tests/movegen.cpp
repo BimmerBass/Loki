@@ -49,12 +49,12 @@ namespace loki::tests
 
 				// First check that all active moves generated exist in the list of total moves
 				for (auto& activeMove : actives)
-					Assert::IsTrue(all.contains(activeMove.move), LK_WCHAR_STR("Active move '{}' did not exist in the list of all pseudo-legal moves!", to_string(activeMove.move)));
+					Assert::IsTrue(moveListContains(all, activeMove.move), LK_WCHAR_STR("Active move '{}' did not exist in the list of all pseudo-legal moves!", to_string(activeMove.move)));
 				// Next, check that no active moves are missing, by ensuring ALL actives in the list of total moves exist in the actives list.
 				for (auto& genericMove : all)
 				{
 					if (is_active(pos, genericMove.move))
-						Assert::IsTrue(actives.contains(genericMove.move),
+						Assert::IsTrue(moveListContains(actives, genericMove.move),
 							LK_WCHAR_STR("Active move '{}' did not exist in the list of all active moves!", to_string(genericMove.move)));
 				}
 
@@ -69,6 +69,14 @@ namespace loki::tests
 			// Active moves are defined as changing the material on the board. Thus they are en-passant, promotions or captures.
 			if (spc == ENPASSANT || spc == PROMOTION || pos->piece_on_sq(to_sq(move), !pos->side_to_move()) != PIECE_NB)
 				return true;
+			return false;
+		}
+
+		bool moveListContains(const move_list_t& ml, move_t move) const
+		{
+			for (auto& m : ml)
+				if (m.move == move)
+					return true;
 			return false;
 		}
 	};

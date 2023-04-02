@@ -51,15 +51,18 @@ namespace loki::tests
 			std::unordered_set<move_t> moves_generated;
 			for (auto& fen : m_fens)
 			{
+				eValue score = -VALUE_INF, best_score = VALUE_INF;
 				LOG("Starting move_sorter test for position:\t{}", fen);
 				(*pos) << fen;
 				ordering::move_sorter sorter(pos, false, scoring);
 				move_list_t moves(pos->generate_moves()); /* Copy the moves, so we're can compare with results from move_sorter */
 
 				move_t move;
-				while (move = sorter.get_next())
+				while (move = sorter.get_next(&score))
 				{
+					Assert::IsTrue(score <= best_score, LK_WCHAR_STR("get_next returned higher scored move than the best one so far. score = '{}' while best_score = '{}'", (int)score, (int)best_score));
 					Assert::IsTrue(moves_generated.find(move) == moves_generated.end(), L"'sorter' fetched same move twice!");
+					best_score = score;
 					moves_generated.insert(move);
 				}
 

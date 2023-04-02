@@ -29,7 +29,7 @@ namespace loki::ordering
 			scoreMoves();
 	}
 
-	move_t move_sorter::get_next()
+	move_t move_sorter::get_next(eValue* score)
 	{
 		if (m_moveList == nullptr)
 			generate();
@@ -40,6 +40,8 @@ namespace loki::ordering
 		if (m_perform_scoring)
 			bringBestMoveFront();
 		
+		if (score != nullptr)
+			*score = m_moveList->at(m_currentInx).score;
 		return m_moveList->at(m_currentInx++).move;
 	}
 

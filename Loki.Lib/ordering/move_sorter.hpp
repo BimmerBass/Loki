@@ -44,11 +44,10 @@ namespace loki::ordering
 		void generate();
 
 		/// <summary>
-		/// Fetch the next move.
+		/// Fetch the next move. If score is not nullptr, assign the score of the move.
 		/// </summary>
 		/// <returns>The next highest scored move.</returns>
-		move_t get_next();
-
+		move_t get_next(eValue* score = nullptr);
 	private:
 		void bringBestMoveFront();
 		void scoreMoves();
