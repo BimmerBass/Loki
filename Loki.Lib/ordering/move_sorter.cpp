@@ -76,14 +76,19 @@ namespace loki::ordering
 
 		for (auto i = 0; i < m_moveList->size(); i++)
 		{
-			// If there is a piece of the opposite color on the destination, it is a capture
-			auto dest = to_sq(m_moveList->at(i).move);
-			auto orig = from_sq(m_moveList->at(i).move);
-			auto victim = m_pos->piece_on_sq(dest, !m_pos->side_to_move());
-			if (victim != PIECE_NB)
-				m_moveList->at(i).score = victimValues[victim] + static_cast<eValue>(PIECE_NB - m_pos->piece_on_sq(orig, m_pos->side_to_move()));
-			else if (special(m_moveList->at(i).move) == ENPASSANT) // Just for good measure :))
-				m_moveList->at(i).score = victimValues[PAWN] + static_cast<eValue>(0);
+			auto& sm = m_moveList->at(i);
+			auto victim = m_pos->piece_on_sq(to_sq(sm.move), !m_pos->side_to_move());
+			auto attacker = m_pos->piece_on_sq(from_sq(sm.move), m_pos->side_to_move());
+
+			if (special(sm.move) == ENPASSANT)
+				sm.score = victimValues[PAWN] - (eValue)PAWN;
+			else if (victim != PIECE_NB)
+			{
+				sm.score = victimValues[victim] - (eValue)attacker;
+				// For promotions we score it as the capture itself, along with the material gained from the new piece while losing the pawn.
+				if (special(sm.move) == PROMOTION)
+					sm.score += victimValues[promotion_piece(sm.move)] - victimValues[PAWN];
+			}
 		}
 	}
 
