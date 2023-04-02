@@ -27,11 +27,11 @@ namespace loki::search
 	eValue searcher::root_search(eDepth depth, eValue alpha, eValue beta)
 	{
 		assert(depth > 0);
-		m_info.nodes++;
-		m_pvTable.reset_for_ply(m_pos->ply());
+		m_stats->info.nodes++;
+		m_stats->pvTable->reset_for_ply(m_pos->ply());
 
 		// Setup a move_sorter responsible for generating and scoring moves, while also picking the best one for us.
-		move_sorter sorter(m_pos);
+		move_sorter sorter(m_pos, m_stats);
 		
 		auto move = MOVE_NULL, best_move = MOVE_NULL;
 		size_t legal = 0, moves_searched = 0;
@@ -52,10 +52,14 @@ namespace loki::search
 
 			if (score >= beta) // Fail high
 			{
-				m_info.fail_high++;
+				m_stats->info.fail_high++;
 				if (legal == 1)
-					m_info.fail_high_first++;
+					m_stats->info.fail_high_first++;
 
+				// Even though it seems a bit silly applying killer moves in the root, it makes sense if Loki ever gets aspiration windows, since identifying a window
+				// that is too narrow will likely go faster.
+				if (m_pos->type_of(move) == QUIET)
+					m_stats->update_quiet_heuristics(move, m_pos->ply());
 				return beta;
 			}
 
@@ -69,7 +73,7 @@ namespace loki::search
 					alpha = score;
 					raised_alpha = true;
 
-					m_pvTable.update_pv((eDepth)m_pos->ply(), best_move);
+					m_stats->pvTable->update_pv(m_pos->ply(), best_move);
 				}
 			}
 

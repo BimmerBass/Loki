@@ -189,6 +189,7 @@
     <ClCompile Include="search\functions\alpha_beta.cpp" />
     <ClCompile Include="search\functions\quiescence.cpp" />
     <ClCompile Include="search\functions\root_search.cpp" />
+    <ClCompile Include="search\statistics.cpp" />
     <ClCompile Include="search\thread.cpp" />
     <ClCompile Include="search\search.cpp" />
     <ClCompile Include="search\admin.cpp" />
@@ -215,6 +216,7 @@
     <ClInclude Include="search\pv_table.hpp" />
     <ClInclude Include="search\search.hpp" />
     <ClInclude Include="search\admin.hpp" />
+    <ClInclude Include="search\statistics.hpp" />
     <ClInclude Include="search\thread.hpp" />
     <ClInclude Include="uci\uci.hpp" />
     <ClInclude Include="utility\check_input.hpp" />

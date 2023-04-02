@@ -26,8 +26,8 @@ namespace loki::search
 	eValue searcher::quiescence(eValue alpha, eValue beta)
 	{
 		assert(beta > alpha);
-		m_info.nodes++;
-		if ((m_info.nodes & 2047) == 0)
+		m_stats->info.nodes++;
+		if ((m_stats->info.nodes & 2047) == 0)
 			check_stopped_search();
 		if (m_stop->load(std::memory_order_relaxed))
 			return VALUE_ZERO;
@@ -49,7 +49,7 @@ namespace loki::search
 		if (stand_pat > alpha)
 			alpha = stand_pat;
 
-		move_sorter sorter(m_pos, true);
+		move_sorter sorter(m_pos, m_stats, true);
 		auto score = -VALUE_INF;
 		auto move = MOVE_NULL;
 		size_t legal = 0;
@@ -68,9 +68,9 @@ namespace loki::search
 
 			if (score >= beta)
 			{
-				m_info.fail_high++;
+				m_stats->info.fail_high++;
 				if (legal == 1)
-					m_info.fail_high_first++;
+					m_stats->info.fail_high_first++;
 				return beta;
 			}
 			if (score > alpha)

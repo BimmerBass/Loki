@@ -23,7 +23,7 @@ namespace loki::search::util
 	/// <summary>
 	/// Modern implementation of a Triangular PV table (ref: https://www.chessprogramming.org/Triangular_PV-Table)
 	/// </summary>
-	template<size_t _Depth = 0>
+	template<size_t _Depth>
 	class tri_pv_table
 	{
 	public:

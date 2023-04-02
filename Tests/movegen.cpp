@@ -44,7 +44,7 @@ namespace loki::tests
 			for (auto& fen : m_fens)
 			{
 				(*pos) << fen;
-				auto actives = move_list_t(pos->generate_moves<movegen::ACTIVES>()); // Ensure proper copy.
+				auto actives = move_list_t(pos->generate_moves<movegen::ACTIVE>()); // Ensure proper copy.
 				auto all = pos->generate_moves();
 
 				// First check that all active moves generated exist in the list of total moves

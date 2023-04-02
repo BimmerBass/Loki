@@ -48,13 +48,14 @@ namespace loki::tests
 			auto pos = position::position::create_position(
 				std::make_shared<position::game_state>(),
 				m_sliderGen);
+			auto stats = std::make_shared<search::search_stats>();
 			std::unordered_set<move_t> moves_generated;
 			for (auto& fen : m_fens)
 			{
 				eValue score = -VALUE_INF, best_score = VALUE_INF;
 				LOG("Starting move_sorter test for position:\t{}", fen);
 				(*pos) << fen;
-				ordering::move_sorter sorter(pos, false, scoring);
+				ordering::move_sorter sorter(pos, stats, false, scoring);
 				move_list_t moves(pos->generate_moves()); /* Copy the moves, so we're can compare with results from move_sorter */
 
 				move_t move;

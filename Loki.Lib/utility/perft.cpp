@@ -61,7 +61,7 @@ namespace loki::utility
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();
 		
-		ordering::move_sorter sorter(m_pos, false, false);
+		ordering::move_sorter sorter(m_pos, nullptr, false, false);
 		move_t move;
 		while (move = sorter.get_next())
 		{
@@ -104,7 +104,7 @@ namespace loki::utility
 		}
 		size_t nodes = 0;
 
-		ordering::move_sorter sorter(m_pos, false, false);
+		ordering::move_sorter sorter(m_pos, nullptr, false, false);
 		move_t move;
 		while (move = sorter.get_next())
 		{

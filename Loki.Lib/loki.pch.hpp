@@ -470,7 +470,7 @@ namespace loki::movegen
 	// Constants and type declarations.
 	enum eMoveType : size_t
 	{
-		ACTIVES,	/* All active moves; captures, promotions etc.. */
+		ACTIVE,	/* All active moves; captures, promotions etc.. */
 		QUIET,		/* All quiet moves. */
 		ALL			/* All moves. */
 	};
@@ -588,6 +588,15 @@ namespace loki::search
 		MAIN_THREAD = 0
 	};
 	ENABLE_INCR_OPERATORS_ON(eThreadId);
+
+	class search_stats;
+
+	namespace util
+	{
+		template<size_t _Depth = 0>
+		class tri_pv_table;
+		using tri_pv_table_t = std::unique_ptr<tri_pv_table<>>;
+	}
 }
 
 #include "position/castling_rights.hpp"
@@ -613,6 +622,7 @@ namespace loki::search
 
 #include "search/pv_table.hpp"
 #include "search/limits.hpp"
+#include "search/statistics.hpp"
 #include "search/search.hpp"
 #include "search/thread.hpp"
 #include "search/option.hpp"

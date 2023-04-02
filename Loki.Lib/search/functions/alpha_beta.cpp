@@ -30,19 +30,19 @@ namespace loki::search
 
 		// Reset PV in case we return due to pruning.
 		// If we do that, none of the moves in this PV should be used by the parent.
-		m_pvTable.reset_for_ply(m_pos->ply());
+		m_stats->pvTable->reset_for_ply(m_pos->ply());
 
-		if (m_pos->ply() >= m_info.selective_depth)
-			m_info.selective_depth = m_pos->ply();
+		if (m_pos->ply() >= m_stats->info.selective_depth)
+			m_stats->info.selective_depth = m_pos->ply();
 
 		// If we've reached sufficient depth, return quiescent evaluation.
 		if (depth <= 0)
 			return quiescence(alpha, beta);
 
 		// We've entered a new node.
-		m_info.nodes++;
+		m_stats->info.nodes++;
 
-		if ((m_info.nodes & 2047) == 0)
+		if ((m_stats->info.nodes & 2047) == 0)
 			check_stopped_search();
 
 		if (m_stop->load(std::memory_order_relaxed))
@@ -60,7 +60,7 @@ namespace loki::search
 
 
 		// Set up a move_sorter which will generate all our moves, and traverse the list
-		move_sorter sorter(m_pos);
+		move_sorter sorter(m_pos, m_stats);
 
 		auto move = MOVE_NULL, best_move = MOVE_NULL;
 		size_t legal = 0, moves_searched = 0;
@@ -87,9 +87,13 @@ namespace loki::search
 			if (score >= beta) /* Fail-hard beta cutoff */
 			{
 				// Update statistics
-				m_info.fail_high++;
+				m_stats->info.fail_high++;
 				if (moves_searched == 1)
-					m_info.fail_high_first++;
+					m_stats->info.fail_high_first++;
+
+				// Update our heuristics for quiet moves.
+				if (m_pos->type_of(move) == QUIET)
+					m_stats->update_quiet_heuristics(move, m_pos->ply());
 
 				return beta;
 			}
@@ -101,7 +105,7 @@ namespace loki::search
 				if (score > alpha)
 				{
 					alpha = score;
-					m_pvTable.update_pv((eDepth)m_pos->ply(), best_move);
+					m_stats->pvTable->update_pv(m_pos->ply(), best_move);
 				}
 			}
 		}

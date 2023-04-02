@@ -24,20 +24,7 @@ namespace loki::search
 	{
 	protected:
 		EXCEPTION_CLASS(e_searcherError, e_lokiError);
-
-	private:
-		/// <summary>
-		/// Information gathered during the search.
-		/// </summary>
-		struct _search_info
-		{
-			eDepth selective_depth;		/* The actual depth that the thread has searched due to reductions, pruning and extensions */
-			uint64_t nodes;				/* The total amount of nodes, the thread has analyzed */
-			uint64_t fail_high;			/* The amount of nodes where the thread has found a beta-cutoff */
-			uint64_t fail_high_first;	/* The amount of nodes where the thread has found a beta-cutoff on the first tested move. fail_high_first / fail_high gives an indication on the quality of the move ordering */
-		};
-		inline static constexpr _search_info ZeroInfo{ static_cast<eDepth>(0), 0, 0, 0 };
-
+		
 		// Ctor params
 	protected:
 		const eThreadId								m_threadId;
@@ -50,9 +37,7 @@ namespace loki::search
 		position::position_t						m_pos;
 		std::unique_ptr<evaluation::evaluator>		m_eval;
 		std::shared_ptr<const search_limits>		m_limits;
-		_search_info								m_info;
-		util::tri_pv_table<>						m_pvTable;
-
+		std::shared_ptr<search_stats>				m_stats;
 	protected:
 		searcher() = delete;
 		searcher(

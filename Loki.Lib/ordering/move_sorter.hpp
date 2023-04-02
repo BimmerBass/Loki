@@ -26,15 +26,25 @@ namespace loki::ordering
 	class move_sorter
 	{
 		EXCEPTION_CLASS(e_moveSorter, e_lokiError);
-	private:
-		const position::position_t&	m_pos;
-		move_list_t*				m_moveList;
-		const bool					m_is_quiescence;
-		const bool					m_perform_scoring;
+		using stats_t = search::search_stats;
 
-		size_t						m_currentInx;
+		inline static constexpr eValue CaptureScale = (eValue)12000;
+		inline static constexpr eValue KillerOneScale = (eValue)11000;
+		inline static constexpr eValue KillerTwoScale = (eValue)10000;
+	private:
+		const position::position_t&		m_pos;
+		const std::shared_ptr<stats_t>& m_stats;
+		move_list_t*					m_moveList;
+		const bool						m_is_quiescence;
+		const bool						m_perform_scoring;
+
+		size_t							m_currentInx;
 	public:
-		move_sorter(const position::position_t& pos, bool isQuiescence = false, bool performScoring = true);
+		move_sorter(
+			const position::position_t&		pos,
+			const std::shared_ptr<stats_t>&	stats,
+			bool							isQuiescence = false,
+			bool							performScoring = true);
 
 		/// <summary>
 		/// Generate the moves and score them.

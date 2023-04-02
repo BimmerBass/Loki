@@ -32,14 +32,13 @@ namespace loki::search
 		m_pos{nullptr},
 		m_eval{nullptr},
 		m_limits{nullptr},
-		m_info{ZeroInfo},
-		m_pvTable{},
 		m_stop{stop}
 	{
 		if (m_sliderGenerator == nullptr)
 			throw e_searcherError("Parameter 'sliderGen' was nullptr");
 		if (m_evalParams == nullptr)
 			throw e_searcherError("Parameter 'params' was nullptr");
+		m_stats = std::make_shared<search_stats>();
 	}
 
 	/// <summary>
@@ -58,25 +57,25 @@ namespace loki::search
 		for (auto current_depth = (eDepth)1; current_depth <= m_limits->depth; current_depth++)
 		{
 			// Clear the previous search's selective depth.
-			m_info.selective_depth = ZERO_DEPTH;
+			m_stats->info.selective_depth = ZERO_DEPTH;
 
 			auto score = root_search(depth_for_thread(current_depth), -VALUE_INF, VALUE_INF);
 
 			if (m_stop->load(std::memory_order_relaxed))
 			{
 				if (current_depth == 1) /* If this is the first iteration we need to fetch the best move here. */
-					best_move = m_pvTable.get_for_depth(m_pos->ply()).second[0];
+					best_move = m_stats->pvTable->get_for_depth(m_pos->ply()).second[0];
 				break;
 			}
 
 			if (m_threadId == MAIN_THREAD)
 			{
-				auto nodes = m_info.nodes;
+				auto nodes = m_stats->info.nodes;
 				auto time_to_depth = now() - m_limits->start_time;
 				if (time_to_depth <= 0)
 					time_to_depth = 1;
 				auto nodes_per_sec = static_cast<int64_t>((double)nodes / (time_to_depth / 1000.0));
-				auto pv = m_pvTable.get_for_depth(m_pos->ply());
+				auto pv = m_stats->pvTable->get_for_depth(m_pos->ply());
 				best_move = pv.second[0];
 
 				// Print info.
@@ -88,7 +87,7 @@ namespace loki::search
 				else
 					ss << "cp " << to_centipawns(score);
 				ss << " depth " << current_depth
-					<< " seldepth " << m_info.selective_depth
+					<< " seldepth " << m_stats->info.selective_depth
 					<< " nodes " << nodes
 					<< " nps " << nodes_per_sec
 					<< " time " << time_to_depth;
@@ -121,9 +120,7 @@ namespace loki::search
 			std::make_shared<position::game_state>(state),
 			m_sliderGenerator);
 		m_eval = std::make_unique<evaluation::evaluator>(m_pos, m_evalParams);
-
-		m_info = ZeroInfo;
-		m_pvTable.clear();
+		m_stats->clear();
 
 		if (m_threadId == MAIN_THREAD)
 			m_stop->store(false, std::memory_order_relaxed);
@@ -136,7 +133,7 @@ namespace loki::search
 	{
 		if (m_pos->in_check())
 			return m_pos->generate_moves<movegen::ALL>();
-		return m_pos->generate_moves<movegen::ACTIVES>();
+		return m_pos->generate_moves<movegen::ACTIVE>();
 	}
 
 	/// <summary>

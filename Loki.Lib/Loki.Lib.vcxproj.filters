@@ -129,6 +129,9 @@
     <ClCompile Include="ordering\move_sorter.cpp">
       <Filter>Source Files\ordering</Filter>
     </ClCompile>
+    <ClCompile Include="search\statistics.cpp">
+      <Filter>Source Files\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.hpp">
@@ -211,6 +214,9 @@
     </ClInclude>
     <ClInclude Include="ordering\move_sorter.hpp">
       <Filter>Header Files\ordering</Filter>
+    </ClInclude>
+    <ClInclude Include="search\statistics.hpp">
+      <Filter>Header Files\search</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

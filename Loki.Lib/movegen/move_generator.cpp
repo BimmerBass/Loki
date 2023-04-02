@@ -32,7 +32,7 @@ namespace loki::movegen
 
 	/// <summary>
 	/// Generate a list of pseudo-legal moves in the position.
-	/// _Ty: The type of moves (ACTIVES: Generally moves that change the material situation, QUIETS: Moves that does not change material on the board, ALL: All pseudo-legal moves)
+	/// _Ty: The type of moves (ACTIVE: Generally moves that change the material situation, QUIETS: Moves that does not change material on the board, ALL: All pseudo-legal moves)
 	/// _Si: The side to generate the moves for (WHITE: Generate white's pseudo-legal moves, BLACK: Generate black's pseudo-legal moves, SIDE_NB: Generate pseudo-legal moves for the side to move)
 	/// </summary>
 	/// <returns></returns>
@@ -178,7 +178,7 @@ namespace loki::movegen
 				m_moves->add(_S == WHITE ? idx - 16 : idx + 16, idx, NOT_SPECIAL, 0, VALUE_ZERO);
 			}
 		}
-		else if constexpr (_Ty == ACTIVES)
+		else if constexpr (_Ty == ACTIVE)
 		{
 			// 1: Attacks.
 			bitboard_t left_attacks = shift<up_left>(pawns) & opponent_pieces;
@@ -249,7 +249,7 @@ namespace loki::movegen
 		{
 			// Call this function for active moves as well as quiets.
 			get_pawn_moves<_S, QUIET>();
-			get_pawn_moves<_S, ACTIVES>();
+			get_pawn_moves<_S, ACTIVE>();
 		}
 	}
 
@@ -272,7 +272,7 @@ namespace loki::movegen
 			auto idx = pop_bit(knight_board);
 			bitboard_t attacks =
 				knight_attacks[idx] &
-				(_Ty == ACTIVES ? opponent_pieces : full_board) &
+				(_Ty == ACTIVE ? opponent_pieces : full_board) &
 				(_Ty == QUIET ? ~opponent_pieces : full_board) &
 				~friendly_pieces;
 
@@ -297,7 +297,7 @@ namespace loki::movegen
 			auto idx = pop_bit(bishops);
 			bitboard_t attacks =
 				m_slider_generator->bishop_attacks(idx, friendly_pieces | opponent_pieces) &
-				(_Ty == ACTIVES ? opponent_pieces : full_board) &
+				(_Ty == ACTIVE ? opponent_pieces : full_board) &
 				(_Ty == QUIET ? ~opponent_pieces : full_board) &
 				~friendly_pieces;
 
@@ -322,7 +322,7 @@ namespace loki::movegen
 			auto idx = pop_bit(rooks);
 			bitboard_t attacks =
 				m_slider_generator->rook_attacks(idx, friendly_pieces | opponent_pieces) &
-				(_Ty == ACTIVES ? opponent_pieces : full_board) &
+				(_Ty == ACTIVE ? opponent_pieces : full_board) &
 				(_Ty == QUIET ? ~opponent_pieces : full_board) &
 				~friendly_pieces;
 
@@ -347,7 +347,7 @@ namespace loki::movegen
 			auto idx = pop_bit(queens);
 			bitboard_t attacks =
 				m_slider_generator->queen_attacks(idx, friendly_pieces | opponent_pieces) &
-				(_Ty == ACTIVES ? opponent_pieces : full_board) &
+				(_Ty == ACTIVE ? opponent_pieces : full_board) &
 				(_Ty == QUIET ? ~opponent_pieces : full_board) &
 				~friendly_pieces;
 
@@ -368,7 +368,7 @@ namespace loki::movegen
 		bitboard_t friendly_pieces = m_position->m_all_pieces[_S];
 		bitboard_t opponent_pieces = m_position->m_all_pieces[!_S];
 
-		if constexpr (_Ty == ACTIVES)
+		if constexpr (_Ty == ACTIVE)
 		{
 			bitboard_t attacks = king_attacks[king_sq] & ~friendly_pieces & opponent_pieces;
 
@@ -401,7 +401,7 @@ namespace loki::movegen
 		else
 		{
 			get_king_moves<_S, QUIET>();
-			get_king_moves<_S, ACTIVES>();
+			get_king_moves<_S, ACTIVE>();
 		}
 	}
 #pragma endregion
@@ -481,55 +481,55 @@ namespace loki::movegen
 	}
 
 #pragma region Explicit template instantiations
-	template void move_generator::get_pawn_moves<WHITE, ACTIVES>();
+	template void move_generator::get_pawn_moves<WHITE, ACTIVE>();
 	template void move_generator::get_pawn_moves<WHITE, QUIET>();
 	template void move_generator::get_pawn_moves<WHITE, ALL>();
-	template void move_generator::get_pawn_moves<BLACK, ACTIVES>();
+	template void move_generator::get_pawn_moves<BLACK, ACTIVE>();
 	template void move_generator::get_pawn_moves<BLACK, QUIET>();
 	template void move_generator::get_pawn_moves<BLACK, ALL>();
 
-	template void move_generator::get_knight_moves<WHITE, ACTIVES>();
+	template void move_generator::get_knight_moves<WHITE, ACTIVE>();
 	template void move_generator::get_knight_moves<WHITE, QUIET>();
 	template void move_generator::get_knight_moves<WHITE, ALL>();
-	template void move_generator::get_knight_moves<BLACK, ACTIVES>();
+	template void move_generator::get_knight_moves<BLACK, ACTIVE>();
 	template void move_generator::get_knight_moves<BLACK, QUIET>();
 	template void move_generator::get_knight_moves<BLACK, ALL>();
 
-	template void move_generator::get_bishop_moves<WHITE, ACTIVES>();
+	template void move_generator::get_bishop_moves<WHITE, ACTIVE>();
 	template void move_generator::get_bishop_moves<WHITE, QUIET>();
 	template void move_generator::get_bishop_moves<WHITE, ALL>();
-	template void move_generator::get_bishop_moves<BLACK, ACTIVES>();
+	template void move_generator::get_bishop_moves<BLACK, ACTIVE>();
 	template void move_generator::get_bishop_moves<BLACK, QUIET>();
 	template void move_generator::get_bishop_moves<BLACK, ALL>();
 
-	template void move_generator::get_rook_moves<WHITE, ACTIVES>();
+	template void move_generator::get_rook_moves<WHITE, ACTIVE>();
 	template void move_generator::get_rook_moves<WHITE, QUIET>();
 	template void move_generator::get_rook_moves<WHITE, ALL>();
-	template void move_generator::get_rook_moves<BLACK, ACTIVES>();
+	template void move_generator::get_rook_moves<BLACK, ACTIVE>();
 	template void move_generator::get_rook_moves<BLACK, QUIET>();
 	template void move_generator::get_rook_moves<BLACK, ALL>();
 
-	template void move_generator::get_queen_moves<WHITE, ACTIVES>();
+	template void move_generator::get_queen_moves<WHITE, ACTIVE>();
 	template void move_generator::get_queen_moves<WHITE, QUIET>();
 	template void move_generator::get_queen_moves<WHITE, ALL>();
-	template void move_generator::get_queen_moves<BLACK, ACTIVES>();
+	template void move_generator::get_queen_moves<BLACK, ACTIVE>();
 	template void move_generator::get_queen_moves<BLACK, QUIET>();
 	template void move_generator::get_queen_moves<BLACK, ALL>();
 
-	template void move_generator::get_king_moves<WHITE, ACTIVES>();
+	template void move_generator::get_king_moves<WHITE, ACTIVE>();
 	template void move_generator::get_king_moves<WHITE, QUIET>();
 	template void move_generator::get_king_moves<WHITE, ALL>();
-	template void move_generator::get_king_moves<BLACK, ACTIVES>();
+	template void move_generator::get_king_moves<BLACK, ACTIVE>();
 	template void move_generator::get_king_moves<BLACK, QUIET>();
 	template void move_generator::get_king_moves<BLACK, ALL>();
 
-	template const move_list_t& move_generator::generate<ACTIVES, WHITE>();
+	template const move_list_t& move_generator::generate<ACTIVE, WHITE>();
 	template const move_list_t& move_generator::generate<QUIET, WHITE>();
 	template const move_list_t& move_generator::generate<ALL, WHITE>();
-	template const move_list_t& move_generator::generate<ACTIVES, BLACK>();
+	template const move_list_t& move_generator::generate<ACTIVE, BLACK>();
 	template const move_list_t& move_generator::generate<QUIET, BLACK>();
 	template const move_list_t& move_generator::generate<ALL, BLACK>();
-	template const move_list_t& move_generator::generate<ACTIVES, SIDE_NB>();
+	template const move_list_t& move_generator::generate<ACTIVE, SIDE_NB>();
 	template const move_list_t& move_generator::generate<QUIET, SIDE_NB>();
 	template const move_list_t& move_generator::generate<ALL, SIDE_NB>();
 

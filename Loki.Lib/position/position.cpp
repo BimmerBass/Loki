@@ -506,6 +506,16 @@ namespace loki::position
 	}
 
 	/// <summary>
+	/// Determine the type of a given move.
+	/// </summary>
+	movegen::eMoveType position::type_of(move_t move) const
+	{
+		// We have defined actives as being either captures/en-passant's or promotions.
+		bool isCapture = m_piece_list[!m_state_info->side_to_move][to_sq(move)] != PIECE_NB;
+		return (isCapture || special(move) == ENPASSANT || special(move) == PROMOTION) ? ACTIVE : QUIET;
+	}
+
+	/// <summary>
 	/// Get a copy of the internal state.
 	/// NOTE: Use this function sparingly because the copy is expensive.
 	/// </summary>
@@ -564,7 +574,7 @@ namespace loki::position
 	template bool position::square_attacked<WHITE>(eSquare) const noexcept;
 	template bool position::square_attacked<BLACK>(eSquare) const noexcept;
 
-	template const movegen::move_list_t& position::generate_moves<movegen::ACTIVES>();
+	template const movegen::move_list_t& position::generate_moves<movegen::ACTIVE>();
 	template const movegen::move_list_t& position::generate_moves<movegen::QUIET>();
 	template const movegen::move_list_t& position::generate_moves<movegen::ALL>();
 #pragma endregion

@@ -3,8 +3,12 @@ using namespace loki::movegen;
 
 namespace loki::ordering
 {
-	move_sorter::move_sorter(const position::position_t& pos, bool isQuiescence, bool performScoring)
-		: m_pos(pos), m_is_quiescence(isQuiescence), m_perform_scoring(performScoring), m_moveList{nullptr}, m_currentInx{0}
+	move_sorter::move_sorter(
+		const position::position_t&		pos,
+		const std::shared_ptr<stats_t>&	stats,
+		bool							isQuiescence,
+		bool							performScoring)
+		: m_pos(pos), m_stats(stats), m_is_quiescence(isQuiescence), m_perform_scoring(performScoring), m_moveList{nullptr}, m_currentInx{0}
 	{}
 
 	/// <summary>
@@ -22,7 +26,7 @@ namespace loki::ordering
 		if (!m_is_quiescence || m_pos->in_check())
 			m_moveList = const_cast<move_list_t*>(&m_pos->generate_moves());
 		else
-			m_moveList = const_cast<move_list_t*>(&m_pos->generate_moves<movegen::ACTIVES>());
+			m_moveList = const_cast<move_list_t*>(&m_pos->generate_moves<movegen::ACTIVE>());
 		m_currentInx = 0;
 
 		if (m_perform_scoring)
@@ -79,17 +83,29 @@ namespace loki::ordering
 		for (auto i = 0; i < m_moveList->size(); i++)
 		{
 			auto& sm = m_moveList->at(i);
-			auto victim = m_pos->piece_on_sq(to_sq(sm.move), !m_pos->side_to_move());
-			auto attacker = m_pos->piece_on_sq(from_sq(sm.move), m_pos->side_to_move());
-
-			if (special(sm.move) == ENPASSANT)
-				sm.score = victimValues[PAWN] - (eValue)PAWN;
-			else if (victim != PIECE_NB)
+			if (m_pos->type_of(sm.move) == ACTIVE)
 			{
-				sm.score = victimValues[victim] - (eValue)attacker;
-				// For promotions we score it as the capture itself, along with the material gained from the new piece while losing the pawn.
-				if (special(sm.move) == PROMOTION)
-					sm.score += victimValues[promotion_piece(sm.move)] - victimValues[PAWN];
+				auto victim = m_pos->piece_on_sq(to_sq(sm.move), !m_pos->side_to_move());
+				auto attacker = m_pos->piece_on_sq(from_sq(sm.move), m_pos->side_to_move());
+
+				if (special(sm.move) == ENPASSANT)
+					sm.score = victimValues[PAWN] - (eValue)PAWN;
+				else if (victim != PIECE_NB)
+				{
+					sm.score = victimValues[victim] - (eValue)attacker;
+					// For promotions we score it as the capture itself, along with the material gained from the new piece while losing the pawn.
+					if (special(sm.move) == PROMOTION)
+						sm.score += victimValues[promotion_piece(sm.move)] - victimValues[PAWN];
+				}
+				sm.score += CaptureScale;
+			}
+			else
+			{
+				// Apply killers.
+				if (sm.move == m_stats->ply_stats(m_pos->ply())->killers.first)
+					sm.score = KillerOneScale;
+				else if (sm.move == m_stats->ply_stats(m_pos->ply())->killers.second)
+					sm.score = KillerTwoScale;
 			}
 		}
 	}
@@ -97,6 +113,6 @@ namespace loki::ordering
 #pragma region Template instantiations
 	template void move_sorter::generate<ALL>();
 	template void move_sorter::generate<QUIET>();
-	template void move_sorter::generate<ACTIVES>();
+	template void move_sorter::generate<ACTIVE>();
 #pragma endregion
 }

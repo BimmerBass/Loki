@@ -80,6 +80,11 @@ namespace loki::position
 		size_t move_count() const;
 
 		/// <summary>
+		/// Determine the type of a given move.
+		/// </summary>
+		movegen::eMoveType type_of(move_t move) const;
+
+		/// <summary>
 		/// Determine how many pieces of type _Pi side _Si has on the board.
 		/// </summary>
 		template<eSide _Si, ePiece _Pi> requires (_Si == WHITE || _Si == BLACK) && (_Pi >= 0 && _Pi <= 4)
