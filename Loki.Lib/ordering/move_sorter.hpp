@@ -29,8 +29,6 @@ namespace loki::ordering
 		using stats_t = search::search_stats;
 
 		inline static constexpr eValue CaptureScale = (eValue)12000;
-		inline static constexpr eValue KillerOneScale = (eValue)11000;
-		inline static constexpr eValue KillerTwoScale = (eValue)10000;
 	private:
 		const position::position_t&		m_pos;
 		const std::shared_ptr<stats_t>& m_stats;

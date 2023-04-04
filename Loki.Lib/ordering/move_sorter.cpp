@@ -103,9 +103,9 @@ namespace loki::ordering
 			{
 				// Apply killers.
 				if (sm.move == m_stats->ply_stats(m_pos->ply())->killers.first)
-					sm.score = KillerOneScale;
+					sm.score = CaptureScale - 1;
 				else if (sm.move == m_stats->ply_stats(m_pos->ply())->killers.second)
-					sm.score = KillerTwoScale;
+					sm.score = CaptureScale - 2;
 			}
 		}
 	}
