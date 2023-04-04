@@ -38,8 +38,12 @@ namespace loki::search
 			std::pair<move_t, move_t> killers;
 		};
 		inline static constexpr _depthBasedStats ZeroStats{{MOVE_NULL, MOVE_NULL}};
+		
+		// Indexed by side-to-move, from-square, to-square
+		using history_table_t = utility::NDimensionalArray<eValue, SIDE_NB, SQ_NB, SQ_NB>;
 	private:
 		std::array<_depthBasedStats, MAX_DEPTH>		m_plyStats;
+		history_table_t								m_historyTable;
 	public:
 		util::tri_pv_table_t						pvTable;
 		_search_info								info;
@@ -47,7 +51,8 @@ namespace loki::search
 		search_stats();
 
 		inline _depthBasedStats* ply_stats(eDepth ply)	{ return &m_plyStats[ply]; }
-		void update_quiet_heuristics(move_t bestMove, eDepth ply);
+		inline eValue history_score(eSide side, eSquare fromSq, eSquare toSq) const { return m_historyTable[side][fromSq][toSq]; }
+		void update_quiet_heuristics(const position::position_t& pos, move_t bestMove, eDepth ply);
 		void clear();
 	private:
 		void update_killers(move_t newBest, eDepth ply);

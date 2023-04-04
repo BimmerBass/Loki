@@ -149,7 +149,7 @@ namespace loki {
 		ZERO_DEPTH = 0,
 		MAX_DEPTH = 100
 	};
-	ENABLE_BASE_OPERATORS_ON(eDepth);
+	ENABLE_FULL_OPERATORS_ON(eDepth);
 	ENABLE_INCR_OPERATORS_ON(eDepth);
 	
 	/// <summary>
@@ -613,6 +613,7 @@ namespace loki::search
 #include "utility/fast_stack.hpp"
 #include "utility/perft.hpp"
 #include "utility/textutil.hpp"
+#include "utility/n_dim_array.hpp"
 
 #include "evaluation/piece_square_table.hpp"
 #include "evaluation/parameters/evaluation_params.hpp"

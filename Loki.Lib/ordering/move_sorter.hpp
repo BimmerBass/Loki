@@ -28,7 +28,7 @@ namespace loki::ordering
 		EXCEPTION_CLASS(e_moveSorter, e_lokiError);
 		using stats_t = search::search_stats;
 
-		inline static constexpr eValue CaptureScale = (eValue)12000;
+		inline static constexpr eValue CaptureScale = (eValue)12003; // If the second killer is available, it'll be given score = 120001, just one higher than the history threshold.
 	private:
 		const position::position_t&		m_pos;
 		const std::shared_ptr<stats_t>& m_stats;

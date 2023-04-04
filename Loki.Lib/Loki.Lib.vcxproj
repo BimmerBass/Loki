@@ -222,6 +222,7 @@
     <ClInclude Include="utility\check_input.hpp" />
     <ClInclude Include="utility\exception.hpp" />
     <ClInclude Include="utility\fast_stack.hpp" />
+    <ClInclude Include="utility\n_dim_array.hpp" />
     <ClInclude Include="utility\operators.hpp" />
     <ClInclude Include="utility\perft.hpp" />
     <ClInclude Include="utility\textutil.hpp" />

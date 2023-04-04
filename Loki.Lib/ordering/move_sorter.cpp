@@ -106,6 +106,13 @@ namespace loki::ordering
 					sm.score = CaptureScale - 1;
 				else if (sm.move == m_stats->ply_stats(m_pos->ply())->killers.second)
 					sm.score = CaptureScale - 2;
+				else
+				{
+					// If the move wasn't a killer, score it with the history table.
+					auto fromSq = from_sq(sm.move);
+					auto toSq = to_sq(sm.move);
+					sm.score = m_stats->history_score(m_pos->side_to_move(), fromSq, toSq);
+				}
 			}
 		}
 	}

@@ -218,6 +218,9 @@
     <ClInclude Include="search\statistics.hpp">
       <Filter>Header Files\search</Filter>
     </ClInclude>
+    <ClInclude Include="utility\n_dim_array.hpp">
+      <Filter>Header Files\utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="DebugInfo.natvis" />

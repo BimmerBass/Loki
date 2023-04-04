@@ -93,7 +93,7 @@ namespace loki::search
 
 				// Update our heuristics for quiet moves.
 				if (m_pos->type_of(move) == QUIET)
-					m_stats->update_quiet_heuristics(move, m_pos->ply());
+					m_stats->update_quiet_heuristics(m_pos, move, m_pos->ply());
 
 				return beta;
 			}

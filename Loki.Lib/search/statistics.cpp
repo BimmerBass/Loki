@@ -22,15 +22,21 @@ namespace loki::search
 	search_stats::search_stats() : m_plyStats{}, info{ZeroInfo}
 	{
 		pvTable = std::make_unique<util::tri_pv_table<>>();
+		m_historyTable.fill(VALUE_ZERO);
 	}
 
 	/// <summary>
 	/// Update the heuristics for quiet moves based on the best move from a search at a given depth.
 	/// </summary>
-	void search_stats::update_quiet_heuristics(move_t bestMove, eDepth ply)
+	void search_stats::update_quiet_heuristics(const position::position_t& pos, move_t bestMove, eDepth ply)
 	{
 		// Currently, the only heuristic we use is the killer moves.
 		update_killers(bestMove, ply);
+
+		// Update history.
+		auto history_update = std::min(ply * ply, (size_t)400);
+		auto& val = m_historyTable[pos->side_to_move()][from_sq(bestMove)][to_sq(bestMove)];
+		val = std::clamp(val + (eValue)history_update, (eValue)-12000, (eValue)12000);
 	}
 
 	/// <summary>
@@ -39,6 +45,7 @@ namespace loki::search
 	void search_stats::clear()
 	{
 		m_plyStats.fill(ZeroStats);
+		m_historyTable.fill(VALUE_ZERO);
 		pvTable->clear();
 		info = ZeroInfo;
 	}
