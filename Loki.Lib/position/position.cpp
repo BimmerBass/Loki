@@ -480,18 +480,13 @@ namespace loki::position
 	/// </summary>
 	bool position::is_repetition() const
 	{
-		if (m_state_info->move_history->size() < 3)
-			return false;
+		auto dist = m_state_info->fifty_move_counter;
+		int history_ply = m_state_info->move_history->size();
 
-		// A repetition cannot happen after the fifty-move counter has been reset.
-		//	This is because either a pawn has been moved - which cannot be undone - or a cature has been performed, which can only be "undone" by promoting a pawn, which therefore requires moving a pawn :)
-		auto start_it = m_state_info->move_history->cend() - 2; // Don't check current position :))
-		auto end_it = start_it - m_state_info->fifty_move_counter;
-		assert(start_it >= end_it);
-		
-		for (auto it = start_it; it != end_it; it--)
+		for (auto i = history_ply - 2; i >= 0 && i >= history_ply - dist; i -= 2)
 		{
-			if ((*it).second.position_hash == m_poskey)
+			auto& entry = *(m_state_info->move_history->cbegin() + i);
+			if (entry.second.position_hash == m_poskey)
 				return true;
 		}
 		return false;
