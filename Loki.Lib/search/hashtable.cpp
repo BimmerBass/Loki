@@ -22,7 +22,7 @@ namespace loki::search
 	/// <summary>
 	/// Initialize the table with sizeMB size (megabytes).
 	/// </summary>
-	transposition_table::transposition_table(size_t sizeMB)
+	transposition_table::transposition_table(size_t sizeMB) : m_currentAge(0)
 	{
 		resize(sizeMB);
 	}
@@ -42,7 +42,8 @@ namespace loki::search
 	{
 		auto upperEntryBound = from_mb(sizeMB) / sizeof(hash_entry);
 		m_entryCount = nearest_pow2(upperEntryBound);
-		m_table = std::make_unique<hash_entry[]>(m_entryCount);
+		m_slotCount = m_entryCount / slot_size;
+		m_table = std::make_unique<slot_t[]>(m_slotCount);
 		
 		clear();
 	}
@@ -52,29 +53,45 @@ namespace loki::search
 	/// </summary>
 	void transposition_table::clear()
 	{
-		for (auto i = 0; i < m_entryCount; i++)
-			m_table[i].clear();
+		m_currentAge = 0;
+		for (auto i = 0; i < m_slotCount; i++)
+		{
+			for (auto entryInx = 0; entryInx < slot_size; entryInx++)
+				m_table[i].at(entryInx).clear();
+		}
+	}
+
+	/// <summary>
+	/// Increment the age, making sure to stay under max_age
+	/// </summary>
+	void transposition_table::increment_age() noexcept
+	{
+		if (m_currentAge < max_age)
+			m_currentAge++;
 	}
 
 	/// <summary>
 	/// Probe the table for entries matching the key.
 	/// If none are found, return false
-	/// NOTE:
 	/// </summary>
 	bool transposition_table::probe(const hashkey_t& key, const eDepth& ply, move_t& move, eValue& score, eDepth& depth, ttFlag& flag) const
 	{
-		if (m_entryCount <= 0)
+		if (m_slotCount <= 0)
 			return false;
-		auto potentialMatch = &m_table[key & (m_entryCount - 1)];
+		auto potentialMatch = &m_table[key & (m_slotCount - 1)];
 
-		// Match!
-		if (potentialMatch->key() == (key ^ potentialMatch->hash()))
+		// Always attempt to match on the depth-preferred bucket first.
+		for (auto entryInx = 0; entryInx < slot_size; entryInx++)
 		{
-			move = (move_t)potentialMatch->move();
-			score = value_from_tt((eValue)potentialMatch->score(), ply);
-			depth = (eDepth)potentialMatch->depth();
-			flag = (ttFlag)potentialMatch->flag();
-			return true;
+			auto& current = potentialMatch->at(entryInx);
+			if (current.key() == (key ^ current.hash()))
+			{
+				move = (move_t)current.move();
+				score = value_from_tt((eValue)current.score(), ply);
+				depth = (eDepth)current.depth();
+				flag = (ttFlag)current.flag();
+				return true;
+			}
 		}
 		return false;
 	}
@@ -84,9 +101,23 @@ namespace loki::search
 	/// </summary>
 	void transposition_table::store(const hashkey_t& key, const eDepth& ply, move_t move, eValue score, eDepth depth, ttFlag flag)
 	{
-		if (m_entryCount <= 0)
+		if (m_slotCount <= 0)
 			return;
-		auto entry = &m_table[key & (m_entryCount - 1)];
-		entry->set(key, move, value_to_tt(score, ply), depth, flag, 0);
+		auto slot = &m_table[key & (m_slotCount - 1)];
+		//entry->set(key, move, value_to_tt(score, ply), depth, flag, 0);
+
+		// 1. Check if we can replace depth/age preferred entry.
+		if (depth >= slot->at(0).depth() - 1 || m_currentAge > slot->at(0).age())
+		{
+			auto age = m_currentAge;
+			if (m_currentAge >= max_age)
+				age = max_age - (key & 1); // Subtract random number so we allow replacements even when we exceed the age limit.
+
+			slot->at(0).set(key, move, value_to_tt(score, ply), depth, flag, static_cast<uint8_t>(age));
+		}
+		else
+		{
+			slot->at(1).set(key, move, value_to_tt(score, ply), depth, flag, m_currentAge);
+		}
 	}
 }

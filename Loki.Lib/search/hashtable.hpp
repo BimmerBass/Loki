@@ -19,13 +19,19 @@
 
 namespace loki::search
 {
+	/// <summary>
+	/// transposition_table holds a two-bucket hash table.
+	/// The first bucket features a depth/age based replacement scheme, whereas the other one is always replace.
+	/// </summary>
 	class transposition_table
 	{
 		EXCEPTION_CLASS(e_transpositionTable, e_lokiError);
 	private:
-		std::unique_ptr<hash_entry[]> m_table;
-		size_t m_entryCount;
-
+		inline static constexpr size_t max_age = static_cast<size_t>(std::numeric_limits<uint8_t>::max());
+		inline static constexpr size_t slot_size = 2;
+		using slot_t = std::array<hash_entry, slot_size>;
+		std::unique_ptr<slot_t[]> m_table;
+		size_t m_entryCount, m_slotCount, m_currentAge;
 	public:
 		transposition_table(size_t sizeMB = default_size);
 
@@ -35,7 +41,7 @@ namespace loki::search
 		bool probe(const hashkey_t& key, const eDepth& ply, move_t& move, eValue& score, eDepth& depth, ttFlag& flag) const;
 		void store(const hashkey_t& key, const eDepth& ply, move_t move, eValue score, eDepth depth, ttFlag flag);
 		void clear();
-
+		void increment_age() noexcept;
 
 		inline static constexpr size_t min_size_mb = 1;
 		inline static constexpr size_t max_size_mb = 8192;

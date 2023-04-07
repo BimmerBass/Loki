@@ -114,6 +114,7 @@ namespace loki::search
 		std::shared_ptr<const search_limits> limits)
 	{
 		// Begin searching with the main thread.
+		m_hashTable->increment_age();
 		search_thread::begin_search(state, limits);
 
 		for (auto& thread : m_workerThreads)

@@ -598,7 +598,7 @@ namespace loki::search
 		using tri_pv_table_t = std::unique_ptr<tri_pv_table<>>;
 	}
 
-	enum ttFlag : uint16_t
+	enum ttFlag : uint8_t
 	{
 		FLAG_ALPHA = 0,
 		FLAG_BETA = 1,

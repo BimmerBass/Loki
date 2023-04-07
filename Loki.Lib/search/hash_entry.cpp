@@ -22,7 +22,7 @@ namespace loki::search
 	/// <summary>
 	/// Set the data in the entry.
 	/// </summary>
-	void hash_entry::set(hashkey_t key, uint16_t move, int16_t score, uint16_t depth, uint16_t flag, uint16_t age) noexcept
+	void hash_entry::set(hashkey_t key, uint16_t move, int16_t score, uint16_t depth, uint8_t flag, uint8_t age) noexcept
 	{
 		m_data.move = move;
 		m_data.score = score;

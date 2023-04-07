@@ -55,7 +55,7 @@ namespace loki::tests
 				eValue score = -VALUE_INF, best_score = VALUE_INF;
 				LOG("Starting move_sorter test for position:\t{}", fen);
 				(*pos) << fen;
-				ordering::move_sorter sorter(pos, stats, false, scoring);
+				auto sorter = ordering::move_sorter::make_regular_scorer(pos, stats, MOVE_NULL, scoring);
 				move_list_t moves(pos->generate_moves()); /* Copy the moves, so we're can compare with results from move_sorter */
 
 				move_t move;

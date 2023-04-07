@@ -64,21 +64,22 @@ namespace loki::search
 			uint16_t move;
 			int16_t score;
 			uint16_t depth;
-			int16_t flag : 8, age : 8;
+			uint8_t flag;
+			uint8_t age;
 		};
 	private:
 		__entryData m_data;
 		uint64_t m_key;
 	public:
-		void set(hashkey_t key, uint16_t move, int16_t score, uint16_t depth, uint16_t flag, uint16_t age) noexcept;
+		void set(hashkey_t key, uint16_t move, int16_t score, uint16_t depth, uint8_t flag, uint8_t age) noexcept;
 		void clear() noexcept;
 
 		auto key() const noexcept { return m_key; }
 		auto move() const noexcept { return m_data.move; }
 		auto score() const noexcept { return m_data.score; }
 		auto depth() const noexcept { return m_data.depth; }
-		auto flag() const noexcept { return (int8_t)m_data.flag; }
-		auto age() const noexcept { return (int8_t)m_data.age; }
+		auto flag() const noexcept { return m_data.flag; }
+		auto age() const noexcept { return m_data.age; }
 
 		auto hash() const noexcept
 		{
