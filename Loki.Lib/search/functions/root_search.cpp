@@ -30,8 +30,15 @@ namespace loki::search
 		m_stats->info.nodes++;
 		m_stats->pvTable->reset_for_ply(m_pos->ply());
 
+		// Transposition table probing. For a root search we will only use this for move ordering.
+		move_t ttMove = MOVE_NULL;
+		eValue ttScore = VALUE_ZERO;
+		eDepth ttDepth = ZERO_DEPTH;
+		ttFlag ttFlag = NO_FLAG;
+		m_hashTable->probe(m_pos->position_hash(), m_pos->ply(), ttMove, ttScore, ttDepth, ttFlag);
+
 		// Setup a move_sorter responsible for generating and scoring moves, while also picking the best one for us.
-		move_sorter sorter(m_pos, m_stats);
+		auto sorter = move_sorter::make_regular_scorer(m_pos, m_stats, ttMove);
 		
 		auto move = MOVE_NULL, best_move = MOVE_NULL;
 		size_t legal = 0, moves_searched = 0;
@@ -60,6 +67,8 @@ namespace loki::search
 				// that is too narrow will likely go faster.
 				if (m_pos->type_of(move) == QUIET)
 					m_stats->update_quiet_heuristics(m_pos, move, m_pos->ply());
+				m_hashTable->store(m_pos->position_hash(), m_pos->ply(), move, beta, depth, FLAG_BETA);
+
 				return beta;
 			}
 
@@ -88,6 +97,12 @@ namespace loki::search
 			else
 				return VALUE_ZERO;
 		}
+
+		if (raised_alpha)
+			m_hashTable->store(m_pos->position_hash(), m_pos->ply(), best_move, alpha, depth, FLAG_EXACT);
+		else
+			m_hashTable->store(m_pos->position_hash(), m_pos->ply(), best_move, alpha, depth, FLAG_ALPHA);
+		
 		return alpha;
 	}
 }

@@ -20,8 +20,8 @@
 
 namespace loki::search
 {
-	search_thread::search_thread(eThreadId threadId, const movegen::magics::slider_generator_t& sliderGen, const evaluation::evaluation_params_t& params, std::shared_ptr<std::atomic_bool> stop) :
-		searcher(threadId, sliderGen, params, stop),
+	search_thread::search_thread(eThreadId threadId, const movegen::magics::slider_generator_t& sliderGen, const evaluation::evaluation_params_t& params, ttPtr_t& hashTable, std::shared_ptr<std::atomic_bool> stop) :
+		searcher(threadId, sliderGen, params, hashTable, stop),
 		m_state{},
 		m_limits{nullptr},
 		m_sleep(true),
@@ -92,9 +92,9 @@ namespace loki::search
 		m_cv.notify_one();
 	}
 
-	main_thread::main_thread(const movegen::magics::slider_generator_t& sliderGen, const evaluation::evaluation_params_t& params)
-		: _stopFlag(), search_thread(MAIN_THREAD, sliderGen, params, m_stopFlag),
-		m_sliderGen(sliderGen), m_evalParams(params), m_workerThreads{}, m_quitPtr{nullptr}
+	main_thread::main_thread(const movegen::magics::slider_generator_t& sliderGen, const evaluation::evaluation_params_t& params, ttPtr_t& hashTable)
+		: _stopFlag(), search_thread(MAIN_THREAD, sliderGen, params, hashTable, m_stopFlag),
+		m_sliderGen(sliderGen), m_evalParams(params), m_workerThreads{}, m_quitPtr{nullptr}, m_hashTable{hashTable}
 	{
 	}
 
@@ -164,7 +164,7 @@ namespace loki::search
 		while (m_workerThreads.size() < count)
 		{
 			eThreadId last_id = m_workerThreads.empty() ? MAIN_THREAD : m_workerThreads.back()->Id();
-			auto new_thread = std::make_unique<search_thread>(last_id++, m_sliderGen, m_evalParams, m_stopFlag);
+			auto new_thread = std::make_unique<search_thread>(last_id++, m_sliderGen, m_evalParams, m_hashTable, m_stopFlag);
 			m_workerThreads.push_back(std::move(new_thread));
 		}
 	}
@@ -204,5 +204,14 @@ namespace loki::search
 		{
 			m_quitPtr = std::current_exception();
 		}
+	}
+
+	uint64_t main_thread::get_nodes()
+	{
+		auto nodes = search_thread::get_nodes();
+
+		for (auto& thread : m_workerThreads)
+			nodes += thread->get_nodes();
+		return nodes;
 	}
 }

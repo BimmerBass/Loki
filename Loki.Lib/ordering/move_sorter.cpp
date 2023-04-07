@@ -3,14 +3,6 @@ using namespace loki::movegen;
 
 namespace loki::ordering
 {
-	move_sorter::move_sorter(
-		const position::position_t&		pos,
-		const std::shared_ptr<stats_t>&	stats,
-		bool							isQuiescence,
-		bool							performScoring)
-		: m_pos(pos), m_stats(stats), m_is_quiescence(isQuiescence), m_perform_scoring(performScoring), m_moveList{nullptr}, m_currentInx{0}
-	{}
-
 	/// <summary>
 	/// Generate the moves and score them.
 	/// TODO: Perhaps the template argument should be moved up to cover the entire class?
@@ -83,7 +75,14 @@ namespace loki::ordering
 		for (auto i = 0; i < m_moveList->size(); i++)
 		{
 			auto& sm = m_moveList->at(i);
-			if (m_pos->type_of(sm.move) == ACTIVE)
+
+			// If the move is the one we found from the transposition table, score it highest.
+			if (sm.move == m_ttMove)
+			{
+				sm.score = HashTableScore;
+			}
+			// Captures / Active moves scoring
+			else if (m_pos->type_of(sm.move) == ACTIVE)
 			{
 				auto victim = m_pos->piece_on_sq(to_sq(sm.move), !m_pos->side_to_move());
 				auto attacker = m_pos->piece_on_sq(from_sq(sm.move), m_pos->side_to_move());
@@ -99,6 +98,7 @@ namespace loki::ordering
 				}
 				sm.score += CaptureScale;
 			}
+			// Quiet move scoring
 			else
 			{
 				// Apply killers.
@@ -116,6 +116,15 @@ namespace loki::ordering
 			}
 		}
 	}
+
+	move_sorter::move_sorter(
+		const position::position_t& pos,
+		const std::shared_ptr<stats_t>& stats,
+		move_t							ttMove,
+		bool							isQuiescence,
+		bool							performScoring)
+		: m_pos(pos), m_stats(stats), m_is_quiescence(isQuiescence), m_perform_scoring(performScoring), m_moveList{ nullptr }, m_currentInx{ 0 }, m_ttMove(ttMove)
+	{}
 
 #pragma region Template instantiations
 	template void move_sorter::generate<ALL>();

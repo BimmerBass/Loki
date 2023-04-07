@@ -40,6 +40,7 @@ namespace loki::search
 		movegen::magics::slider_generator_t m_slider_generator;
 		evaluation::evaluation_params_t m_eval_parameters;
 		std::unique_ptr<const options_manager> m_optManager;
+		std::shared_ptr<transposition_table> m_hashTable;
 	public:
 		search_admin();
 

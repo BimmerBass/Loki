@@ -32,6 +32,7 @@ namespace loki::search
 		const movegen::magics::slider_generator_t	m_sliderGenerator;
 		const evaluation::evaluation_params_t		m_evalParams;
 		std::shared_ptr<std::atomic_bool>			m_stop; /* Controlled by the main-thread */
+		ttPtr_t										m_hashTable;
 
 		// The thread's own params
 		position::position_t						m_pos;
@@ -41,14 +42,19 @@ namespace loki::search
 	protected:
 		searcher() = delete;
 		searcher(
-			eThreadId threadId,
-			const movegen::magics::slider_generator_t& sliderGen,
-			const evaluation::evaluation_params_t& params,
-			std::shared_ptr<std::atomic_bool> stop);
+			eThreadId									threadId,
+			const movegen::magics::slider_generator_t&	sliderGen,
+			const evaluation::evaluation_params_t&		params,
+			ttPtr_t&									hashTable,
+			std::shared_ptr<std::atomic_bool>			stop);
 
 		void search(
 			const position::game_state& state,
 			std::shared_ptr<const search_limits>& limits);
+	
+	public:
+		virtual uint64_t get_nodes() { return m_stats->info.nodes; }
+
 	private:
 		void check_stopped_search();	
 		void preprocess_search(

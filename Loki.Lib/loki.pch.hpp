@@ -597,6 +597,17 @@ namespace loki::search
 		class tri_pv_table;
 		using tri_pv_table_t = std::unique_ptr<tri_pv_table<>>;
 	}
+
+	enum ttFlag : uint16_t
+	{
+		FLAG_ALPHA = 0,
+		FLAG_BETA = 1,
+		FLAG_EXACT = 2,
+		NO_FLAG = 3
+	};
+
+	class transposition_table;
+	using ttPtr_t = std::shared_ptr<transposition_table>;
 }
 
 #include "position/castling_rights.hpp"
@@ -621,6 +632,8 @@ namespace loki::search
 
 #include "ordering/move_sorter.hpp"
 
+#include "search/hash_entry.hpp"
+#include "search/hashtable.hpp"
 #include "search/pv_table.hpp"
 #include "search/limits.hpp"
 #include "search/statistics.hpp"

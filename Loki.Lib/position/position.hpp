@@ -85,6 +85,11 @@ namespace loki::position
 		movegen::eMoveType type_of(move_t move) const;
 
 		/// <summary>
+		/// Get the hash key for the position
+		/// </summary>
+		hashkey_t position_hash() const noexcept { return m_poskey; }
+
+		/// <summary>
 		/// Determine how many pieces of type _Pi side _Si has on the board.
 		/// </summary>
 		template<eSide _Si, ePiece _Pi> requires (_Si == WHITE || _Si == BLACK) && (_Pi >= 0 && _Pi <= 4)

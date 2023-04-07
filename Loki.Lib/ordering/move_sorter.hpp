@@ -29,21 +29,17 @@ namespace loki::ordering
 		using stats_t = search::search_stats;
 
 		inline static constexpr eValue CaptureScale = (eValue)12003; // If the second killer is available, it'll be given score = 120001, just one higher than the history threshold.
+		inline static constexpr eValue HashTableScore = (eValue)100000;
 	private:
 		const position::position_t&		m_pos;
 		const std::shared_ptr<stats_t>& m_stats;
 		move_list_t*					m_moveList;
+		const move_t					m_ttMove;
 		const bool						m_is_quiescence;
 		const bool						m_perform_scoring;
 
 		size_t							m_currentInx;
 	public:
-		move_sorter(
-			const position::position_t&		pos,
-			const std::shared_ptr<stats_t>&	stats,
-			bool							isQuiescence = false,
-			bool							performScoring = true);
-
 		/// <summary>
 		/// Generate the moves and score them.
 		/// TODO: Perhaps the template argument should be moved up to cover the entire class?
@@ -56,8 +52,31 @@ namespace loki::ordering
 		/// </summary>
 		/// <returns>The next highest scored move.</returns>
 		move_t get_next(eValue* score = nullptr);
+
+		inline static move_sorter make_regular_scorer(
+			const position::position_t& pos,
+			const std::shared_ptr<stats_t>& stats,
+			move_t							ttMove,
+			bool							performScoring = true)
+		{
+			return move_sorter(pos, stats, ttMove, false, performScoring);
+		}
+		inline static move_sorter make_qsearch_scorer(
+			const position::position_t& pos,
+			const std::shared_ptr<stats_t>& stats,
+			bool							performScoring = true)
+		{
+			return move_sorter(pos, stats, MOVE_NULL, true, performScoring);
+		}
 	private:
 		void bringBestMoveFront();
 		void scoreMoves();
+
+		move_sorter(
+			const position::position_t& pos,
+			const std::shared_ptr<stats_t>& stats,
+			move_t							ttMove,
+			bool							isQuiescence = false,
+			bool							performScoring = true);
 	};
 }

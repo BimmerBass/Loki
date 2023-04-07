@@ -23,13 +23,15 @@ namespace loki::search
 	{
 		m_slider_generator = std::make_shared<movegen::magics::slider_generator>();
 		m_eval_parameters = evaluation::make_params<evaluation::hardcoded_params>();
-		m_mainThread = std::make_unique<main_thread>(m_slider_generator, m_eval_parameters);
+		m_hashTable = std::make_shared<transposition_table>();
+		m_mainThread = std::make_unique<main_thread>(m_slider_generator, m_eval_parameters, m_hashTable);
 		m_optManager = std::unique_ptr<const options_manager>(register_options());
 	}
 
 	void search_admin::reset()
 	{
 		set_position(START_FEN, {});
+		m_hashTable->clear();
 	}
 
 	void search_admin::set_position(std::string fen, const std::vector<std::string>& moves)
@@ -105,6 +107,14 @@ namespace loki::search
 			main_thread::min_thread_count,
 			main_thread::max_thread_count(),
 			[&](int v) { m_mainThread->set_thread_count((size_t)v); });
+		// Hash table size.
+		optsMan->register_option(
+			"Hash",
+			transposition_table::default_size,
+			transposition_table::min_size_mb,
+			transposition_table::max_size_mb,
+			[&](int s) { m_hashTable->resize((size_t)s); });
+
 		return optsMan;
 	}
 }

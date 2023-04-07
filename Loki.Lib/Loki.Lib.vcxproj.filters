@@ -132,6 +132,12 @@
     <ClCompile Include="search\statistics.cpp">
       <Filter>Source Files\search</Filter>
     </ClCompile>
+    <ClCompile Include="search\hashtable.cpp">
+      <Filter>Source Files\search</Filter>
+    </ClCompile>
+    <ClCompile Include="search\hash_entry.cpp">
+      <Filter>Source Files\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loki.pch.hpp">
@@ -220,6 +226,12 @@
     </ClInclude>
     <ClInclude Include="utility\n_dim_array.hpp">
       <Filter>Header Files\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="search\hashtable.hpp">
+      <Filter>Header Files\search</Filter>
+    </ClInclude>
+    <ClInclude Include="search\hash_entry.hpp">
+      <Filter>Header Files\search</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

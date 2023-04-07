@@ -34,10 +34,11 @@ namespace loki::search
 	public:
 		search_thread() = delete;
 		search_thread(
-			eThreadId threadId,
-			const movegen::magics::slider_generator_t& sliderGen,
-			const evaluation::evaluation_params_t& params,
-			std::shared_ptr<std::atomic_bool> stop);
+			eThreadId									threadId,
+			const movegen::magics::slider_generator_t&	sliderGen,
+			const evaluation::evaluation_params_t&		params,
+			ttPtr_t&									hashTable,
+			std::shared_ptr<std::atomic_bool>			stop);
 		virtual ~search_thread();
 
 		// Request the thread to begin searching.
@@ -88,9 +89,11 @@ namespace loki::search
 		// Used for constructing new threads
 		movegen::magics::slider_generator_t m_sliderGen;
 		evaluation::evaluation_params_t m_evalParams;
+		ttPtr_t m_hashTable;
 	public:
 		main_thread(const movegen::magics::slider_generator_t& sliderGen,
-			const evaluation::evaluation_params_t& params);
+			const evaluation::evaluation_params_t& params,
+			ttPtr_t& hashTable);
 		~main_thread();
 		
 		/// <summary>
@@ -121,6 +124,7 @@ namespace loki::search
 		inline static constexpr int min_thread_count = 1;
 		static int max_thread_count();
 	private:
+		virtual uint64_t get_nodes() override;
 		void kill_last_n(size_t n);
 
 		void search_internal(

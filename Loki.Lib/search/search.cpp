@@ -25,10 +25,15 @@ namespace loki::search
 	/// <summary>
 	/// Initialize an empty searcher, and make sure the parameters are valid.
 	/// </summary>
-	searcher::searcher(eThreadId threadId, const movegen::magics::slider_generator_t& sliderGen, const evaluation::evaluation_params_t& params, std::shared_ptr<std::atomic_bool> stop)
+	searcher::searcher(
+		eThreadId threadId,
+		const movegen::magics::slider_generator_t& sliderGen,
+		const evaluation::evaluation_params_t& params,
+		ttPtr_t& hashTable, std::shared_ptr<std::atomic_bool> stop)
 		: m_threadId(threadId), 
 		m_sliderGenerator(sliderGen),
 		m_evalParams(params),
+		m_hashTable(hashTable),
 		m_pos{nullptr},
 		m_eval{nullptr},
 		m_limits{nullptr},
@@ -38,6 +43,8 @@ namespace loki::search
 			throw e_searcherError("Parameter 'sliderGen' was nullptr");
 		if (m_evalParams == nullptr)
 			throw e_searcherError("Parameter 'params' was nullptr");
+		if (m_hashTable == nullptr)
+			throw e_searcherError("Parameter 'hashTable' was nullptr");
 		m_stats = std::make_shared<search_stats>();
 	}
 
@@ -70,7 +77,7 @@ namespace loki::search
 
 			if (m_threadId == MAIN_THREAD)
 			{
-				auto nodes = m_stats->info.nodes;
+				auto nodes = get_nodes();
 				auto time_to_depth = now() - m_limits->start_time;
 				if (time_to_depth <= 0)
 					time_to_depth = 1;

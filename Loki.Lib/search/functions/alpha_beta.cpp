@@ -58,14 +58,32 @@ namespace loki::search
 		if (!is_root && m_pos->ply() >= MAX_DEPTH)
 			return m_eval->score_position();
 
+		// Transposition table probing.
+		move_t ttMove = MOVE_NULL;
+		eValue ttScore = VALUE_ZERO;
+		eDepth ttDepth = ZERO_DEPTH;
+		ttFlag ttFlag = NO_FLAG;
+		
+		// If we're not in a PV-node and get a hit, return if the depth is sufficient.
+		if (m_hashTable->probe(m_pos->position_hash(), m_pos->ply(), ttMove, ttScore, ttDepth, ttFlag) && ttDepth >= depth)
+		{
+			if (ttFlag == FLAG_BETA && ttScore >= beta)
+				return beta;
+			else if (ttFlag == FLAG_ALPHA && ttScore <= alpha)
+				return alpha;
+			else if (ttFlag == FLAG_EXACT)
+				return ttScore;
+		}
+
 
 		// Set up a move_sorter which will generate all our moves, and traverse the list
-		move_sorter sorter(m_pos, m_stats);
+		auto sorter = move_sorter::make_regular_scorer(m_pos, m_stats, ttMove);
 
 		auto move = MOVE_NULL, best_move = MOVE_NULL;
 		size_t legal = 0, moves_searched = 0;
 		auto new_depth = depth - 1;
 		auto score = -VALUE_INF, best_score = -VALUE_INF;
+		auto raised_alpha = false;
 
 		while (move = sorter.get_next())
 		{
@@ -94,7 +112,7 @@ namespace loki::search
 				// Update our heuristics for quiet moves.
 				if (m_pos->type_of(move) == QUIET)
 					m_stats->update_quiet_heuristics(m_pos, move, m_pos->ply());
-
+				m_hashTable->store(m_pos->position_hash(), m_pos->ply(), move, beta, depth, FLAG_BETA);
 				return beta;
 			}
 			if (score > best_score) // score higher than alpha (previously believed to be best score) i.e. new best score.
@@ -106,6 +124,7 @@ namespace loki::search
 				{
 					alpha = score;
 					m_stats->pvTable->update_pv(m_pos->ply(), best_move);
+					raised_alpha = true;
 				}
 			}
 		}
@@ -117,6 +136,11 @@ namespace loki::search
 			else
 				return VALUE_ZERO;
 		}
+
+		if (raised_alpha)
+			m_hashTable->store(m_pos->position_hash(), m_pos->ply(), best_move, alpha, depth, FLAG_EXACT);
+		else
+			m_hashTable->store(m_pos->position_hash(), m_pos->ply(), best_move, alpha, depth, FLAG_ALPHA);
 
 		return alpha;
 	}
