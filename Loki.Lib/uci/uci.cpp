@@ -137,7 +137,7 @@ namespace loki::uci
 	void engine_manager::parse_go(const std::string& cmd)
 	{
 		if (!has_position)
-			throw e_engineManager("A 'go' command was received before the first 'position command'");
+			throw e_engineManager(FORMAT_EXCEPTION_MESSAGE("A 'go' command was received before the first 'position command'"));
 		auto limits = std::make_shared<search::search_limits>();
 		std::string tk;
 		std::stringstream ss(cmd);
@@ -175,7 +175,7 @@ namespace loki::uci
 	void engine_manager::parse_perft(const std::string& cmd)
 	{
 		if (!has_position)
-			throw e_engineManager("A 'perft' command was received before the first 'position command'");
+			throw e_engineManager(FORMAT_EXCEPTION_MESSAGE("A 'perft' command was received before the first 'position command'"));
 
 		long depth = 1;
 		size_t pos;
@@ -183,7 +183,7 @@ namespace loki::uci
 			depth = std::stol(cmd.substr(pos + 7, std::string::npos));
 
 		if (depth <= 0)
-			throw e_engineManager("'depth' was less than or equal to zero");
+			throw e_engineManager(FORMAT_EXCEPTION_MESSAGE("'depth' was less than or equal to zero"));
 
 		m_admin.do_perft(static_cast<eDepth>(depth));
 	}
@@ -191,7 +191,7 @@ namespace loki::uci
 	void engine_manager::parse_printpos(const std::string& /* unused */)
 	{
 		if (!has_position)
-			throw e_engineManager("A 'printpos' command was received before the first 'position command'");
+			throw e_engineManager(FORMAT_EXCEPTION_MESSAGE("A 'printpos' command was received before the first 'position command'"));
 
 		std::cout << m_admin.game_state() << std::endl;
 	}

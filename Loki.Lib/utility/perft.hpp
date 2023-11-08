@@ -25,6 +25,7 @@ namespace loki::utility
 	/// </summary>
 	class perft
 	{
+		EXCEPTION_CLASS(e_Perft, e_lokiError);
 	public:
 		perft() = delete;
 		perft(const std::string& fen);

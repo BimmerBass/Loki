@@ -69,7 +69,7 @@ namespace loki::ordering
 	void move_sorter::scoreMoves()
 	{
 		if (m_moveList == nullptr)
-			throw e_moveSorter("scoreMoves was called before moves were generated");
+			throw e_moveSorter(FORMAT_EXCEPTION_MESSAGE("scoreMoves was called before moves were generated"));
 		const static eValue victimValues[PIECE_NB] = { (eValue)100, (eValue)200, (eValue)300, (eValue)400, (eValue)500, (eValue)600 };
 
 		for (auto i = 0; i < m_moveList->size(); i++)

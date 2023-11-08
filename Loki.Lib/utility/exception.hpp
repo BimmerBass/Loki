@@ -2,7 +2,7 @@
 
 // Removes the path to the file that threw the exception.
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
-#define FORMAT_EXCEPTION_MESSAGE(msg) std::format("{} ({}:{})", msg, __FILENAME__, __LINE__)
+#define FORMAT_EXCEPTION_MESSAGE(msg, ...) std::format("{} ({}:{})", std::format((msg), __VA_ARGS__), __FILENAME__, __LINE__)
 
 #define EXCEPTION(className)												\
 class className : public std::exception {									\

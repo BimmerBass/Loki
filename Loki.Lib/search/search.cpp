@@ -40,11 +40,11 @@ namespace loki::search
 		m_stop{stop}
 	{
 		if (m_sliderGenerator == nullptr)
-			throw e_searcherError("Parameter 'sliderGen' was nullptr");
+			throw e_searcherError(FORMAT_EXCEPTION_MESSAGE("Parameter 'sliderGen' was nullptr"));
 		if (m_evalParams == nullptr)
-			throw e_searcherError("Parameter 'params' was nullptr");
+			throw e_searcherError(FORMAT_EXCEPTION_MESSAGE("Parameter 'params' was nullptr"));
 		if (m_hashTable == nullptr)
-			throw e_searcherError("Parameter 'hashTable' was nullptr");
+			throw e_searcherError(FORMAT_EXCEPTION_MESSAGE("Parameter 'hashTable' was nullptr"));
 		m_stats = std::make_shared<search_stats>();
 	}
 

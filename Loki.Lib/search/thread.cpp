@@ -42,7 +42,7 @@ namespace loki::search
 	{
 		std::unique_lock<std::mutex> lock(m_mtx); // Need a proper lock in case the method throws.
 		if (!m_sleep)
-			throw e_searchThread("Search was requested on active thread");
+			throw e_searchThread(FORMAT_EXCEPTION_MESSAGE("Search was requested on active thread"));
 
 		m_state = state;
 		m_limits = limits;
@@ -157,7 +157,7 @@ namespace loki::search
 	void main_thread::set_thread_count(size_t count)
 	{
 		if (count < 1)
-			throw e_mainThread(std::format("A non-zero positive value was expected, but 'count' was equal to '{}'", count));
+			throw e_mainThread(FORMAT_EXCEPTION_MESSAGE("A non-zero positive value was expected, but 'count' was equal to '{}'", count));
 		count--; // Main is a search thread itself.
 		if (m_workerThreads.size() > count)
 			kill_last_n(m_workerThreads.size() - count);
@@ -176,7 +176,7 @@ namespace loki::search
 	void main_thread::kill_last_n(size_t n)
 	{
 		if (n > m_workerThreads.size())
-			throw e_mainThread(std::format("m_workerThreads contains '{}' elements, but kill_last_n was called with n = '{}'", m_workerThreads.size(), n));
+			throw e_mainThread(FORMAT_EXCEPTION_MESSAGE("m_workerThreads contains '{}' elements, but kill_last_n was called with n = '{}'", m_workerThreads.size(), n));
 		// Firstly request the threads to stop, and then delete them from the list.
 		for (auto i = 1; i <= n; i++)
 			m_workerThreads[m_workerThreads.size() - i]->request_stop();

@@ -17,7 +17,7 @@ namespace loki::evaluation
 			_PieceSquareTable(const std::initializer_list<eValue>& l) : m_table{ VALUE_ZERO }
 			{
 				if (l.size() != SQ_NB)
-					throw e_psqtError(std::format("Error initializing piece-square table for piece type '{}'! Expected a std::initializer_list with size = {} but got {} elements.", (long)_P, (long)SQ_NB, l.size()));
+					throw e_psqtError(FORMAT_EXCEPTION_MESSAGE("Error initializing piece-square table for piece type '{}'! Expected a std::initializer_list with size = {} but got {} elements.", (long)_P, (long)SQ_NB, l.size()));
 				std::copy(l.begin(), l.end(), m_table.begin());
 			}
 

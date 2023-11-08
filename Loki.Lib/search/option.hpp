@@ -51,19 +51,19 @@ namespace loki::search
 				{
 					auto val = std::stoi(cmd);
 					if (val < m_min)
-						throw std::out_of_range("Value specified was lower than the minimum value the application supports");
+						throw std::out_of_range(FORMAT_EXCEPTION_MESSAGE("Value specified was lower than the minimum value the application supports"));
 					if (val > m_max)
-						throw std::out_of_range("Value specified was higher than the maximum value the application supports");
+						throw std::out_of_range(FORMAT_EXCEPTION_MESSAGE("Value specified was higher than the maximum value the application supports"));
 
 					m_callback(val);
 				}
 				catch (std::invalid_argument& e)
 				{
-					throw e_optionError(std::string("Error while executing spin option (std::invalid_argument): ") + e.what());
+					throw e_optionError(FORMAT_EXCEPTION_MESSAGE("Error while executing spin option (std::invalid_argument): {}", e.what()));
 				}
 				catch (std::out_of_range& e)
 				{
-					throw e_optionError(std::string("Error while executing spin option (std::out_of_range): ") + e.what());
+					throw e_optionError(FORMAT_EXCEPTION_MESSAGE("Error while executing spin option (std::out_of_range): {}", e.what()));
 				}
 			}
 			std::string get_typeString() const override
@@ -80,7 +80,7 @@ namespace loki::search
 		void register_option(const std::string& optionName, int defaultVal, int min, int max, std::function<void(int)>&& func)
 		{
 			if (m_optionsMap.find(optionName) != m_optionsMap.end())
-				throw e_optionsManager(std::format("Key '{}' was already registered as an option!", optionName));
+				throw e_optionsManager(FORMAT_EXCEPTION_MESSAGE("Key '{}' was already registered as an option!", optionName));
 			m_optionsMap[optionName] = std::make_unique<_SpinOption>(defaultVal, min, max, std::move(func));
 		}
 

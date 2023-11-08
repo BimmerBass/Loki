@@ -237,11 +237,11 @@ namespace loki::position
 				}
 				catch (const std::invalid_argument& e)
 				{
-					throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("Invalid FEN: Error parsing move clocks (std::invalid_argument: )" + std::string(e.what())));
+					throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("Invalid FEN: Error parsing move clocks (std::invalid_argument: {})", e.what()));
 				}
 				catch (const std::out_of_range& e)
 				{
-					throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("Invalid FEN: Error parsing move clocks (std::out_of_range: )" + std::string(e.what())));
+					throw e_invalidFen(FORMAT_EXCEPTION_MESSAGE("Invalid FEN: Error parsing move clocks (std::out_of_range: {})", e.what()));
 				}
 			}
 		}

@@ -57,7 +57,7 @@ namespace loki::uci
 		// Parse methods that are intentionally not implemented, but may be in the future.
 		void parse_debug(const std::string& /* unused */) {};
 		void parse_register(const std::string& /* unused */) {};
-		void parse_ponderhit(const std::string& /* unused */) { throw e_notImplementedError("Pondering is not (yet) implemented!"); };
+		void parse_ponderhit(const std::string& /* unused */) { throw e_notImplementedError(FORMAT_EXCEPTION_MESSAGE("Pondering is not (yet) implemented!")); };
 	private:
 		bool has_position;
 	};

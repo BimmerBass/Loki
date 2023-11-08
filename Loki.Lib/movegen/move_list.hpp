@@ -90,7 +90,7 @@ namespace loki::movegen
 		inline void swap(size_t inx1, size_t inx2)
 		{
 			if (inx1 >= m_size || inx2 >= m_size)
-				throw e_moveList(FORMAT_EXCEPTION_MESSAGE(std::format("One of the requested indeces was bigger than the list. inx1 = '{}', inx2 = '{}', m_size = '{}'", inx1, inx2, m_size)));
+				throw e_moveList(FORMAT_EXCEPTION_MESSAGE("One of the requested indeces was bigger than the list. inx1 = '{}', inx2 = '{}', m_size = '{}'", inx1, inx2, m_size));
 			auto tmp_move = m_movelist[inx1].move;
 			auto tmp_score = m_movelist[inx1].score;
 			

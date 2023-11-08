@@ -65,6 +65,7 @@ namespace loki::utility
 		move_t move;
 		while (move = sorter.get_next())
 		{
+			auto poskey_before = m_pos->position_hash();
 			if (!m_pos->make_move(move))
 				continue;
 			legal++;
@@ -74,6 +75,9 @@ namespace loki::utility
 			m_pos->undo_move();
 
 			os << std::format("[{}] {}\t---> {} nodes.\n", legal, movegen::to_string(move), std::to_string(m_nodes - old_nodes));
+
+			if (m_pos->position_hash() != poskey_before)
+				throw e_Perft(FORMAT_EXCEPTION_MESSAGE("Position keys did not match! Value was {} before move '{}', while it was {} afterwards.", poskey_before, movegen::to_string(move), m_pos->position_hash()));
 		}
 
 		std::chrono::time_point<std::chrono::high_resolution_clock> end_time = std::chrono::high_resolution_clock::now();
@@ -108,11 +112,15 @@ namespace loki::utility
 		move_t move;
 		while (move = sorter.get_next())
 		{
+			auto poskey_before = m_pos->position_hash();
 			if (!m_pos->make_move(move))
 				continue;
 			perft_internal(d - 1);
 
 			m_pos->undo_move();
+
+			if (m_pos->position_hash() != poskey_before)
+				throw e_Perft(FORMAT_EXCEPTION_MESSAGE("Position keys did not match! Value was {} before move '{}', while it was {} afterwards.", poskey_before, movegen::to_string(move), m_pos->position_hash()));
 		}
 	}
 

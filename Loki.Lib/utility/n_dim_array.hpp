@@ -24,7 +24,7 @@ namespace loki::utility
 		{
 			auto inx = static_cast<size_type>(idx);
 			if (inx >= size)
-				throw e_outOfRange("Index out of range");
+				throw e_outOfRange(FORMAT_EXCEPTION_MESSAGE("Index out of range"));
 			return m_array[inx];
 		}
 		template<typename _InxTy> requires std::convertible_to<_InxTy, size_type>
@@ -32,7 +32,7 @@ namespace loki::utility
 		{
 			auto inx = static_cast<size_type>(idx);
 			if (inx >= size)
-				throw e_outOfRange("Index out of range");
+				throw e_outOfRange(FORMAT_EXCEPTION_MESSAGE("Index out of range"));
 			return m_array[inx];
 		}
 
@@ -67,7 +67,7 @@ namespace loki::utility
 		{
 			auto inx = static_cast<size_type>(idx);
 			if (inx >= size)
-				throw e_outOfRange("Index out of range");
+				throw e_outOfRange(FORMAT_EXCEPTION_MESSAGE("Index out of range"));
 			return m_array[inx];
 		}
 		template<typename _InxTy> requires std::convertible_to<_InxTy, size_type>
@@ -75,7 +75,7 @@ namespace loki::utility
 		{
 			auto inx = static_cast<size_type>(idx);
 			if (inx >= size)
-				throw e_outOfRange("Index out of range");
+				throw e_outOfRange(FORMAT_EXCEPTION_MESSAGE("Index out of range"));
 			return m_array[inx];
 		}
 
