@@ -16,45 +16,9 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-
-namespace loki
-{
-    class stacktrace_exception : public std::exception
-    {
-    public:
-        static constexpr size_t SKIP_FRAME_COUNT = 1;
-
-        explicit inline stacktrace_exception(const char* msg, size_t skip_frames = SKIP_FRAME_COUNT) : std::exception(msg)
-        {
-            m_stacktrace = std::stacktrace::current(skip_frames);
-        }
-
-        // one method wich has both value, const and rvalue overloads using "deducing this"
-        // https://devblogs.microsoft.com/cppblog/cpp23-deducing-this/
-        template<class Self>
-        auto&& trace(this Self&& self)
-        {
-            return std::forward<Self>(self).m_stacktrace;
-        }
-
-    private:
-        std::stacktrace m_stacktrace;
-    };
-
-    /// <summary>
-    /// Utility function that throws an exception with a formatted message string.
-    /// </summary>
-    /// <typeparam name="ExceptionType">The type of exception to throw</typeparam>
-    /// <typeparam name="...Args">Arguments types for std::format</typeparam>
-    /// <param name="format_str">Format string</param>
-    /// <param name="...args">Variables to pass to std::format</param>
-    template<typename ExceptionType, typename... Args>
-    [[noreturn]] void throw_msg(const std::format_string<Args...>& format_str, Args&&... args)
-    {
-        std::string message = std::format(format_str, std::forward<Args>(args)...);
-        throw ExceptionType(message.c_str(), ExceptionType::SKIP_FRAME_COUNT + 1);
-    }
-}
+#include <format>
+#include <stacktrace>
+#include <stdexcept>
 
 #define BASE_EXCEPTION(className)					                        \
 class className : public ::loki::stacktrace_exception {			            \
@@ -82,3 +46,49 @@ public:                                                                     \
         : superclass(std::format("{}: {}", #className, msg).c_str(),        \
                      skip_frames) {}                                        \
 };
+
+namespace loki
+{
+    class stacktrace_exception : public std::exception
+    {
+    public:
+        static constexpr size_t SKIP_FRAME_COUNT = 1;
+
+        explicit inline stacktrace_exception(const char* msg, size_t skip_frames = SKIP_FRAME_COUNT) : std::exception(msg)
+        {
+            m_stacktrace = std::stacktrace::current(skip_frames);
+        }
+
+        // one method wich has both value, const and rvalue overloads using "deducing this"
+        // https://devblogs.microsoft.com/cppblog/cpp23-deducing-this/
+        template<class Self>
+        auto&& trace(this Self&& self)
+        {
+            return std::forward<Self>(self).m_stacktrace;
+        }
+
+    private:
+        std::stacktrace m_stacktrace;
+    };
+
+    /// <summary>
+    /// Loki's base exception class.
+    /// All Loki-exceptions should ultimately derive from this.
+    /// </summary>
+    BASE_EXCEPTION(loki_exception);
+
+
+    /// <summary>
+    /// Utility function that throws an exception with a formatted message string.
+    /// </summary>
+    /// <typeparam name="ExceptionType">The type of exception to throw</typeparam>
+    /// <typeparam name="...Args">Arguments types for std::format</typeparam>
+    /// <param name="format_str">Format string</param>
+    /// <param name="...args">Variables to pass to std::format</param>
+    template<typename ExceptionType, typename... Args>
+    [[noreturn]] void throw_msg(const std::format_string<Args...>& format_str, Args&&... args)
+    {
+        std::string message = std::format(format_str, std::forward<Args>(args)...);
+        throw ExceptionType(message.c_str(), ExceptionType::SKIP_FRAME_COUNT + 1);
+    }
+}

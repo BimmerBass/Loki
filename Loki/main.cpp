@@ -1,6 +1,6 @@
-#include "loki.pch.hpp"
+#include "util/exception.hpp"
+#include "position/game_state.hpp"
 #include <iostream>
-#include <stacktrace>
 
 void foo()
 {

@@ -16,21 +16,27 @@
     <Filter Include="Header Files\util">
       <UniqueIdentifier>{862ce2e5-859a-4cfa-b3d3-e93e10aeecf6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\position">
+      <UniqueIdentifier>{e881b32f-5216-4db9-ac09-0c381e97dff0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="loki.pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="loki.pch.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="util\exception.hpp">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="position\game_state.hpp">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="defs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="position\castle_rights.hpp">
+      <Filter>Header Files\position</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
