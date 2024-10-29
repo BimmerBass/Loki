@@ -1,0 +1,21 @@
+#include "loki.pch.hpp"
+#include <iostream>
+#include <stacktrace>
+
+void foo()
+{
+	loki::throw_msg<loki::loki_exception>("Hello there, I am {}!", "Niels");
+}
+
+
+int main()
+{
+	try
+	{
+		foo();
+	}
+	catch (const loki::loki_exception& e)
+	{
+		std::printf("Error!\nMessage: %s\n\nStack-trace:\n%s", e.what(), std::to_string(e.trace()).c_str());
+	}
+}
