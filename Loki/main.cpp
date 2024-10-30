@@ -1,5 +1,6 @@
 #include "util/exception.hpp"
 #include "position/game_state.hpp"
+#include "versioninfo.hpp"
 #include <iostream>
 
 void foo()
@@ -12,7 +13,9 @@ int main()
 {
 	try
 	{
-		foo();
+		std::printf("NAME: %s\n", NAME);
+		std::printf("AUTHOR: %s\n", AUTHOR);
+		std::printf("VERSION: %s\n", VERSION);
 	}
 	catch (const loki::loki_exception& e)
 	{
