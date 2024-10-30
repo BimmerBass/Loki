@@ -131,6 +131,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="uci\loki_context_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Loki\Loki.vcxproj">

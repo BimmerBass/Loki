@@ -19,10 +19,19 @@
     <Filter Include="Header Files\position">
       <UniqueIdentifier>{e881b32f-5216-4db9-ac09-0c381e97dff0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\uci">
+      <UniqueIdentifier>{8fe36f31-cbb8-4d0f-beb2-9f8e1c1e84ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\uci">
+      <UniqueIdentifier>{af17cfd5-52c5-4b93-ad47-ba779c95791a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\loki_context.cpp">
+      <Filter>Source Files\uci</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -40,6 +49,9 @@
     </ClInclude>
     <ClInclude Include="versioninfo.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\loki_context.hpp">
+      <Filter>Header Files\uci</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

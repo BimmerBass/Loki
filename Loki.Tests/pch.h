@@ -7,6 +7,7 @@
 #include "gtest/gtest.h"
 
 // STL includes
+#include <ranges>
 #include <tuple>
 
 

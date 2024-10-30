@@ -8,6 +8,9 @@
     <ClCompile Include="position\game_state_test.cpp">
       <Filter>position</Filter>
     </ClCompile>
+    <ClCompile Include="uci\loki_context_test.cpp">
+      <Filter>uci</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -15,6 +18,9 @@
   <ItemGroup>
     <Filter Include="position">
       <UniqueIdentifier>{2b64ef1d-57de-4278-a4c9-928c8d500fca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uci">
+      <UniqueIdentifier>{fcfa53ba-557c-49d3-9217-b90977ca8b33}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
