@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="position\castle_rights_test.cpp">
+      <Filter>position</Filter>
+    </ClCompile>
+    <ClCompile Include="position\game_state_test.cpp">
+      <Filter>position</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="position">
+      <UniqueIdentifier>{2b64ef1d-57de-4278-a4c9-928c8d500fca}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

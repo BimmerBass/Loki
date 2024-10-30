@@ -16,8 +16,6 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <tuple>
-
 #include "defs.hpp"
 
 namespace loki::position
@@ -39,7 +37,7 @@ namespace loki::position
 		template<side _S, castling_direction _D>
 		inline bool can_castle() const noexcept
 		{
-			return m_rights & mask<_S,_D>() != 0;
+			return (m_rights & mask<_S,_D>()) != 0;
 		}
 
 		/// <summary>
@@ -54,7 +52,8 @@ namespace loki::position
 			if (can_castle<_S, _D>() != value)
 			{
 				// toggle
-				m_rights ^= mask<_S, _D>();
+				auto m = mask<_S, _D>();
+				m_rights ^= m;
 			}
 		}
 
@@ -64,7 +63,7 @@ namespace loki::position
 		template<side _S, castling_direction _D>
 		inline uint8_t mask() const noexcept
 		{
-			return 0x02 * (uint8_t)_S + (uint8_t)_D;
+			return 0x01 << (0x02 * (uint8_t)_S + (uint8_t)_D);
 		}
 	};
 }
