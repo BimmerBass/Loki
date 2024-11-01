@@ -15,30 +15,28 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#pragma once
-#include "util/exception.hpp"
-#include "castle_rights.hpp"
-#include "defs.hpp"
+#include <ranges>
+#include "stringops.hpp"
 
-namespace loki::position
+namespace loki::util
 {
-	struct game_state;
-	using game_state_t = std::shared_ptr<game_state>;
-
-	/// <summary>
-	/// game_state represents the most basic chess position.
-	/// It acts like a DTO (data-transfer object) between internal types and FEN's and is not optimized for quick move generation.
-	/// </summary>
-	struct game_state
+	std::vector<std::string> split(const std::string& str, char sep, bool keep_empty_entries)
 	{
-		CHILD_EXCEPTION(fen_parsing_error, loki_exception);
-		
-		piece piece_placements[NUM_SIDES][NUM_SQUARES];
-		side side_to_move;
-		size_t fifty_move_cnt, full_move_cnt;
-		square en_passant_sq;
-		castle_rights castling_rights;
+		auto split = str
+			| std::views::split(sep)
+			| std::views::filter([&](const auto& subr)
+				{
+					if (keep_empty_entries) return true;
+					return std::distance(subr.begin(), subr.end()) > 0;
+				})
+			| std::views::transform([](const auto& sr) { return std::string(sr.begin(), sr.end()); });
+		return std::vector(split.begin(), split.end());
+	}
 
-		static game_state_t from_fen(const std::string& fen);
-	};
+	std::string lowercase(const std::string& str)
+	{
+		return str 
+			| std::views::transform([](const char c) { return (char)std::tolower(c); }) 
+			| std::ranges::to<std::string>();
+	}
 }

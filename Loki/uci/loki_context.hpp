@@ -16,20 +16,7 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include <iostream>
-#include <optional>
-#include <vector>
-
-#include "util/exception.hpp"
-#include "position/game_state.hpp"
-
-namespace loki::search
-{
-	struct limits
-	{
-		int i;
-	};
-}
+#include "context_interface.hpp"
 
 namespace loki::uci
 {
@@ -40,7 +27,7 @@ namespace loki::uci
 	/// Exposes a UCI-like interface and streams potential output to a specified textual stream.
 	/// This class exists to make it easy to use Loki in client-code without having to fidget with multi-processing and IO.
 	/// </summary>
-	class loki_context
+	class loki_context : public context_interface
 	{
 	public:
 		CHILD_EXCEPTION(not_implemented_error, loki_exception);
@@ -51,24 +38,21 @@ namespace loki::uci
 		/// <param name="os">The ostream to write results to.</param>
 		loki_context(std::ostream& os);
 
-		//
-		//	Below functions correspond to the "GUI to engine" bullet-points in 
-		//	https://gist.github.com/DOBRO/2592c6dad754ba67e6dcaec8c90165bf
-		//
-		void uci() const;
-		void debug() const;
-		void isready() const;
+		void uci() const override;
+		void debug() const override;
+		void isready() const override;
 		void setoption(
 			std::string name, 
-			std::optional<std::string> value);
-		void register_() const;
-		void ucinewgame();
+			std::optional<std::string> value) override;
+		void register_() const override;
+		void ucinewgame() override;
 		void position(
-			const position::game_state* newState);
+			const std::string& fen,
+			const std::vector<std::string>& moves) override;
 		void go(
-			const search::limits* limits);
-		void stop();
-		void ponderhit();
+			const search::limits* limits) override;
+		void stop() override;
+		void ponderhit() override;
 	private:
 		std::ostream& m_os;
 	};

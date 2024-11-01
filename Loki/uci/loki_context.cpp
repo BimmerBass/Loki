@@ -15,6 +15,8 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
+#include <iostream>
+
 #include "loki_context.hpp"
 #include "versioninfo.hpp"
 
@@ -54,11 +56,11 @@ namespace loki::uci
 	{
 		throw_msg<not_implemented_error>("not implemented");
 	}
-	void loki_context::position(const position::game_state* /**/)
+	void loki_context::position(const std::string&, const std::vector<std::string>&)
 	{
 		throw_msg<not_implemented_error>("not implemented");
 	}
-	void loki_context::go(const search::limits* /**/)
+	void loki_context::go(const search::limits*)
 	{
 		throw_msg<not_implemented_error>("not implemented");
 	}

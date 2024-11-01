@@ -16,29 +16,24 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include "util/exception.hpp"
-#include "castle_rights.hpp"
-#include "defs.hpp"
+#include <string>
+#include <vector>
 
-namespace loki::position
+namespace loki::util
 {
-	struct game_state;
-	using game_state_t = std::shared_ptr<game_state>;
+	/// <summary>
+	/// Split a string on each occurence of a given separator.
+	/// </summary>
+	/// <param name="str">The string to split</param>
+	/// <param name="sep">The separator</param>
+	/// <param name="keep_empty_entries">Whether or not to include empty substrings (default = false)1</param>
+	/// <returns>A vector with the splitted string.</returns>
+	std::vector<std::string> split(const std::string& str, char sep, bool keep_empty_entries = false);
 
 	/// <summary>
-	/// game_state represents the most basic chess position.
-	/// It acts like a DTO (data-transfer object) between internal types and FEN's and is not optimized for quick move generation.
+	/// Convert an ASCII-string to lowercase.
 	/// </summary>
-	struct game_state
-	{
-		CHILD_EXCEPTION(fen_parsing_error, loki_exception);
-		
-		piece piece_placements[NUM_SIDES][NUM_SQUARES];
-		side side_to_move;
-		size_t fifty_move_cnt, full_move_cnt;
-		square en_passant_sq;
-		castle_rights castling_rights;
-
-		static game_state_t from_fen(const std::string& fen);
-	};
+	/// <param name="str">The string in question.</param>
+	/// <returns>A lowercase copy of str.</returns>
+	std::string lowercase(const std::string& str);
 }

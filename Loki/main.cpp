@@ -1,24 +1,31 @@
-#include "util/exception.hpp"
-#include "position/game_state.hpp"
-#include "versioninfo.hpp"
+//
+//	Loki, a UCI-compliant chess playing software
+//	Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+//	Loki is free software: you can redistribute it and/or modify
+//	it under the terms of the GNU General Public License as published by
+//	the Free Software Foundation, either version 3 of the License, or
+//	(at your option) any later version.
+//
+//	Loki is distributed in the hope that it will be useful,
+//	but WITHOUT ANY WARRANTY; without even the implied warranty of
+//	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//	GNU General Public License for more details.
+//
+//	You should have received a copy of the GNU General Public License
+//	along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
 #include <iostream>
+#include <memory>
 
-void foo()
-{
-	loki::throw_msg<loki::loki_exception>("Hello there, I am {}!", "Niels");
-}
+#include "uci/loki_context.hpp"
+#include "uci/uci_parser.hpp"
 
+using namespace loki::uci;
 
 int main()
 {
-	try
-	{
-		std::printf("NAME: %s\n", NAME);
-		std::printf("AUTHOR: %s\n", AUTHOR);
-		std::printf("VERSION: %s\n", VERSION);
-	}
-	catch (const loki::loki_exception& e)
-	{
-		std::printf("Error!\nMessage: %s\n\nStack-trace:\n%s", e.what(), std::to_string(e.trace()).c_str());
-	}
+	std::shared_ptr<context_interface> ctx = std::make_shared<loki_context>(std::cout);
+	auto uci = std::make_unique<uci_parser>(ctx);
+	return uci->uci_loop();
 }

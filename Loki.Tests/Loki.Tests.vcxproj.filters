@@ -1,7 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
+    <ClInclude Include="pch.hpp" />
+    <ClInclude Include="mocks\context_mock.hpp">
+      <Filter>mocks</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="position\castle_rights_test.cpp">
       <Filter>position</Filter>
     </ClCompile>
@@ -11,16 +16,29 @@
     <ClCompile Include="uci\loki_context_test.cpp">
       <Filter>uci</Filter>
     </ClCompile>
+    <ClCompile Include="uci\uci_parser_test.cpp">
+      <Filter>uci</Filter>
+    </ClCompile>
+    <ClCompile Include="util\stringops_test.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Filter Include="mocks">
+      <UniqueIdentifier>{844f9302-4ecb-4a9e-a5da-73bc1c737b0c}</UniqueIdentifier>
+    </Filter>
     <Filter Include="position">
-      <UniqueIdentifier>{2b64ef1d-57de-4278-a4c9-928c8d500fca}</UniqueIdentifier>
+      <UniqueIdentifier>{d39f7cbb-059c-4acb-81ce-9aab0628b8cf}</UniqueIdentifier>
     </Filter>
     <Filter Include="uci">
-      <UniqueIdentifier>{fcfa53ba-557c-49d3-9217-b90977ca8b33}</UniqueIdentifier>
+      <UniqueIdentifier>{8451d069-b8e7-4010-9c4c-6f7efb4fef03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{a40b6cb2-d0ac-4c0a-af01-cba60abe16b1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

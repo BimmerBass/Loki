@@ -15,30 +15,12 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#pragma once
-#include "util/exception.hpp"
-#include "castle_rights.hpp"
-#include "defs.hpp"
+#include "game_state.hpp"
 
 namespace loki::position
 {
-	struct game_state;
-	using game_state_t = std::shared_ptr<game_state>;
-
-	/// <summary>
-	/// game_state represents the most basic chess position.
-	/// It acts like a DTO (data-transfer object) between internal types and FEN's and is not optimized for quick move generation.
-	/// </summary>
-	struct game_state
+	game_state_t game_state::from_fen(const std::string& )
 	{
-		CHILD_EXCEPTION(fen_parsing_error, loki_exception);
-		
-		piece piece_placements[NUM_SIDES][NUM_SQUARES];
-		side side_to_move;
-		size_t fifty_move_cnt, full_move_cnt;
-		square en_passant_sq;
-		castle_rights castling_rights;
-
-		static game_state_t from_fen(const std::string& fen);
-	};
+		return game_state_t(nullptr);
+	}
 }

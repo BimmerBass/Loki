@@ -25,6 +25,15 @@
     <Filter Include="Source Files\uci">
       <UniqueIdentifier>{af17cfd5-52c5-4b93-ad47-ba779c95791a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\util">
+      <UniqueIdentifier>{973bca16-7d23-4757-b9cb-54f3755da5aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\position">
+      <UniqueIdentifier>{d56e2ca6-9932-4e5e-8a5e-f422b952ccff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\search">
+      <UniqueIdentifier>{302c91cb-11b0-4eee-9ec9-52b787e599d6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -32,6 +41,15 @@
     </ClCompile>
     <ClCompile Include="uci\loki_context.cpp">
       <Filter>Source Files\uci</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\uci_parser.cpp">
+      <Filter>Source Files\uci</Filter>
+    </ClCompile>
+    <ClCompile Include="util\stringops.cpp">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
+    <ClCompile Include="position\game_state.cpp">
+      <Filter>Source Files\position</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +70,18 @@
     </ClInclude>
     <ClInclude Include="uci\loki_context.hpp">
       <Filter>Header Files\uci</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\uci_parser.hpp">
+      <Filter>Header Files\uci</Filter>
+    </ClInclude>
+    <ClInclude Include="util\stringops.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\context_interface.hpp">
+      <Filter>Header Files\uci</Filter>
+    </ClInclude>
+    <ClInclude Include="search\limits.hpp">
+      <Filter>Header Files\search</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
