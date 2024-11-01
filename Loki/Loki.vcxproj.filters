@@ -51,6 +51,9 @@
     <ClCompile Include="position\game_state.cpp">
       <Filter>Source Files\position</Filter>
     </ClCompile>
+    <ClCompile Include="util\bitboard.cpp">
+      <Filter>Source Files\util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="util\exception.hpp">
@@ -82,6 +85,9 @@
     </ClInclude>
     <ClInclude Include="search\limits.hpp">
       <Filter>Header Files\search</Filter>
+    </ClInclude>
+    <ClInclude Include="util\bitboard.hpp">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

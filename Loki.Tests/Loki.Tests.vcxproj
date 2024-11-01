@@ -167,6 +167,7 @@
     <ClInclude Include="pch.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="bitboard_test.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="position\castle_rights_test.cpp" />
     <ClCompile Include="position\game_state_test.cpp" />

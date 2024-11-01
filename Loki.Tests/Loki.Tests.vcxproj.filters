@@ -23,6 +23,11 @@
       <Filter>util</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\gtest\gtest-all.cc" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)src\gmock\gmock-all.cc" />
+    <ClCompile Include="bitboard_test.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
