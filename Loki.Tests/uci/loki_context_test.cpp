@@ -43,7 +43,7 @@ namespace uci_tests
 	}
 	TEST_F(loki_context_test, test_debug)
 	{
-		ASSERT_THROW(context.debug(), loki::uci::loki_context::not_implemented_error);
+		ASSERT_THROW(context.debug(), loki::not_implemented_error);
 	}
 	TEST_F(loki_context_test, test_isready)
 	{
@@ -53,31 +53,31 @@ namespace uci_tests
 	}
 	TEST_F(loki_context_test, test_setoption)
 	{
-		ASSERT_THROW(context.setoption("", {}), loki::uci::loki_context::not_implemented_error);
+		ASSERT_THROW(context.setoption("", {}), loki::not_implemented_error);
 	}
 	TEST_F(loki_context_test, test_register)
 	{
-		ASSERT_THROW(context.register_(), loki::uci::loki_context::not_implemented_error);
+		ASSERT_THROW(context.register_(), loki::not_implemented_error);
 	}
 	TEST_F(loki_context_test, test_ucinewgame)
 	{
-		ASSERT_THROW(context.ucinewgame(), loki::uci::loki_context::not_implemented_error);
+		ASSERT_THROW(context.ucinewgame(), loki::not_implemented_error);
 	}
 	TEST_F(loki_context_test, test_position)
 	{
 		auto ev = std::vector<std::string>();
-		ASSERT_THROW(context.position(loki::START_FEN, ev), loki::uci::loki_context::not_implemented_error);
+		ASSERT_THROW(context.position(loki::START_FEN, ev), loki::not_implemented_error);
 	}
 	TEST_F(loki_context_test, test_go)
 	{
-		ASSERT_THROW(context.go(nullptr), loki::uci::loki_context::not_implemented_error);
+		ASSERT_THROW(context.go(nullptr), loki::not_implemented_error);
 	}
 	TEST_F(loki_context_test, test_stop)
 	{
-		ASSERT_THROW(context.stop(), loki::uci::loki_context::not_implemented_error);
+		ASSERT_THROW(context.stop(), loki::not_implemented_error);
 	}
 	TEST_F(loki_context_test, test_ponderhit)
 	{
-		ASSERT_THROW(context.ponderhit(), loki::uci::loki_context::not_implemented_error);
+		ASSERT_THROW(context.ponderhit(), loki::not_implemented_error);
 	}
 }

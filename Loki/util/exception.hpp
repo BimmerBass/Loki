@@ -77,6 +77,11 @@ namespace loki
     /// </summary>
     BASE_EXCEPTION(loki_exception);
 
+    /// <summary>
+    /// Used for intentionally non-implemented features.
+    /// </summary>
+    CHILD_EXCEPTION(not_implemented_error, loki_exception);
+
 
     /// <summary>
     /// Utility function that throws an exception with a formatted message string.

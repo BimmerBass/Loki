@@ -30,8 +30,6 @@ namespace loki::uci
 	class loki_context : public context_interface
 	{
 	public:
-		CHILD_EXCEPTION(not_implemented_error, loki_exception);
-
 		/// <summary>
 		/// Initialize a context object
 		/// </summary>
