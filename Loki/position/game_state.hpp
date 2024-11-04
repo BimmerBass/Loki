@@ -16,29 +16,49 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include "util/exception.hpp"
+#include <concepts>
 #include "castle_rights.hpp"
 #include "defs.hpp"
+#include "square.hpp"
+#include "util/exception.hpp"
+#include "io/game_state_builder.hpp"
+
 
 namespace loki::position
 {
-	struct game_state;
-	using game_state_t = std::shared_ptr<game_state>;
-
 	/// <summary>
 	/// game_state represents the most basic chess position.
 	/// It acts like a DTO (data-transfer object) between internal types and FEN's and is not optimized for quick move generation.
 	/// </summary>
 	struct game_state
 	{
-		CHILD_EXCEPTION(fen_parsing_error, loki_exception);
-		
 		piece piece_placements[NUM_SIDES][NUM_SQUARES];
 		side side_to_move;
 		size_t fifty_move_cnt, full_move_cnt;
 		square en_passant_sq;
 		castle_rights castling_rights;
 
-		static game_state_t from_fen(const std::string& fen);
+
+		inline static game_state_t from_fen(const std::string& fen)
+		{
+			io::game_state_builder builder;
+			return from_builder(&builder, fen);
+		}
+
+		// this is the actual method we will test.
+		inline static game_state_t from_builder(io::base_builder<std::string, game_state>* bPtr, const std::string& fen)
+		{
+			auto gs = std::make_shared<game_state>();
+			auto sPtr = std::shared_ptr<std::string>(new std::string(fen));
+			bPtr->reset(sPtr, gs);
+			return (*bPtr)
+				.piece_placements()
+				.side_to_move()
+				.castling_ability()
+				.en_passant_square()
+				.halfmove_clock()
+				.fullmove_clock()
+				.get_product();
+		}
 	};
 }

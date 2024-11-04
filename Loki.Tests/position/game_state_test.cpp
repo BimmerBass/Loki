@@ -1,6 +1,37 @@
 #include "pch.hpp"
+#include "mocks/game_state_builder_mock.hpp"
+#include "Loki/position/game_state.hpp"
 
 namespace position_tests
 {
+	using namespace loki::position;
+	using namespace ::testing;
+	TEST(game_state_tests, test_fen_empty)
+	{
+		game_state_builder_mock builder;
+		io::game_state_builder actual_builder;
+		EXPECT_CALL(builder, piece_placements).Times(0).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::piece_placements));
+		EXPECT_CALL(builder, side_to_move).Times(0).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::side_to_move));
+		EXPECT_CALL(builder, castling_ability).Times(0).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::castling_ability));
+		EXPECT_CALL(builder, en_passant_square).Times(0).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::en_passant_square));
+		EXPECT_CALL(builder, halfmove_clock).Times(0).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::halfmove_clock));
+		EXPECT_CALL(builder, fullmove_clock).Times(0).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::fullmove_clock));
+		EXPECT_THROW(game_state::from_builder(&builder, ""), io::game_state_builder::fen_parsing_error);
+	}
 
+	// Can't get this test to work...
+	/*
+	TEST(game_state_tests, test_fen_nonempty)
+	{
+		game_state_builder_mock builder;
+		io::game_state_builder actual_builder;
+		EXPECT_CALL(builder, piece_placements).Times(1).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::piece_placements));
+		EXPECT_CALL(builder, side_to_move).Times(1).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::side_to_move));
+		EXPECT_CALL(builder, castling_ability).Times(1).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::castling_ability));
+		EXPECT_CALL(builder, en_passant_square).Times(1).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::en_passant_square));
+		EXPECT_CALL(builder, halfmove_clock).Times(1).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::halfmove_clock));
+		EXPECT_CALL(builder, fullmove_clock).Times(1).WillRepeatedly(Invoke(&actual_builder, &io::game_state_builder::fullmove_clock));
+		game_state::from_builder(&builder, loki::START_FEN);
+		EXPECT_NO_THROW(game_state::from_builder(&builder, loki::START_FEN));
+	}*/
 }

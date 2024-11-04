@@ -20,6 +20,12 @@
 
 namespace loki::position
 {
+	enum castling_direction : uint8_t
+	{
+		KINGSIDE = 0,
+		QUEENSIDE
+	};
+
 	class castle_rights
 	{
 	public:

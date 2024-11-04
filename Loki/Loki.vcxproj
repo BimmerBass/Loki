@@ -182,22 +182,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="position\game_state.cpp" />
+    <ClCompile Include="position\bitboard.cpp" />
+    <ClCompile Include="position\io\game_state_builder.cpp" />
     <ClCompile Include="uci\loki_context.cpp" />
     <ClCompile Include="uci\uci_parser.cpp" />
-    <ClCompile Include="util\bitboard.cpp" />
     <ClCompile Include="util\stringops.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="defs.hpp" />
+    <ClInclude Include="position\bitboard.hpp" />
     <ClInclude Include="position\castle_rights.hpp" />
     <ClInclude Include="position\game_state.hpp" />
+    <ClInclude Include="position\io\base_builder.hpp" />
+    <ClInclude Include="position\io\fen_string_builder.hpp" />
+    <ClInclude Include="position\io\game_state_builder.hpp" />
+    <ClInclude Include="position\square.hpp" />
     <ClInclude Include="search\limits.hpp" />
     <ClInclude Include="uci\context_interface.hpp" />
     <ClInclude Include="uci\loki_context.hpp" />
     <ClInclude Include="uci\uci_parser.hpp" />
-    <ClInclude Include="util\bitboard.hpp" />
     <ClInclude Include="util\exception.hpp" />
+    <ClInclude Include="util\operators.hpp" />
     <ClInclude Include="util\stringops.hpp" />
     <ClInclude Include="versioninfo.hpp" />
   </ItemGroup>

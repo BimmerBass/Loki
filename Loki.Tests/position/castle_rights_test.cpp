@@ -1,10 +1,10 @@
 #include "pch.hpp"
 #include "Loki/position/castle_rights.hpp"
 
-
 namespace position_tests
 {
 	using namespace loki;
+	using namespace loki::position;
 	// parameterized testing: https://www.sandordargo.com/blog/2019/04/24/parameterized-testing-with-gtest
 	class castle_rights_test :
 		public ::testing::Test,

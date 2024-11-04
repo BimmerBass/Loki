@@ -20,7 +20,7 @@
 #include "bitboard.hpp"
 
 
-namespace loki::util
+namespace loki::position
 {
 	namespace
 	{

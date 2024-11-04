@@ -5,6 +5,9 @@
     <ClInclude Include="mocks\context_mock.hpp">
       <Filter>mocks</Filter>
     </ClInclude>
+    <ClInclude Include="mocks\game_state_builder_mock.hpp">
+      <Filter>mocks</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="position\castle_rights_test.cpp">
@@ -25,8 +28,14 @@
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\gtest\gtest-all.cc" />
     <ClCompile Include="$(MSBuildThisFileDirectory)src\gmock\gmock-all.cc" />
-    <ClCompile Include="bitboard_test.cpp">
-      <Filter>util</Filter>
+    <ClCompile Include="position\bitboard_test.cpp">
+      <Filter>position</Filter>
+    </ClCompile>
+    <ClCompile Include="position\square_test.cpp">
+      <Filter>position</Filter>
+    </ClCompile>
+    <ClCompile Include="game_state_builder_test.cpp">
+      <Filter>position\io</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -44,6 +53,9 @@
     </Filter>
     <Filter Include="util">
       <UniqueIdentifier>{a40b6cb2-d0ac-4c0a-af01-cba60abe16b1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="position\io">
+      <UniqueIdentifier>{2372d5cd-f79a-4bcb-b713-6989ca350985}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

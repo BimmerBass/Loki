@@ -15,12 +15,25 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#include "game_state.hpp"
+#pragma once
+#include <string>
+#include "../game_state.hpp"
+#include "base_builder.hpp"
 
-namespace loki::position
+namespace loki::position::io
 {
-	game_state_t game_state::from_fen(const std::string& )
+	class fen_string_builder : public base_builder<game_state, std::string>
 	{
-		return game_state_t(nullptr);
-	}
+		using bb_t = base_builder<game_state, std::string>;
+	public:
+		base_builder& piece_placements() override;
+		base_builder& side_to_move() override;
+		base_builder& castling_ability() override;
+		base_builder& en_passant_square() override;
+		base_builder& halfmove_clock() override;
+		base_builder& fullmove_clock() override;
+
+	protected:
+		void reset_internal() override;
+	};
 }

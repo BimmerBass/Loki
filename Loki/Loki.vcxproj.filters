@@ -34,6 +34,12 @@
     <Filter Include="Header Files\search">
       <UniqueIdentifier>{302c91cb-11b0-4eee-9ec9-52b787e599d6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\position\io">
+      <UniqueIdentifier>{b475fb4c-2d7d-4d46-8ad6-ffadc99f1cf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\position\io">
+      <UniqueIdentifier>{48720b66-3e7d-42f7-810c-4cedf640cf48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -48,11 +54,11 @@
     <ClCompile Include="util\stringops.cpp">
       <Filter>Source Files\util</Filter>
     </ClCompile>
-    <ClCompile Include="position\game_state.cpp">
-      <Filter>Source Files\position</Filter>
+    <ClCompile Include="position\io\game_state_builder.cpp">
+      <Filter>Source Files\position\io</Filter>
     </ClCompile>
-    <ClCompile Include="util\bitboard.cpp">
-      <Filter>Source Files\util</Filter>
+    <ClCompile Include="position\bitboard.cpp">
+      <Filter>Source Files\position</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -86,7 +92,22 @@
     <ClInclude Include="search\limits.hpp">
       <Filter>Header Files\search</Filter>
     </ClInclude>
-    <ClInclude Include="util\bitboard.hpp">
+    <ClInclude Include="position\io\base_builder.hpp">
+      <Filter>Header Files\position\io</Filter>
+    </ClInclude>
+    <ClInclude Include="position\io\game_state_builder.hpp">
+      <Filter>Header Files\position\io</Filter>
+    </ClInclude>
+    <ClInclude Include="position\io\fen_string_builder.hpp">
+      <Filter>Header Files\position\io</Filter>
+    </ClInclude>
+    <ClInclude Include="position\bitboard.hpp">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="position\square.hpp">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="util\operators.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>

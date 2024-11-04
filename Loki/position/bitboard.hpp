@@ -20,12 +20,12 @@
 #include <cstdint>
 #include <optional>
 
-#include <cassert>
 #define rt_assert(_cond) \
 	if (!std::is_constant_evaluated()){ \
 		assert(_cond); \
 	}
-namespace loki::util
+
+namespace loki::position
 {
 	using bitboard_t = uint64_t;
 
@@ -38,6 +38,9 @@ namespace loki::util
 		bitboard_t x;
 	public:
 		inline constexpr bitboard(bitboard_t num) : x(num){}
+
+		inline constexpr bitboard(const bitboard& _other) = delete;
+		inline constexpr bitboard(bitboard&& _other) = delete;
 
 #pragma region const methods
 		/// <summary>

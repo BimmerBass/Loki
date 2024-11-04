@@ -1,10 +1,10 @@
 #include "pch.hpp"
-#include "loki/util/bitboard.hpp"
-#include "loki/util/bitboard.cpp"
+#include "loki/position/bitboard.hpp"
+#include "loki/position/bitboard.cpp"
 
-using namespace loki::util;
+using namespace loki::position;
 
-namespace util_tests
+namespace position_tests
 {
 #pragma region IS_ONE_AT
 	TEST(bitboard_test, is_one_at_zero)

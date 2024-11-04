@@ -90,9 +90,9 @@ namespace loki::uci
 			name += " " + (*i);
 		}
 		std::optional<std::string> value = std::nullopt;
-		if ((*i) == "value" && ++i != tokens.end())
+		if (i != tokens.end() && i+1 != tokens.end() && (*i) == "value")
 		{
-			value = util::lowercase(*i);
+			value = util::lowercase(*++i);
 		}
 
 		m_context->setoption(util::lowercase(name), value);
