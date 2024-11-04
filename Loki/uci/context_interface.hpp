@@ -50,5 +50,8 @@ namespace loki::uci
 			const search::limits* limits) = 0;
 		virtual void stop() = 0;
 		virtual void ponderhit() = 0;
+
+		// custom methods for Loki
+		virtual void printpos() const = 0;
 	};
 }

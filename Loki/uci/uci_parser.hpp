@@ -62,5 +62,7 @@ namespace loki::uci
 		void parse_register(const tokens_t&) {}
 		void parse_ponderhit(const tokens_t&) { m_context->ponderhit(); }
 
+		void parse_printpos(const tokens_t&);
+
 	};
 }

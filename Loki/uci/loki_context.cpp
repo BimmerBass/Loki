@@ -23,7 +23,7 @@
 namespace loki::uci
 {
 	loki_context::loki_context(std::ostream& os) :
-		m_os{ os }
+		m_os{ os }, m_gamestate{ nullptr }
 	{}
 
 	void loki_context::uci() const
@@ -56,9 +56,10 @@ namespace loki::uci
 	{
 		throw_msg<not_implemented_error>("not implemented");
 	}
-	void loki_context::position(const std::string&, const std::vector<std::string>&)
+	void loki_context::position(const std::string& fen, const std::vector<std::string>&)
 	{
-		throw_msg<not_implemented_error>("not implemented");
+		m_gamestate = position::game_state::from_fen(fen);
+		// TODO: Add moves
 	}
 	void loki_context::go(const search::limits*)
 	{
@@ -71,5 +72,11 @@ namespace loki::uci
 	void loki_context::ponderhit()
 	{
 		throw_msg<not_implemented_error>("not implemented");
+	}
+	void loki_context::printpos() const
+	{
+		if (m_gamestate == nullptr)
+			throw_msg<loki_exception>("game_state pointer was null");
+		m_os << position::game_state::to_fen(m_gamestate) << std::endl;
 	}
 }

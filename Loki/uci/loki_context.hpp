@@ -51,8 +51,10 @@ namespace loki::uci
 			const search::limits* limits) override;
 		void stop() override;
 		void ponderhit() override;
+		void printpos() const override;
 	private:
 		std::ostream& m_os;
+		position::game_state_t m_gamestate;
 	};
 
 }

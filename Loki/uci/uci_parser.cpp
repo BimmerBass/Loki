@@ -37,6 +37,7 @@ namespace loki::uci
 		REGISTER_CALLBACK(parse_ponderhit);
 		REGISTER_CALLBACK(parse_quit);
 		REGISTER_CALLBACK(parse_stop);
+		REGISTER_CALLBACK(parse_printpos);
 #undef REGISTER_CALLBACK
 	}
 
@@ -126,5 +127,10 @@ namespace loki::uci
 	void uci_parser::parse_go(const tokens_t&)
 	{
 		m_context->go(nullptr);
+	}
+
+	void uci_parser::parse_printpos(const tokens_t&)
+	{
+		m_context->printpos();
 	}
 }
