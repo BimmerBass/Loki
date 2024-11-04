@@ -8,6 +8,9 @@
     <ClInclude Include="mocks\game_state_builder_mock.hpp">
       <Filter>mocks</Filter>
     </ClInclude>
+    <ClInclude Include="position\io\fen_reader.hpp">
+      <Filter>position\io</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="position\castle_rights_test.cpp">
@@ -34,7 +37,7 @@
     <ClCompile Include="position\square_test.cpp">
       <Filter>position</Filter>
     </ClCompile>
-    <ClCompile Include="game_state_builder_test.cpp">
+    <ClCompile Include="position\io\game_state_builder_test.cpp">
       <Filter>position\io</Filter>
     </ClCompile>
   </ItemGroup>

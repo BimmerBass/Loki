@@ -28,6 +28,26 @@ namespace util_tests
 
 	/* SPLIT END */
 
+	/* JOIN */
+	TEST(stringops_test, join_empty_vector)
+	{
+		auto v = std::vector<std::string>{};
+		ASSERT_EQ(join(v, ','), "");
+	}
+	TEST(stringops_test, join_single_vector)
+	{
+		auto v = std::vector<std::string>{ "hello" };
+		ASSERT_EQ(join(v, ','), "hello");
+	}
+	TEST(stringops_test, join_multi_vector)
+	{
+		auto v = std::vector<std::string>{ "hello", "world"};
+		ASSERT_EQ(join(v, ','), "hello,world");
+	}
+
+	/* JOIN END */
+
+
 
 	/* LOWERCASE */
 

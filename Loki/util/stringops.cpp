@@ -33,6 +33,13 @@ namespace loki::util
 		return std::vector(split.begin(), split.end());
 	}
 
+	std::string join(const std::vector<std::string>& vec, char delim)
+	{
+		return vec
+			| std::views::join_with(delim)
+			| std::ranges::to<std::string>();
+	}
+
 	std::string lowercase(const std::string& str)
 	{
 		return str 

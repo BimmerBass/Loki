@@ -17,7 +17,7 @@
 //
 #pragma once
 #include <string>
-#include "../game_state.hpp"
+#include "defs.hpp"
 #include "base_builder.hpp"
 
 namespace loki::position::io

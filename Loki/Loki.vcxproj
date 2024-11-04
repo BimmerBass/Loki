@@ -183,6 +183,8 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="position\bitboard.cpp" />
+    <ClCompile Include="position\game_state.cpp" />
+    <ClCompile Include="position\io\fen_string_builder.cpp" />
     <ClCompile Include="position\io\game_state_builder.cpp" />
     <ClCompile Include="uci\loki_context.cpp" />
     <ClCompile Include="uci\uci_parser.cpp" />

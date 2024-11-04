@@ -41,4 +41,22 @@ namespace position_tests
 		EXPECT_EQ(sq1.rank(), r);
 		EXPECT_EQ(sq1.file(), f);
 	}
+
+	TEST_P(square_testf, test_to_algebraic)
+	{
+		auto [r, f, sq, _] = GetParam();
+		std::string cf = "a";
+		switch (f)
+		{
+		case FILE_B: cf = "b"; break;
+		case FILE_C: cf = "c"; break;
+		case FILE_D: cf = "d"; break;
+		case FILE_E: cf = "e"; break;
+		case FILE_F: cf = "f"; break;
+		case FILE_G: cf = "g"; break;
+		case FILE_H: cf = "h"; break;
+		}
+		square sq1 = sq;
+		ASSERT_EQ(sq1.to_algebraic(), cf + std::to_string(r + 1));
+	}
 }

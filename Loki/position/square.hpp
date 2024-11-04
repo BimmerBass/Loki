@@ -45,6 +45,7 @@ namespace loki::position
 		NO_FILE
 	};
 	ENABLE_BASE_OPERATORS_ON(e_file);
+	ENABLE_INCR_OPERATORS_ON(e_file);
 
 	class square final
 	{
@@ -79,6 +80,22 @@ namespace loki::position
 		{
 			rt_assert(m_value <= H8);
 			m_value++;
+		}
+
+		inline std::string to_algebraic() const
+		{
+			std::string cf = "a";
+			switch (file())
+			{
+			case FILE_B: cf = "b"; break;
+			case FILE_C: cf = "c"; break;
+			case FILE_D: cf = "d"; break;
+			case FILE_E: cf = "e"; break;
+			case FILE_F: cf = "f"; break;
+			case FILE_G: cf = "g"; break;
+			case FILE_H: cf = "h"; break;
+			}
+			return cf + std::to_string(rank() + 1);
 		}
 	};
 

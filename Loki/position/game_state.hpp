@@ -21,8 +21,7 @@
 #include "defs.hpp"
 #include "square.hpp"
 #include "util/exception.hpp"
-#include "io/game_state_builder.hpp"
-
+#include "io/base_builder.hpp"
 
 namespace loki::position
 {
@@ -38,27 +37,26 @@ namespace loki::position
 		square en_passant_sq;
 		castle_rights castling_rights;
 
+		/// <summary>
+		/// Generate a FEN string for the current position.
+		/// </summary>
+		/// <param name="gs">A shared pointer to the object.</param>
+		/// <returns>A string representing the position.</returns>
+		static std::string to_fen(const game_state_t& gs);
 
-		inline static game_state_t from_fen(const std::string& fen)
-		{
-			io::game_state_builder builder;
-			return from_builder(&builder, fen);
-		}
+		/// <summary>
+		/// Parse a FEN string to a game_state instance.
+		/// </summary>
+		/// <param name="fen">The string to parse</param>
+		/// <returns>A std::shared_ptr to the game_state instance.</returns>
+		static game_state_t from_fen(const std::string& fen);
 
-		// this is the actual method we will test.
-		inline static game_state_t from_builder(io::base_builder<std::string, game_state>* bPtr, const std::string& fen)
-		{
-			auto gs = std::make_shared<game_state>();
-			auto sPtr = std::shared_ptr<std::string>(new std::string(fen));
-			bPtr->reset(sPtr, gs);
-			return (*bPtr)
-				.piece_placements()
-				.side_to_move()
-				.castling_ability()
-				.en_passant_square()
-				.halfmove_clock()
-				.fullmove_clock()
-				.get_product();
-		}
+		/// <summary>
+		/// Parse a FEN string using a builder.
+		/// </summary>
+		/// <param name="bPtr">Pointer to the builter to use</param>
+		/// <param name="fen">The string to parse.</param>
+		/// <returns>A std::shared_ptr to the game_state instance.</returns>
+		static game_state_t from_builder(io::base_builder<std::string, game_state>* bPtr, const std::string& fen);
 	};
 }

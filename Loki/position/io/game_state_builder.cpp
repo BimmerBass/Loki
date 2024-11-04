@@ -25,22 +25,28 @@ namespace loki::position::io
 {
 	void game_state_builder::reset_internal()
 	{
-		std::istringstream iss(*m_resource);
-		if (!(iss >> m_piece_placements >> m_side_to_move >> m_castling_abilities))
-			throw_msg<fen_parsing_error>("invalid fen (missing either pieces, side to move or castling rights): '{}'", *m_resource);
-
-		if (!(iss >> m_en_passant_sq))
-			m_en_passant_sq = "-";
-		if (!(iss >> m_halfmove_clock >> m_fullmove_clock))
-			m_halfmove_clock = m_fullmove_clock = "-";
-
 		// Reset the game_state instance.
-		std::fill_n(m_product->piece_placements[WHITE], NUM_SQUARES, NO_PIECE);
-		std::fill_n(m_product->piece_placements[BLACK], NUM_SQUARES, NO_PIECE);
-		m_product->side_to_move = WHITE;
-		m_product->fifty_move_cnt = m_product->full_move_cnt = 0;
-		m_product->en_passant_sq = NO_SQ;
-		m_product->castling_rights = castle_rights();
+		if (m_product != nullptr)
+		{
+			std::fill_n(m_product->piece_placements[WHITE], NUM_SQUARES, NO_PIECE);
+			std::fill_n(m_product->piece_placements[BLACK], NUM_SQUARES, NO_PIECE);
+			m_product->side_to_move = WHITE;
+			m_product->fifty_move_cnt = m_product->full_move_cnt = 0;
+			m_product->en_passant_sq = NO_SQ;
+			m_product->castling_rights = castle_rights();
+		}
+
+		if (m_resource != nullptr)
+		{
+			std::istringstream iss(*m_resource);
+			if (!(iss >> m_piece_placements >> m_side_to_move >> m_castling_abilities))
+				throw_msg<fen_parsing_error>("invalid fen (missing either pieces, side to move or castling rights): '{}'", *m_resource);
+
+			if (!(iss >> m_en_passant_sq))
+				m_en_passant_sq = "-";
+			if (!(iss >> m_halfmove_clock >> m_fullmove_clock))
+				m_halfmove_clock = m_fullmove_clock = "-";
+		}
 	}
 	game_state_builder::bb_t& game_state_builder::piece_placements()
 	{

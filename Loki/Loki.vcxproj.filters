@@ -60,6 +60,12 @@
     <ClCompile Include="position\bitboard.cpp">
       <Filter>Source Files\position</Filter>
     </ClCompile>
+    <ClCompile Include="position\game_state.cpp">
+      <Filter>Source Files\position</Filter>
+    </ClCompile>
+    <ClCompile Include="position\io\fen_string_builder.cpp">
+      <Filter>Source Files\position\io</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="util\exception.hpp">

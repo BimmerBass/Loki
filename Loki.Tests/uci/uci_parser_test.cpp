@@ -1,6 +1,7 @@
 #include "pch.hpp"
 #include "Loki/uci/uci_parser.hpp"
 #include "Loki/uci/uci_parser.cpp"
+#include "Loki/position/io/fen_string_builder.cpp"
 #include "mocks/context_mock.hpp"
 using namespace loki::uci;
 

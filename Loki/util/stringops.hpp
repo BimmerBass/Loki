@@ -31,6 +31,14 @@ namespace loki::util
 	std::vector<std::string> split(const std::string& str, char sep, bool keep_empty_entries = false);
 
 	/// <summary>
+	/// Join a vector of strings into a single string using a specified delimiter
+	/// </summary>
+	/// <param name="vec">The vector of strings to join</param>
+	/// <param name="delim">Delimiter to use</param>
+	/// <returns>A string of the accumulated vector</returns>
+	std::string join(const std::vector<std::string>& vec, char delim);
+
+	/// <summary>
 	/// Convert an ASCII-string to lowercase.
 	/// </summary>
 	/// <param name="str">The string in question.</param>
