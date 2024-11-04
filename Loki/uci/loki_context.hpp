@@ -52,6 +52,8 @@ namespace loki::uci
 		void stop() override;
 		void ponderhit() override;
 		void printpos() const override;
+
+		inline const position::game_state_t& game_state() const { return m_gamestate; }
 	private:
 		std::ostream& m_os;
 		position::game_state_t m_gamestate;

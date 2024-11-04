@@ -66,7 +66,9 @@ namespace uci_tests
 	TEST_F(loki_context_test, test_position)
 	{
 		auto ev = std::vector<std::string>();
-		ASSERT_THROW(context.position(loki::START_FEN, ev), loki::not_implemented_error);
+		ASSERT_EQ(context.game_state(), nullptr);
+		context.position(loki::START_FEN, ev);
+		ASSERT_NE(context.game_state(), nullptr);
 	}
 	TEST_F(loki_context_test, test_go)
 	{

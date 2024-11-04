@@ -18,5 +18,6 @@ namespace uci_tests
 		MOCK_METHOD(void, go, (const loki::search::limits* limits), (override));
 		MOCK_METHOD(void, stop, (), (override));
 		MOCK_METHOD(void, ponderhit, (), (override));
+		MOCK_METHOD(void, printpos, (), (const override));
 	};
 }
