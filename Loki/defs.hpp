@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "position/bitboard.hpp"
+#include "util/stringops.hpp"
 
 // This file contains the most common type and constant definitions in Loki.
 namespace loki
@@ -32,6 +33,7 @@ namespace loki
 		BLACK,
 		NUM_SIDES
 	};
+	ENABLE_STRINGIFY(side, "W", "B", "-");
 	enum piece
 	{
 		PAWN = 0,
@@ -43,6 +45,8 @@ namespace loki
 		NUM_PIECES,
 		NO_PIECE
 	};
+	ENABLE_STRINGIFY(piece, "P", "N", "B", "R", "Q", "K", "NP", "-");
+
 
 	namespace position
 	{

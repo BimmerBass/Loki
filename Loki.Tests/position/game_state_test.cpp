@@ -58,4 +58,53 @@ namespace position_tests
 		}
 	}
 #pragma endregion
+#pragma region get_piece
+	TEST(game_state_test, get_piece_empty_sq)
+	{
+		side s = WHITE;
+		game_state gs;
+		std::fill_n(gs.piece_placements[WHITE], NUM_SQUARES, NO_PIECE);
+		std::fill_n(gs.piece_placements[BLACK], NUM_SQUARES, NO_PIECE);
+
+		EXPECT_EQ(gs.get_piece(A1, &s), NO_PIECE);
+		EXPECT_EQ(s, NUM_SIDES);
+	}
+	TEST(game_state_test, get_piece_white)
+	{
+		side s = WHITE;
+		game_state gs;
+		std::fill_n(gs.piece_placements[WHITE], NUM_SQUARES, NO_PIECE);
+		std::fill_n(gs.piece_placements[BLACK], NUM_SQUARES, NO_PIECE);
+
+		gs.piece_placements[WHITE][B7] = KNIGHT;
+
+		EXPECT_EQ(gs.get_piece(B7, &s), KNIGHT);
+		EXPECT_EQ(s, WHITE);
+	}
+	TEST(game_state_test, get_piece_black)
+	{
+		side s = WHITE;
+		game_state gs;
+		std::fill_n(gs.piece_placements[WHITE], NUM_SQUARES, NO_PIECE);
+		std::fill_n(gs.piece_placements[BLACK], NUM_SQUARES, NO_PIECE);
+
+		gs.piece_placements[BLACK][F6] = QUEEN;
+
+		EXPECT_EQ(gs.get_piece(F6, &s), QUEEN);
+		EXPECT_EQ(s, BLACK);
+	}
+	TEST(game_state_test, get_piece_both_throws)
+	{
+		side s = WHITE;
+		game_state gs;
+		std::fill_n(gs.piece_placements[WHITE], NUM_SQUARES, NO_PIECE);
+		std::fill_n(gs.piece_placements[BLACK], NUM_SQUARES, NO_PIECE);
+
+		gs.piece_placements[BLACK][F6] = QUEEN;
+		gs.piece_placements[WHITE][F6] = KING;
+
+		ASSERT_THROW(gs.get_piece(F6, &s), loki_exception);
+	}
+
+#pragma endregion
 }

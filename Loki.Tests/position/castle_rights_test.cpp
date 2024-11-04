@@ -107,4 +107,24 @@ namespace position_tests
 		EXPECT_FALSE((rights.can_castle<BLACK, KINGSIDE>()));
 		EXPECT_FALSE((rights.can_castle<BLACK, QUEENSIDE>()));
 	}
+
+	TEST_F(castle_rights_test, to_string_empty)
+	{
+		ASSERT_EQ(rights.to_string(), "-");
+	}
+
+	TEST_F(castle_rights_test, to_string_nonempty)
+	{
+		rights.set<WHITE, QUEENSIDE>(true);
+		rights.set<BLACK, KINGSIDE>(true);
+		ASSERT_EQ(rights.to_string(), "Qk");
+	}
+	TEST_F(castle_rights_test, to_string_full)
+	{
+		rights.set<WHITE, KINGSIDE>(true);
+		rights.set<WHITE, QUEENSIDE>(true);
+		rights.set<BLACK, KINGSIDE>(true);
+		rights.set<BLACK, QUEENSIDE>(true);
+		ASSERT_EQ(rights.to_string(), "KQkq");
+	}
 }

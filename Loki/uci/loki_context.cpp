@@ -19,6 +19,8 @@
 
 #include "loki_context.hpp"
 #include "versioninfo.hpp"
+#include "position/square.hpp"
+#include "defs.hpp"
 
 namespace loki::uci
 {
@@ -77,6 +79,43 @@ namespace loki::uci
 	{
 		if (m_gamestate == nullptr)
 			throw_msg<loki_exception>("game_state pointer was null");
-		m_os << position::game_state::to_fen(m_gamestate) << std::endl;
+
+		m_os << "POSITION:" << std::endl;
+
+		for (auto rank = position::RANK_8; rank >= position::RANK_1; rank--)
+		{
+			m_os << "\t" << rank + 1 << " ";
+
+			for (auto file = position::FILE_A; file <= position::FILE_H; file++)
+			{
+				position::square sq(rank, file);
+				side color = NUM_SIDES;
+				auto piece_type = m_gamestate->get_piece(sq, &color);
+				std::string piece_string = enum_to_string(piece_type);
+				if (piece_type != NO_PIECE)
+					piece_string = color == WHITE ?
+						util::uppercase(piece_string) : util::lowercase(piece_string);
+				m_os << piece_string << " ";
+			}
+			m_os << std::endl;
+		}
+		m_os << "\t" << " " << " "
+			<< enum_to_string(position::FILE_A) << " "
+			<< enum_to_string(position::FILE_B) << " "
+			<< enum_to_string(position::FILE_C) << " "
+			<< enum_to_string(position::FILE_D) << " "
+			<< enum_to_string(position::FILE_E) << " "
+			<< enum_to_string(position::FILE_F) << " "
+			<< enum_to_string(position::FILE_G) << " "
+			<< enum_to_string(position::FILE_H) << std::endl;
+		m_os << "/POSITION" << std::endl;
+		m_os << "INFORMATION" << std::endl;
+		m_os << "\tSide to move:\t\t" << enum_to_string(m_gamestate->side_to_move) << std::endl;
+		m_os << "\tEn-passant square:\t" << m_gamestate->en_passant_sq.to_algebraic() << std::endl;;
+		m_os << "\tCastling rights:\t" << m_gamestate->castling_rights.to_string() << std::endl;
+		m_os << "\tFifty move counter:\t" << m_gamestate->fifty_move_cnt << std::endl;
+		m_os << "\tFull move counter:\t" << m_gamestate->full_move_cnt << std::endl;
+		m_os << "\t" << "FEN:\t\t\t" << position::game_state::to_fen(m_gamestate) << std::endl;
+		m_os << "/INFORMATION" << std::endl;
 	}
 }

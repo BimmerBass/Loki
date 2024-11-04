@@ -38,6 +38,15 @@ namespace loki::position
 		castle_rights castling_rights;
 
 		/// <summary>
+		/// Get the piece type on a given square.
+		/// NOTE: This method is not optimized for speed and should therefore not be used during move generation.
+		/// </summary>
+		/// <param name="sq">The square in question</param>
+		/// param name="sPtr">An optional pointer to a side-enum. If NULL, it is not used</param>
+		/// <returns>A piece enum representing the piece, if present. Otherwise NO_PIECE</returns>
+		piece get_piece(square sq, side* sPtr = nullptr) const;
+
+		/// <summary>
 		/// Generate a FEN string for the current position.
 		/// </summary>
 		/// <param name="gs">A shared pointer to the object.</param>

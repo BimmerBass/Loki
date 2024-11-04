@@ -18,9 +18,24 @@
 #include "game_state.hpp"
 #include "io/fen_string_builder.hpp"
 #include "io/game_state_builder.hpp"
+#include <cassert>
 
 namespace loki::position
 {
+	piece game_state::get_piece(square sq, side* sPtr) const
+	{
+		if (!(piece_placements[WHITE][sq.value()] == NO_PIECE || piece_placements[BLACK][sq.value()] == NO_PIECE))
+			throw_msg<loki_exception>("a piece was present on both the white and black side.");
+		auto side = NUM_SIDES;
+		if (piece_placements[WHITE][sq.value()] != NO_PIECE)
+			side = WHITE;
+		else if (piece_placements[BLACK][sq.value()] != NO_PIECE)
+			side = BLACK;
+		if (sPtr != nullptr)
+			*sPtr = side;
+		return side == NUM_SIDES ? NO_PIECE : piece_placements[side][sq.value()];
+	}
+
 	std::string game_state::to_fen(const game_state_t& gs)
 	{
 		io::fen_string_builder builder;

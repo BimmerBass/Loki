@@ -46,4 +46,10 @@ namespace loki::util
 			| std::views::transform([](const char c) { return (char)std::tolower(c); }) 
 			| std::ranges::to<std::string>();
 	}
+	std::string uppercase(const std::string& str)
+	{
+		return str
+			| std::views::transform([](const char c) { return (char)std::toupper(c); })
+			| std::ranges::to<std::string>();
+	}
 }

@@ -87,24 +87,13 @@ namespace loki::position::io
 	}
 	fen_string_builder::bb_t& fen_string_builder::castling_ability()
 	{
-		std::string castle_rights = "";
-		if (m_resource->castling_rights.can_castle<WHITE, KINGSIDE>())
-			castle_rights += "K";
-		if (m_resource->castling_rights.can_castle<WHITE, QUEENSIDE>())
-			castle_rights += "Q";
-		if (m_resource->castling_rights.can_castle<BLACK, KINGSIDE>())
-			castle_rights += "k";
-		if (m_resource->castling_rights.can_castle<BLACK, QUEENSIDE>())
-			castle_rights += "q";
-
-		m_product->append(castle_rights.empty() ? "-" : castle_rights);
+		m_product->append(m_resource->castling_rights.to_string());
 		m_product->append(" ");
 		return *this;
 	}
 	fen_string_builder::bb_t& fen_string_builder::en_passant_square()
 	{
-		m_product->append(m_resource->en_passant_sq == NO_SQ
-			? "-" : m_resource->en_passant_sq.to_algebraic());
+		m_product->append(m_resource->en_passant_sq.to_algebraic());
 		m_product->append(" ");
 		return *this;
 	}

@@ -18,6 +18,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <array>
 
 namespace loki::util
 {
@@ -44,4 +45,42 @@ namespace loki::util
 	/// <param name="str">The string in question.</param>
 	/// <returns>A lowercase copy of str.</returns>
 	std::string lowercase(const std::string& str);
+
+	/// <summary>
+	/// Convert an ASCII-string to uppercase.
+	/// </summary>
+	/// <param name="str">The string in question.</param>
+	/// <returns>A lowercase copy of str.</returns>
+	std::string uppercase(const std::string& str);
 }
+
+template<typename EnumT>
+struct enum_strings
+{
+	static constexpr std::array<const char*, 1> strings = { "<unused>" };
+};
+
+/// <summary>
+/// Convert an enum to a string representation.
+/// NOTE: To enable this function, use the ENABLE_STRINGIFY macro instead of direct template instantiation.
+/// </summary>
+/// <typeparam name="EnumT">The enum type</typeparam>
+/// <param name="value">Value of the enum</param>
+/// <returns>A string representing the enum</returns>
+template<typename T>
+constexpr const char* enum_to_string(T value)
+{
+	auto index = static_cast<size_t>(value);
+	if (index < enum_strings<T>::strings.size())
+	{
+		return enum_strings<T>::strings[index];
+	}
+	return "<invalid>";
+}
+
+#define ENABLE_STRINGIFY(enumType, ...) \
+	template<>\
+	struct enum_strings<enumType>{\
+		static constexpr std::array<const char*, std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value> strings = {__VA_ARGS__};\
+	};	
+	

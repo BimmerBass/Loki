@@ -44,6 +44,7 @@ namespace loki::position
 		NUM_FILES,
 		NO_FILE
 	};
+	ENABLE_STRINGIFY(e_file, "A", "B", "C", "D", "E", "F", "G", "H", "NF", "NONE");
 	ENABLE_BASE_OPERATORS_ON(e_file);
 	ENABLE_INCR_OPERATORS_ON(e_file);
 
@@ -84,6 +85,8 @@ namespace loki::position
 
 		inline std::string to_algebraic() const
 		{
+			if (m_value == NO_SQ)
+				return "-";
 			std::string cf = "a";
 			switch (file())
 			{

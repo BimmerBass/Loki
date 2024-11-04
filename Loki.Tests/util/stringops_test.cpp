@@ -64,4 +64,19 @@ namespace util_tests
 	}
 
 	/* LOWERCASE END */
+
+	/* UPPERCASE */
+	TEST(stringops_test, uppercase_empty_whitespace)
+	{
+		EXPECT_EQ(uppercase(""), "");
+		EXPECT_EQ(uppercase(" \t"), " \t");
+	}
+
+	TEST(stringops_test, uppercase_nonempty)
+	{
+		EXPECT_EQ(uppercase("ABC123"), "ABC123");
+		EXPECT_EQ(uppercase("AbC123"), "ABC123");
+	}
+
+	/* UPPERCASE END */
 }
