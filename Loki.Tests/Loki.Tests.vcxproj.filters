@@ -40,6 +40,9 @@
     <ClCompile Include="position\io\game_state_builder_test.cpp">
       <Filter>position\io</Filter>
     </ClCompile>
+    <ClCompile Include="movegen\move_test.cpp">
+      <Filter>movegen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -59,6 +62,9 @@
     </Filter>
     <Filter Include="position\io">
       <UniqueIdentifier>{2372d5cd-f79a-4bcb-b713-6989ca350985}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="movegen">
+      <UniqueIdentifier>{c4cc904e-2d63-4d4f-b675-e28f268c05cd}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
