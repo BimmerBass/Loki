@@ -193,6 +193,7 @@
   <ItemGroup>
     <ClInclude Include="defs.hpp" />
     <ClInclude Include="movegen\move.hpp" />
+    <ClInclude Include="movegen\move_list.hpp" />
     <ClInclude Include="position\bitboard.hpp" />
     <ClInclude Include="position\castle_rights.hpp" />
     <ClInclude Include="position\game_state.hpp" />

@@ -122,5 +122,8 @@
     <ClInclude Include="movegen\move.hpp">
       <Filter>Header Files\movegen</Filter>
     </ClInclude>
+    <ClInclude Include="movegen\move_list.hpp">
+      <Filter>Header Files\movegen</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

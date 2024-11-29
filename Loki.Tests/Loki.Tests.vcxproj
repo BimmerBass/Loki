@@ -169,6 +169,7 @@
     <ClInclude Include="position\io\fen_reader.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="movegen\move_list_test.cpp" />
     <ClCompile Include="movegen\move_test.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="position\bitboard_test.cpp" />

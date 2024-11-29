@@ -21,9 +21,10 @@ namespace loki::movegen
 		move_t m_move;
 
 	public:
+		move() noexcept = default;
 		inline constexpr move(move_t m) : m_move{ m }
 		{ }
-		inline constexpr move(position::e_square from, position::e_square to, move_type type, piece promotion_piece)
+		inline constexpr move(position::e_square from, position::e_square to, move_type type, piece promotion_piece) noexcept
 			: m_move{0}
 		{
 			this->from(from);
@@ -31,6 +32,7 @@ namespace loki::movegen
 			this->type(type);
 			this->promotion_piece(promotion_piece);
 		}
+		move(const move& src) noexcept : m_move{ src.m_move } {}
 
 #pragma region setters
 		inline constexpr void from(position::e_square sq) noexcept
@@ -68,6 +70,16 @@ namespace loki::movegen
 			return get<piece>(0x0003, 0) + 1;
 		}
 #pragma endregion
+
+		template<typename T> requires std::convertible_to<T, move_t>
+		inline constexpr bool operator==(const T& rhs) const noexcept
+		{
+			return m_move == static_cast<move_t>(rhs);
+		}
+		inline constexpr bool operator==(const move& rhs) const noexcept
+		{
+			return m_move == rhs.m_move;
+		}
 
 	private:
 

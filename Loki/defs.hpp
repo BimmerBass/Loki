@@ -27,7 +27,12 @@
 // This file contains the most common type and constant definitions in Loki.
 namespace loki
 {
-	constexpr const char* START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	namespace constants
+	{
+		constexpr const char* START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+		
+		constexpr size_t MAX_POSITION_MOVES = 256; // TODO: Remove this restriction
+	}
 	
 	enum side {
 		WHITE = 0,

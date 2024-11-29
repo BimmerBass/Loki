@@ -85,7 +85,7 @@ namespace uci_tests
 	TEST_F(uci_parser_mocked, test_position_startpos)
 	{
 		using namespace ::testing;
-		EXPECT_CALL(*context, position(loki::START_FEN, std::vector<std::string>()))
+		EXPECT_CALL(*context, position(loki::constants::START_FEN, std::vector<std::string>()))
 			.Times(1);
 		uci_parser parser(context);
 		parser.parse_position({"startpos"});

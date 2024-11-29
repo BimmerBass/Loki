@@ -104,7 +104,7 @@ namespace loki::uci
 		if (tokens.size() < 1)
 			throw_msg<uci_error>("position needs at least one parameter.");
 		
-		std::string fen = START_FEN;
+		std::string fen = constants::START_FEN;
 		std::vector<std::string> moves;
 
 		auto it = tokens.begin();
