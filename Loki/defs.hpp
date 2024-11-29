@@ -22,6 +22,7 @@
 
 #include "position/bitboard.hpp"
 #include "util/stringops.hpp"
+#include "util/operators.hpp"
 
 // This file contains the most common type and constant definitions in Loki.
 namespace loki
@@ -45,6 +46,7 @@ namespace loki
 		NUM_PIECES,
 		NO_PIECE
 	};
+	ENABLE_BASE_OPERATORS_ON(piece);
 	ENABLE_STRINGIFY(piece, "P", "N", "B", "R", "Q", "K", "NP", "-");
 
 

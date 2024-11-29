@@ -40,6 +40,9 @@
     <Filter Include="Source Files\position\io">
       <UniqueIdentifier>{48720b66-3e7d-42f7-810c-4cedf640cf48}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\movegen">
+      <UniqueIdentifier>{a51b2c5f-e92f-40de-a4cf-3d41c279e8e7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -115,6 +118,9 @@
     </ClInclude>
     <ClInclude Include="util\operators.hpp">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move.hpp">
+      <Filter>Header Files\movegen</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
