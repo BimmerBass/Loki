@@ -10,7 +10,9 @@
 // STL includes
 #include <filesystem>
 #include <fstream>
+#include <numeric>
 #include <ranges>
+#include <stdfloat>
 #include <tuple>
 
 #define STRINGIFY(x) #x
@@ -21,5 +23,13 @@ inline std::string get_project_dir()
 	std::string s = EXPAND(DATA_DIR_PATH);
 	return s.erase(0,1).erase(s.size() - 1);
 }
+
+template <typename T>
+auto IsInRange(T lo, T hi)
+{
+	using namespace ::testing;
+	return AllOf(Ge((lo)), Le((hi)));
+}
+
 
 // For an introduction on google test: https://github.com/google/googletest/blob/main/docs/primer.md

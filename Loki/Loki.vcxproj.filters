@@ -125,5 +125,11 @@
     <ClInclude Include="movegen\move_list.hpp">
       <Filter>Header Files\movegen</Filter>
     </ClInclude>
+    <ClInclude Include="movegen\magics\magic_generator.hpp">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="util\rng.hpp">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

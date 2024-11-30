@@ -179,6 +179,7 @@
     <ClCompile Include="position\square_test.cpp" />
     <ClCompile Include="uci\loki_context_test.cpp" />
     <ClCompile Include="uci\uci_parser_test.cpp" />
+    <ClCompile Include="util\rng_test.cpp" />
     <ClCompile Include="util\stringops_test.cpp" />
   </ItemGroup>
   <ItemGroup>

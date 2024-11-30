@@ -207,6 +207,7 @@
     <ClInclude Include="uci\uci_parser.hpp" />
     <ClInclude Include="util\exception.hpp" />
     <ClInclude Include="util\operators.hpp" />
+    <ClInclude Include="util\rng.hpp" />
     <ClInclude Include="util\stringops.hpp" />
     <ClInclude Include="versioninfo.hpp" />
   </ItemGroup>

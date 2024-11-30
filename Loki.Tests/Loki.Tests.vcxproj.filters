@@ -46,6 +46,9 @@
     <ClCompile Include="movegen\move_list_test.cpp">
       <Filter>movegen</Filter>
     </ClCompile>
+    <ClCompile Include="util\rng_test.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
