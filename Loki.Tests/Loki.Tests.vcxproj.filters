@@ -49,6 +49,18 @@
     <ClCompile Include="util\rng_test.cpp">
       <Filter>util</Filter>
     </ClCompile>
+    <ClCompile Include="movegen\magics\rook_generator_test.cpp">
+      <Filter>movegen\magics</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\bishop_generator_test.cpp">
+      <Filter>movegen\magics</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\sliding_generator_test.cpp">
+      <Filter>movegen\magics</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\magic_generator_test.cpp">
+      <Filter>movegen\magics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -71,6 +83,9 @@
     </Filter>
     <Filter Include="movegen">
       <UniqueIdentifier>{c4cc904e-2d63-4d4f-b675-e28f268c05cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="movegen\magics">
+      <UniqueIdentifier>{c9700ae2-c37f-4bd2-9e79-01572b4d4779}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -32,6 +32,7 @@ namespace loki::position
 		NO_RANK
 	};
 	ENABLE_INCR_OPERATORS_ON(e_rank);
+	ENABLE_FULL_OPERATORS_ON(e_rank);
 	enum e_file{
 		FILE_A = 0,
 		FILE_B,
@@ -45,7 +46,7 @@ namespace loki::position
 		NO_FILE
 	};
 	ENABLE_STRINGIFY(e_file, "A", "B", "C", "D", "E", "F", "G", "H", "NF", "NONE");
-	ENABLE_BASE_OPERATORS_ON(e_file);
+	ENABLE_FULL_OPERATORS_ON(e_file);
 	ENABLE_INCR_OPERATORS_ON(e_file);
 
 	class square final

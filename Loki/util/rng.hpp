@@ -12,6 +12,8 @@ namespace loki::util
 	/// </summary>
 	class rng
 	{
+	public:
+		inline static constexpr uint64_t SEED = 0x3a8f05c53a8f05c5ULL;
 	private:
 		inline static rng* _instance = nullptr;
 		inline static std::once_flag _init_flag;
@@ -26,7 +28,7 @@ namespace loki::util
 		std::mt19937_64 m_engine;
 		std::recursive_mutex m_mtx;
 
-		rng() : m_engine(std::random_device{}()), m_mtx{}
+		rng() : m_engine(SEED), m_mtx{}
 		{}
 		~rng() = default;
 	public:

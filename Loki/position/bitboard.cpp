@@ -15,15 +15,46 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#include <type_traits>
-#include <assert.h>
 #include "bitboard.hpp"
+#include "square.hpp"
+#include "util/stringops.hpp"
 
+#include <type_traits>
+#include <iostream>
 
 namespace loki::position
 {
 	namespace
 	{
+		static constexpr int index64[64] = {
+			0, 47,  1, 56, 48, 27,  2, 60,
+			57, 49, 41, 37, 28, 16,  3, 61,
+			54, 58, 35, 52, 50, 42, 21, 44,
+			38, 32, 29, 23, 17, 11,  4, 62,
+			46, 55, 26, 59, 40, 36, 15, 53,
+			34, 51, 20, 43, 31, 22, 10, 45,
+			25, 39, 14, 33, 19, 30,  9, 24,
+			13, 18,  8, 12,  7,  6,  5, 63
+		};
+
+		size_t bit_scan_reverse_fallback(bitboard_t x)
+		{
+			const bitboard_t debruijn64 = 0x03f79d71b4cb0a89;
+			x |= x >> 1;
+			x |= x >> 2;
+			x |= x >> 4;
+			x |= x >> 8;
+			x |= x >> 16;
+			x |= x >> 32;
+			return index64[(x * debruijn64) >> 58];
+		}
+
+		size_t bit_scan_forward_fallback(bitboard_t x)
+		{
+			const bitboard_t debruijn64 = 0x03f79d71b4cb0a89;
+			return index64[((x ^ (x - 1)) * debruijn64) >> 58];
+		}
+
 		std::optional<size_t> runtime_ms1b(bitboard_t x)
 		{
 			assert(x != 0);
@@ -86,58 +117,46 @@ namespace loki::position
 #endif
 			return std::optional<size_t>(n);
 		}
-
-		static constexpr int index64[64] = {
-			0, 47,  1, 56, 48, 27,  2, 60,
-			57, 49, 41, 37, 28, 16,  3, 61,
-			54, 58, 35, 52, 50, 42, 21, 44,
-			38, 32, 29, 23, 17, 11,  4, 62,
-			46, 55, 26, 59, 40, 36, 15, 53,
-			34, 51, 20, 43, 31, 22, 10, 45,
-			25, 39, 14, 33, 19, 30,  9, 24,
-			13, 18,  8, 12,  7,  6,  5, 63
-		};
-
-		constexpr size_t bit_scan_reverse_fallback(bitboard_t x)
-		{
-			const bitboard_t debruijn64 = 0x03f79d71b4cb0a89;
-			x |= x >> 1;
-			x |= x >> 2;
-			x |= x >> 4;
-			x |= x >> 8;
-			x |= x >> 16;
-			x |= x >> 32;
-			return index64[(x * debruijn64) >> 58];
-		}
-
-		constexpr size_t bit_scan_forward_fallback(bitboard_t x)
-		{
-			const bitboard_t debruijn64 = 0x03f79d71b4cb0a89;
-			return index64[((x ^ (x - 1)) * debruijn64) >> 58];
-		}
 	}
 
 
-	constexpr std::optional<size_t> bitboard::ms1b() const noexcept
+	std::optional<size_t> bitboard::ms1b() const noexcept
 	{
 		if (x == 0)
 			return std::nullopt;
-
-		if (std::is_constant_evaluated())
-		{
-			return std::optional<size_t>(bit_scan_reverse_fallback(x));
-		}
 		return runtime_ms1b(x);
 	}
-	constexpr std::optional<size_t> bitboard::ls1b() const noexcept
+	std::optional<size_t> bitboard::ls1b() const noexcept
 	{
 		if (x == 0)
 			return std::nullopt;
-
-		if (std::is_constant_evaluated())
-		{
-			return std::optional<size_t>(bit_scan_forward_fallback(x));
-		}
 		return runtime_ls1b(x);
+	}
+
+	void print_bitboard(const bitboard& bb)
+	{
+		for (auto r = RANK_8; r >= RANK_1; r--)
+		{
+			std::cout << " " << r + 1 << " ";
+
+			for (auto f = FILE_A; f <= FILE_H; f++)
+			{
+				square sq(r, f);
+				auto s = "- ";
+				if (bb.is_one_at(sq.value()))
+					s = "X ";
+				std::cout << s;
+			}
+			std::cout << std::endl;
+		}
+		std::cout << " " << " " << " "
+			<< enum_to_string(FILE_A) << " "
+			<< enum_to_string(FILE_B) << " "
+			<< enum_to_string(FILE_C) << " "
+			<< enum_to_string(FILE_D) << " "
+			<< enum_to_string(FILE_E) << " "
+			<< enum_to_string(FILE_F) << " "
+			<< enum_to_string(FILE_G) << " "
+			<< enum_to_string(FILE_H) << std::endl;
 	}
 }

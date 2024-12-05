@@ -43,6 +43,15 @@
     <Filter Include="Header Files\movegen">
       <UniqueIdentifier>{a51b2c5f-e92f-40de-a4cf-3d41c279e8e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\movegen\magics">
+      <UniqueIdentifier>{676e11ca-7e18-4b67-b5fb-d33815960f95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\movegen">
+      <UniqueIdentifier>{24d996c6-71fa-4a46-9308-99808778e02e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\movegen\magics">
+      <UniqueIdentifier>{3e0b247d-0722-4b09-af09-ce7363b41318}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -60,14 +69,26 @@
     <ClCompile Include="position\io\game_state_builder.cpp">
       <Filter>Source Files\position\io</Filter>
     </ClCompile>
-    <ClCompile Include="position\bitboard.cpp">
-      <Filter>Source Files\position</Filter>
-    </ClCompile>
     <ClCompile Include="position\game_state.cpp">
       <Filter>Source Files\position</Filter>
     </ClCompile>
     <ClCompile Include="position\io\fen_string_builder.cpp">
       <Filter>Source Files\position\io</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\magic_generator.cpp">
+      <Filter>Source Files\movegen\magics</Filter>
+    </ClCompile>
+    <ClCompile Include="position\bitboard.cpp">
+      <Filter>Source Files\position</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\rook_generator.cpp">
+      <Filter>Source Files\movegen\magics</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\sliding_generator.cpp">
+      <Filter>Source Files\movegen\magics</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\bishop_generator.cpp">
+      <Filter>Source Files\movegen\magics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -110,9 +131,6 @@
     <ClInclude Include="position\io\fen_string_builder.hpp">
       <Filter>Header Files\position\io</Filter>
     </ClInclude>
-    <ClInclude Include="position\bitboard.hpp">
-      <Filter>Header Files\position</Filter>
-    </ClInclude>
     <ClInclude Include="position\square.hpp">
       <Filter>Header Files\position</Filter>
     </ClInclude>
@@ -130,6 +148,21 @@
     </ClInclude>
     <ClInclude Include="util\rng.hpp">
       <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\sliding_generator.hpp">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\magic.hpp">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\rook_generator.hpp">
+      <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="position\bitboard.hpp">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\magics\bishop_generator.hpp">
+      <Filter>Header Files\movegen\magics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

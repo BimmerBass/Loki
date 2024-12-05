@@ -32,6 +32,13 @@ namespace position_tests
 			std::make_tuple(bitboard_t(0x5555555555555555), 32) // every other is 1
 		));
 
+	TEST_P(num_one_bits_test, get_raw)
+	{
+		auto [xi, ni] = GetParam();
+		bitboard x = xi;
+		ASSERT_EQ(x.get_raw(), xi);
+	}
+
 	TEST_P(num_one_bits_test, num_one_bits)
 	{
 		auto [xi, ni] = GetParam();
@@ -116,17 +123,62 @@ namespace position_tests
 	TEST(bitboard_test, pop_lsb_zero)
 	{
 		bitboard x = 0;
-		ASSERT_EQ(x.pop_lsb(), 0);
+		ASSERT_EQ(x.pop_lsb(), std::nullopt);
 	}
 	TEST(bitboard_test, pop_lsb_nonzero)
 	{
 		bitboard x =
 			(bitboard_t(1) << 32) |
 			(bitboard_t(1) << 63);
-		ASSERT_EQ(x.pop_lsb(), bitboard_t(1) << 63);
+		ASSERT_EQ(x.pop_lsb(), std::optional(32ULL));
 	}
 #pragma endregion
 #pragma region OPERATORS
+	class shift_operators_test :
+		public ::testing::Test,
+		public ::testing::WithParamInterface<std::tuple<bitboard_t, bitboard_t, e_direction>>
+	{};
+	INSTANTIATE_TEST_SUITE_P(
+		bitboard_test,
+		shift_operators_test,
+		::testing::Values(
+			std::make_tuple(0xFF00000000000000, 0, UP),
+			std::make_tuple(0xFF00000000000000, 0x00FF000000000000, DOWN),
+			std::make_tuple(0x00000000000000FF, 0x000000000000FF00, UP),
+			std::make_tuple(0x00000000000000FF, 0x0000000000000000, DOWN),
+			std::make_tuple(0x00000000FF000000, 0x000000FF00000000, UP),
+			std::make_tuple(0x00000000FF000000, 0x0000000000FF0000, DOWN),
+			std::make_tuple(0x0101010101010101, 0x0000000000000000, LEFT),
+			std::make_tuple(0x0101010101010101, 0x202020202020202, RIGHT),
+			std::make_tuple(0x8080808080808080, 0x4040404040404040, LEFT),
+			std::make_tuple(0x8080808080808080, 0x0000000000000000, RIGHT),
+			std::make_tuple(0x0808080808080808, 0x0404040404040404, LEFT),
+			std::make_tuple(0x0808080808080808, 0x1010101010101010, RIGHT)
+		));
+
+	TEST_P(shift_operators_test, test_shift)
+	{
+		auto [b, e, d] = GetParam();
+		bitboard bb = b;
+		bitboard shifted;
+
+		switch (d)
+		{
+		case UP:
+			shifted = shift<UP>(bb);
+			break;
+		case DOWN:
+			shifted = shift<DOWN>(bb);
+			break;
+		case LEFT:
+			shifted = shift<LEFT>(bb);
+			break;
+		case RIGHT:
+			shifted = shift<RIGHT>(bb);
+			break;
+		}
+		ASSERT_EQ(shifted, bitboard(e));
+	}
 	TEST(bitboard_test, equal)
 	{
 		bitboard_t value = 0x1234ff;

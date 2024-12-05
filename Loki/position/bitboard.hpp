@@ -19,6 +19,8 @@
 #include <bit>
 #include <cstdint>
 #include <optional>
+#include <cassert>
+#include <array>
 
 #define rt_assert(_cond) \
 	if (!std::is_constant_evaluated()){ \
@@ -29,6 +31,41 @@ namespace loki::position
 {
 	using bitboard_t = uint64_t;
 
+	enum e_direction : int
+	{
+		UP = 8,
+		DOWN = -8,
+		LEFT = -1,
+		RIGHT = 1
+	};
+
+	consteval std::array<bitboard_t, 8> init_file_masks()
+	{
+		std::array<bitboard_t, 8> files;
+		files[0] = 0x101010101010101ULL;
+
+		for (int i = 1; i < 8; i++)
+		{
+			files[i] = files[i - 1] << 1;
+		}
+		return files;
+	}
+
+	consteval std::array<bitboard_t, 8> init_rank_masks()
+	{
+		std::array<bitboard_t, 8> ranks;
+		ranks[0] = 0x00000000FFULL;
+
+		for (int i = 1; i < 8; i++)
+		{
+			ranks[i] = ranks[i - 1] << 8;
+		}
+		return ranks;
+	}
+
+	constexpr std::array<bitboard_t, 8> FILE_MASKS = init_file_masks();
+	constexpr std::array<bitboard_t, 8> RANK_MASKS = init_rank_masks();
+
 	/// <summary>
 	/// NOTE: All index-based operations are zero-indexed and i < 0 || i > 63 is undefined behaviour.
 	/// </summary>
@@ -37,12 +74,19 @@ namespace loki::position
 	private:
 		bitboard_t x;
 	public:
-		inline constexpr bitboard(bitboard_t num) : x(num){}
-
-		inline constexpr bitboard(const bitboard& _other) = delete;
-		inline constexpr bitboard(bitboard&& _other) = delete;
+		inline constexpr bitboard() : x{ 0 } {}
+		inline constexpr bitboard(bitboard_t num) : x{ num } {}
 
 #pragma region const methods
+		/// <summary>
+		/// Get the underlying bitboard_t value that this instance represents.
+		/// </summary>
+		/// <returns>A bitboard_t value</returns>
+		inline constexpr bitboard_t get_raw() const noexcept
+		{
+			return x;
+		}
+
 		/// <summary>
 		/// Determine if the i'th bit is 1.
 		/// </summary>
@@ -69,7 +113,7 @@ namespace loki::position
 		/// Find the index of the least significant 1-bit.
 		/// </summary>
 		/// <returns>index.</returns>
-		inline constexpr std::optional<size_t> scan_lsb() const noexcept
+		inline std::optional<size_t> scan_lsb() const noexcept
 		{
 			return ls1b();
 		}
@@ -78,7 +122,7 @@ namespace loki::position
 		/// Find the index of the most significant 1-bit.
 		/// </summary>
 		/// <returns>index.</returns>
-		inline constexpr std::optional<size_t> scan_msb() const noexcept
+		inline std::optional<size_t> scan_msb() const noexcept
 		{
 			return ms1b();
 		}
@@ -116,14 +160,14 @@ namespace loki::position
 		/// Find the least significant 1-bit and set it to zero.
 		/// If all bits are zero, nothing is changed.
 		/// </summary>
-		/// <returns>a reference to the current object.</returns>
-		inline constexpr bitboard& pop_lsb() noexcept
+		/// <returns>An optional size_t, having a value if *this != 0ULL</returns>
+		inline std::optional<size_t> pop_lsb() noexcept
 		{
 			// scan_lsb guarantees the bit is 1 so we can XOR without worrying about setting a 0 to 1..
 			auto i = scan_lsb();
 			if (i.has_value())
 				x ^= bitboard_t(1) << i.value();
-			return *this;
+			return i;
 		}
 #pragma endregion
 #pragma region operators
@@ -133,12 +177,68 @@ namespace loki::position
 		}
 		inline constexpr bool operator==(const bitboard& rhs) const
 		{
-			return *this == rhs.x;
+			return x == rhs.x;
+		}
+		template<typename T> requires std::is_integral_v<T>
+		inline constexpr bitboard& operator<<(const T n)
+		{
+			x <<= n;
+			return *this;
+		}
+		template<typename T> requires std::is_integral_v<T>
+		inline constexpr bitboard& operator>>(const T n)
+		{
+			x >>= n;
+			return *this;
 		}
 #pragma endregion
 	private:
-		constexpr std::optional<size_t> ms1b() const noexcept;
-		constexpr std::optional<size_t> ls1b() const noexcept;
+		std::optional<size_t> ms1b() const noexcept;
+		std::optional<size_t> ls1b() const noexcept;
 	};
 
+	/// <summary>
+	/// Print a bitboard to the console.
+	/// </summary>
+	/// <param name="bb">The bitboard to print</param>
+	void print_bitboard(const bitboard& bb);
+
+	inline constexpr bitboard operator*(bitboard l, bitboard r) noexcept
+	{
+		return l.get_raw() * r.get_raw();
+	}
+	inline constexpr bitboard operator&(bitboard l, bitboard r) noexcept
+	{
+		return l.get_raw() & r.get_raw();
+	}
+	inline constexpr bool operator<(const bitboard& b1, const bitboard& b2) noexcept
+	{
+		return b1.get_raw() < b2.get_raw();
+	}
+
+	/// <summary>
+	/// Shift a bitboard in a given direction.
+	/// </summary>
+	/// <typeparam name="D">Direction to shift</typeparam>
+	/// <returns>A new bitboard instance.</returns>
+	template<e_direction D>
+	inline bitboard shift(const bitboard& bb) noexcept
+	{
+		switch (D)
+		{
+		case UP:
+			return (bb.get_raw() & ~RANK_MASKS[7]) << 8;
+		case DOWN:
+			return (bb.get_raw() & ~RANK_MASKS[0]) >> 8;
+		case LEFT:
+			return (bb.get_raw() & ~FILE_MASKS[0]) >> 1;
+		}
+		return (bb.get_raw() & ~FILE_MASKS[7]) << 1; // right
+	}
+
+	template<e_direction D1, e_direction D2>
+	inline bitboard shift(const bitboard& bb) noexcept
+	{
+		return shift<D1>(shift<D2>(bb));
+	}
 }
