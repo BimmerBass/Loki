@@ -71,12 +71,12 @@ namespace loki::position
 	private:
 		e_square m_value;
 	public:
-		inline constexpr square() : square(NO_SQ) {}
-		inline constexpr square(e_square s) : m_value{ s }
+		constexpr square() : square(NO_SQ) {}
+		constexpr square(e_square s) : m_value{ s }
 		{}
-		inline constexpr square(e_rank r, e_file f) : m_value{ static_cast<e_square>(r * 8 + f) }
+		constexpr square(e_rank r, e_file f) : m_value{ static_cast<e_square>(r * 8 + f) }
 		{}
-		inline constexpr square(std::string algebraic)
+		constexpr square(std::string algebraic)
 		{
 			rt_assert(algebraic.size() == 2);
 
@@ -91,11 +91,11 @@ namespace loki::position
 			m_value = static_cast<e_square>(rank * 8 + file);
 		}
 		
-		inline constexpr e_square value() const { return m_value; }
-		inline constexpr e_rank rank() const { return static_cast<e_rank>(m_value / static_cast<e_square>(NUM_RANKS)); }
-		inline constexpr e_file file() const { return static_cast<e_file>(m_value % static_cast<e_square>(NUM_FILES)); }
+		constexpr e_square value() const { return m_value; }
+		constexpr e_rank rank() const { return static_cast<e_rank>(m_value / static_cast<e_square>(NUM_RANKS)); }
+		constexpr e_file file() const { return static_cast<e_file>(m_value % static_cast<e_square>(NUM_FILES)); }
 
-		inline constexpr void operator++(int) // post-increment
+		constexpr void operator++(int) // post-increment
 		{
 			rt_assert(m_value <= H8);
 			m_value++;
@@ -121,9 +121,9 @@ namespace loki::position
 	};
 
 
-	inline constexpr bool operator==(square sq1, square sq2) { return sq1.value() == sq2.value(); }
-	inline constexpr bool operator<(square sq1, square sq2) { return sq1.value() < sq2.value(); }
-	inline constexpr bool operator<=(square sq1, square sq2) { return sq1.value() <= sq2.value(); }
-	inline constexpr bool operator>(square sq1, square sq2) { return sq1.value() > sq2.value(); }
-	inline constexpr bool operator>=(square sq1, square sq2) { return sq1.value() >= sq2.value(); }
+	constexpr bool operator==(square sq1, square sq2) { return sq1.value() == sq2.value(); }
+	constexpr bool operator<(square sq1, square sq2) { return sq1.value() < sq2.value(); }
+	constexpr bool operator<=(square sq1, square sq2) { return sq1.value() <= sq2.value(); }
+	constexpr bool operator>(square sq1, square sq2) { return sq1.value() > sq2.value(); }
+	constexpr bool operator>=(square sq1, square sq2) { return sq1.value() >= sq2.value(); }
 }

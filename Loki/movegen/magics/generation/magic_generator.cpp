@@ -19,7 +19,7 @@
 #include "magic_generator.hpp"
 #include "util/rng.hpp"
 
-namespace loki::movegen::magics
+namespace loki::movegen::magics::generation
 {
 	using namespace loki::util;
 	using namespace loki::position;

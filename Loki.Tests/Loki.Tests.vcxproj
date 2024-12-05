@@ -169,10 +169,11 @@
     <ClInclude Include="position\io\fen_reader.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="movegen\magics\bishop_generator_test.cpp" />
-    <ClCompile Include="movegen\magics\magic_generator_test.cpp" />
-    <ClCompile Include="movegen\magics\rook_generator_test.cpp" />
-    <ClCompile Include="movegen\magics\sliding_generator_test.cpp" />
+    <ClCompile Include="movegen\magics\generation\bishop_generator_test.cpp" />
+    <ClCompile Include="movegen\magics\generation\magic_generator_test.cpp" />
+    <ClCompile Include="movegen\magics\generation\rook_generator_test.cpp" />
+    <ClCompile Include="movegen\magics\generation\sliding_generator_test.cpp" />
+    <ClCompile Include="movegen\magics\magic_index_test.cpp" />
     <ClCompile Include="movegen\move_list_test.cpp" />
     <ClCompile Include="movegen\move_test.cpp" />
     <ClCompile Include="pch.cpp">

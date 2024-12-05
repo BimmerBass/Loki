@@ -19,11 +19,12 @@
 #include "position/bitboard.hpp"
 #include "position/square.hpp"
 
-namespace loki::movegen::magics
+namespace loki::movegen::magics::generation
 {
 	class sliding_generator
 	{
 	public:
+		virtual ~sliding_generator(){}
 		/// <summary>
 		/// Generate all combinations of occupancies for a given square.
 		/// </summary>

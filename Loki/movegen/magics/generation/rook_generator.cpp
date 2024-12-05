@@ -17,7 +17,7 @@
 //
 #include "rook_generator.hpp"
 
-namespace loki::movegen::magics
+namespace loki::movegen::magics::generation
 {
 	using namespace loki::position;
 

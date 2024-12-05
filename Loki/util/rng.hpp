@@ -31,7 +31,7 @@ namespace loki::util
 	{
 	public:
 		// Empirically tested seed to optimize magic bitboard generation time. Halved from original, but still needs improving.
-		inline static constexpr uint64_t SEED = 0x3A8F05C53A8EFE12ULL;
+		static constexpr uint64_t SEED = 0x3A8F05C53A8EFE12ULL;
 	private:
 		inline static rng* _instance = nullptr;
 		inline static std::once_flag _init_flag;

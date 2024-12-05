@@ -40,13 +40,13 @@ namespace loki::movegen
 			: m_size{0}, m_collection{}
 		{}
 
-		inline constexpr void push_back(move move)
+		constexpr void push_back(move move)
 		{
 			if (m_size >= max_size)
 				throw_msg<move_list_error>("collection is full");
 			m_collection[m_size++] = move;
 		}
-		inline constexpr void clear() noexcept { m_size = 0; }
+		constexpr void clear() noexcept { m_size = 0; }
 
 		constexpr const move& operator[](size_t inx) const
 		{
@@ -54,9 +54,9 @@ namespace loki::movegen
 				throw_msg<move_list_error>("access to index {} was requested on a move_list of size {}", inx, m_size);
 			return m_collection[inx];
 		}
-		inline constexpr size_t size() const noexcept { return m_size; }
-		inline constexpr cit begin() const noexcept { return m_collection.begin(); }
-		inline constexpr cit end() const noexcept { return m_collection.begin() + m_size; }
+		constexpr size_t size() const noexcept { return m_size; }
+		constexpr cit begin() const noexcept { return m_collection.begin(); }
+		constexpr cit end() const noexcept { return m_collection.begin() + m_size; }
 
 		move_list(const move_list&) = delete;
 		move_list& operator=(const move_list&) = delete;

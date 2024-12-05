@@ -74,15 +74,15 @@ namespace loki::position
 	private:
 		bitboard_t x;
 	public:
-		inline constexpr bitboard() : x{ 0 } {}
-		inline constexpr bitboard(bitboard_t num) : x{ num } {}
+		constexpr bitboard() : x{ 0 } {}
+		constexpr bitboard(bitboard_t num) : x{ num } {}
 
 #pragma region const methods
 		/// <summary>
 		/// Get the underlying bitboard_t value that this instance represents.
 		/// </summary>
 		/// <returns>A bitboard_t value</returns>
-		inline constexpr bitboard_t get_raw() const noexcept
+		constexpr bitboard_t get_raw() const noexcept
 		{
 			return x;
 		}
@@ -94,7 +94,7 @@ namespace loki::position
 		/// <param name="i">The index at which to check</param>
 		/// <returns>true if the i'th bit is 1, false otherwise.</returns>
 		template<typename tIdx>
-		inline constexpr bool is_one_at(tIdx i) const noexcept
+		constexpr bool is_one_at(tIdx i) const noexcept
 		{
 			rt_assert(i >= 0 && i <= 63);
 			return ((x >> i) & 1) != 0;
@@ -104,7 +104,7 @@ namespace loki::position
 		/// Count the number of one-bits.
 		/// </summary>
 		/// <returns>The number of bits set to 1</returns>
-		inline constexpr size_t num_one_bits() const noexcept
+		constexpr size_t num_one_bits() const noexcept
 		{
 			return std::popcount<uint64_t>(x);
 		}
@@ -135,7 +135,7 @@ namespace loki::position
 		/// <param name="i">Index at which to set the bit to 1</param>
 		/// <returns>a reference to the current object.</returns>
 		template<typename tIdx>
-		inline constexpr bitboard& set_one_at(tIdx i) noexcept
+		constexpr bitboard& set_one_at(tIdx i) noexcept
 		{
 			rt_assert(i >= 0 && i <= 63);
 			x |= bitboard_t(1) << i;
@@ -149,7 +149,7 @@ namespace loki::position
 		/// <param name="i">The index to toggle</param>
 		/// <returns>a reference to the current object.</returns>
 		template<typename tIdx>
-		inline constexpr bitboard& toggle_at(tIdx i) noexcept
+		constexpr bitboard& toggle_at(tIdx i) noexcept
 		{
 			rt_assert(i >= 0 && i <= 63);
 			x ^= bitboard_t(1) << i;
@@ -171,22 +171,22 @@ namespace loki::position
 		}
 #pragma endregion
 #pragma region operators
-		inline constexpr bool operator==(const bitboard_t& rhs) const
+		constexpr bool operator==(const bitboard_t& rhs) const
 		{
 			return x == rhs;
 		}
-		inline constexpr bool operator==(const bitboard& rhs) const
+		constexpr bool operator==(const bitboard& rhs) const
 		{
 			return x == rhs.x;
 		}
 		template<typename T> requires std::is_integral_v<T>
-		inline constexpr bitboard& operator<<(const T n)
+		constexpr bitboard& operator<<(const T n)
 		{
 			x <<= n;
 			return *this;
 		}
 		template<typename T> requires std::is_integral_v<T>
-		inline constexpr bitboard& operator>>(const T n)
+		constexpr bitboard& operator>>(const T n)
 		{
 			x >>= n;
 			return *this;
@@ -203,15 +203,15 @@ namespace loki::position
 	/// <param name="bb">The bitboard to print</param>
 	void print_bitboard(const bitboard& bb);
 
-	inline constexpr bitboard operator*(bitboard l, bitboard r) noexcept
+	constexpr bitboard operator*(bitboard l, bitboard r) noexcept
 	{
 		return l.get_raw() * r.get_raw();
 	}
-	inline constexpr bitboard operator&(bitboard l, bitboard r) noexcept
+	constexpr bitboard operator&(bitboard l, bitboard r) noexcept
 	{
 		return l.get_raw() & r.get_raw();
 	}
-	inline constexpr bool operator<(const bitboard& b1, const bitboard& b2) noexcept
+	constexpr bool operator<(const bitboard& b1, const bitboard& b2) noexcept
 	{
 		return b1.get_raw() < b2.get_raw();
 	}

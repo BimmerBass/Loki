@@ -16,13 +16,16 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include "magic_generator.hpp"
+#include "magic_index.hpp"
+#include "defs.hpp"
 
 namespace loki::movegen::magics
 {
-	class bishop_generator : public sliding_generator
+	class hardcoded_index : public magic_index
 	{
 	public:
-		position::bitboard attack(position::square sq, position::bitboard occupancy_mask) const;
+		CHILD_EXCEPTION(hardcoded_error, magic_index::index_exception);
+	public:
+		hardcoded_index(piece p);
 	};
 }

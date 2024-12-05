@@ -1,11 +1,12 @@
 #include "pch.hpp"
-#include "Loki/movegen/magics/bishop_generator.hpp"
-#include "Loki/movegen/magics/bishop_generator.cpp"
+#include "Loki/movegen/magics/generation/bishop_generator.hpp"
+#include "Loki/movegen/magics/generation/bishop_generator.cpp"
 
-namespace movegen_tests::magics_tests
+namespace movegen_tests::generation_tests::magics_tests
 {
 	using namespace loki::position;
 	using namespace loki::movegen::magics;
+	using namespace loki::movegen::magics::generation;
 
 	class bishop_test_attack :
 		public ::testing::Test,

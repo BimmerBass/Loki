@@ -182,10 +182,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="movegen\magics\bishop_generator.cpp" />
-    <ClCompile Include="movegen\magics\magic_generator.cpp" />
-    <ClCompile Include="movegen\magics\rook_generator.cpp" />
-    <ClCompile Include="movegen\magics\sliding_generator.cpp" />
+    <ClCompile Include="movegen\magics\generation\bishop_generator.cpp" />
+    <ClCompile Include="movegen\magics\generation\magic_generator.cpp" />
+    <ClCompile Include="movegen\magics\generation\rook_generator.cpp" />
+    <ClCompile Include="movegen\magics\generation\sliding_generator.cpp" />
+    <ClCompile Include="movegen\magics\hardcoded_index.cpp" />
+    <ClCompile Include="movegen\magics\magic_index.cpp" />
     <ClCompile Include="position\bitboard.cpp" />
     <ClCompile Include="position\game_state.cpp" />
     <ClCompile Include="position\io\fen_string_builder.cpp" />
@@ -196,11 +198,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="defs.hpp" />
-    <ClInclude Include="movegen\magics\bishop_generator.hpp" />
-    <ClInclude Include="movegen\magics\magic.hpp" />
-    <ClInclude Include="movegen\magics\magic_generator.hpp" />
-    <ClInclude Include="movegen\magics\rook_generator.hpp" />
-    <ClInclude Include="movegen\magics\sliding_generator.hpp" />
+    <ClInclude Include="movegen\magics\generation\bishop_generator.hpp" />
+    <ClInclude Include="movegen\magics\generation\magic.hpp" />
+    <ClInclude Include="movegen\magics\generation\magic_generator.hpp" />
+    <ClInclude Include="movegen\magics\generation\rook_generator.hpp" />
+    <ClInclude Include="movegen\magics\generation\sliding_generator.hpp" />
+    <ClInclude Include="movegen\magics\hardcoded_index.hpp" />
+    <ClInclude Include="movegen\magics\magic_index.hpp" />
     <ClInclude Include="movegen\move.hpp" />
     <ClInclude Include="movegen\move_list.hpp" />
     <ClInclude Include="position\bitboard.hpp" />
