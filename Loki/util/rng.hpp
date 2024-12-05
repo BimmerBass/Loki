@@ -13,7 +13,8 @@ namespace loki::util
 	class rng
 	{
 	public:
-		inline static constexpr uint64_t SEED = 0x3a8f05c53a8f05c5ULL;
+		// Empirically tested seed to optimize magic bitboard generation time. Halved from original, but still needs improving.
+		inline static constexpr uint64_t SEED = 0x3A8F05C53A8EFE12ULL;
 	private:
 		inline static rng* _instance = nullptr;
 		inline static std::once_flag _init_flag;
@@ -87,6 +88,12 @@ namespace loki::util
 		T generate_sparse()
 		{
 			return (generate<T>() & generate<T>() & generate<T>());
+		}
+
+		void set_seed(uint64_t x)
+		{
+			std::lock_guard<std::recursive_mutex> lock(m_mtx);
+			m_engine.seed(x);
 		}
 	};
 }
