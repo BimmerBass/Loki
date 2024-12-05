@@ -19,6 +19,7 @@ namespace loki::movegen::magics
 
 	magic magic_generator::find_magic(square sq)
 	{
+		size_t iteration = 0;
 		auto magic_found = false;
 		std::vector<bitboard> occupancies = m_generator->relevant_occupancies(sq), attacks(occupancies.size());
 		std::transform(
@@ -30,21 +31,24 @@ namespace loki::movegen::magics
 
 		while (!magic_found)
 		{
+			iteration++;
 			auto fail = false;
 			magic.magic_number = generate_valid_random(magic.mask);
-
-			std::fill_n(
-				magic.attacks.begin(),
-				magic.attacks.size(), 0ULL);
 
 			for (auto i = 0; i < occupancies.size() && !fail; i++)
 			{
 				auto index = magic.get_index(occupancies[i]);
 
-				if (magic.attacks[index] == 0ULL)
-					magic.attacks[index] = attacks[i];
-				else if (magic.attacks[index] != attacks[i])
+				if (magic.attacks[index].age < iteration)
+				{
+					magic.attacks[index].age = iteration;
+					magic.attacks[index].attack = attacks[i];
+				}
+				else if (magic.attacks[index].attack != attacks[i])
+				{
 					fail = true;
+					break;
+				}
 			}
 			if (!fail)
 				magic_found = true;

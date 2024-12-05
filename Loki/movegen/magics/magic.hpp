@@ -3,17 +3,23 @@
 
 namespace loki::movegen::magics
 {
+	struct magic_attack
+	{
+		position::bitboard attack = 0;
+		size_t age = 0;
+	};
+
 	class magic
 	{
 	public:
-		std::vector<position::bitboard> attacks; // Attack table for the given square
+		std::vector<magic_attack> attacks; // Attack table for the given square
 		position::bitboard mask;
 		position::bitboard magic_number;
 		uint64_t shift;
 
 	public:
 		magic(size_t n) :
-			attacks(n, 0ULL),
+			attacks(n),
 			mask{ 0 },
 			magic_number{ 0 },
 			shift{ 0 }
