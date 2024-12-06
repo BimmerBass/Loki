@@ -12,7 +12,7 @@ namespace util_tests
 	{
 		size_t total = 0;
 		for (auto x : v)
-			total += bitboard(x).num_one_bits();
+			total += popcount(x);
 		return static_cast<double>(total) / static_cast<double>(v.size());
 	}
 

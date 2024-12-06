@@ -21,17 +21,17 @@ namespace loki::movegen::magics::generation
 {
 	using namespace loki::position;
 
-	std::vector<bitboard> sliding_generator::relevant_occupancies(square sq) const
+	std::vector<bitboard_t> sliding_generator::relevant_occupancies(square sq) const
 	{
 		std::vector<size_t> bit_indices;
-		std::vector<bitboard> permutations;
+		std::vector<bitboard_t> permutations;
 		auto mask = occupancy_mask(sq);
-		size_t n = 1ULL << mask.num_one_bits();
+		size_t n = 1ULL << popcount(mask);
 
 		// Get the indices of the set bits
 		for (auto s = A1; s <= H8; s++)
 		{
-			if (mask.is_one_at(s))
+			if (is_one_at(mask, s))
 				bit_indices.push_back(s);
 		}
 
@@ -42,19 +42,19 @@ namespace loki::movegen::magics::generation
 		// then we just mask the i'th subset bit to our mask's bit positions
 		for (bitboard_t subset = 0; subset < n; subset++)
 		{
-			bitboard occupancy = 0;
+			bitboard_t occupancy = 0;
 
-			for (size_t i = 0; i < mask.num_one_bits(); i++)
+			for (size_t i = 0; i < popcount(mask); i++)
 			{
 				if (subset & (1ULL << i))
-					occupancy.set_one_at(bit_indices[i]);
+					occupancy = set_one_at(occupancy, bit_indices[i]);
 			}
 			permutations.push_back(occupancy);
 		}
 		return permutations;
 	}
 
-	bitboard sliding_generator::occupancy_mask(square sq) const
+	bitboard_t sliding_generator::occupancy_mask(square sq) const
 	{
 		bitboard_t mask =
 			((RANK_MASKS[RANK_1] | RANK_MASKS[RANK_8]) & ~RANK_MASKS[sq.rank()]) |

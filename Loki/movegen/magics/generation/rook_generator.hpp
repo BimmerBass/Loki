@@ -22,9 +22,7 @@ namespace loki::movegen::magics::generation
 {
 	class rook_generator : public sliding_generator
 	{
-		using bitboard = position::bitboard;
-		using square = position::square;
 	public:
-		bitboard attack(square sq, bitboard occupancy_mask) const;
+		position::bitboard_t attack(position::square sq, position::bitboard_t occupancy_mask) const;
 	};
 }

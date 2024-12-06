@@ -18,12 +18,12 @@ namespace movegen_tests::generation_tests::magics_tests
 			auto occupancies = g.relevant_occupancies(sq);
 
 			// Check for the correct number of permutations
-			ASSERT_EQ(occupancies.size(), 1ULL << base_mask.num_one_bits());
+			ASSERT_EQ(occupancies.size(), 1ULL << popcount(base_mask));
 
 			// Check that each permutation is valid
 			for (auto& p : occupancies)
 			{
-				ASSERT_EQ(p.get_raw() & ~base_mask.get_raw(), 0);
+				ASSERT_EQ(p & ~base_mask, 0);
 			}
 			
 			// Check that all values are unique

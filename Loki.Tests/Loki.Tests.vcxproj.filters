@@ -49,16 +49,19 @@
     <ClCompile Include="util\rng_test.cpp">
       <Filter>util</Filter>
     </ClCompile>
-    <ClCompile Include="movegen\magics\rook_generator_test.cpp">
-      <Filter>movegen\magics</Filter>
+    <ClCompile Include="movegen\magics\generation\bishop_generator_test.cpp">
+      <Filter>movegen\magics\generation</Filter>
     </ClCompile>
-    <ClCompile Include="movegen\magics\bishop_generator_test.cpp">
-      <Filter>movegen\magics</Filter>
+    <ClCompile Include="movegen\magics\generation\magic_generator_test.cpp">
+      <Filter>movegen\magics\generation</Filter>
     </ClCompile>
-    <ClCompile Include="movegen\magics\sliding_generator_test.cpp">
-      <Filter>movegen\magics</Filter>
+    <ClCompile Include="movegen\magics\generation\rook_generator_test.cpp">
+      <Filter>movegen\magics\generation</Filter>
     </ClCompile>
-    <ClCompile Include="movegen\magics\magic_generator_test.cpp">
+    <ClCompile Include="movegen\magics\generation\sliding_generator_test.cpp">
+      <Filter>movegen\magics\generation</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\magics\magic_index_test.cpp">
       <Filter>movegen\magics</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,6 +89,9 @@
     </Filter>
     <Filter Include="movegen\magics">
       <UniqueIdentifier>{c9700ae2-c37f-4bd2-9e79-01572b4d4779}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="movegen\magics\generation">
+      <UniqueIdentifier>{e5fd46ad-821c-4b21-a9a5-37d61ad73f07}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -23,6 +23,6 @@ namespace loki::movegen::magics::generation
 	class bishop_generator : public sliding_generator
 	{
 	public:
-		position::bitboard attack(position::square sq, position::bitboard occupancy_mask) const;
+		position::bitboard_t attack(position::square sq, position::bitboard_t occupancy_mask) const;
 	};
 }

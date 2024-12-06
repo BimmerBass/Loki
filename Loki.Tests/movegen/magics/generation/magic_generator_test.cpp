@@ -45,8 +45,6 @@ namespace movegen_tests::generation_tests::magics_tests
 				auto attack = ptr->attack(sq, occ);
 				ASSERT_TRUE(inx >= 0 && inx <= magic.attacks.size());
 
-				auto x = magic.attacks[inx].attack.get_raw();
-				auto y = attack.get_raw();
 				ASSERT_EQ(magic.attacks[inx].attack, attack);
 			}
 		}

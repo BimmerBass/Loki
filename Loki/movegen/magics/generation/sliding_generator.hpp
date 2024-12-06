@@ -30,14 +30,14 @@ namespace loki::movegen::magics::generation
 		/// </summary>
 		/// <param name="sq">The square</param>
 		/// <returns>A vector of possible occupancies</returns>
-		std::vector<position::bitboard> relevant_occupancies(position::square sq) const;
+		std::vector<position::bitboard_t> relevant_occupancies(position::square sq) const;
 
 		/// <summary>
 		/// Generate a base-occupancy mask for the piece (i.e. all ray-attacks until, but excluding, the border files/ranks)
 		/// </summary>
 		/// <param name="sq">The square</param>
 		/// <returns>A bitboard representing the occupancy.</returns>
-		position::bitboard occupancy_mask(position::square sq) const;
+		position::bitboard_t occupancy_mask(position::square sq) const;
 
 		/// <summary>
 		/// Generate an attack bitboard for a square and a set of occupied squares.
@@ -45,6 +45,6 @@ namespace loki::movegen::magics::generation
 		/// <param name="sq">The square for which to generate</param>
 		/// <param name="occupancy_mask">A mask for all occupied squares</param>
 		/// <returns>A bitboard with 1's where an attack/move is possible.</returns>
-		virtual position::bitboard attack(position::square sq, position::bitboard occupancy_mask) const = 0;
+		virtual position::bitboard_t attack(position::square sq, position::bitboard_t occupancy_mask) const = 0;
 	};
 }

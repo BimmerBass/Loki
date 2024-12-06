@@ -54,86 +54,75 @@ namespace loki::position
 			const bitboard_t debruijn64 = 0x03f79d71b4cb0a89;
 			return index64[((x ^ (x - 1)) * debruijn64) >> 58];
 		}
-
-		std::optional<size_t> runtime_ms1b(bitboard_t x)
-		{
-			assert(x != 0);
-			size_t n = 0;
-
-#if defined(__GNUC__) || defined(__GNUG__) // g++/gcc and clang
-			n = size_t(63 ^ __builtin_clzll(bb)));
-#elif defined(_MSC_VER) // windows
-#ifdef _WIN64
-			unsigned long idx;
-			_BitScanReverse64(&idx, x);
-			n = (size_t)idx;
-#else
-			// 32-bit
-			unsigned long idx;
-			if (bb >> 32)
-			{
-				_BitScanReverse(&idx, int32_t(bb >> 32));
-				n = size_t(idx + 32);
-			}
-			else
-			{
-				_BitScanReverse(&idx, int32_t(bb));
-				n = size_t(idx);
-			}
-#endif
-#else
-			n = bit_scan_reverse_fallback(x);
-#endif
-			return std::optional<size_t>(n);
-		}
-
-		std::optional<size_t> runtime_ls1b(bitboard_t x)
-		{
-			assert(x != 0);
-			size_t n = 0;
-
-#if defined(__GNUC__) || defined(__GNUG__) // g++/gcc and clang
-			n = size_t(__builtin_ctzll(bb));
-#elif defined(_MSC_VER) // windows
-			unsigned long idx;
-#ifdef _WIN64
-			_BitScanForward64(&idx, x);
-			n = (size_t)idx;
-#else
-			// 32-bit
-			if (bb & 0xffffffff)
-			{
-				_BitScanForward(&idx, int32_t(bb));
-				n = size_t(idx);
-			}
-			else
-			{
-				_BitScanForward(&idx, int32_t(bb >> 32));
-				n = size_t(idx + 32);
-			}
-#endif
-#else
-			n = bit_scan_forward_fallback(x);
-#endif
-			return std::optional<size_t>(n);
-		}
 	}
 
 
-	std::optional<size_t> bitboard::ms1b() const noexcept
+	std::optional<size_t> scan_msb(bitboard_t x) noexcept
 	{
+		size_t n = 0;
 		if (x == 0)
 			return std::nullopt;
-		return runtime_ms1b(x);
-	}
-	std::optional<size_t> bitboard::ls1b() const noexcept
-	{
-		if (x == 0)
-			return std::nullopt;
-		return runtime_ls1b(x);
+#if defined(__GNUC__) || defined(__GNUG__) // g++/gcc and clang
+		n = size_t(63 ^ __builtin_clzll(bb)));
+#elif defined(_MSC_VER) // windows
+#ifdef _WIN64
+		unsigned long idx;
+		_BitScanReverse64(&idx, x);
+		n = (size_t)idx;
+#else
+		// 32-bit
+		unsigned long idx;
+		if (bb >> 32)
+		{
+			_BitScanReverse(&idx, int32_t(bb >> 32));
+			n = size_t(idx + 32);
+		}
+		else
+		{
+			_BitScanReverse(&idx, int32_t(bb));
+			n = size_t(idx);
+		}
+#endif
+#else
+		n = bit_scan_reverse_fallback(x);
+#endif
+		return std::optional<size_t>(n);
 	}
 
-	void print_bitboard(const bitboard& bb)
+
+	std::optional<size_t> scan_lsb(bitboard_t x) noexcept
+	{
+		size_t n = 0;
+		if (x == 0)
+			return std::nullopt;
+
+#if defined(__GNUC__) || defined(__GNUG__) // g++/gcc and clang
+		n = size_t(__builtin_ctzll(bb));
+#elif defined(_MSC_VER) // windows
+		unsigned long idx;
+#ifdef _WIN64
+		_BitScanForward64(&idx, x);
+		n = (size_t)idx;
+#else
+		// 32-bit
+		if (bb & 0xffffffff)
+		{
+			_BitScanForward(&idx, int32_t(bb));
+			n = size_t(idx);
+		}
+		else
+		{
+			_BitScanForward(&idx, int32_t(bb >> 32));
+			n = size_t(idx + 32);
+		}
+#endif
+#else
+		n = bit_scan_forward_fallback(x);
+#endif
+		return std::optional<size_t>(n);
+	}
+
+	void print_bitboard(bitboard_t bb)
 	{
 		for (auto r = RANK_8; r >= RANK_1; r--)
 		{
@@ -143,7 +132,7 @@ namespace loki::position
 			{
 				square sq(r, f);
 				auto s = "- ";
-				if (bb.is_one_at(sq.value()))
+				if (is_one_at(bb, sq.value()))
 					s = "X ";
 				std::cout << s;
 			}

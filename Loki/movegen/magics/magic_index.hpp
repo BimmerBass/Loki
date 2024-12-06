@@ -36,7 +36,7 @@ namespace loki::movegen::magics
 	protected:
 		struct M
 		{
-			position::bitboard* attacks;
+			position::bitboard_t* attacks;
 			position::bitboard_t magic;
 			position::bitboard_t mask;
 			position::bitboard_t shift;
@@ -44,7 +44,7 @@ namespace loki::movegen::magics
 
 	private:
 		bool m_initialized;
-		position::bitboard* m_index = nullptr;
+		position::bitboard_t* m_index = nullptr;
 		std::array<M, position::NUM_SQUARES> m_blocks;
 
 	protected:
@@ -66,7 +66,7 @@ namespace loki::movegen::magics
 		/// <param name="sq">The square</param>
 		/// <param name="occupancy">Mask with occupied squares set to 1</param>
 		/// <returns>A bitboard object with the attacks the piece can make.</returns>
-		position::bitboard attacks(position::e_square sq, position::bitboard_t occupancy) const;
+		position::bitboard_t attacks(position::e_square sq, position::bitboard_t occupancy) const;
 
 		magic_index(const magic_index&) = delete;
 		magic_index(magic_index&&) = delete;

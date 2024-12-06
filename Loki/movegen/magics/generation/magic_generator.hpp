@@ -34,6 +34,6 @@ namespace loki::movegen::magics::generation
 		std::array<magic, position::NUM_SQUARES> generate();
 	private:
 		magic find_magic(position::square sq);
-		position::bitboard generate_valid_random(const position::bitboard& mask) const;
+		position::bitboard_t generate_valid_random(position::bitboard_t mask) const;
 	};
 }

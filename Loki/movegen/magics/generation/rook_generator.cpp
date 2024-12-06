@@ -21,37 +21,37 @@ namespace loki::movegen::magics::generation
 {
 	using namespace loki::position;
 
-	bitboard rook_generator::attack(square sq, bitboard occupancy_mask) const
+	bitboard_t rook_generator::attack(square sq, bitboard_t occupancy_mask) const
 	{
 		using namespace loki::position;
-		bitboard result = 0;
+		bitboard_t result = 0;
 
 		for (auto r = sq.rank() + 1; r <= RANK_8; r++) // up
 		{
 			auto cur_sq = sq.file() + r * 8;
-			result.set_one_at(cur_sq);
-			if (occupancy_mask.is_one_at(cur_sq))
+			result = set_one_at(result, cur_sq);
+			if (is_one_at(occupancy_mask, cur_sq))
 				break;
 		}
 		for (auto r = sq.rank() - 1; r >= RANK_1; r--) // down
 		{
 			auto cur_sq = sq.file() + r * 8;
-			result.set_one_at(cur_sq);
-			if (occupancy_mask.is_one_at(cur_sq))
+			result = set_one_at(result, cur_sq);
+			if (is_one_at(occupancy_mask, cur_sq))
 				break;
 		}
 		for (auto f = sq.file() + 1; f <= FILE_H; f++) // right
 		{
 			auto cur_sq = f + sq.rank() * 8;
-			result.set_one_at(cur_sq);
-			if (occupancy_mask.is_one_at(cur_sq))
+			result = set_one_at(result, cur_sq);
+			if (is_one_at(occupancy_mask, cur_sq))
 				break;
 		}
 		for (auto f = sq.file() - 1; f >= FILE_A; f--) // left
 		{
 			auto cur_sq = f + sq.rank() * 8;
-			result.set_one_at(cur_sq);
-			if (occupancy_mask.is_one_at(cur_sq))
+			result = set_one_at(result, cur_sq);
+			if (is_one_at(occupancy_mask, cur_sq))
 				break;
 		}
 		return result;

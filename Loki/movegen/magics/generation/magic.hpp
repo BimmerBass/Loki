@@ -22,7 +22,7 @@ namespace loki::movegen::magics::generation
 {
 	struct magic_attack
 	{
-		position::bitboard attack = 0;
+		position::bitboard_t attack = 0;
 		size_t age = 0;
 	};
 
@@ -30,8 +30,8 @@ namespace loki::movegen::magics::generation
 	{
 	public:
 		std::vector<magic_attack> attacks; // Attack table for the given square
-		position::bitboard mask;
-		position::bitboard magic_number;
+		position::bitboard_t mask;
+		position::bitboard_t magic_number;
 		uint64_t shift;
 
 	public:
@@ -49,11 +49,10 @@ namespace loki::movegen::magics::generation
 		/// </summary>
 		/// <param name="occupancy">A bitboard with all occupancies</param>
 		/// <returns>An index into the attack table</returns>
-		constexpr size_t get_index(position::bitboard occupancy) const noexcept
+		constexpr size_t get_index(position::bitboard_t occ) const noexcept
 		{
-			auto occ = occupancy.get_raw();
-			occ &= mask.get_raw();
-			occ *= magic_number.get_raw();
+			occ &= mask;
+			occ *= magic_number;
 			occ >>= 64 - shift;
 			return static_cast<size_t>(occ);
 		}

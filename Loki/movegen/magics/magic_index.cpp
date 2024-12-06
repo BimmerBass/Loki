@@ -21,7 +21,7 @@ namespace loki::movegen::magics
 {
 	using namespace loki::position;
 
-	bitboard magic_index::attacks(e_square sq, bitboard_t occupancy) const
+	bitboard_t magic_index::attacks(e_square sq, bitboard_t occupancy) const
 	{
 		assert(m_initialized);
 		auto ptr = m_blocks[sq].attacks;
@@ -45,7 +45,7 @@ namespace loki::movegen::magics
 			m_blocks.begin(), m_blocks.end(), 0ULL,
 			[](size_t acc, const M& b) { return acc + (1ULL << b.shift); });
 
-		m_index = new bitboard[index_size];
+		m_index = new bitboard_t[index_size];
 		partition_blocks(index_size);
 
 		for (auto sq = A1; sq <= H8; sq++)
@@ -53,7 +53,7 @@ namespace loki::movegen::magics
 			auto occupancies = gen->relevant_occupancies(sq);
 			for (auto& occ : occupancies)
 			{
-				m_blocks[sq].attacks[calculate_index(sq, occ.get_raw())] = gen->attack(sq, occ);
+				m_blocks[sq].attacks[calculate_index(sq, occ)] = gen->attack(sq, occ);
 			}
 		}
 
@@ -64,10 +64,9 @@ namespace loki::movegen::magics
 	{
 		for (auto sq = A1; sq <= H8; sq++)
 		{
-			auto m = gen->occupancy_mask(sq);
 			m_blocks[sq].magic = magics[sq];
-			m_blocks[sq].mask = m.get_raw();
-			m_blocks[sq].shift = m.num_one_bits();
+			m_blocks[sq].mask = gen->occupancy_mask(sq);
+			m_blocks[sq].shift = popcount(m_blocks[sq].mask);
 		}
 	}
 

@@ -36,7 +36,7 @@ namespace movegen_tests::generation_tests::magics_tests
 	{
 		auto [sq, expected, occ] = GetParam();
 		auto generated = gen.attack(sq, occ);
-		ASSERT_EQ(generated.get_raw(), expected);
+		ASSERT_EQ(generated, expected);
 	}
 
 	TEST_P(bishop_test_attack, test_masks)
@@ -46,7 +46,7 @@ namespace movegen_tests::generation_tests::magics_tests
 		{
 			auto mask = gen.occupancy_mask(s);
 			auto attack = gen.attack(s, 0ULL);
-			ASSERT_EQ(mask.get_raw(), attack & ~border_mask);
+			ASSERT_EQ(mask, attack & ~border_mask);
 		}
 	}
 }

@@ -48,7 +48,7 @@ namespace movegen_tests::magics_tests
 
 			for (auto occ : occs)
 			{
-				ASSERT_EQ(inx.attacks(sq, occ.get_raw()), gen->attack(sq, occ).get_raw());
+				ASSERT_EQ(inx.attacks(sq, occ), gen->attack(sq, occ));
 			}
 		}
 

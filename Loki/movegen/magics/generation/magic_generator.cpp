@@ -38,13 +38,13 @@ namespace loki::movegen::magics::generation
 	{
 		size_t iteration = 0;
 		auto magic_found = false;
-		std::vector<bitboard> occupancies = m_generator->relevant_occupancies(sq), attacks(occupancies.size());
+		std::vector<bitboard_t> occupancies = m_generator->relevant_occupancies(sq), attacks(occupancies.size());
 		std::transform(
 			occupancies.begin(), occupancies.end(),
 			attacks.begin(), [&](auto& m) { return m_generator->attack(sq, m); });
 		magic magic(occupancies.size());
 		magic.mask = m_generator->occupancy_mask(sq);
-		magic.shift = magic.mask.num_one_bits();
+		magic.shift = popcount(magic.mask);
 
 		while (!magic_found)
 		{
@@ -73,14 +73,13 @@ namespace loki::movegen::magics::generation
 		return magic;
 	}
 
-	bitboard magic_generator::generate_valid_random(const bitboard& mask) const
+	bitboard_t magic_generator::generate_valid_random(bitboard_t mask) const
 	{
-		bitboard num = rng::instance()->generate_sparse<uint64_t>();
-		int i = 0;
-		while (((num * mask) & 0xFF00000000000000ULL).num_one_bits() < 6)
+		auto num = rng::instance()->generate_sparse<bitboard_t>();
+
+		while (popcount((num * mask) & 0xFF00000000000000ULL) < 6)
 		{
 			num = rng::instance()->generate_sparse<uint64_t>();
-			i++;
 		}
 		return num;
 	}
