@@ -81,6 +81,6 @@ constexpr const char* enum_to_string(T value)
 #define ENABLE_STRINGIFY(enumType, ...) \
 	template<>\
 	struct enum_strings<enumType>{\
-		static constexpr std::array<const char*, std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value> strings = {__VA_ARGS__};\
+		static constexpr std::array<const char*, std::tuple_size<decltype(std::make_tuple(__VA_ARGS__))>::value> strings = {{__VA_ARGS__}};\
 	};	
 	

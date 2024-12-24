@@ -105,9 +105,10 @@ namespace loki::position
 		{
 			if (m_value == NO_SQ)
 				return "-";
-			std::string cf = "a";
+			std::string cf;
 			switch (file())
 			{
+			case FILE_A: cf = "a"; break;
 			case FILE_B: cf = "b"; break;
 			case FILE_C: cf = "c"; break;
 			case FILE_D: cf = "d"; break;
@@ -119,7 +120,6 @@ namespace loki::position
 			return cf + std::to_string(rank() + 1);
 		}
 	};
-
 
 	constexpr bool operator==(square sq1, square sq2) { return sq1.value() == sq2.value(); }
 	constexpr bool operator<(square sq1, square sq2) { return sq1.value() < sq2.value(); }

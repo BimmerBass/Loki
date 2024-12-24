@@ -24,6 +24,12 @@ namespace loki::movegen
 {
 	enum move_type : uint8_t
 	{
+		ACTIVE, // Active moves. captures, promotions, en-passant
+		QUIET, // Non-active moves.
+		ALL
+	};
+	enum move_attr : uint8_t
+	{
 		NORMAL = 0x0,
 		CASTLING = 0x1,
 		ENPASSANT = 0x2,
@@ -41,7 +47,7 @@ namespace loki::movegen
 		move() noexcept = default;
 		constexpr move(move_t m) : m_move{ m }
 		{ }
-		constexpr move(position::e_square from, position::e_square to, move_type type, piece promotion_piece) noexcept
+		constexpr move(position::e_square from, position::e_square to, move_attr type, piece promotion_piece) noexcept
 			: m_move{0}
 		{
 			this->from(from);
@@ -49,6 +55,9 @@ namespace loki::movegen
 			this->type(type);
 			this->promotion_piece(promotion_piece);
 		}
+		constexpr move(position::e_square from, position::e_square to)
+			: move(from, to, NORMAL, KNIGHT)
+		{ }
 		move(const move& src) noexcept : m_move{ src.m_move } {}
 
 #pragma region setters
@@ -60,7 +69,7 @@ namespace loki::movegen
 		{
 			m_move = nmasked_or(sq, 0x03F0, 4);
 		}
-		constexpr void type(move_type t) noexcept
+		constexpr void type(move_attr t) noexcept
 		{
 			m_move = nmasked_or(t, 0x000C, 2);
 		}
@@ -78,9 +87,9 @@ namespace loki::movegen
 		{
 			return get<position::e_square>(0x003F, 4);
 		}
-		constexpr move_type type() noexcept
+		constexpr move_attr type() noexcept
 		{
-			return get<move_type>(0x0003, 2);
+			return get<move_attr>(0x0003, 2);
 		}
 		constexpr piece promotion_piece() noexcept
 		{

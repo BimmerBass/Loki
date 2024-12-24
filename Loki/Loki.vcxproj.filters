@@ -102,6 +102,9 @@
     <ClCompile Include="movegen\magics\hardcoded_index.cpp">
       <Filter>Source Files\movegen\magics</Filter>
     </ClCompile>
+    <ClCompile Include="movegen\move_generator.cpp">
+      <Filter>Source Files\movegen</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="util\exception.hpp">
@@ -181,6 +184,12 @@
     </ClInclude>
     <ClInclude Include="movegen\magics\hardcoded_index.hpp">
       <Filter>Header Files\movegen\magics</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_generator.hpp">
+      <Filter>Header Files\movegen</Filter>
+    </ClInclude>
+    <ClInclude Include="position\search_position.hpp">
+      <Filter>Header Files\position</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

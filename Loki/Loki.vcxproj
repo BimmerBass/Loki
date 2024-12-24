@@ -188,6 +188,7 @@
     <ClCompile Include="movegen\magics\generation\sliding_generator.cpp" />
     <ClCompile Include="movegen\magics\hardcoded_index.cpp" />
     <ClCompile Include="movegen\magics\magic_index.cpp" />
+    <ClCompile Include="movegen\move_generator.cpp" />
     <ClCompile Include="position\bitboard.cpp" />
     <ClCompile Include="position\game_state.cpp" />
     <ClCompile Include="position\io\fen_string_builder.cpp" />
@@ -206,6 +207,7 @@
     <ClInclude Include="movegen\magics\hardcoded_index.hpp" />
     <ClInclude Include="movegen\magics\magic_index.hpp" />
     <ClInclude Include="movegen\move.hpp" />
+    <ClInclude Include="movegen\move_generator.hpp" />
     <ClInclude Include="movegen\move_list.hpp" />
     <ClInclude Include="position\bitboard.hpp" />
     <ClInclude Include="position\castle_rights.hpp" />
@@ -213,6 +215,7 @@
     <ClInclude Include="position\io\base_builder.hpp" />
     <ClInclude Include="position\io\fen_string_builder.hpp" />
     <ClInclude Include="position\io\game_state_builder.hpp" />
+    <ClInclude Include="position\search_position.hpp" />
     <ClInclude Include="position\square.hpp" />
     <ClInclude Include="search\limits.hpp" />
     <ClInclude Include="uci\context_interface.hpp" />

@@ -39,7 +39,12 @@ namespace loki
 		BLACK,
 		NUM_SIDES
 	};
+	inline constexpr side operator!(side s)
+	{
+		return s == WHITE ? BLACK : WHITE;
+	}
 	ENABLE_STRINGIFY(side, "W", "B", "-");
+
 	enum piece
 	{
 		PAWN = 0,

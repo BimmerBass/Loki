@@ -18,7 +18,7 @@
 #pragma once
 #include <string>
 #include "defs.hpp"
-#include "../square.hpp"
+#include "position/square.hpp"
 #include "util/exception.hpp"
 #include "base_builder.hpp"
 

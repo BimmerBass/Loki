@@ -17,7 +17,7 @@
 //
 #pragma once
 
-// Neat way of defining operators taken by stockfish (see https://github.com/official-stockfish/Stockfish/blob/master/src/types.h line 307)
+// Neat way of defining operators taken from stockfish (see https://github.com/official-stockfish/Stockfish/blob/master/src/types.h)
 #define ENABLE_BASE_OPERATORS_ON(_Ty)																	\
 template<typename T> requires(!std::is_same_v<T, _Ty>)													\
 constexpr _Ty operator+(_Ty v1, T v2) noexcept { return static_cast<_Ty>((T)v1 + v2); }			\
