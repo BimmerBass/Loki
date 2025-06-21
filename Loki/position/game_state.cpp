@@ -39,7 +39,7 @@ namespace loki::position
 	std::string game_state::to_fen(const game_state_t& gs)
 	{
 		io::fen_string_builder builder;
-		builder.reset(gs, std::make_shared<std::string>(""));
+		builder.reset(gs, std::make_unique<std::string>(""));
 		auto fenPtr = builder
 			.piece_placements()
 			.side_to_move()

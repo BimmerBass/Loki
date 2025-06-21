@@ -34,6 +34,8 @@ namespace loki::position
 		/// </summary>
 		constexpr castle_rights() : m_rights{ 0 } {}
 
+		constexpr castle_rights(uint8_t rights) : m_rights{ rights } {}
+
 		/// <summary>
 		/// Check if castling is possible for a given side and direction.
 		/// </summary>
@@ -61,6 +63,19 @@ namespace loki::position
 				auto m = mask<_S, _D>();
 				m_rights ^= m;
 			}
+		}
+		template<castling_direction _D>
+		constexpr inline void set(side s, bool value) noexcept
+		{
+			if (s == WHITE)
+				set<WHITE, _D>(value);
+			else
+				set<BLACK, _D>(value);
+		}
+
+		constexpr uint8_t get() const noexcept
+		{
+			return m_rights;
 		}
 
 		/// <summary>

@@ -32,6 +32,7 @@ namespace loki
 		constexpr const char* START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 		
 		constexpr size_t MAX_POSITION_MOVES = 256; // TODO: Remove this restriction
+		constexpr size_t MAX_GAME_MOVES = 1024; // TODO: Remove this restriction
 	}
 	
 	enum side {
@@ -39,6 +40,7 @@ namespace loki
 		BLACK,
 		NUM_SIDES
 	};
+	ENABLE_INCR_OPERATORS_ON(side);
 	inline constexpr side operator!(side s)
 	{
 		return s == WHITE ? BLACK : WHITE;
@@ -57,6 +59,7 @@ namespace loki
 		NO_PIECE
 	};
 	ENABLE_BASE_OPERATORS_ON(piece);
+	ENABLE_INCR_OPERATORS_ON(piece);
 	ENABLE_STRINGIFY(piece, "P", "N", "B", "R", "Q", "K", "NP", "-");
 
 
@@ -64,5 +67,22 @@ namespace loki
 	{
 		struct game_state;
 		using game_state_t = std::shared_ptr<game_state>;
+
+		class search_position;
+		using search_position_t = std::shared_ptr<search_position>;
+
+		class position_proxy;
+	}
+
+	namespace movegen
+	{
+		class move_generator;
+		using move_generator_t = std::shared_ptr<move_generator>;
+
+		namespace magics
+		{
+			class magic_index;
+			using magic_index_t = std::shared_ptr<magic_index>;
+		}
 	}
 }

@@ -20,13 +20,19 @@
 #include "loki_context.hpp"
 #include "versioninfo.hpp"
 #include "position/square.hpp"
+#include "position/search_position.hpp"
+#include "movegen/magics/hardcoded_index.hpp"
+#include "movegen/move_generator.hpp"
 #include "defs.hpp"
 
 namespace loki::uci
 {
 	loki_context::loki_context(std::ostream& os) :
 		m_os{ os }, m_gamestate{ nullptr }
-	{}
+	{
+		m_rook_index = std::make_shared<movegen::magics::hardcoded_index>(ROOK);
+		m_bishop_index = std::make_shared<movegen::magics::hardcoded_index>(BISHOP);
+	}
 
 	void loki_context::uci() const
 	{
@@ -58,10 +64,22 @@ namespace loki::uci
 	{
 		throw_msg<not_implemented_error>("not implemented");
 	}
-	void loki_context::position(const std::string& fen, const std::vector<std::string>&)
+	void loki_context::position(const std::string& fen, const std::vector<std::string>& moves)
 	{
 		m_gamestate = position::game_state::from_fen(fen);
-		// TODO: Add moves
+		
+		if (!moves.empty())
+		{
+			auto position = position::make(m_gamestate, m_bishop_index, m_rook_index);
+			movegen::move_list move_list;
+			for (const std::string& move : moves)
+			{
+				auto count = position->generate_moves(&move_list);
+				std::string test = move;
+				test += "";
+				test += std::to_string(count);
+			}
+		}
 	}
 	void loki_context::go(const search::limits*)
 	{

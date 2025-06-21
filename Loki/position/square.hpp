@@ -36,6 +36,7 @@ namespace loki::position
 		NUM_SQUARES = 64, NO_SQ = 65
 	};
 	ENABLE_INCR_OPERATORS_ON(e_square);
+	ENABLE_FULL_OPERATORS_ON(e_square);
 	enum e_rank{
 		RANK_1 = 0,
 		RANK_2,
@@ -66,6 +67,15 @@ namespace loki::position
 	ENABLE_FULL_OPERATORS_ON(e_file);
 	ENABLE_INCR_OPERATORS_ON(e_file);
 
+	constexpr e_rank rank_of(e_square sq) noexcept
+	{
+		return static_cast<e_rank>(sq / static_cast<e_square>(NUM_RANKS));
+	}
+	constexpr e_file file_of(e_square sq)
+	{
+		return static_cast<e_file>(sq % static_cast<e_square>(NUM_FILES));
+	}
+
 	class square final
 	{
 	private:
@@ -92,8 +102,8 @@ namespace loki::position
 		}
 		
 		constexpr e_square value() const { return m_value; }
-		constexpr e_rank rank() const { return static_cast<e_rank>(m_value / static_cast<e_square>(NUM_RANKS)); }
-		constexpr e_file file() const { return static_cast<e_file>(m_value % static_cast<e_square>(NUM_FILES)); }
+		constexpr e_rank rank() const { return rank_of(m_value); }
+		constexpr e_file file() const { return file_of(m_value); }
 
 		constexpr void operator++(int) // post-increment
 		{

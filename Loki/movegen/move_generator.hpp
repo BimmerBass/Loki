@@ -16,10 +16,11 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
-#include "position/search_position.hpp"
 #include "magics/magic_index.hpp"
 #include "util/exception.hpp"
 #include "move_list.hpp"
+#include "defs.hpp"
+
 
 namespace loki::movegen
 {
@@ -28,21 +29,20 @@ namespace loki::movegen
 		CHILD_EXCEPTION(movegen_exception, loki_exception);
 	private:
 		using atk_table = std::array<position::bitboard_t, position::NUM_SQUARES>;
-		using inx_t = std::shared_ptr<magics::magic_index>;
 		using proxy_t = position::position_proxy;
 		using ml_t = move_list;
 
 		atk_table m_knight_attacks;
 		atk_table m_king_attacks;
-		inx_t m_rook_index;
-		inx_t m_bishop_index;
+		magics::magic_index_t m_rook_index;
+		magics::magic_index_t m_bishop_index;
 	public:
 		/// <summary>
 		/// Initialize a move_generator object.
 		/// </summary>
 		/// <param name="rook_inx">A shared pointer to a magic rook table</param>
 		/// <param name="bishop_inx">A shared pointer to a magic bishop table</param>
-		move_generator(inx_t rook_inx, inx_t bishop_inx)
+		move_generator(magics::magic_index_t rook_inx, magics::magic_index_t bishop_inx)
 			: m_rook_index{ rook_inx }, m_bishop_index{ bishop_inx }, m_knight_attacks{0ULL}, m_king_attacks{0ULL}
 		{
 			init_knight_table();
@@ -51,6 +51,9 @@ namespace loki::movegen
 
 		move_generator(const move_generator&) = delete;
 		move_generator(move_generator&&) = delete;
+
+		template<move_type MT = ALL, piece PT = NUM_PIECES>
+		inline size_t generate(const proxy_t* pos, ml_t* ml) const;
 
 		/// <summary>
 		/// Generate all moves for a position given a piece type and side.
@@ -62,28 +65,17 @@ namespace loki::movegen
 		/// <param name="move_list">A move_list pointer to insert the result. Note that the original data will be cleared.</param>
 		/// <returns>A size_t integer denoting the number of generated moves.</returns>
 		template<side S, move_type MT = ALL, piece PT = NUM_PIECES> requires (PT <= NUM_PIECES) && (S < NUM_SIDES) && (MT <= PROMOTION)
-		size_t generate(const proxy_t* pos, ml_t* ml) const
-		{
-			if (pos == nullptr || ml == nullptr)
-				throw_msg<movegen_exception>("invalid arguments to generate(): either pos ({}) or ml ({}) is nullptr.", (intptr_t)pos, (intptr_t)ml);
-			ml->clear();
-			
-			if constexpr (PT == NUM_PIECES)
-				generate_all<S, MT>(pos, ml);
-			else if constexpr (PT == PAWN)
-				generate_pawn<S, MT>(pos, ml);
-			else if constexpr (PT == KNIGHT)
-				generate_knight<S, MT>(pos, ml);
-			else if constexpr (PT == BISHOP)
-				generate_bishop<S, MT>(pos, ml);
-			else if constexpr (PT == ROOK)
-				generate_rook<S, MT>(pos, ml);
-			else if constexpr (PT == QUEEN)
-				generate_queen<S, MT>(pos, ml);
-			else
-				generate_king<S, MT>(pos, ml);
-			return ml->size();
-		}
+		size_t generate(const proxy_t* pos, ml_t* ml) const;
+
+		/// <summary>
+		/// Get the attackers of some piece type to a given square
+		/// </summary>
+		/// <typeparam name="PT">The piece type. Default: All pieces</typeparam>
+		/// <param name="sq">The square</param>
+		/// <param name="s">The side</param>
+		/// <returns>A bitboard with the attacking pieces to the square</returns>
+		template<piece PT = NUM_PIECES> requires (PT >= PAWN && PT <= NUM_PIECES)
+		position::bitboard_t attackers_to(const proxy_t* pos, position::e_square sq, side s) const;
 
 	private:
 		void init_knight_table();
@@ -98,45 +90,19 @@ namespace loki::movegen
 		template<side S, move_type MT>
 		void generate_rook(const proxy_t* pos, ml_t* ml) const;
 		template<side S, move_type MT>
+		void generate_queen(const proxy_t* pos, ml_t* ml) const;
+		template<side S, move_type MT>
 		void generate_king(const proxy_t* pos, ml_t* ml) const;
 
 		template<side S, move_type MT>
-		void generate_queen(const proxy_t* pos, ml_t* ml) const
-		{
-			return generate_rook<S, MT>(pos, ml) + generate_bishop<S, MT>(pos, ml);
-		}
-
-		template<side S, move_type MT>
-		void generate_all(const proxy_t* pos, ml_t* ml)
-		{
-			generate_pawn<S, MT>(pos, ml);
-			generate_knight<S, MT>(pos, ml);
-			generate_bishop<S, MT>(pos, ml);
-			generate_rook<S, MT>(pos, ml);
-			generate_queen<S, MT>(pos, ml);
-			generate_king<S, MT>(pos, ml);
-		}
+		void generate_all(const proxy_t* pos, ml_t* ml) const;
 
 		template<side S, move_type MT>
 		void add_basic_attacks(
 			position::bitboard_t all_attacks,
 			position::e_square from_sq,
 			const proxy_t* pos,
-			ml_t* ml) const
-		{
-			auto valid_attacks = 0ULL;
-
-			if constexpr (MT == ACTIVE || MT == ALL)
-				valid_attacks |= all_attacks & pos->all_pieces<!S>();
-			if constexpr (MT == QUIET || MT == ALL)
-				valid_attacks |= all_attacks & ~pos->all_pieces<!S>();
-
-			while (valid_attacks != 0)
-			{
-				auto to_sq = position::pop_lsb(valid_attacks).value();
-				ml->push_back(from_sq, to_sq);
-			}
-		}
+			ml_t* ml) const;
 
 		void add_promotions(position::e_square from, position::e_square to, ml_t* ml)
 		{
@@ -147,3 +113,5 @@ namespace loki::movegen
 		}
 	};
 }
+
+#include "move_generator_templates.hpp"

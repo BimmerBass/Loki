@@ -105,6 +105,15 @@
     <ClCompile Include="movegen\move_generator.cpp">
       <Filter>Source Files\movegen</Filter>
     </ClCompile>
+    <ClCompile Include="position\search_position.cpp">
+      <Filter>Source Files\position</Filter>
+    </ClCompile>
+    <ClCompile Include="position\position_history.hpp">
+      <Filter>Header Files\position</Filter>
+    </ClCompile>
+    <ClCompile Include="position\position_proxy.cpp">
+      <Filter>Source Files\position</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="util\exception.hpp">
@@ -131,12 +140,6 @@
     <ClInclude Include="util\stringops.hpp">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="uci\context_interface.hpp">
-      <Filter>Header Files\uci</Filter>
-    </ClInclude>
-    <ClInclude Include="search\limits.hpp">
-      <Filter>Header Files\search</Filter>
-    </ClInclude>
     <ClInclude Include="position\io\base_builder.hpp">
       <Filter>Header Files\position\io</Filter>
     </ClInclude>
@@ -157,9 +160,6 @@
     </ClInclude>
     <ClInclude Include="movegen\move_list.hpp">
       <Filter>Header Files\movegen</Filter>
-    </ClInclude>
-    <ClInclude Include="util\rng.hpp">
-      <Filter>Header Files\util</Filter>
     </ClInclude>
     <ClInclude Include="position\bitboard.hpp">
       <Filter>Header Files\position</Filter>
@@ -190,6 +190,12 @@
     </ClInclude>
     <ClInclude Include="position\search_position.hpp">
       <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="position\position_proxy.hpp">
+      <Filter>Header Files\position</Filter>
+    </ClInclude>
+    <ClInclude Include="movegen\move_generator_templates.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

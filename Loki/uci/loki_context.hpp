@@ -57,6 +57,8 @@ namespace loki::uci
 	private:
 		std::ostream& m_os;
 		position::game_state_t m_gamestate;
+		movegen::magics::magic_index_t m_rook_index;
+		movegen::magics::magic_index_t m_bishop_index;
 	};
 
 }

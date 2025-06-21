@@ -18,43 +18,73 @@
 #pragma once
 #include "util/exception.hpp"
 #include "game_state.hpp"
+#include "position_history.hpp"
+#include "movegen/magics/magic_index.hpp"
+#include "movegen/move_list.hpp"
+#include <defs.hpp>
 
 namespace loki::position
 {
-	class position_proxy;
+	/// <summary>
+	/// Create a new instance of a search_position.
+	/// </summary>
+	/// <param name="state">The initial game state to load. Note that a new unique_ptr will be created from this.</param>
+	/// <param name="bishop_index">A pointer to the bishop magic index</param>
+	/// <param name="rook_index">A pointer to the rook magic index</param>
+	/// <returns>A search_position wrapped in a std::shared_ptr</returns>
+	search_position_t make(
+		game_state_t state,
+		movegen::magics::magic_index_t bishop_index,
+		movegen::magics::magic_index_t rook_index);
 
-	class search_position
+	/// <summary>
+	/// Wrapper for game_state, which is optimized for quick move generation during search.
+	/// </summary>
+	class search_position final
 	{
 		CHILD_EXCEPTION(position_error, loki_exception);
 		friend class position_proxy;
+		friend search_position_t make(
+			game_state_t state,
+			movegen::magics::magic_index_t bishop_index,
+			movegen::magics::magic_index_t rook_index);
 	private:
 		std::unique_ptr<game_state> m_state;
 		bitboard_t m_piecebbs[NUM_SIDES][NUM_PIECES];
 		bitboard_t m_all_pieces[NUM_SIDES];
 		e_square m_king_squares[NUM_SIDES];
 
+		position_history<constants::MAX_GAME_MOVES> m_history;
 
-	};
-
-	/// <summary>
-	/// Provides simple getters and setters without cluttering search_position's interface.
-	/// </summary>
-	class position_proxy final
-	{
+		std::unique_ptr<movegen::move_generator> m_move_generator;
 	private:
-		const search_position* m_ptr;
+		search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::move_generator> move_generator);
+
 	public:
+		/// <summary>
+		/// Perform a move on the position.
+		/// </summary>
+		/// <param name="move">The move to perform.</param>
+		/// <returns>True if the move was legal, false otherwise.</returns>
+		bool make_move(const movegen::move& move);
 
-		position_proxy(const search_position* ptr)
-			: m_ptr(ptr)
-		{}
+		/// <summary>
+		/// Undo the last move.
+		/// </summary>
+		/// <exception cref="position_error">If no previous moves has been made.</exception>
+		void undo_last_move();
 
-		template<side S, piece P>
-		inline bitboard_t piece_bb() const { return m_ptr->m_piecebbs[S][P]; }
-		template<side S>
-		inline bitboard_t all_pieces() const { return m_ptr->m_all_pieces[S]; }
-		template<side S>
-		inline bitboard_t king_square() const { return m_ptr->m_king_squares[S]; }
-		inline const game_state* game_state() const { return m_ptr->m_state.get(); }
+		/// <summary>
+		/// Determine if the side to move is in check.
+		/// </summary>
+		/// <returns>a bool indicating if we're in check</returns>
+		bool in_check() const;
+
+		/// <summary>
+		/// Generate all pseudo-legal moves for the current side.
+		/// </summary>
+		/// <param name="ml">A pointer to the move list object</param>
+		/// <returns>The number of moves generated.</returns>
+		size_t generate_moves(movegen::move_list* ml) const;
 	};
 }

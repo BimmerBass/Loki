@@ -79,21 +79,26 @@ namespace loki::movegen
 		}
 #pragma endregion
 #pragma region getters
-		constexpr position::e_square from() noexcept
+		constexpr position::e_square from() const noexcept
 		{
 			return get<position::e_square>(0x003F, 10);
 		}
-		constexpr position::e_square to() noexcept
+		constexpr position::e_square to() const noexcept
 		{
 			return get<position::e_square>(0x003F, 4);
 		}
-		constexpr move_attr type() noexcept
+		constexpr move_attr type() const noexcept
 		{
 			return get<move_attr>(0x0003, 2);
 		}
-		constexpr piece promotion_piece() noexcept
+		constexpr piece promotion_piece() const noexcept
 		{
 			return get<piece>(0x0003, 0) + 1;
+		}
+
+		constexpr move_t get_raw() const noexcept
+		{
+			return m_move;
 		}
 #pragma endregion
 
@@ -110,7 +115,7 @@ namespace loki::movegen
 	private:
 
 		template<typename T>
-		constexpr T get(uint16_t mask, size_t shift) noexcept
+		constexpr T get(uint16_t mask, size_t shift) const noexcept
 		{
 			return static_cast<T>((m_move >> shift) & mask);
 		}
