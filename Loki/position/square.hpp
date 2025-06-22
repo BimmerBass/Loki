@@ -82,6 +82,8 @@ namespace loki::position
 		e_square m_value;
 	public:
 		constexpr square() : square(NO_SQ) {}
+		constexpr square(size_t s) : square(static_cast<e_square>(s))
+		{}
 		constexpr square(e_square s) : m_value{ s }
 		{}
 		constexpr square(e_rank r, e_file f) : m_value{ static_cast<e_square>(r * 8 + f) }

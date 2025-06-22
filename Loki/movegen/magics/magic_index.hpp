@@ -25,6 +25,10 @@
 
 namespace loki::movegen::magics
 {
+	class magic_index;
+	using magic_index_t = std::shared_ptr<magic_index>;
+
+
 	/// <summary>
 	/// Interface for a magic attack tablebase.
 	/// Manages pointers into a continuous area of memory.

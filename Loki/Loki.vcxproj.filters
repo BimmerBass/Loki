@@ -111,9 +111,6 @@
     <ClCompile Include="position\position_history.hpp">
       <Filter>Header Files\position</Filter>
     </ClCompile>
-    <ClCompile Include="position\position_proxy.cpp">
-      <Filter>Source Files\position</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="util\exception.hpp">
@@ -191,11 +188,11 @@
     <ClInclude Include="position\search_position.hpp">
       <Filter>Header Files\position</Filter>
     </ClInclude>
-    <ClInclude Include="position\position_proxy.hpp">
+    <ClInclude Include="position\i_position_view.hpp">
       <Filter>Header Files\position</Filter>
     </ClInclude>
-    <ClInclude Include="movegen\move_generator_templates.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="movegen\i_move_generator.hpp">
+      <Filter>Header Files\movegen</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

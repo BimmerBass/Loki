@@ -25,6 +25,9 @@
 
 namespace loki::position
 {
+	struct game_state;
+	using game_state_t = std::shared_ptr<game_state>;
+
 	/// <summary>
 	/// game_state represents the most basic chess position.
 	/// It acts like a DTO (data-transfer object) between internal types and FEN's and is not optimized for quick move generation.

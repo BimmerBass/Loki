@@ -17,6 +17,7 @@
 //
 #pragma once
 #include "context_interface.hpp"
+#include "movegen/magics/magic_index.hpp"
 
 namespace loki::uci
 {

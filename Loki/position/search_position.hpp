@@ -21,10 +21,14 @@
 #include "position_history.hpp"
 #include "movegen/magics/magic_index.hpp"
 #include "movegen/move_list.hpp"
+#include "movegen/i_move_generator.hpp"
 #include <defs.hpp>
 
 namespace loki::position
 {
+	class search_position;
+	using search_position_t = std::shared_ptr<search_position>;
+
 	/// <summary>
 	/// Create a new instance of a search_position.
 	/// </summary>
@@ -56,9 +60,9 @@ namespace loki::position
 
 		position_history<constants::MAX_GAME_MOVES> m_history;
 
-		std::unique_ptr<movegen::move_generator> m_move_generator;
+		std::unique_ptr<movegen::i_move_generator> m_move_generator;
 	private:
-		search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::move_generator> move_generator);
+		search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::i_move_generator> move_generator);
 
 	public:
 		/// <summary>

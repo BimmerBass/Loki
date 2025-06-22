@@ -208,14 +208,13 @@
     <ClCompile Include="position\io\fen_string_builder.cpp" />
     <ClCompile Include="position\io\game_state_builder.cpp" />
     <ClCompile Include="position\position_history.hpp" />
-    <ClCompile Include="position\position_proxy.cpp" />
     <ClCompile Include="position\search_position.cpp" />
     <ClCompile Include="uci\loki_context.cpp" />
     <ClCompile Include="uci\uci_parser.cpp" />
     <ClCompile Include="util\stringops.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="movegen\move_generator_templates.hpp" />
+    <ClInclude Include="movegen\i_move_generator.hpp" />
     <ClInclude Include="defs.hpp" />
     <ClInclude Include="movegen\magics\generation\bishop_generator.hpp" />
     <ClInclude Include="movegen\magics\generation\magic.hpp" />
@@ -233,7 +232,7 @@
     <ClInclude Include="position\io\base_builder.hpp" />
     <ClInclude Include="position\io\fen_string_builder.hpp" />
     <ClInclude Include="position\io\game_state_builder.hpp" />
-    <ClInclude Include="position\position_proxy.hpp" />
+    <ClInclude Include="position\i_position_view.hpp" />
     <ClInclude Include="position\search_position.hpp" />
     <ClInclude Include="position\square.hpp" />
     <ClInclude Include="uci\loki_context.hpp" />

@@ -21,6 +21,7 @@
 #include "position/square.hpp"
 #include "util/exception.hpp"
 #include "base_builder.hpp"
+#include "position/game_state.hpp"
 
 namespace loki::position::io
 {

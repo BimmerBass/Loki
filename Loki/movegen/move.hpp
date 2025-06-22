@@ -55,6 +55,11 @@ namespace loki::movegen
 			this->type(type);
 			this->promotion_piece(promotion_piece);
 		}
+		constexpr move(size_t from, size_t to)
+			: move(static_cast<position::e_square>(from), static_cast<position::e_square>(to))
+		{
+
+		}
 		constexpr move(position::e_square from, position::e_square to)
 			: move(from, to, NORMAL, KNIGHT)
 		{ }
