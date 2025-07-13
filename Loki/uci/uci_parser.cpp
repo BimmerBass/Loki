@@ -133,4 +133,23 @@ namespace loki::uci
 	{
 		m_context->printpos();
 	}
+
+	void uci_parser::parse_perft(const tokens_t& tokens)
+	{
+		if (tokens.size() < 1)
+			throw_msg<uci_error>("perft needs either a \"depth [depth]\" or non-zero numeric parameter");
+
+		auto it = tokens.begin();
+		std::string sdepth;
+		if ((*it) == "depth")
+		{
+			sdepth = *++it;
+		}
+		else
+		{
+			sdepth = *it;
+		}
+		size_t depth = std::stol(sdepth);
+		m_context->perft(depth);
+	}
 }

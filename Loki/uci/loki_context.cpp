@@ -23,6 +23,7 @@
 #include "position/search_position.hpp"
 #include "movegen/magics/hardcoded_index.hpp"
 #include "movegen/move_generator.hpp"
+#include "search/perft.hpp"
 #include "defs.hpp"
 
 namespace loki::uci
@@ -72,13 +73,17 @@ namespace loki::uci
 		{
 			auto position = position::make(m_gamestate, m_bishop_index, m_rook_index);
 			movegen::move_list move_list;
-			for (const std::string& move : moves)
+			for (const std::string& move_string : moves)
 			{
-				auto count = position->generate_moves(&move_list);
-				std::string test = move;
-				test += "";
-				test += std::to_string(count);
+				generate_legals(position, &move_list);
+				//position->generate_moves(&move_list);
+				auto move = move_list.find(move_string);
+				if (!move.has_value())
+					break;
+				position->make_move(move.value());
 			}
+
+			m_gamestate = std::move(position->state());
 		}
 	}
 	void loki_context::go(const search::limits*)
@@ -135,5 +140,31 @@ namespace loki::uci
 		m_os << "\tFull move counter:\t" << m_gamestate->full_move_cnt << std::endl;
 		m_os << "\t" << "FEN:\t\t\t" << position::game_state::to_fen(m_gamestate) << std::endl;
 		m_os << "/INFORMATION" << std::endl;
+	}
+
+	void loki_context::perft(size_t) const
+	{
+		if (m_gamestate == nullptr)
+			throw_msg<loki_exception>("game_state pointer was null");
+
+		auto fen = position::game_state::to_fen(m_gamestate);
+		auto perft = search::perft(m_os, m_rook_index, m_bishop_index);
+	}
+
+	void loki_context::generate_legals(position::search_position_t position, movegen::move_list* legals) const
+	{
+		legals->clear();
+		movegen::move_list pseudoLegals;
+		position->generate_moves(&pseudoLegals);
+		auto it = pseudoLegals.begin();
+
+		while (it != pseudoLegals.end())
+		{
+			if (!position->make_move(*it))
+				continue;
+			legals->push_back(*it);
+			position->undo_last_move();
+			it++;
+		}
 	}
 }

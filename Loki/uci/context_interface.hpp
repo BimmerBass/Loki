@@ -53,5 +53,6 @@ namespace loki::uci
 
 		// custom methods for Loki
 		virtual void printpos() const = 0;
+		virtual void perft(size_t depth) const = 0;
 	};
 }

@@ -18,6 +18,7 @@
 #pragma once
 #include "context_interface.hpp"
 #include "movegen/magics/magic_index.hpp"
+#include "position/search_position.hpp"
 
 namespace loki::uci
 {
@@ -53,6 +54,7 @@ namespace loki::uci
 		void stop() override;
 		void ponderhit() override;
 		void printpos() const override;
+		void perft(size_t depth) const override;
 
 		inline const position::game_state_t& game_state() const { return m_gamestate; }
 	private:
@@ -60,6 +62,8 @@ namespace loki::uci
 		position::game_state_t m_gamestate;
 		movegen::magics::magic_index_t m_rook_index;
 		movegen::magics::magic_index_t m_bishop_index;
+
+		void generate_legals(position::search_position_t position, movegen::move_list* legals) const;
 	};
 
 }

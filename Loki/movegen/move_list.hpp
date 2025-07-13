@@ -58,6 +58,8 @@ namespace loki::movegen
 		constexpr cit begin() const noexcept { return m_collection.begin(); }
 		constexpr cit end() const noexcept { return m_collection.begin() + m_size; }
 
+		std::optional<move> find(const std::string& move_string) const;
+
 		move_list(const move_list&) = delete;
 		move_list& operator=(const move_list&) = delete;
 		move_list(move_list&&) = delete;

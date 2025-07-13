@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="loki::movegen::move">
+		<!-- this is the one-line summary shown in Watch/Autos/Locals -->
+		<DisplayString>From = {from()}, To = {to()}, Type = {type()}, Promotion Piece = {promotion_piece()}</DisplayString>
+
+		<!-- if you also want to expand into fields or sub-objects -->
+		<Expand>
+			<Item Name="From">{from()}</Item>
+			<Item Name="To">{to()}</Item>
+			<Item Name="Type">{type()}</Item>
+			<Item Name="Promotion Piece">{promotion_piece()}</Item>
+		</Expand>
+	</Type>
+</AutoVisualizer>

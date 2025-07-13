@@ -35,15 +35,16 @@ namespace loki::movegen
 	{
 		for (auto sq = A1; sq <= H8; sq++)
 		{
+			auto file = square(sq).file();
+			auto rank = square(sq).rank();
 			auto sqBB = 1ULL << sq;
 			m_knight_attacks[sq] = 0ULL;
-			
-			
-			m_knight_attacks[sq] |=
-				shift_combine<UP, UP, UP, LEFT>(sqBB) | shift_combine<UP, UP, UP, RIGHT>(sqBB) |
-				shift_combine<DOWN, DOWN, DOWN, LEFT>(sqBB) | shift_combine<DOWN, DOWN, DOWN, RIGHT>(sqBB) |
-				shift_combine<LEFT, LEFT, LEFT, UP>(sqBB) | shift_combine<LEFT, LEFT, LEFT, DOWN>(sqBB) |
-				shift_combine<RIGHT, RIGHT, RIGHT, UP>(sqBB) | shift_combine<RIGHT, RIGHT, RIGHT, DOWN>(sqBB);
+
+			m_knight_attacks[sq] =
+				((shift_combine<UP, UP, LEFT>(sqBB) | shift_combine<UP, UP, RIGHT>(sqBB) |
+					shift_combine<DOWN, DOWN, LEFT>(sqBB) | shift_combine<DOWN, DOWN, RIGHT>(sqBB)) & ~FILE_MASKS[file]) |
+				((shift_combine<LEFT, LEFT, UP>(sqBB) | shift_combine<LEFT, LEFT, DOWN>(sqBB) |
+					shift_combine<RIGHT, RIGHT, UP>(sqBB) | shift_combine<RIGHT, RIGHT, DOWN>(sqBB)) & ~RANK_MASKS[rank]);
 		}
 	}
 
@@ -240,6 +241,8 @@ namespace loki::movegen
 		{
 			auto from_sq = static_cast<e_square>(pop_lsb(bishopbb).value());
 			bitboard_t all_attacks = m_bishop_index->attacks(from_sq, occupancy);
+			all_attacks &= ~pos->all_pieces(S);
+
 			add_basic_attacks<S, MT>(all_attacks, from_sq, pos, ml);
 		}
 	}
@@ -257,6 +260,8 @@ namespace loki::movegen
 		{
 			auto from_sq = static_cast<e_square>(pop_lsb(rookbb).value());
 			bitboard_t all_attacks = m_rook_index->attacks(from_sq, occupancy);
+			all_attacks &= ~pos->all_pieces(S);
+
 			add_basic_attacks<S, MT>(all_attacks, from_sq, pos, ml);
 		}
 	}
@@ -274,6 +279,8 @@ namespace loki::movegen
 			auto from_sq = static_cast<e_square>(pop_lsb(queenbb).value());
 			bitboard_t all_attacks =
 				m_rook_index->attacks(from_sq, occupancy) | m_bishop_index->attacks(from_sq, occupancy);
+			all_attacks &= ~pos->all_pieces(S);
+
 			add_basic_attacks<S, MT>(all_attacks, from_sq, pos, ml);
 		}
 	}
@@ -282,8 +289,11 @@ namespace loki::movegen
 	void move_generator::generate_king(const pos_t* pos, ml_t* ml) const
 	{
 		assert(pos->king_square(S) == scan_lsb(pos->piece_bb(S, KING)).value());
+		constexpr auto first_rank = S == WHITE ? RANK_1 : RANK_8;
+		
 		auto king_sq = pos->king_square(S);
-		bitboard_t attacks = m_king_attacks[king_sq];
+		bitboard_t attacks = m_king_attacks[king_sq] & ~pos->all_pieces(S);
+		bitboard_t occupancy = pos->all_pieces();
 		bitboard_t valid_attacks = 0;
 
 		if constexpr (MT == ACTIVE || MT == ALL)
@@ -294,9 +304,28 @@ namespace loki::movegen
 
 			// castling
 			if (pos->game_state()->castling_rights.can_castle<S, KINGSIDE>())
-				ml->push_back(move(king_sq, S == WHITE ? G1 : G8, CASTLING, KNIGHT));
+			{
+				auto f_sq = square(first_rank, FILE_F);
+				auto g_sq = square(first_rank, FILE_G);
+
+				if (!is_one_at(occupancy, f_sq.value()) && 
+					!is_one_at(occupancy, g_sq.value()))
+				{
+					ml->push_back(move(king_sq, S == WHITE ? G1 : G8, CASTLING, KNIGHT));
+				}
+			}
 			if (pos->game_state()->castling_rights.can_castle<S, QUEENSIDE>())
-				ml->push_back(move(king_sq, S == WHITE ? C1 : C8, CASTLING, KNIGHT));
+			{
+				auto b_sq = square(first_rank, FILE_B);
+				auto c_sq = square(first_rank, FILE_C);
+				auto d_sq = square(first_rank, FILE_D);
+				if (!is_one_at(occupancy, b_sq.value()) &&
+					!is_one_at(occupancy, c_sq.value()) &&
+					!is_one_at(occupancy, d_sq.value()))
+				{
+					ml->push_back(move(king_sq, S == WHITE ? C1 : C8, CASTLING, KNIGHT));
+				}
+			}
 		}
 		while (valid_attacks != 0)
 		{

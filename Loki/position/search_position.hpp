@@ -90,5 +90,12 @@ namespace loki::position
 		/// <param name="ml">A pointer to the move list object</param>
 		/// <returns>The number of moves generated.</returns>
 		size_t generate_moves(movegen::move_list* ml) const;
+
+		/// <summary>
+		/// Extract the game_state instance
+		/// Note that after this function has been called, no other operations should be performed on this search_position object.
+		/// </summary>
+		/// <returns>A std::unique_ptr<game_state> rvalue reference</returns>
+		std::unique_ptr<game_state>&& state() { return std::move(m_state); }
 	};
 }

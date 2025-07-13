@@ -17,6 +17,7 @@
 //
 #pragma once
 #include <cstdint>
+#include <map>
 #include "defs.hpp"
 #include "position/square.hpp"
 
@@ -36,7 +37,10 @@ namespace loki::movegen
 		PROMOTION = 0x3
 	};
 
-	using move_t = uint16_t;
+	enum move_t : uint16_t
+	{
+		MOVE_NULL = 0
+	};
 
 	class move final
 	{
@@ -63,6 +67,7 @@ namespace loki::movegen
 		constexpr move(position::e_square from, position::e_square to)
 			: move(from, to, NORMAL, KNIGHT)
 		{ }
+
 		move(const move& src) noexcept : m_move{ src.m_move } {}
 
 #pragma region setters
@@ -128,7 +133,7 @@ namespace loki::movegen
 		template<typename T>
 		constexpr move_t nmasked_or(T value, uint16_t mask, size_t shift) const noexcept
 		{
-			return (m_move & ~mask) | ((uint16_t)value << shift);
+			return static_cast<move_t>((m_move & ~mask) | ((uint16_t)value << shift));
 		}
 	};
 }

@@ -58,6 +58,9 @@
     <Filter Include="Source Files\movegen\magics\generation">
       <UniqueIdentifier>{13c83bb9-52d9-49b6-a6e7-85fbcd8deda2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\search">
+      <UniqueIdentifier>{2fbbf300-9503-483d-960c-4cadede6bfa4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -110,6 +113,12 @@
     </ClCompile>
     <ClCompile Include="position\position_history.hpp">
       <Filter>Header Files\position</Filter>
+    </ClCompile>
+    <ClCompile Include="search\perft.cpp">
+      <Filter>Source Files\search</Filter>
+    </ClCompile>
+    <ClCompile Include="movegen\move_list.cpp">
+      <Filter>Source Files\movegen</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -194,5 +203,11 @@
     <ClInclude Include="movegen\i_move_generator.hpp">
       <Filter>Header Files\movegen</Filter>
     </ClInclude>
+    <ClInclude Include="search\perft.hpp">
+      <Filter>Header Files\search</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="MoveVisualizer.natvis" />
   </ItemGroup>
 </Project>

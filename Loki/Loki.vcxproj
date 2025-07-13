@@ -203,12 +203,14 @@
     <ClCompile Include="movegen\magics\hardcoded_index.cpp" />
     <ClCompile Include="movegen\magics\magic_index.cpp" />
     <ClCompile Include="movegen\move_generator.cpp" />
+    <ClCompile Include="movegen\move_list.cpp" />
     <ClCompile Include="position\bitboard.cpp" />
     <ClCompile Include="position\game_state.cpp" />
     <ClCompile Include="position\io\fen_string_builder.cpp" />
     <ClCompile Include="position\io\game_state_builder.cpp" />
     <ClCompile Include="position\position_history.hpp" />
     <ClCompile Include="position\search_position.cpp" />
+    <ClCompile Include="search\perft.cpp" />
     <ClCompile Include="uci\loki_context.cpp" />
     <ClCompile Include="uci\uci_parser.cpp" />
     <ClCompile Include="util\stringops.cpp" />
@@ -235,12 +237,21 @@
     <ClInclude Include="position\i_position_view.hpp" />
     <ClInclude Include="position\search_position.hpp" />
     <ClInclude Include="position\square.hpp" />
+    <ClInclude Include="search\perft.hpp" />
     <ClInclude Include="uci\loki_context.hpp" />
     <ClInclude Include="uci\uci_parser.hpp" />
     <ClInclude Include="util\exception.hpp" />
     <ClInclude Include="util\operators.hpp" />
     <ClInclude Include="util\stringops.hpp" />
     <ClInclude Include="versioninfo.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="MoveVisualizer.natvis">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </Natvis>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
