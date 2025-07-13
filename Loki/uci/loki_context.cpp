@@ -142,13 +142,14 @@ namespace loki::uci
 		m_os << "/INFORMATION" << std::endl;
 	}
 
-	void loki_context::perft(size_t) const
+	void loki_context::perft(size_t depth) const
 	{
 		if (m_gamestate == nullptr)
 			throw_msg<loki_exception>("game_state pointer was null");
 
 		auto fen = position::game_state::to_fen(m_gamestate);
 		auto perft = search::perft(m_os, m_rook_index, m_bishop_index);
+		perft.run(fen, depth);
 	}
 
 	void loki_context::generate_legals(position::search_position_t position, movegen::move_list* legals) const

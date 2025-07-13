@@ -26,18 +26,48 @@ namespace loki::search
 			if (!m_position->make_move(moves[i]))
 				continue;
 			legal++;
-			//size_t old_nodes = m_nodes;
+			size_t old_nodes = m_nodes;
 
 			run_internal(depth - 1);
 			m_position->undo_last_move();
 
-			//m_os << std::format("[{}] {}\t---> {} nodes.\n", legal, moves[i].from(), m_nodes - old_nodes);
+			m_os << std::format("[{}] {}\t---> {} nodes.\n", legal, moves[i].to_string(), m_nodes - old_nodes);
 		}
+
+		std::chrono::time_point<std::chrono::high_resolution_clock> end_time = std::chrono::high_resolution_clock::now();
+		auto start = std::chrono::time_point_cast<std::chrono::milliseconds>(start_time).time_since_epoch().count();
+		auto end = std::chrono::time_point_cast<std::chrono::milliseconds>(end_time).time_since_epoch().count();
+		auto elapsed = end - start;
+		m_nps = static_cast<int64_t>(double(m_nodes) / (double(elapsed <= 0 ? 1 : elapsed) / 1000.0));
+
+
+		m_os << "\nPerft test completed after: " << elapsed << "ms.\n";
+		m_os << "Nodes/second: " << m_nps << "\n";
+		m_os << "\nNodes visited: " << m_nodes << "\n";
+		m_os << "</PERFT TEST FOR DEPTH = " << depth << ">" << std::endl;
 	}
 
-	void perft::run_internal(size_t)
+	void perft::run_internal(size_t depth)
 	{
-		return;
+		if (depth <= 0)
+		{
+			m_nodes++;
+			return;
+		}
+
+		move_list moves;
+		m_position->generate_moves(&moves);
+		auto move = moves.begin();
+
+		while (move != moves.end())
+		{
+			if (!m_position->make_move(*move))
+				continue;
+			run_internal(depth - 1);
+			m_position->undo_last_move();
+
+			move++;
+		}
 	}
 
 }

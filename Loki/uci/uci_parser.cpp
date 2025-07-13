@@ -38,6 +38,7 @@ namespace loki::uci
 		REGISTER_CALLBACK(parse_quit);
 		REGISTER_CALLBACK(parse_stop);
 		REGISTER_CALLBACK(parse_printpos);
+		REGISTER_CALLBACK(parse_perft);
 #undef REGISTER_CALLBACK
 	}
 

@@ -122,6 +122,19 @@ namespace loki::movegen
 			return m_move == rhs.m_move;
 		}
 
+		std::string to_string() const
+		{
+			constexpr std::array<char, 4> promotion_pieces = { 'n', 'b', 'r', 'q' };
+
+			position::square from_sq = from();
+			position::square to_sq = to();
+			auto move_str = from_sq.to_algebraic() + to_sq.to_algebraic();
+			if (type() == PROMOTION)
+			{
+				move_str += promotion_pieces[promotion_piece() - 1];
+			}
+			return move_str;
+		}
 	private:
 
 		template<typename T>
