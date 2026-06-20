@@ -1,0 +1,79 @@
+#!/usr/bin/env sh
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+
+header_cpp='// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//'
+
+header_py='# Loki, a UCI-compliant chess playing software
+# Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+#
+# Loki is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Loki is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#'
+
+insert_header() {
+    file=$1
+    header=$2
+
+    tmp_file="${file}.license.$$"
+    printf '%s\n\n' "$header" > "$tmp_file"
+    cat "$file" >> "$tmp_file"
+    mv "$tmp_file" "$file"
+    git add -- "$file"
+}
+
+git diff --cached --name-only -z --diff-filter=AM -- \
+    ':!Loki/__gitversion_autogen.hpp' |
+while IFS= read -r -d '' file; do
+    case "$file" in
+        *.cpp|*.hpp|*.h)
+            ;;
+        *.py)
+            ;;
+        *)
+            continue
+            ;;
+    esac
+
+    abs_file="$repo_root/$file"
+    [ -f "$abs_file" ] || continue
+
+    if grep -q 'Copyright (C) 2021  Niels Abildskov' "$abs_file"; then
+        continue
+    fi
+
+    case "$file" in
+        *.py)
+            insert_header "$abs_file" "$header_py"
+            ;;
+        *)
+            insert_header "$abs_file" "$header_cpp"
+            ;;
+    esac
+done
