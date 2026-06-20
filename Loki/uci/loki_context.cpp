@@ -53,7 +53,7 @@ namespace loki::uci
 		// TODO: Also output this while searching if we're asked to. Perhaps have the main_thread listening for inputs...
 		m_os << "readyok" << std::endl;
 	}
-	void loki_context::setoption(std::string name, std::optional<std::string> value)
+	void loki_context::setoption(std::string /*name*/, std::optional<std::string> /*value*/)
 	{
 		throw_msg<not_implemented_error>("not implemented");
 	}

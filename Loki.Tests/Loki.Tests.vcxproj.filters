@@ -29,8 +29,6 @@
       <Filter>util</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\gtest\gtest-all.cc" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)src\gmock\gmock-all.cc" />
     <ClCompile Include="position\bitboard_test.cpp">
       <Filter>position</Filter>
     </ClCompile>
