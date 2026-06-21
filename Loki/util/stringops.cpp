@@ -16,6 +16,7 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include <ranges>
+#include <regex>
 #include "stringops.hpp"
 
 namespace loki::util
@@ -31,6 +32,12 @@ namespace loki::util
 				})
 			| std::views::transform([](const auto& sr) { return std::string(sr.begin(), sr.end()); });
 		return std::vector(split.begin(), split.end());
+	}
+
+	std::string collapse_whitespace(const std::string& str)
+	{
+		static std::regex ws_re("\\s+");
+		return std::regex_replace(str, ws_re, " ");
 	}
 
 	std::string join(const std::vector<std::string>& vec, char delim)

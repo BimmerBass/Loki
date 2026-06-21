@@ -16,12 +16,11 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include "hardcoded_index.hpp"
-#include "generation/bishop_generator.hpp"
-#include "generation/rook_generator.hpp"
 
 namespace loki::movegen::magics
 {
-	static constexpr position::bitboard_t ROOK_MAGICS[position::NUM_SQUARES] = {
+	template<>
+	const position::bitboard_t hardcoded_index<ROOK>::MAGICS[position::NUM_SQUARES] = {
 		0x0080002080400010, 0x0040100040002008, 0x0200108020084200, 0x0200081004220041,
 		0x4200081002002004, 0x0580040001804200, 0xC100010004008200, 0x2080104080002100,
 		0x00028000C0008022, 0x000280400080200D, 0x0005004700102000, 0x0080800800100080,
@@ -39,7 +38,9 @@ namespace loki::movegen::magics
 		0xA105002043108602, 0x0801E50040001081, 0x0120104020000901, 0x0000100100200409,
 		0x0402001008A0CC72, 0x0011000400020801, 0x2040102100820804, 0x0000108030410402
 	};
-	static constexpr position::bitboard_t BISHOP_MAGICS[position::NUM_SQUARES] = {
+
+	template<>
+	const position::bitboard_t hardcoded_index<BISHOP>::MAGICS[position::NUM_SQUARES] = {
 		0x0084014408060440, 0x0484040400421002, 0x3042021049004000, 0x0051040080100008,
 		0x00040B08020000C8, 0x0120900420000040, 0x082400C808080000, 0x0241050090010801,
 		0x0000A06084088880, 0x1100A018A081004A, 0x0B10188209420000, 0x0100041062040401,
@@ -58,25 +59,4 @@ namespace loki::movegen::magics
 		0x100200B088210105, 0x00042C3121310500, 0x00C404D004080090, 0x0002020802008200
 	};
 
-	hardcoded_index::hardcoded_index(piece p)
-	{
-		const position::bitboard_t* ptr;
-		generation::sliding_generator* gen;
-		switch (p)
-		{
-		case ROOK:
-			ptr = ROOK_MAGICS;
-			gen = new generation::rook_generator();
-			break;
-		case BISHOP:
-			ptr = BISHOP_MAGICS;
-			gen = new generation::bishop_generator();
-			break;
-		default:
-			throw_msg<hardcoded_error>("piece type '{}' (int = {}) is invalid for magic bitboard generation", enum_to_string(p), (int)p);
-		}
-
-		initialize(ptr, gen);
-		delete gen;
-	}
 }

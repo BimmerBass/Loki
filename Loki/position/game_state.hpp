@@ -16,12 +16,17 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
+#include <array>
+#include <cstddef>
 #include <concepts>
+#include <memory>
+#include <string>
 #include "castle_rights.hpp"
 #include "defs.hpp"
 #include "square.hpp"
 #include "util/exception.hpp"
 #include "io/base_builder.hpp"
+#include "util/arrayops.hpp"
 
 namespace loki::position
 {
@@ -34,11 +39,16 @@ namespace loki::position
 	/// </summary>
 	struct game_state
 	{
-		piece piece_placements[NUM_SIDES][NUM_SQUARES];
-		side side_to_move;
-		size_t fifty_move_cnt, full_move_cnt;
-		square en_passant_sq;
-		castle_rights castling_rights;
+		std::array<std::array<piece, NUM_SQUARES>, NUM_SIDES> piece_placements
+			= util::construct_fill<piece, NUM_SIDES, NUM_SQUARES>(NO_PIECE);
+		side side_to_move = NUM_SIDES;
+		size_t fifty_move_cnt = 0, full_move_cnt = 0;
+		square en_passant_sq = NO_SQ;
+		castle_rights castling_rights{};
+
+		game_state() = default;
+		game_state(const game_state&) = default;
+		game_state& operator=(const game_state&) = default;
 
 		/// <summary>
 		/// Get the piece type on a given square.

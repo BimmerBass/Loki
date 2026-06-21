@@ -61,13 +61,16 @@
     <Filter Include="Source Files\search">
       <UniqueIdentifier>{2fbbf300-9503-483d-960c-4cadede6bfa4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\uci\commands">
+      <UniqueIdentifier>{03439c92-008d-4a32-b36b-ccfeab14ece4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\uci\commands\dev">
+      <UniqueIdentifier>{20f0feea-2d5c-4ed2-8ed7-32b3a0eb2bc5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="uci\loki_context.cpp">
-      <Filter>Source Files\uci</Filter>
     </ClCompile>
     <ClCompile Include="uci\uci_parser.cpp">
       <Filter>Source Files\uci</Filter>
@@ -117,8 +120,50 @@
     <ClCompile Include="search\perft.cpp">
       <Filter>Source Files\search</Filter>
     </ClCompile>
+    <ClCompile Include="uci\commands\debug.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\dev\perft.cpp">
+      <Filter>Source Files\uci\commands\dev</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\dev\printpos.cpp">
+      <Filter>Source Files\uci\commands\dev</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\go.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\isready.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\ponderhit.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\position.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\quit.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\register.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\setoption.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\stop.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\ucinewgame.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
     <ClCompile Include="movegen\move_list.cpp">
       <Filter>Source Files\movegen</Filter>
+    </ClCompile>
+    <ClCompile Include="uci\commands\uci.cpp">
+      <Filter>Source Files\uci\commands</Filter>
+    </ClCompile>
+    <ClCompile Include="loki_engine.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -136,9 +181,6 @@
     </ClInclude>
     <ClInclude Include="versioninfo.hpp">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="uci\loki_context.hpp">
-      <Filter>Header Files\uci</Filter>
     </ClInclude>
     <ClInclude Include="uci\uci_parser.hpp">
       <Filter>Header Files\uci</Filter>
@@ -205,6 +247,21 @@
     </ClInclude>
     <ClInclude Include="search\perft.hpp">
       <Filter>Header Files\search</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\command.hpp">
+      <Filter>Header Files\uci</Filter>
+    </ClInclude>
+    <ClInclude Include="loki_engine.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\context.hpp">
+      <Filter>Header Files\uci</Filter>
+    </ClInclude>
+    <ClInclude Include="uci\command_registry.hpp">
+      <Filter>Header Files\uci</Filter>
+    </ClInclude>
+    <ClInclude Include="util\arrayops.hpp">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

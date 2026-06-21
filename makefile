@@ -27,10 +27,18 @@ optimize ?= yes
 use_popcount ?= yes
 perft_transposition_table ?= no
 debug ?= no
+dev_commands ?= no
 
 rwildcard = $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst *,%,$2),$d))
 
 SOURCES := $(filter-out $(VERSION_HEADER),$(call rwildcard,$(SRC_DIR)/,*.cpp))
+DEV_SOURCES := $(call rwildcard,$(SRC_DIR)/uci/commands/dev/,*.cpp)
+
+ifeq ($(dev_commands),yes)
+	CXXFLAGS += -DLOKI_ENABLE_DEV_COMMANDS
+else
+	SOURCES := $(filter-out $(DEV_SOURCES),$(SOURCES))
+endif
 
 OBJECTS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/obj/%.o,$(SOURCES))
 DEPS := $(OBJECTS:.o=.d)

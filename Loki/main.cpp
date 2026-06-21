@@ -18,14 +18,13 @@
 #include <iostream>
 #include <memory>
 
-#include "uci/loki_context.hpp"
+
 #include "uci/uci_parser.hpp"
 
 using namespace loki::uci;
 
 int main()
 {
-	std::shared_ptr<context_interface> ctx = std::make_shared<loki_context>(std::cout);
-	auto uci = std::make_unique<uci_parser>(ctx);
-	return uci->uci_loop();
+	uci_parser engine;
+	return engine.uci_loop();
 }

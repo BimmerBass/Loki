@@ -1,3 +1,4 @@
+﻿#pragma once
 //
 //	Loki, a UCI-compliant chess playing software
 //	Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
@@ -15,30 +16,31 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#pragma once
-#include "generation/bishop_generator.hpp"
-#include "generation/rook_generator.hpp"
-#include "magic_index.hpp"
-#include "defs.hpp"
+#include <iostream>
+#include "loki_engine.hpp"
 
-namespace loki::movegen::magics
+namespace loki::uci
 {
-	template<piece P> requires (P == ROOK || P == BISHOP)
-	class hardcoded_index : public magic_index
+	enum class UCI_STATE
 	{
-		using sliding_generator_t = std::conditional_t<P == ROOK,
-			generation::rook_generator,
-			generation::bishop_generator>;
-	public:
-		CHILD_EXCEPTION(hardcoded_error, magic_index::index_exception);
-	public:
-		hardcoded_index()
-		{
-			sliding_generator_t gen{};
-			initialize(MAGICS, &gen);
-		}
+		Boot, // engine is running, but has not initialized any position
+		Ready, // engine is ready to perform a search
+		Searching, // engine is in the middle of searching
+		Quit
+	};
 
-	private:
-		static const position::bitboard_t MAGICS[position::NUM_SQUARES];
+	class context
+	{
+	public:
+		loki_engine engine;
+		UCI_STATE state;
+		std::istream& in;
+		std::ostream& out;
+		std::ostream& error;
+
+		context(loki_engine eng, UCI_STATE ctx_state, std::istream& input, std::ostream& output, std::ostream& err)
+			: engine{ eng }, state{ ctx_state }, in{ input }, out{ output }, error{ err }
+		{
+		}
 	};
 }

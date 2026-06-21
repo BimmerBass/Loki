@@ -1,3 +1,4 @@
+#pragma once
 //
 //	Loki, a UCI-compliant chess playing software
 //	Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
@@ -15,30 +16,35 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-#pragma once
-#include "generation/bishop_generator.hpp"
-#include "generation/rook_generator.hpp"
-#include "magic_index.hpp"
-#include "defs.hpp"
+#include "position/game_state.hpp"
+#include "movegen/move.hpp"
+#include "movegen/magics/magic_index.hpp"
 
-namespace loki::movegen::magics
+#include <optional>
+#include <vector>
+
+namespace loki
 {
-	template<piece P> requires (P == ROOK || P == BISHOP)
-	class hardcoded_index : public magic_index
+	class loki_engine final
 	{
-		using sliding_generator_t = std::conditional_t<P == ROOK,
-			generation::rook_generator,
-			generation::bishop_generator>;
 	public:
-		CHILD_EXCEPTION(hardcoded_error, magic_index::index_exception);
-	public:
-		hardcoded_index()
-		{
-			sliding_generator_t gen{};
-			initialize(MAGICS, &gen);
-		}
+		loki_engine();
 
+		//void reset_state();
+		//void set_position(std::string fen);
+		bool set_position(const position::game_state& state, const std::vector<movegen::move>& moves);
+
+		const position::game_state& state() const
+		{
+			if (!game_state.has_value())
+				throw_msg<loki_exception>("game state has not been initialized.");
+			return game_state.value();
+		}
 	private:
-		static const position::bitboard_t MAGICS[position::NUM_SQUARES];
+		const movegen::magics::magic_index_t rook_index;
+		const movegen::magics::magic_index_t bishop_index;
+
+		std::optional<position::game_state> game_state;
 	};
+
 }

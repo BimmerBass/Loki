@@ -28,8 +28,8 @@ namespace loki::position::io
 		// Reset the game_state instance.
 		if (m_product != nullptr)
 		{
-			std::fill_n(m_product->piece_placements[WHITE], NUM_SQUARES, NO_PIECE);
-			std::fill_n(m_product->piece_placements[BLACK], NUM_SQUARES, NO_PIECE);
+			m_product->piece_placements[WHITE].fill(NO_PIECE);
+			m_product->piece_placements[BLACK].fill(NO_PIECE);
 			m_product->side_to_move = WHITE;
 			m_product->fifty_move_cnt = m_product->full_move_cnt = 0;
 			m_product->en_passant_sq = NO_SQ;

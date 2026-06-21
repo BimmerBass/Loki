@@ -20,26 +20,22 @@
 #include <map>
 #include <memory>
 
-#include "context_interface.hpp"
+#include "util/exception.hpp"
+#include "command.hpp"
+#include "context.hpp"
 
 namespace loki::uci
 {
-	class uci_parser
+	class uci_parser final : public context
 	{
 	public:
 		CHILD_EXCEPTION(uci_error, loki_exception);
-		CHILD_EXCEPTION(quit_exception, loki_exception);
 	private:
 		using tokens_t = std::vector<std::string>;
 		
-		std::shared_ptr<context_interface> m_context;
-		std::map<std::string, std::function<void(const tokens_t&)>> m_uciCallbacks;
+		std::map<std::string, std::unique_ptr<i_uci_command>> m_handlers;
 	public:
-		/// <summary>
-		/// Initialize 
-		/// </summary>
-		/// <param name="ptr"></param>
-		uci_parser(const std::shared_ptr<context_interface>& ptr);
+		uci_parser();
 
 		/// <summary>
 		/// Main loop which implements the UCI protocol.
@@ -47,22 +43,7 @@ namespace loki::uci
 		/// <returns>zero if no error occurs. non-zero otherwise.</returns>
 		int uci_loop() noexcept;
 
-	public:
-		void parse_uci(const tokens_t&) const { m_context->uci(); }
-		void parse_isready(const tokens_t&) const { m_context->isready(); }
-		void parse_setoption(const tokens_t&);
-		void parse_ucinewgame(const tokens_t&) { m_context->ucinewgame(); }
-		void parse_position(const tokens_t&);
-		void parse_go(const tokens_t&);
-		void parse_quit(const tokens_t&) { throw quit_exception(); }
-		void parse_stop(const tokens_t&) { m_context->stop(); }
-
-		// unused/misc
-		void parse_debug(const tokens_t&) {}
-		void parse_register(const tokens_t&) {}
-		void parse_ponderhit(const tokens_t&) { m_context->ponderhit(); }
-
-		void parse_printpos(const tokens_t&);
-		void parse_perft(const tokens_t&);
+	private:
+		std::vector<std::string> tokenize(std::string command);
 	};
 }

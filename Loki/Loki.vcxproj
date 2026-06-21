@@ -29,13 +29,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -48,7 +48,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -92,7 +92,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);__MODULES__</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);__MODULES__;LOKI_ENABLE_DEV_COMMANDS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -145,7 +145,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);__MODULES__</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);__MODULES__;LOKI_ENABLE_DEV_COMMANDS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -195,6 +195,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="loki_engine.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="movegen\magics\generation\bishop_generator.cpp" />
     <ClCompile Include="movegen\magics\generation\magic_generator.cpp" />
@@ -211,11 +212,24 @@
     <ClCompile Include="position\position_history.hpp" />
     <ClCompile Include="position\search_position.cpp" />
     <ClCompile Include="search\perft.cpp" />
-    <ClCompile Include="uci\loki_context.cpp" />
+    <ClCompile Include="uci\commands\debug.cpp" />
+    <ClCompile Include="uci\commands\dev\perft.cpp" />
+    <ClCompile Include="uci\commands\dev\printpos.cpp" />
+    <ClCompile Include="uci\commands\go.cpp" />
+    <ClCompile Include="uci\commands\isready.cpp" />
+    <ClCompile Include="uci\commands\ponderhit.cpp" />
+    <ClCompile Include="uci\commands\position.cpp" />
+    <ClCompile Include="uci\commands\quit.cpp" />
+    <ClCompile Include="uci\commands\register.cpp" />
+    <ClCompile Include="uci\commands\setoption.cpp" />
+    <ClCompile Include="uci\commands\stop.cpp" />
+    <ClCompile Include="uci\commands\ucinewgame.cpp" />
+    <ClCompile Include="uci\commands\uci.cpp" />
     <ClCompile Include="uci\uci_parser.cpp" />
     <ClCompile Include="util\stringops.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="loki_engine.hpp" />
     <ClInclude Include="movegen\i_move_generator.hpp" />
     <ClInclude Include="defs.hpp" />
     <ClInclude Include="movegen\magics\generation\bishop_generator.hpp" />
@@ -238,8 +252,11 @@
     <ClInclude Include="position\search_position.hpp" />
     <ClInclude Include="position\square.hpp" />
     <ClInclude Include="search\perft.hpp" />
-    <ClInclude Include="uci\loki_context.hpp" />
+    <ClInclude Include="uci\command.hpp" />
+    <ClInclude Include="uci\command_registry.hpp" />
+    <ClInclude Include="uci\context.hpp" />
     <ClInclude Include="uci\uci_parser.hpp" />
+    <ClInclude Include="util\arrayops.hpp" />
     <ClInclude Include="util\exception.hpp" />
     <ClInclude Include="util\operators.hpp" />
     <ClInclude Include="util\stringops.hpp" />

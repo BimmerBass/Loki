@@ -32,6 +32,13 @@ namespace loki::util
 	std::vector<std::string> split(const std::string& str, char sep, bool keep_empty_entries = false);
 
 	/// <summary>
+	/// Collapse all whitespace to single spaces.
+	/// </summary>
+	/// <param name="str"></param>
+	/// <returns></returns>
+	std::string collapse_whitespace(const std::string& str);
+
+	/// <summary>
 	/// Join a vector of strings into a single string using a specified delimiter
 	/// </summary>
 	/// <param name="vec">The vector of strings to join</param>
