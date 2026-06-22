@@ -340,4 +340,4 @@ ASALocalRun/
 healthchecksdb
 /Loki/__gitversion_autogen.hpp
 /Loki.Tests/vcpkg_installed/x64-windows
-/build/windows-msvc
+/build/*

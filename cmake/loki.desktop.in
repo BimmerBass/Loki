@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Loki
+Comment=UCI chess engine
+Exec=Loki
+Icon=loki
+Terminal=true
+Categories=Game;BoardGame;
