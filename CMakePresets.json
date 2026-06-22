@@ -25,6 +25,15 @@
       }
     },
     {
+      "name": "gcc-release",
+      "displayName": "GCC Release",
+      "inherits": "gcc",
+      "binaryDir": "${sourceDir}/build/gcc-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
       "name": "gcc-coverage",
       "displayName": "GCC Coverage",
       "inherits": "gcc",
@@ -40,8 +49,17 @@
       "configuration": "Debug"
     },
     {
+      "name": "windows-msvc-release",
+      "configurePreset": "windows-msvc",
+      "configuration": "Release"
+    },
+    {
       "name": "gcc",
       "configurePreset": "gcc"
+    },
+    {
+      "name": "gcc-release",
+      "configurePreset": "gcc-release"
     },
     {
       "name": "gcc-coverage",
@@ -55,8 +73,17 @@
       "configuration": "Debug"
     },
     {
+      "name": "windows-msvc-release",
+      "configurePreset": "windows-msvc",
+      "configuration": "Release"
+    },
+    {
       "name": "gcc",
       "configurePreset": "gcc"
+    },
+    {
+      "name": "gcc-release",
+      "configurePreset": "gcc-release"
     },
     {
       "name": "gcc-coverage",

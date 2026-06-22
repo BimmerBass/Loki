@@ -2,12 +2,16 @@ file(GLOB_RECURSE LOKI_CORE_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
 list(REMOVE_ITEM LOKI_CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+file(GLOB_RECURSE LOKI_CORE_HEADERS CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
+)
 
 include(GNUInstallDirs)
 
 set(LOKI_ICON_SOURCE "${LOKI_ROOT_DIR}/Icon.png")
 
 add_library(loki_core OBJECT ${LOKI_CORE_SOURCES})
+target_sources(loki_core PRIVATE ${LOKI_CORE_HEADERS})
 target_include_directories(loki_core
   PUBLIC
     "${LOKI_ROOT_DIR}"
@@ -53,6 +57,8 @@ if(LOKI_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(Loki PRIVATE --coverage -O0)
   target_link_options(Loki PRIVATE --coverage)
 endif()
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${LOKI_CORE_SOURCES} ${LOKI_CORE_HEADERS})
 
 install(TARGETS Loki RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 

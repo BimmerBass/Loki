@@ -27,8 +27,12 @@ file(GLOB_RECURSE LOKI_TEST_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
 )
 list(FILTER LOKI_TEST_SOURCES EXCLUDE REGEX ".*/pch\\.cpp$")
+file(GLOB_RECURSE LOKI_TEST_HEADERS CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp"
+)
 
 add_executable(loki_tests ${LOKI_TEST_SOURCES} $<TARGET_OBJECTS:loki_core>)
+target_sources(loki_tests PRIVATE ${LOKI_TEST_HEADERS})
 target_link_libraries(loki_tests PRIVATE Catch2::Catch2WithMain)
 target_include_directories(loki_tests
   PRIVATE
@@ -90,5 +94,7 @@ if(LOKI_ENABLE_COVERAGE AND MSVC)
     )
   endif()
 endif()
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${LOKI_TEST_SOURCES} ${LOKI_TEST_HEADERS})
 
 set_target_properties(loki_tests PROPERTIES FOLDER "Loki/Tests")
