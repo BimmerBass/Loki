@@ -107,10 +107,18 @@ namespace loki::position
 		constexpr e_rank rank() const { return rank_of(m_value); }
 		constexpr e_file file() const { return file_of(m_value); }
 
-		constexpr void operator++(int) // post-increment
+		constexpr square& operator++() // pre-increment
 		{
 			rt_assert(m_value <= H8);
 			m_value++;
+			return *this;
+		}
+
+		constexpr square operator++(int) // post-increment
+		{
+			auto old = *this;
+			++(*this);
+			return old;
 		}
 
 		inline std::string to_algebraic() const

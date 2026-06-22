@@ -1,3 +1,20 @@
+// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
 #include "pch.hpp"
 #include "Loki/position/castle_rights.hpp"
 
@@ -5,126 +22,85 @@ namespace position_tests
 {
 	using namespace loki;
 	using namespace loki::position;
-	// parameterized testing: https://www.sandordargo.com/blog/2019/04/24/parameterized-testing-with-gtest
-	class castle_rights_test :
-		public ::testing::Test,
-		public ::testing::WithParamInterface<std::tuple<side, castling_direction>>
-	{
-	protected:
-		castle_rights_test() : rights() {}
 
-		loki::position::castle_rights rights;
-	};
-
-	// hacky wrapper functions to allow for runtime test cases
-	bool runtime_can_castle(const loki::position::castle_rights& crs, side s, castling_direction d) noexcept
+	bool runtime_can_castle(const castle_rights& rights, side s, castling_direction d) noexcept
 	{
-		return (s == WHITE) ?
-			((d == KINGSIDE) ? crs.can_castle<WHITE, KINGSIDE>() : crs.can_castle<WHITE, QUEENSIDE>()) :
-			((d == KINGSIDE) ? crs.can_castle<BLACK, KINGSIDE>() : crs.can_castle<BLACK, QUEENSIDE>());
+		return (s == WHITE)
+			? ((d == KINGSIDE) ? rights.can_castle<WHITE, KINGSIDE>() : rights.can_castle<WHITE, QUEENSIDE>())
+			: ((d == KINGSIDE) ? rights.can_castle<BLACK, KINGSIDE>() : rights.can_castle<BLACK, QUEENSIDE>());
 	}
-	void runtime_set(position::castle_rights& crs, side s, castling_direction d, bool value) noexcept
+
+	void runtime_set(castle_rights& rights, side s, castling_direction d, bool value) noexcept
 	{
 		if (s == WHITE)
 		{
-			if (d == KINGSIDE) crs.set<WHITE, KINGSIDE>(value);
-			else crs.set<WHITE, QUEENSIDE>(value);
+			if (d == KINGSIDE)
+				rights.set<WHITE, KINGSIDE>(value);
+			else
+				rights.set<WHITE, QUEENSIDE>(value);
 		}
 		else
 		{
-			if (d == KINGSIDE) crs.set<BLACK, KINGSIDE>(value);
-			else crs.set<BLACK, QUEENSIDE>(value);
+			if (d == KINGSIDE)
+				rights.set<BLACK, KINGSIDE>(value);
+			else
+				rights.set<BLACK, QUEENSIDE>(value);
 		}
 	}
 
-	TEST_F(castle_rights_test, initially_false)
+	static const std::array<std::tuple<side, castling_direction>, 4> castle_cases{{
+		{WHITE, KINGSIDE},
+		{WHITE, QUEENSIDE},
+		{BLACK, KINGSIDE},
+		{BLACK, QUEENSIDE},
+	}};
+
+	TEST_CASE("castle rights default to false", "[position][castle_rights]")
 	{
-		EXPECT_EQ((rights.can_castle<WHITE, KINGSIDE>()), false);
-		EXPECT_EQ((rights.can_castle<WHITE, QUEENSIDE>()), false);
-		EXPECT_EQ((rights.can_castle<BLACK, KINGSIDE>()), false);
-		EXPECT_EQ((rights.can_castle<BLACK, QUEENSIDE>()), false);
+		castle_rights rights;
+		REQUIRE_FALSE(rights.can_castle<WHITE, KINGSIDE>());
+		REQUIRE_FALSE(rights.can_castle<WHITE, QUEENSIDE>());
+		REQUIRE_FALSE(rights.can_castle<BLACK, KINGSIDE>());
+		REQUIRE_FALSE(rights.can_castle<BLACK, QUEENSIDE>());
 	}
 
-	TEST_P(castle_rights_test, set_false_to_true)
+	TEST_CASE("castle rights can be toggled independently", "[position][castle_rights]")
 	{
-		// all are initially_false (ref. above test)
-		// check that setting one doesn't set anything else
-		auto [side, direction] = GetParam();
-
-		ASSERT_FALSE(runtime_can_castle(rights, side, direction));
-		runtime_set(rights, side, direction, true);
-		ASSERT_TRUE(runtime_can_castle(rights, side, direction));
-	}
-	INSTANTIATE_TEST_SUITE_P(
-		castle_rights_test,
-		castle_rights_test,
-		::testing::Values(
-			std::make_tuple(WHITE, KINGSIDE),
-			std::make_tuple(WHITE, QUEENSIDE),
-			std::make_tuple(BLACK, KINGSIDE),
-			std::make_tuple(BLACK, QUEENSIDE)
-		)
-	);
-	TEST_P(castle_rights_test, set_true_to_false)
-	{
-		// all are initially_false (ref. above test)
-		// check that setting one doesn't set anything else
-		auto [side, direction] = GetParam();
-
-		runtime_set(rights, side, direction, true);
-		ASSERT_TRUE(runtime_can_castle(rights, side, direction));
-		runtime_set(rights, side, direction, false);
-		ASSERT_FALSE(runtime_can_castle(rights, side, direction));
-	}
-	TEST_P(castle_rights_test, set_false_to_false)
-	{
-		auto [side, direction] = GetParam();
-
-		// pre-cond.
-		ASSERT_FALSE(runtime_can_castle(rights, side, direction));
-		runtime_set(rights, side, direction, false);
-		ASSERT_FALSE(runtime_can_castle(rights, side, direction));
-	}
-	TEST_P(castle_rights_test, set_true_to_true)
-	{
-		auto [side, direction] = GetParam();
-
-		// pre-cond.
-		runtime_set(rights, side, direction, true);
-		ASSERT_TRUE(runtime_can_castle(rights, side, direction));
-		runtime_set(rights, side, direction, true);
-		ASSERT_TRUE(runtime_can_castle(rights, side, direction));
+		for (const auto& [side, direction] : castle_cases)
+		{
+			SECTION(std::string{side == WHITE ? "white" : "black"} + ":" + std::string{direction == KINGSIDE ? "kingside" : "queenside"})
+			{
+				castle_rights rights;
+				REQUIRE_FALSE(runtime_can_castle(rights, side, direction));
+				runtime_set(rights, side, direction, true);
+				REQUIRE(runtime_can_castle(rights, side, direction));
+				runtime_set(rights, side, direction, false);
+				REQUIRE_FALSE(runtime_can_castle(rights, side, direction));
+			}
+		}
 	}
 
-	TEST_F(castle_rights_test, set_single_value)
+	TEST_CASE("castle rights set one value leaves the others untouched", "[position][castle_rights]")
 	{
-		// assumption: initially_empty is passing
+		castle_rights rights;
 		rights.set<WHITE, KINGSIDE>(true);
 
-		// we know from set_false_to_true that white kingside is true now.
-		// check that nothing else has been changed.
-		EXPECT_FALSE((rights.can_castle<WHITE, QUEENSIDE>()));
-		EXPECT_FALSE((rights.can_castle<BLACK, KINGSIDE>()));
-		EXPECT_FALSE((rights.can_castle<BLACK, QUEENSIDE>()));
+		REQUIRE_FALSE(rights.can_castle<WHITE, QUEENSIDE>());
+		REQUIRE_FALSE(rights.can_castle<BLACK, KINGSIDE>());
+		REQUIRE_FALSE(rights.can_castle<BLACK, QUEENSIDE>());
 	}
 
-	TEST_F(castle_rights_test, to_string_empty)
+	TEST_CASE("castle rights stringify empty and full states", "[position][castle_rights]")
 	{
-		ASSERT_EQ(rights.to_string(), "-");
-	}
+		castle_rights rights;
+		REQUIRE(rights.to_string() == "-");
 
-	TEST_F(castle_rights_test, to_string_nonempty)
-	{
 		rights.set<WHITE, QUEENSIDE>(true);
 		rights.set<BLACK, KINGSIDE>(true);
-		ASSERT_EQ(rights.to_string(), "Qk");
-	}
-	TEST_F(castle_rights_test, to_string_full)
-	{
+		REQUIRE(rights.to_string() == "Qk");
+
 		rights.set<WHITE, KINGSIDE>(true);
-		rights.set<WHITE, QUEENSIDE>(true);
-		rights.set<BLACK, KINGSIDE>(true);
 		rights.set<BLACK, QUEENSIDE>(true);
-		ASSERT_EQ(rights.to_string(), "KQkq");
+		REQUIRE(rights.to_string() == "KQkq");
 	}
 }

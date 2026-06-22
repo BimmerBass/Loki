@@ -1,0 +1,66 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "windows-msvc",
+      "displayName": "Windows MSVC",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows-msvc",
+      "cacheVariables": {
+        "LOKI_BUILD_TESTS": "ON",
+        "LOKI_ENABLE_COVERAGE": "OFF"
+      }
+    },
+    {
+      "name": "gcc",
+      "displayName": "GCC",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/gcc",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "LOKI_BUILD_TESTS": "ON",
+        "LOKI_ENABLE_COVERAGE": "OFF"
+      }
+    },
+    {
+      "name": "gcc-coverage",
+      "displayName": "GCC Coverage",
+      "inherits": "gcc",
+      "cacheVariables": {
+        "LOKI_ENABLE_COVERAGE": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windows-msvc",
+      "configurePreset": "windows-msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "gcc",
+      "configurePreset": "gcc"
+    },
+    {
+      "name": "gcc-coverage",
+      "configurePreset": "gcc-coverage"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "windows-msvc",
+      "configurePreset": "windows-msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "gcc",
+      "configurePreset": "gcc"
+    },
+    {
+      "name": "gcc-coverage",
+      "configurePreset": "gcc-coverage"
+    }
+  ]
+}

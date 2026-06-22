@@ -99,15 +99,13 @@ namespace loki::position::io
 	}
 	fen_string_builder::bb_t& fen_string_builder::halfmove_clock()
 	{
-		m_product->append(m_resource->fifty_move_cnt == 0
-			? "-" : std::to_string(m_resource->fifty_move_cnt));
+		m_product->append(std::to_string(m_resource->fifty_move_cnt));
 		m_product->append(" ");
 		return *this;
 	}
 	fen_string_builder::bb_t& fen_string_builder::fullmove_clock()
 	{
-		m_product->append(m_resource->full_move_cnt == 0
-			? "-" : std::to_string(m_resource->full_move_cnt));
+		m_product->append(std::to_string(m_resource->full_move_cnt));
 		return *this;
 	}
 }

@@ -41,6 +41,7 @@ namespace loki::movegen
 	{
 		MOVE_NULL = 0
 	};
+	ENABLE_COMP_OPERATORS_ON(move_t);
 
 	class move final
 	{

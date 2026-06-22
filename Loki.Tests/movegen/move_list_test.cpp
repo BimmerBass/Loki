@@ -1,53 +1,69 @@
+// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
 #include "pch.hpp"
 #include "Loki/movegen/move_list.hpp"
 
-using namespace loki::movegen;
-using namespace loki;
-
 namespace move_tests
 {
-	TEST(move_list_tests, test_push_back)
+	using namespace loki::movegen;
+	using namespace loki;
+
+	TEST_CASE("move_list push_back clear and iteration", "[movegen][move_list]")
 	{
-		move_list ml;
-
-		for (size_t i = 0; i < ml.max_size; i++)
+		SECTION("push_back fills the list up to capacity")
 		{
-			ASSERT_EQ(ml.size(), i);
-			ml.push_back(move_t(i + 1));
-
-			ASSERT_EQ(ml[i], i + 1);
-			if (i > 0)
-				ASSERT_EQ(ml[i - 1], i);
-			if (i < ml.max_size - 1)
-				ASSERT_THROW(ml[i + 1], move_list::move_list_error);
+			move_list ml;
+			for (size_t i = 0; i < ml.max_size; ++i)
+			{
+				REQUIRE(ml.size() == i);
+				ml.push_back(move_t(i + 1));
+				REQUIRE(ml[i].get_raw() == i + 1);
+				if (i > 0)
+					REQUIRE(ml[i - 1].get_raw() == i);
+				if (i < ml.max_size - 1)
+					REQUIRE_THROWS_AS(ml[i + 1].get_raw(), move_list::move_list_error);
+			}
+			REQUIRE(ml.size() == ml.max_size);
+			REQUIRE_THROWS_AS(ml.push_back(move_t(0)), move_list::move_list_error);
 		}
-		ASSERT_EQ(ml.size(), ml.max_size);
-		ASSERT_THROW(ml.push_back(0), move_list::move_list_error);
-	}
 
-	TEST(move_list_tests, test_clear)
-	{
-		move_list ml;
-		ml.push_back(0);
-		ml.push_back(0);
-
-		ASSERT_EQ(ml.size(), 2);
-		ml.clear();
-		ASSERT_EQ(ml.size(), 0);
-	}
-	TEST(move_list_tests, test_iterators)
-	{
-		move_list ml;
-		for (size_t i = 0; i < ml.max_size / 2; i++)
+		SECTION("clear resets the size")
 		{
-			ml.push_back(move_t(i+1));
+			move_list ml;
+			ml.push_back(move_t(0));
+			ml.push_back(move_t(0));
+			REQUIRE(ml.size() == 2);
+			ml.clear();
+			REQUIRE(ml.size() == 0);
 		}
-		size_t j = 0;
 
-		for (const auto& m : ml)
+		SECTION("iteration yields inserted elements in order")
 		{
-			ASSERT_EQ(m, j + 1);
-			j++;
+			move_list ml;
+			for (size_t i = 0; i < ml.max_size / 2; ++i)
+				ml.push_back(move_t(i + 1));
+
+			size_t expected = 1;
+			for (const auto& move : ml)
+			{
+				REQUIRE(move.get_raw() == expected);
+				++expected;
+			}
 		}
 	}
 }

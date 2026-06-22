@@ -1,9 +1,23 @@
+// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
 #include "pch.hpp"
 #include "Loki/movegen/magics/magic_index.hpp"
 #include "Loki/movegen/magics/hardcoded_index.hpp"
-#include "Loki/movegen/magics/magic_index.cpp"
-#include "Loki/movegen/magics/hardcoded_index.cpp"
-
 #include "Loki/movegen/magics/generation/rook_generator.hpp"
 #include "Loki/movegen/magics/generation/bishop_generator.hpp"
 
@@ -14,44 +28,31 @@ namespace movegen_tests::magics_tests
 	using namespace loki::movegen::magics;
 	using namespace loki::movegen::magics::generation;
 
-	class test_magic_index :
-		public ::testing::Test,
-		public ::testing::WithParamInterface<piece>
-	{};
-	INSTANTIATE_TEST_SUITE_P(
-		magics_tests,
-		test_magic_index,
-		::testing::Values(ROOK, BISHOP));
-
-	TEST_P(test_magic_index, test_hardcoded)
+	TEST_CASE("hardcoded magic indexes match generated attacks", "[movegen][magics][magic_index]")
 	{
-		auto t = GetParam();
-		hardcoded_index inx(t);
-		sliding_generator* gen;
-		switch (t)
+		for (const auto piece_type : {ROOK, BISHOP})
 		{
-		case ROOK:
-			gen = new rook_generator();
-			break;
-		case BISHOP:
-			gen = new bishop_generator();
-			break;
-		default:
-			ASSERT_TRUE(false);
-			return;
-		}
-
-
-		for (auto sq = A1; sq <= H8; sq++)
-		{
-			auto occs = gen->relevant_occupancies(sq);
-
-			for (auto occ : occs)
+			SECTION(piece_type == ROOK ? "rook" : "bishop")
 			{
-				ASSERT_EQ(inx.attacks(sq, occ), gen->attack(sq, occ));
+				std::unique_ptr<magic_index> index;
+				if (piece_type == ROOK)
+					index = std::make_unique<hardcoded_index<ROOK>>();
+				else
+					index = std::make_unique<hardcoded_index<BISHOP>>();
+
+				std::unique_ptr<sliding_generator> generator;
+				if (piece_type == ROOK)
+					generator = std::make_unique<rook_generator>();
+				else
+					generator = std::make_unique<bishop_generator>();
+
+				for (auto sq = A1; sq <= H8; ++sq)
+				{
+					const auto occupancies = generator->relevant_occupancies(sq);
+					for (const auto occupancy : occupancies)
+						REQUIRE(index->attacks(sq, occupancy) == generator->attack(sq, occupancy));
+				}
 			}
 		}
-
-		delete gen;
 	}
 }

@@ -16,23 +16,12 @@
 //
 
 #include "pch.hpp"
-#include "Loki/uci/context.hpp"
+#include "Loki/search/perft.hpp"
 
-namespace uci_tests
+namespace stub_tests
 {
-	using namespace loki::uci;
-
-	TEST_CASE("context stores engine, state and stream references", "[uci][context]")
+	TEST_CASE("perft still needs focused assertions", "[stub][search][perft]")
 	{
-		std::stringstream input;
-		std::stringstream output;
-		std::stringstream error;
-		loki::loki_engine engine;
-		context ctx{engine, UCI_STATE::Boot, input, output, error};
-
-		REQUIRE(ctx.state == UCI_STATE::Boot);
-		REQUIRE(&ctx.in == &input);
-		REQUIRE(&ctx.out == &output);
-		REQUIRE(&ctx.error == &error);
+		FAIL("TODO: add deterministic perft assertions around the active search/perft entry point.");
 	}
 }

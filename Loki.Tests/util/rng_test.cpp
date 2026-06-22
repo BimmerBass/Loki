@@ -1,3 +1,20 @@
+// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
 #include "pch.hpp"
 #include "Loki/position/bitboard.hpp"
 #include "Loki/util/rng.hpp"
@@ -8,48 +25,45 @@ namespace util_tests
 	using namespace loki::position;
 
 	template<typename T>
-	double average_popcount(const std::vector<T>& v)
+	double average_popcount(const std::vector<T>& values)
 	{
 		size_t total = 0;
-		for (auto x : v)
-			total += popcount(x);
-		return static_cast<double>(total) / static_cast<double>(v.size());
+		for (auto value : values)
+		{
+			total += popcount(value);
+		}
+		return static_cast<double>(total) / static_cast<double>(values.size());
 	}
 
 	template<typename T>
-	class rng_test : public ::testing::Test
+	void run_rng_distribution_check()
 	{
-	public:
-	};
-	TYPED_TEST_SUITE_P(rng_test);
+		const double bit_width = static_cast<double>(sizeof(T) * 8);
+		std::vector<T> regular_rands;
+		std::vector<T> sparse_rands;
+		regular_rands.reserve(10000);
+		sparse_rands.reserve(10000);
 
-	TYPED_TEST_P(rng_test, test_sparse_lower_popcount)
-	{
-		// On average, generate() will have half of the bits set to 1
-		// => generate() & generate() will have a fourth of the bits set
-		// => generate() & generate() & generate() will have 1/8 set.
-		// we will just check that the popcount is strictly lower than 1/4
-		double bit_width = sizeof(TypeParam) * 8;
-		std::vector<TypeParam> regular_rands;
-		std::vector<TypeParam> sparse_rands;
-		for (int i = 0; i < 10000; i++)
+		for (int i = 0; i < 10000; ++i)
 		{
-			regular_rands.push_back(rng::instance()->generate<TypeParam>());
-			sparse_rands.push_back(rng::instance()->generate_sparse<TypeParam>());
+			regular_rands.push_back(rng::instance()->generate<T>());
+			sparse_rands.push_back(rng::instance()->generate_sparse<T>());
 		}
-		double avg_regular_popcnt = average_popcount<TypeParam>(regular_rands);
-		double avg_sparse_popcnt = average_popcount<TypeParam>(sparse_rands);
 
-		EXPECT_THAT(avg_regular_popcnt, IsInRange(bit_width * 1.0 / 4.0, bit_width * 3.0 / 4.0))
-			<< "Regular popcount is not between 1/4 and 3/4 (i.e. not centered around 1/2)";
-		EXPECT_THAT(avg_sparse_popcnt, IsInRange(bit_width * 0.0, bit_width * 1 / 4.0))
-			<< "Sparse popcount is not between 0 and 1/4 (i.e. not centered around 1/8)";
-		EXPECT_LT(avg_sparse_popcnt, avg_regular_popcnt / 2.0)
-			<< "Sparse popcount isn't significantly lower than regular.";
+		const auto avg_regular_popcnt = average_popcount(regular_rands);
+		const auto avg_sparse_popcnt = average_popcount(sparse_rands);
+
+		REQUIRE(avg_regular_popcnt >= bit_width * 0.25);
+		REQUIRE(avg_regular_popcnt <= bit_width * 0.75);
+		REQUIRE(avg_sparse_popcnt >= 0.0);
+		REQUIRE(avg_sparse_popcnt <= bit_width * 0.25);
+		REQUIRE(avg_sparse_popcnt < avg_regular_popcnt / 2.0);
 	}
-	REGISTER_TYPED_TEST_SUITE_P(rng_test,
-		test_sparse_lower_popcount);
-	using rng_types = ::testing::Types<
-		uint64_t, uint32_t, uint16_t, uint8_t>;
-	INSTANTIATE_TYPED_TEST_SUITE_P(rng, rng_test, rng_types);
+
+	TEMPLATE_TEST_CASE("rng_sparse_values_have_lower_popcount",
+		"[util][rng]",
+		uint64_t, uint32_t, uint16_t, uint8_t)
+	{
+		run_rng_distribution_check<TestType>();
+	}
 }

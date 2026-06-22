@@ -1,62 +1,89 @@
-#include "pch.hpp"
-#include "loki/position/square.hpp"
+// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
 
-using namespace loki::position;
+#include "pch.hpp"
+#include "Loki/position/square.hpp"
 
 namespace position_tests
 {
-	class square_testf :
-		public ::testing::Test,
-		public ::testing::WithParamInterface<std::tuple<e_rank,e_file,e_square, std::string>>
-	{};
-	INSTANTIATE_TEST_SUITE_P(
-		square_tests,
-		square_testf,
-		::testing::Values(
-			std::make_tuple(RANK_1, FILE_A, A1, "A1"),
-			std::make_tuple(RANK_4, FILE_E, E4, "e4"),
-			std::make_tuple(RANK_8, FILE_H, H8, "H8")));
+	using namespace loki::position;
 
-	TEST_P(square_testf, test_ctor)
+	struct square_case
 	{
-		auto [_, unused, sq, unused1] = GetParam();
-		square sqq = sq;
-		ASSERT_EQ(sqq.value(), sq);
-	}
-	TEST_P(square_testf, test_ctors)
-	{
-		auto [r, f, sq, alg] = GetParam();
-		square sq1 = sq;
-		square sq2(r, f);
-		square sq3(alg);
+		e_rank rank;
+		e_file file;
+		e_square square_value;
+		std::string_view algebraic;
+	};
 
-		EXPECT_EQ(sq1.value(), sq);
-		EXPECT_EQ(sq2.value(), sq);
-		EXPECT_EQ(sq3.value(), sq);
-	}
-	TEST_P(square_testf, test_file_rank)
-	{
-		auto [r, f, sq, _] = GetParam();
-		square sq1 = sq;
-		EXPECT_EQ(sq1.rank(), r);
-		EXPECT_EQ(sq1.file(), f);
-	}
+	static const std::array<square_case, 3> cases{{
+		{RANK_1, FILE_A, A1, "A1"},
+		{RANK_4, FILE_E, E4, "e4"},
+		{RANK_8, FILE_H, H8, "H8"},
+	}};
 
-	TEST_P(square_testf, test_to_algebraic)
+	TEST_CASE("square construction and accessors", "[position][square]")
 	{
-		auto [r, f, sq, _] = GetParam();
-		std::string cf = "a";
-		switch (f)
+		for (const auto& test_case : cases)
 		{
-		case FILE_B: cf = "b"; break;
-		case FILE_C: cf = "c"; break;
-		case FILE_D: cf = "d"; break;
-		case FILE_E: cf = "e"; break;
-		case FILE_F: cf = "f"; break;
-		case FILE_G: cf = "g"; break;
-		case FILE_H: cf = "h"; break;
+			SECTION(std::string{test_case.algebraic})
+			{
+				square sq1 = test_case.square_value;
+				square sq2(test_case.rank, test_case.file);
+				square sq3(std::string(test_case.algebraic));
+
+				REQUIRE(sq1.value() == test_case.square_value);
+				REQUIRE(sq2.value() == test_case.square_value);
+				REQUIRE(sq3.value() == test_case.square_value);
+				REQUIRE(sq1.rank() == test_case.rank);
+				REQUIRE(sq1.file() == test_case.file);
+			}
 		}
-		square sq1 = sq;
-		ASSERT_EQ(sq1.to_algebraic(), cf + std::to_string(r + 1));
+	}
+
+	TEST_CASE("square to_algebraic matches the expected casing", "[position][square]")
+	{
+		for (const auto& test_case : cases)
+		{
+			SECTION(std::string{test_case.algebraic})
+			{
+				square sq = test_case.square_value;
+				REQUIRE(sq.to_algebraic() == std::string{static_cast<char>(std::tolower(static_cast<unsigned char>(test_case.algebraic[0])))} + std::to_string(static_cast<int>(test_case.rank) + 1));
+			}
+		}
+	}
+
+	TEST_CASE("increment operators support pre-increment", "[position][square]")
+	{
+		e_rank rank = RANK_1;
+
+		REQUIRE(++rank == RANK_2);
+		REQUIRE(rank == RANK_2);
+		REQUIRE(rank-- == RANK_2);
+		REQUIRE(rank == RANK_1);
+	}
+
+	TEST_CASE("square supports pre and post increment", "[position][square]")
+	{
+		square sq = A1;
+
+		REQUIRE(++sq == square(B1));
+		REQUIRE(sq == square(B1));
+		REQUIRE(sq++ == square(B1));
+		REQUIRE(sq == square(C1));
 	}
 }

@@ -69,14 +69,28 @@ With all the above mentioned move ordering techniques, Loki achieves a cutoff on
 ##### Note: **Features with a striketrough (line through the text) are disabled at the moment due to missing elo gains. These will hopefully be successfully implemented in the future.**
 
 ## Building Loki
-Loki has been tested to build without errors on both MSVC and GCC (with some warnings by the former). If Loki should be compiled to a non-native popcount version one will have to either:
+The only supported build system is now CMake. It fetches Catch2 and the mocking dependency automatically and is the same path used for both Visual Studio and GCC.
 
-- If compiling on MSVC, the global preprocessor variable USE_POPCNT should be removed in the project properties.
-- If compiling on GCC, `use_popcount=no` should be added when running make.
+```bash
+cmake --preset windows-msvc
+cmake --build --preset windows-msvc
+ctest --preset windows-msvc
 
-Additionally, a 32-bit compilation in GCC needs `BIT=32` when running make. It should be noted however, that 32-bit compilation on 64-bit systems is unstable and should be avoided at the moment.
+cmake --preset gcc
+cmake --build --preset gcc
+ctest --preset gcc
+```
 
-It is also possible to change the amount of optimizations with both compilers by (if MSVC) going to the project properties or (if GCC) using `optimize=no` when running make.
+Coverage is available through the CMake presets as well. GCC coverage is wired through `gcovr`, and the Visual Studio path is designed to work with `OpenCppCoverage` when it is installed locally.
+
+The build is split into three CMake files:
+- [`CMakeLists.txt`](/C:/Users/nva/Desktop/Code/Loki/CMakeLists.txt) sets up shared configuration and adds the subdirectories.
+- [`Loki/CMakeLists.txt`](/C:/Users/nva/Desktop/Code/Loki/Loki/CMakeLists.txt) defines the engine target.
+- [`Loki.Tests/CMakeLists.txt`](/C:/Users/nva/Desktop/Code/Loki/Loki.Tests/CMakeLists.txt) defines the test target and test dependencies.
+
+
+The active test suite only targets code under `Loki/`. `Loki.Deprecated/` remains reference material only and is intentionally excluded from the Catch2 migration. The shared perft dataset in `tests/perft.epd` is kept unchanged for integration-style validation.
+
 ##### TO-DO
 - Try the following additions:
     - Singular extensions.

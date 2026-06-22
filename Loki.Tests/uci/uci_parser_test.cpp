@@ -1,140 +1,203 @@
+// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
 #include "pch.hpp"
+#include "Loki/uci/command_registry.hpp"
+#include "Loki/uci/context.hpp"
+#include "Loki/position/game_state.hpp"
 #include "Loki/uci/uci_parser.hpp"
-#include "Loki/uci/uci_parser.cpp"
-#include "Loki/position/io/fen_string_builder.cpp"
-#include "mocks/context_mock.hpp"
-using namespace loki::uci;
 
 namespace uci_tests
 {
-	class uci_parser_mocked :
-		public ::testing::Test
+	using namespace loki;
+	using namespace loki::uci;
+
+	i_uci_command* find_command(const std::vector<std::unique_ptr<i_uci_command>>& commands, const std::string& name)
 	{
-	public:
-		uci_parser_mocked()
+		for (const auto& command : commands)
 		{
-			context = std::make_shared<context_mock>();
+			if (command->name() == name)
+				return command.get();
+		}
+		return nullptr;
+	}
+
+	TEST_CASE("command registry exposes the active UCI commands", "[uci][registry]")
+	{
+		const auto commands = command_registry::instance().commands();
+		std::vector<std::string> names;
+		names.reserve(commands.size());
+		for (const auto& command : commands)
+			names.push_back(command->name());
+
+		REQUIRE(std::find(names.begin(), names.end(), "uci") != names.end());
+		REQUIRE(std::find(names.begin(), names.end(), "isready") != names.end());
+		REQUIRE(std::find(names.begin(), names.end(), "position") != names.end());
+		REQUIRE(std::find(names.begin(), names.end(), "quit") != names.end());
+	}
+
+#ifdef LOKI_ENABLE_DEV_COMMANDS
+	TEST_CASE("development commands are registered when dev commands are enabled", "[uci][registry][dev]")
+	{
+		const auto commands = command_registry::instance().commands();
+		std::vector<std::string> names;
+		names.reserve(commands.size());
+		for (const auto& command : commands)
+			names.push_back(command->name());
+
+		REQUIRE(std::find(names.begin(), names.end(), "debug") != names.end());
+		REQUIRE(std::find(names.begin(), names.end(), "perft") != names.end());
+		REQUIRE(std::find(names.begin(), names.end(), "printpos") != names.end());
+	}
+#endif
+
+	TEST_CASE("uci_parser dispatches commands from the active stream buffers", "[uci][parser]")
+	{
+		std::istringstream input("isready\nquit\n");
+		std::ostringstream output;
+		std::ostringstream error;
+
+		auto* cin_buf = std::cin.rdbuf(input.rdbuf());
+		auto* cout_buf = std::cout.rdbuf(output.rdbuf());
+		auto* cerr_buf = std::cerr.rdbuf(error.rdbuf());
+
+		auto restore = [&]()
+		{
+			std::cin.rdbuf(cin_buf);
+			std::cout.rdbuf(cout_buf);
+			std::cerr.rdbuf(cerr_buf);
+		};
+
+		try
+		{
+			uci_parser parser;
+			REQUIRE(parser.uci_loop() == EXIT_SUCCESS);
+		}
+		catch (...)
+		{
+			restore();
+			throw;
+		}
+		restore();
+
+		REQUIRE(output.str().find("readyok") != std::string::npos);
+		REQUIRE(error.str().empty());
+	}
+
+	TEST_CASE("uci command writes its banner", "[uci][commands][uci]")
+	{
+		const auto commands = command_registry::instance().commands();
+		auto uci = find_command(commands, "uci");
+		REQUIRE(uci != nullptr);
+
+		std::stringstream input;
+		std::stringstream output;
+		std::stringstream error;
+		loki_engine engine;
+		context ctx{engine, UCI_STATE::Boot, input, output, error};
+
+		uci->execute(std::vector<std::string>{}, &ctx);
+		const auto uci_output = output.str();
+		REQUIRE(uci_output.find("id name ") == 0);
+		REQUIRE(uci_output.find("id author ") != std::string::npos);
+		REQUIRE(uci_output.find("uciok") != std::string::npos);
+	}
+
+	TEST_CASE("isready command writes readyok", "[uci][commands][isready]")
+	{
+		const auto commands = command_registry::instance().commands();
+		auto* isready = find_command(commands, "isready");
+		REQUIRE(isready != nullptr);
+
+		std::stringstream input;
+		std::stringstream output;
+		std::stringstream error;
+		loki_engine engine;
+		context ctx{engine, UCI_STATE::Boot, input, output, error};
+
+		isready->execute(std::vector<std::string>{}, &ctx);
+		REQUIRE(output.str() == "readyok\n");
+	}
+
+	TEST_CASE("position command applies startpos and moves", "[uci][commands][position]")
+	{
+		const auto commands = command_registry::instance().commands();
+		auto* position = find_command(commands, "position");
+		REQUIRE(position != nullptr);
+
+		std::stringstream input;
+		std::stringstream output;
+		std::stringstream error;
+		loki_engine engine;
+		context ctx{engine, UCI_STATE::Boot, input, output, error};
+
+		position->execute(std::vector<std::string>{"startpos", "moves", "e2e4", "e7e5"}, &ctx);
+		REQUIRE(ctx.state == UCI_STATE::Ready);
+		REQUIRE(loki::position::game_state::to_fen(std::make_shared<loki::position::game_state>(ctx.engine.state()))
+			== "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2");
+	}
+
+	TEST_CASE("quit command transitions the context to Quit", "[uci][commands][quit]")
+	{
+		const auto commands = command_registry::instance().commands();
+		auto* quit = find_command(commands, "quit");
+		REQUIRE(quit != nullptr);
+
+		std::stringstream input;
+		std::stringstream output;
+		std::stringstream error;
+		loki_engine engine;
+		context ctx{engine, UCI_STATE::Boot, input, output, error};
+
+		quit->execute(std::vector<std::string>{}, &ctx);
+		REQUIRE(ctx.state == UCI_STATE::Quit);
+	}
+
+	TEST_CASE("unsupported commands still throw not_implemented_error", "[uci][commands][stubbed]")
+	{
+		auto commands = command_registry::instance().commands();
+		std::stringstream input;
+		std::stringstream output;
+		std::stringstream error;
+		loki_engine engine;
+		context ctx{engine, UCI_STATE::Ready, input, output, error};
+
+		for (const auto& name : {"go", "register", "setoption", "stop", "ponderhit", "ucinewgame", "debug"})
+		{
+			SECTION(name)
+			{
+				auto* command = find_command(commands, name);
+				REQUIRE(command != nullptr);
+				REQUIRE_THROWS_AS(command->can_execute(&ctx), not_implemented_error);
+				REQUIRE_THROWS_AS(command->execute(std::vector<std::string>{}, &ctx), not_implemented_error);
+			}
 		}
 
-		inline static const std::vector<std::string> no_tokens = {};
-		std::shared_ptr<context_mock> context;
-	};
-
-	
-	template<typename Base, typename Derived>
-	std::unique_ptr<Base> static_downcast(std::unique_ptr<Derived>& ptr)
-	{
-		auto rawPtr = static_cast<Base*>(ptr.release());
-		return std::unique_ptr<Base>(rawPtr);
-	}
-
-	TEST_F(uci_parser_mocked, test_uci)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, uci)
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_uci(no_tokens);
-	}
-	TEST_F(uci_parser_mocked, test_isready)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, isready)
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_isready(no_tokens);
-	}
-
-#pragma region SETOPTION
-	TEST_F(uci_parser_mocked, test_setoption_no_tokens_or_invalid)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, setoption)
-			.Times(0);
-		uci_parser parser(context);
-
-		EXPECT_THROW(parser.parse_setoption(no_tokens), uci_parser::uci_error);
-		EXPECT_THROW(parser.parse_setoption({ "hello", "world" }), uci_parser::uci_error);
-	}
-	TEST_F(uci_parser_mocked, test_setoption_valid_novalue)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, setoption("testoption", std::optional<std::string>(std::nullopt)))
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_setoption({ "name", "testOption" });
-	}
-	TEST_F(uci_parser_mocked, test_setoption_valid_withvalue)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, setoption("testoption", std::optional<std::string>("testvalue")))
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_setoption({ "name", "testOption", "value", "testValue"});
-	}
-#pragma endregion
-#pragma region POSITION	
-	TEST_F(uci_parser_mocked, test_position_empty)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, position)
-			.Times(0);
-		uci_parser parser(context);
-		EXPECT_THROW(parser.parse_position(no_tokens), uci_parser::uci_error);
-	}
-	TEST_F(uci_parser_mocked, test_position_startpos)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, position(loki::constants::START_FEN, std::vector<std::string>()))
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_position({"startpos"});
-	}
-	TEST_F(uci_parser_mocked, test_position_fen_moves)
-	{
-		using namespace ::testing;
-		auto test_fen = "FEN: 8/8/8/4p1K1/2k1P3/8/8/8 b - - 0 1";
-		EXPECT_CALL(*context, position(test_fen, std::vector<std::string> {"e2e4", "e7e5" }))
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_position({ "fen", test_fen, "moves", "e2e4", "e7e5" });
-	}
-#pragma endregion
-#pragma region GO
-	// TODO: Finish these tests when we get to actually parsing the go-parameters
-	TEST_F(uci_parser_mocked, test_go_empty) // infinite
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, go)
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_go(no_tokens);
-	}
-#pragma endregion
-
-	TEST_F(uci_parser_mocked, test_ucinewgame)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, ucinewgame)
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_ucinewgame(no_tokens);
-	}
-	TEST_F(uci_parser_mocked, test_stop)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, stop)
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_stop(no_tokens);
-	}
-
-	TEST_F(uci_parser_mocked, test_ponderhit)
-	{
-		using namespace ::testing;
-		EXPECT_CALL(*context, ponderhit)
-			.Times(1);
-		uci_parser parser(context);
-		parser.parse_ponderhit(no_tokens);
+#ifdef LOKI_ENABLE_DEV_COMMANDS
+		for (const auto& name : { "perft" })
+		{
+			SECTION(name)
+			{
+				auto* command = find_command(commands, name);
+				REQUIRE(command != nullptr);
+				REQUIRE_THROWS_AS(command->can_execute(&ctx), not_implemented_error);
+				REQUIRE_THROWS_AS(command->execute(std::vector<std::string>{}, &ctx), not_implemented_error);
+			}
+		}
+#endif
 	}
 }

@@ -16,23 +16,25 @@
 //
 
 #include "pch.hpp"
-#include "Loki/uci/context.hpp"
+#include "Loki/position/search_position.hpp"
+#include "Loki/movegen/magics/hardcoded_index.hpp"
 
-namespace uci_tests
+namespace position_tests
 {
-	using namespace loki::uci;
+	using namespace loki;
+	using namespace loki::position;
+	using namespace loki::movegen;
+	using namespace loki::movegen::magics;
 
-	TEST_CASE("context stores engine, state and stream references", "[uci][context]")
+	TEST_CASE("search_position can generate moves from the initial position", "[position][search_position]")
 	{
-		std::stringstream input;
-		std::stringstream output;
-		std::stringstream error;
-		loki::loki_engine engine;
-		context ctx{engine, UCI_STATE::Boot, input, output, error};
+		auto state = game_state::from_fen(constants::START_FEN);
+		auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
+		auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
+		auto pos = make(state, bishop_index, rook_index);
 
-		REQUIRE(ctx.state == UCI_STATE::Boot);
-		REQUIRE(&ctx.in == &input);
-		REQUIRE(&ctx.out == &output);
-		REQUIRE(&ctx.error == &error);
+		move_list moves;
+		REQUIRE(pos->generate_moves(&moves) == 20);
+		REQUIRE_FALSE(pos->in_check());
 	}
 }
