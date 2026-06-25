@@ -64,4 +64,16 @@ namespace util_tests
 	{
 		FAIL("TODO: add direct coverage for collapse_whitespace() now that it is used by the UCI parser.");
 	}
+
+	TEST_CASE("hash and _hash agree for equivalent strings", "[util][stringops][stub]")
+	{
+		const std::string all_string = "all";
+		const std::string_view all_view = all_string;
+
+		REQUIRE(hash(all_string) == hash(all_view));
+		REQUIRE(hash("all") != hash("quiet"));
+		REQUIRE(hash(all_string) == "all"_hash);
+
+		FAIL("TODO: complete direct coverage for hash() and the _hash literal.");
+	}
 }

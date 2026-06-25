@@ -61,6 +61,20 @@ namespace loki::util
 	std::string uppercase(const std::string& str);
 }
 
+constexpr auto hash(std::string_view str) noexcept
+{
+	auto hash = 0ULL;
+	for (char c : str)
+		hash = (hash * 131) + c;
+	return hash;
+}
+
+constexpr auto operator"" _hash(const char* str, size_t len) noexcept
+{
+	return hash(std::string_view(str, len));
+}
+
+
 template<typename EnumT>
 struct enum_strings
 {

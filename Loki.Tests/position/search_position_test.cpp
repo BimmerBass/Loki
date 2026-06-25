@@ -37,4 +37,37 @@ namespace position_tests
 		REQUIRE(pos->generate_moves(&moves) == 20);
 		REQUIRE_FALSE(pos->in_check());
 	}
+
+	TEST_CASE("search_position move-type templates partition active and quiet moves", "[position][search_position][stub]")
+	{
+		auto state = game_state::from_fen("8/8/8/3p4/4P3/8/8/4K2k w - - 0 1");
+		auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
+		auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
+		auto pos = make(state, bishop_index, rook_index);
+
+		move_list active_moves;
+		move_list quiet_moves;
+		move_list all_moves;
+
+		REQUIRE(pos->generate_moves<ACTIVE>(&active_moves) == active_moves.size());
+		REQUIRE(pos->generate_moves<QUIET>(&quiet_moves) == quiet_moves.size());
+		REQUIRE(pos->generate_moves<ALL>(&all_moves) == all_moves.size());
+
+		REQUIRE(active_moves.size() == 1);
+		REQUIRE(active_moves[0].to_string() == "e4d5");
+		REQUIRE(std::ranges::none_of(quiet_moves, [](const move& m) { return m.to_string() == "e4d5"; }));
+		REQUIRE(all_moves.size() == active_moves.size() + quiet_moves.size());
+
+		const auto contains = [](const move_list& moves, const move& expected)
+			{
+				return std::ranges::any_of(moves, [&expected](const move& actual) { return actual == expected; });
+			};
+
+		for (const auto& move : active_moves)
+			REQUIRE(contains(all_moves, move));
+		for (const auto& move : quiet_moves)
+			REQUIRE(contains(all_moves, move));
+
+		FAIL("TODO: complete move-type template coverage after validating this mixed FEN.");
+	}
 }

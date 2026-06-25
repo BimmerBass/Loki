@@ -72,5 +72,5 @@ if(UNIX AND NOT APPLE)
   install(FILES "${LOKI_GENERATED_DIR}/loki.desktop" DESTINATION "${CMAKE_INSTALL_DATADIR}/applications")
 endif()
 
-set_target_properties(loki_core PROPERTIES FOLDER "Loki/Core")
+set_target_properties(loki_core PROPERTIES FOLDER "Loki")
 set_target_properties(Loki PROPERTIES FOLDER "Loki")

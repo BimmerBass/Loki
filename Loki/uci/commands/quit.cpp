@@ -20,10 +20,10 @@
 
 using namespace loki::uci;
 
-class quit_command final : public i_uci_command
+class quit_command final : public uci_command<quit_command>
 {
 public:
-	std::string name() override { return "quit"; }
+	static std::string name() { return "quit"; }
 	bool can_execute(const context*) override { return true; }
 
 	void execute(std::vector<std::string>, context* ctx) override

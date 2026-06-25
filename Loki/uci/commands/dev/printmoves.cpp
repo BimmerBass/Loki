@@ -18,28 +18,52 @@
 #include "uci/command_registry.hpp"
 #include "util/exception.hpp"
 #include "uci/uci_parser.hpp"
+#include "movegen/move_list.hpp"
 
 #ifdef LOKI_ENABLE_DEV_COMMANDS
 
 using namespace loki;
 using namespace loki::uci;
+using namespace loki::movegen;
 
-class perft_command final : public uci_command<perft_command>
+class printmoves_command final : public uci_command<printmoves_command>
 {
 public:
-	static std::string name() { return "perft"; }
+	static std::string name() { return "printmoves"; }
 	bool can_execute(const context* ctx) override { return ctx->state == UCI_STATE::Ready; }
 
-	void execute(std::vector<std::string> arguments, context* ctx) override
+	void execute(std::vector<std::string> parameters, context* ctx) override
 	{
-		if (arguments.empty())
-			throw_msg<uci_parser::uci_error>("perft needs at least one parameter");
+		const auto& pos = ctx->engine.position();
+		move_list ml;
 
-		auto depth = std::stoi(arguments[0]);
-		ctx->engine.perft(depth, ctx->out);
+		auto type = parameters.empty() ? "all" : util::lowercase(parameters[0]);
+
+		switch (hash(type))
+		{
+		case "all"_hash:
+			pos->generate_moves<movegen::ALL>(&ml);
+			break;
+		case "quiet"_hash:
+			pos->generate_moves<movegen::QUIET>(&ml);
+			break;
+		case "active"_hash:
+			pos->generate_moves<movegen::ACTIVE>(&ml);
+			break;
+		default:
+			throw_msg<uci_parser::uci_error>("invalid argument to printmoves: '{}'", type);
+		}
+
+		ctx->out << type << " moves for position:" << std::endl;
+
+		auto i = 1;
+		for (const auto& m : ml)
+		{
+			ctx->out << std::format("[{}] {}", i++, m.to_string()) << std::endl;
+		}
 	}
 };
 
-static command_registration<perft_command> reg;
+static command_registration<printmoves_command> reg;
 
 #endif

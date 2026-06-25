@@ -16,7 +16,12 @@
 //
 
 #include <functional>
+#include <map>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <vector>
 #include "command.hpp"
 
 namespace loki::uci
@@ -26,8 +31,9 @@ namespace loki::uci
 	/// </summary>
 	class command_registry final
 	{
-		using factory_t = std::function<std::unique_ptr<i_uci_command>()>;
-		using commands_t = std::vector<std::unique_ptr<i_uci_command>>;
+		using command_t = std::unique_ptr<i_uci_command>;
+		using factory_t = std::function<command_t()>;
+		using commands_t = std::vector<command_t>;
 
 		command_registry() = default;
 	public:
@@ -43,29 +49,45 @@ namespace loki::uci
 			return instance;
 		}
 
-		void add(factory_t f)
+		void add(std::string name, factory_t f)
 		{
-			factories.push_back(f);
+			factories.emplace(std::move(name), std::move(f));
+		}
+
+		command_t create(const std::string& name) const
+		{
+			const auto it = factories.find(name);
+			if (it == factories.end())
+				return nullptr;
+			return it->second();
 		}
 
 		commands_t commands() const
 		{
 			commands_t commands;
-			for (const auto& factory : factories)
+			for (const auto& [_, factory] : factories)
 				commands.push_back(factory());
 			return commands;
 		}
 
 	private:
-		std::vector<factory_t> factories;
+		std::map<std::string, factory_t> factories;
 	};
 
-	template<typename T> requires std::is_base_of_v<i_uci_command, T>
+	template<typename T>
+	concept uci_command_type =
+		std::is_base_of_v<i_uci_command, T>
+		&& requires
+	{
+		{ T::name() } -> std::convertible_to<std::string_view>;
+	};
+
+	template<uci_command_type T>
 	struct command_registration
 	{
 		command_registration()
 		{
-			command_registry::instance().add([]
+			command_registry::instance().add(std::string(T::name()), []
 				{
 					return std::make_unique<T>();
 				});

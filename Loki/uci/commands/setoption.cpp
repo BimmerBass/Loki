@@ -20,10 +20,10 @@
 
 using namespace loki::uci;
 
-class setoption_command final : public i_uci_command
+class setoption_command final : public uci_command<setoption_command>
 {
 public:
-	std::string name() override
+	static std::string name()
 	{
 		return "setoption";
 	}

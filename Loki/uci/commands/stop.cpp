@@ -20,10 +20,10 @@
 
 using namespace loki::uci;
 
-class stop_command final : public i_uci_command
+class stop_command final : public uci_command<stop_command>
 {
 public:
-	std::string name() override
+	static std::string name()
 	{
 		return "stop";
 	}

@@ -22,6 +22,7 @@
 #include "movegen/magics/magic_index.hpp"
 #include "movegen/move_list.hpp"
 #include "movegen/i_move_generator.hpp"
+#include "movegen/move.hpp"
 #include <defs.hpp>
 
 namespace loki::position
@@ -89,13 +90,31 @@ namespace loki::position
 		/// </summary>
 		/// <param name="ml">A pointer to the move list object</param>
 		/// <returns>The number of moves generated.</returns>
-		size_t generate_moves(movegen::move_list* ml) const;
+		template<movegen::move_type MT = movegen::ALL>
+		[[maybe_unused]] size_t generate_moves(movegen::move_list* ml) const;
 
 		/// <summary>
-		/// Extract the game_state instance
-		/// Note that after this function has been called, no other operations should be performed on this search_position object.
+		/// Represent the position as a FEN.
+		/// Note that this is *very* inefficient and should never be executed along a critical path!
 		/// </summary>
 		/// <returns>A std::unique_ptr<game_state> rvalue reference</returns>
-		std::unique_ptr<game_state>&& state() { return std::move(m_state); }
+		std::string to_fen() const { return game_state::to_fen(std::make_shared<game_state>(*m_state)); }
+
+		/// <summary>
+		/// Create a position view to read data from the object.
+		/// </summary>
+		/// <returns></returns>
+		std::unique_ptr<i_position_view> make_view() const&;
+		std::unique_ptr<i_position_view> make_view() const&& = delete;
+
+		/// <summary>
+		/// Find out if a move has been made on this object by checking for emptiness on the history stack.
+		/// </summary>
+		/// <returns>true if a move has been made, false if not.</returns>
+		inline bool has_made_move() const noexcept { return m_history.size() > 0; }
 	};
+
+	extern template size_t search_position::generate_moves<movegen::ALL>(movegen::move_list*) const;
+	extern template size_t search_position::generate_moves<movegen::ACTIVE>(movegen::move_list*) const;
+	extern template size_t search_position::generate_moves<movegen::QUIET>(movegen::move_list*) const;
 }

@@ -11,6 +11,48 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT LOKI_IPO_SUPPORTED OUTPUT LOKI_IPO_OUTPUT)
+if(LOKI_IPO_SUPPORTED)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
+endif()
+
+# Keep developer installs writable.  A caller that explicitly supplies
+# CMAKE_INSTALL_PREFIX retains that choice.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT OR
+   (WIN32 AND CMAKE_INSTALL_PREFIX STREQUAL "C:/Program Files/${PROJECT_NAME}"))
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Install path prefix" FORCE)
+endif()
+
+# MSVC does not enable C++ exception-unwind semantics by default.  Apply this
+# globally so every project and dependency compiled from this build uses the
+# standard C++ exception model.
+if(MSVC)
+  add_compile_options(/EHsc)
+  add_compile_options(
+    $<$<CONFIG:Release>:/O2>
+    $<$<CONFIG:Release>:/Ob3>
+    $<$<CONFIG:Release>:/Oi>
+    $<$<CONFIG:Release>:/Ot>
+    $<$<CONFIG:Release>:/GL>
+    $<$<CONFIG:Release>:/fp:fast>
+    $<$<CONFIG:Release>:/arch:AVX2>
+    $<$<CONFIG:Release>:/GS->
+  )
+  add_link_options(
+    $<$<CONFIG:Release>:/LTCG>
+    $<$<CONFIG:Release>:/OPT:REF>
+    $<$<CONFIG:Release>:/OPT:ICF>
+  )
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_compile_options(
+    $<$<CONFIG:Release>:-Ofast>
+    $<$<CONFIG:Release>:-march=native>
+    $<$<CONFIG:Release>:-funroll-loops>
+    $<$<CONFIG:Release>:-fno-stack-protector>
+  )
+endif()
+
 set(LOKI_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(LOKI_SOURCE_DIR "${LOKI_ROOT_DIR}/Loki")
 set(LOKI_TEST_DIR "${LOKI_ROOT_DIR}/Loki.Tests")
@@ -52,4 +94,10 @@ add_subdirectory(Loki)
 
 if(LOKI_BUILD_TESTS)
   add_subdirectory(Loki.Tests)
+endif()
+
+# CMake otherwise selects ALL_BUILD as the Visual Studio startup project.
+# ALL_BUILD is a meta-target and cannot be launched with F5.
+if(CMAKE_GENERATOR MATCHES "Visual Studio")
+  set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Loki)
 endif()

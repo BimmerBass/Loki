@@ -17,6 +17,7 @@
 
 #include "uci/command_registry.hpp"
 #include "uci/uci_parser.hpp"
+#include "uci/move_parsing.hpp"
 #include "movegen/move.hpp"
 #include "position/game_state.hpp"
 #include "position/square.hpp"
@@ -34,70 +35,11 @@
 using namespace loki::uci;
 using namespace loki;
 
-namespace
-{
-	using loki::movegen::move;
-	using loki::movegen::move_attr;
 
-	move_attr infer_move_attr(const position::game_state& state, const move& candidate)
-	{
-		side mover = NUM_SIDES;
-		const auto moved_piece = state.get_piece(position::square(candidate.from()), &mover);
-		if (moved_piece == NO_PIECE || mover == NUM_SIDES)
-			throw_msg<uci_parser::uci_error>("invalid move: no piece exists on '{}'", position::square(candidate.from()).to_algebraic());
-
-		if (candidate.type() == loki::movegen::PROMOTION)
-			return loki::movegen::PROMOTION;
-
-		if (moved_piece == PAWN && state.en_passant_sq == candidate.to())
-		{
-			const auto dest_piece = state.get_piece(position::square(candidate.to()));
-			if (dest_piece == NO_PIECE)
-				return loki::movegen::ENPASSANT;
-		}
-
-		if (moved_piece == KING
-			&& position::rank_of(candidate.from()) == position::rank_of(candidate.to())
-			&& std::abs(static_cast<int>(position::file_of(candidate.to())) - static_cast<int>(position::file_of(candidate.from()))) == 2)
-			return loki::movegen::CASTLING;
-
-		return loki::movegen::NORMAL;
-	}
-
-	move parse_move_token(const std::string& token, const position::game_state& state)
-	{
-		if (token.size() < 4 || token.size() > 5)
-			throw_msg<uci_parser::uci_error>("invalid move token: '{}'", token);
-
-		const position::square from_sq(token.substr(0, 2));
-		const position::square to_sq(token.substr(2, 2));
-
-		auto type = loki::movegen::NORMAL;
-		auto promotion_piece = KNIGHT;
-		if (token.size() == 5)
-		{
-			type = loki::movegen::PROMOTION;
-			switch (std::tolower(static_cast<unsigned char>(token[4])))
-			{
-			case 'n': promotion_piece = KNIGHT; break;
-			case 'b': promotion_piece = BISHOP; break;
-			case 'r': promotion_piece = ROOK; break;
-			case 'q': promotion_piece = QUEEN; break;
-			default:
-				throw_msg<uci_parser::uci_error>("invalid promotion piece in move token: '{}'", token);
-			}
-		}
-
-		move candidate(from_sq.value(), to_sq.value(), type, promotion_piece);
-		candidate.type(infer_move_attr(state, candidate));
-		return candidate;
-	}
-}
-
-class position_command final : public i_uci_command
+class position_command final : public uci_command<position_command>
 {
 public:
-	std::string name() override
+	static std::string name()
 	{
 		return "position";
 	}
@@ -117,7 +59,6 @@ public:
 	void execute(std::vector<std::string> tokens, context* ctx) override
 	{
 		assert(can_execute(ctx));
-		std::vector<move> moves;
 		std::string fen;
 
 		if (tokens.empty())
@@ -148,18 +89,21 @@ public:
 		try
 		{
 			const auto gs = position::game_state::from_fen(fen);
+			auto new_pos = ctx->engine.make_position(*gs);
 
 			// move parsing
 			if (const auto moves_it = std::find(tokens.begin(), tokens.end(), "moves"); moves_it != tokens.end())
 			{
 				for (auto move_it = std::next(moves_it); move_it != tokens.end(); ++move_it)
-					moves.push_back(parse_move_token(*move_it, *gs));
+				{
+					const auto state = new_pos->make_view()->game_state();
+					auto move = parse_move_token(*move_it, *state);
+					if (!new_pos->make_move(move))
+						throw uci_parser::uci_error("move sequence contains one or more invalid moves");
+				}
 			}
 
-			if (!ctx->engine.set_position(*gs, moves))
-			{
-				throw uci_parser::uci_error("move sequence contains one or more invalid moves");
-			}
+			ctx->engine.set_position(std::move(new_pos));
 		}
 		catch (const position::io::game_state_builder::fen_parsing_error& e)
 		{

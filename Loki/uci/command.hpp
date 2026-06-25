@@ -17,6 +17,8 @@
 
 #pragma once
 #include "context.hpp"
+#include <string>
+#include <vector>
 
 namespace loki::uci
 {
@@ -24,8 +26,19 @@ namespace loki::uci
 	{
 	public:
 		virtual ~i_uci_command() = default;
-		virtual std::string name() = 0;
+		virtual std::string command_name() const = 0;
 		virtual bool can_execute(const context* ctx) = 0;
 		virtual void execute(std::vector<std::string> tokens, context* ctx) = 0;
+	};
+
+
+	template<class C>
+	class uci_command : public i_uci_command
+	{
+	public:
+		std::string command_name() const override
+		{
+			return C::name();
+		}
 	};
 }

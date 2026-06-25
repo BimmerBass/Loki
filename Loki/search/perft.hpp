@@ -27,7 +27,7 @@ namespace loki::search
 			m_nps{ 0 }
 		{}
 		
-		void run(const std::string& fen, size_t depth);
+		size_t run(const std::string& fen, size_t depth);
 	private:
 
 		void run_internal(size_t depth);

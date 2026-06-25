@@ -7,7 +7,7 @@ namespace loki::search
 	using namespace position;
 	using namespace movegen;
 
-	void perft::run(const std::string& fen, size_t depth)
+	size_t perft::run(const std::string& fen, size_t depth)
 	{
 		m_fen = fen;
 		m_nodes = m_nps = 0;
@@ -45,6 +45,7 @@ namespace loki::search
 		m_os << "Nodes/second: " << m_nps << "\n";
 		m_os << "\nNodes visited: " << m_nodes << "\n";
 		m_os << "</PERFT TEST FOR DEPTH = " << depth << ">" << std::endl;
+		return m_nodes;
 	}
 
 	void perft::run_internal(size_t depth)
@@ -57,16 +58,13 @@ namespace loki::search
 
 		move_list moves;
 		m_position->generate_moves(&moves);
-		auto move = moves.begin();
 
-		while (move != moves.end())
+		for (const auto& move : moves)
 		{
-			if (!m_position->make_move(*move))
+			if (!m_position->make_move(move))
 				continue;
 			run_internal(depth - 1);
 			m_position->undo_last_move();
-
-			move++;
 		}
 	}
 

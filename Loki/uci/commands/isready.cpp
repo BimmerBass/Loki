@@ -20,10 +20,10 @@
 
 using namespace loki::uci;
 
-class isready_command final : public i_uci_command
+class isready_command final : public uci_command<isready_command>
 {
 public:
-	std::string name() override { return "isready"; }
+	static std::string name() { return "isready"; }
 	bool can_execute(const context* /**/) override { return true; }
 
 	void execute(std::vector<std::string>, context* ctx) override

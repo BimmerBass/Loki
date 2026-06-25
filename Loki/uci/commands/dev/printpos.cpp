@@ -24,17 +24,19 @@
 using namespace loki::uci;
 using namespace loki;
 
-class printpos_command final : public i_uci_command
+class printpos_command final : public uci_command<printpos_command>
 {
 public:
-	std::string name() override { return "printpos"; }
+	static std::string name() { return "printpos"; }
 	bool can_execute(const context* ctx) override { return ctx->state != UCI_STATE::Searching && ctx->state != UCI_STATE::Boot; }
 
 	void execute(std::vector<std::string>, context* ctx) override
 	{
 		ctx->out << "POSITION: " << std::endl;
-		const auto& game_state = ctx->engine.state();
-		const auto& fen = position::game_state::to_fen(std::make_shared<position::game_state>(game_state));
+
+		const auto& view = ctx->engine.position()->make_view();
+		const auto& game_state = view->game_state();
+		const auto& fen = position::game_state::to_fen(std::make_shared<position::game_state>(*game_state));
 
 		for (auto rank = position::RANK_8; rank >= position::RANK_1; rank--)
 		{
@@ -45,7 +47,7 @@ public:
 				position::square sq(rank, file);
 				side color;
 
-				auto piece = game_state.get_piece(sq, &color);
+				auto piece = game_state->get_piece(sq, &color);
 				std::string piece_str = enum_to_string(piece);
 				if (piece != NO_PIECE)
 					piece_str = (color == WHITE) ? util::uppercase(piece_str) : util::lowercase(piece_str);
@@ -66,11 +68,11 @@ public:
 		ctx->out << "/POSITION" << std::endl << std::endl;
 
 		ctx->out << "INFORMATION" << std::endl;
-		ctx->out << "\tSide to move:\t\t" << enum_to_string(game_state.side_to_move) << std::endl;
-		ctx->out << "\tEn-passant square:\t" << game_state.en_passant_sq.to_algebraic() << std::endl;;
-		ctx->out << "\tCastling rights:\t" << game_state.castling_rights.to_string() << std::endl;
-		ctx->out << "\tFifty move counter:\t" << game_state.fifty_move_cnt << std::endl;
-		ctx->out << "\tFull move counter:\t" << game_state.full_move_cnt << std::endl;
+		ctx->out << "\tSide to move:\t\t" << enum_to_string(game_state->side_to_move) << std::endl;
+		ctx->out << "\tEn-passant square:\t" << game_state->en_passant_sq.to_algebraic() << std::endl;
+		ctx->out << "\tCastling rights:\t" << game_state->castling_rights.to_string() << std::endl;
+		ctx->out << "\tFifty move counter:\t" << game_state->fifty_move_cnt << std::endl;
+		ctx->out << "\tFull move counter:\t" << game_state->full_move_cnt << std::endl;
 		ctx->out << "\t" << "FEN:\t\t\t" << fen << std::endl;
 		ctx->out << "/INFORMATION" << std::endl;
 	}

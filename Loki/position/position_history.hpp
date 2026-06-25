@@ -76,6 +76,11 @@ namespace loki::position
 			return m_stack[--m_size];
 		}
 
+		inline size_t size() const noexcept
+		{
+			return m_size;
+		}
+
 		position_history(const position_history&) = delete;
 		position_history(position_history&&) = delete;
 	};

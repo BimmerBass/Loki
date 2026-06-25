@@ -97,4 +97,4 @@ endif()
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${LOKI_TEST_SOURCES} ${LOKI_TEST_HEADERS})
 
-set_target_properties(loki_tests PROPERTIES FOLDER "Loki/Tests")
+set_target_properties(loki_tests PROPERTIES FOLDER "Loki")

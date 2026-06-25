@@ -20,10 +20,10 @@
 
 using namespace loki::uci;
 
-class register_command final : public i_uci_command
+class register_command final : public uci_command<register_command>
 {
 public:
-	std::string name() override
+	static std::string name()
 	{
 		return "register";
 	}

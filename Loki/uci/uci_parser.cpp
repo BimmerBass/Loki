@@ -30,7 +30,7 @@ namespace loki::uci
 		auto handlers = std::move(command_registry::instance().commands());
 		for (auto& handler : handlers)
 		{
-			auto key = handler->name();
+			auto key = handler->command_name();
 			m_handlers.emplace(std::move(key), std::move(handler));
 		}
 	}

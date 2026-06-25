@@ -141,8 +141,8 @@ namespace loki::movegen
 		constexpr e_direction down = S == WHITE ? DOWN : UP;
 		constexpr e_direction left = S == WHITE ? LEFT : RIGHT;
 		constexpr e_direction right = S == WHITE ? RIGHT : LEFT;
-		constexpr int left_attack_origin = S == WHITE ? 7 : -9;
-		constexpr int right_attack_origin = S == WHITE ? 9 : -7;
+		constexpr int left_attack_origin = S == WHITE ? 7 : -7;
+		constexpr int right_attack_origin = S == WHITE ? 9 : -9;
 
 		bitboard_t pawns = pos->piece_bb(S, PAWN);
 		bitboard_t occ = pos->all_pieces();
@@ -202,7 +202,7 @@ namespace loki::movegen
 
 			// En-passant
 			auto en_passant_sq = pos->game_state()->en_passant_sq.value();
-			if (en_passant_sq != NUM_SQUARES)
+			if (en_passant_sq != NO_SQ)
 			{
 				bitboard_t ep_board = 1ULL << en_passant_sq;
 
@@ -342,7 +342,7 @@ namespace loki::movegen
 	{
 		bitboard_t sq_bb = set_one_at(0ULL, sq);
 		bitboard_t attackers = pos->piece_bb(s, PAWN);
-		bitboard_t attacks = s == WHITE ?
+		bitboard_t attacks = s == BLACK ?
 			shift<UP, LEFT>(sq_bb) | shift<UP, RIGHT>(sq_bb) :
 			shift<DOWN, LEFT>(sq_bb) | shift<DOWN, RIGHT>(sq_bb);
 		return attacks & attackers;

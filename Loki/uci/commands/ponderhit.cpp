@@ -20,10 +20,10 @@
 
 using namespace loki::uci;
 
-class ponderhit_command final : public i_uci_command
+class ponderhit_command final : public uci_command<ponderhit_command>
 {
 public:
-	std::string name() override
+	static std::string name()
 	{
 		return "ponderhit";
 	}

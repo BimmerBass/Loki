@@ -131,6 +131,13 @@ namespace loki::position
 				m_king_squares[me] = move.to();
 		}
 
+		// remove the potentially captured piece
+		if (piece_captured != NO_PIECE)
+		{
+			m_state->piece_placements[!me][move.to()] = NO_PIECE;
+			m_piecebbs[!me][piece_captured] = toggle_at(m_piecebbs[!me][piece_captured], move.to());
+		}
+
 		// update castling rights
 		if (piece_moved == KING)
 		{
@@ -200,8 +207,7 @@ namespace loki::position
 		m_piecebbs[me][metadata.moved] = toggle_at(m_piecebbs[me][metadata.moved], move.from());
 
 		if (metadata.moved == KING)
-			m_king_squares[me] = move.to();
-		
+			m_king_squares[me] = move.from();
 
 		// handle special moves
 		e_square pawn_sq;
@@ -273,10 +279,19 @@ namespace loki::position
 		return m_move_generator->attackers_to(&proxy, m_king_squares[m_state->side_to_move], !m_state->side_to_move);
 	}
 
-	size_t search_position::generate_moves(movegen::move_list* ml) const
+	template<move_type MT>
+	[[maybe_unused]] size_t search_position::generate_moves(movegen::move_list* ml) const
 	{
 		position_proxy proxy = this;
-		return m_move_generator->generate(&proxy, ml);
+		return m_move_generator->generate<MT>(&proxy, ml);
 	}
 
+	template size_t search_position::generate_moves<movegen::ALL>(movegen::move_list*) const;
+	template size_t search_position::generate_moves<movegen::ACTIVE>(movegen::move_list*) const;
+	template size_t search_position::generate_moves<movegen::QUIET>(movegen::move_list*) const;
+
+	std::unique_ptr<i_position_view> search_position::make_view() const&
+	{
+		return std::make_unique<position_proxy>(this);
+	}
 }

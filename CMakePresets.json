@@ -4,7 +4,7 @@
     {
       "name": "windows-msvc",
       "displayName": "Windows MSVC",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "architecture": "x64",
       "binaryDir": "${sourceDir}/build/windows-msvc",
       "cacheVariables": {
@@ -46,24 +46,29 @@
     {
       "name": "windows-msvc",
       "configurePreset": "windows-msvc",
-      "configuration": "Debug"
+      "configuration": "Debug",
+      "jobs": 24
     },
     {
       "name": "windows-msvc-release",
       "configurePreset": "windows-msvc",
-      "configuration": "Release"
+      "configuration": "Release",
+      "jobs": 24
     },
     {
       "name": "gcc",
-      "configurePreset": "gcc"
+      "configurePreset": "gcc",
+      "jobs": 24
     },
     {
       "name": "gcc-release",
-      "configurePreset": "gcc-release"
+      "configurePreset": "gcc-release",
+      "jobs": 24
     },
     {
       "name": "gcc-coverage",
-      "configurePreset": "gcc-coverage"
+      "configurePreset": "gcc-coverage",
+      "jobs": 24
     }
   ],
   "testPresets": [

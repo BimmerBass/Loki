@@ -20,10 +20,10 @@
 
 using namespace loki::uci;
 
-class go_command final : public i_uci_command
+class go_command final : public uci_command<go_command>
 {
 public:
-	std::string name() override
+	static std::string name()
 	{
 		return "go";
 	}
