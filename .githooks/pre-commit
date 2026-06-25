@@ -40,6 +40,16 @@ header_py='# Loki, a UCI-compliant chess playing software
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #'
 
+emit_header() {
+    header=$1
+    line_ending=$2
+
+    while IFS= read -r line; do
+        printf '%s%s' "$line" "$line_ending"
+    done <<< "$header"
+    printf '%s' "$line_ending"
+}
+
 insert_header() {
     file=$1
     header=$2
@@ -51,12 +61,18 @@ insert_header() {
     fi
 
     tmp_file="${file}.license.$$"
+    line_ending=$'\n'
+    if grep -q $'\r$' "$file"; then
+        line_ending=$'\r\n'
+    fi
+
     if [[ "$file" == *.py ]] && head -n 1 "$file" | grep -q '^#!'; then
         head -n 1 "$file" > "$tmp_file"
-        printf '\n%s\n\n' "$header" >> "$tmp_file"
+        printf '%s' "$line_ending" >> "$tmp_file"
+        emit_header "$header" "$line_ending" >> "$tmp_file"
         tail -n +2 "$file" >> "$tmp_file"
     else
-        printf '%s\n\n' "$header" > "$tmp_file"
+        emit_header "$header" "$line_ending" > "$tmp_file"
         cat "$file" >> "$tmp_file"
     fi
     mv "$tmp_file" "$file"
