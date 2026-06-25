@@ -1,7 +1,10 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="/usr/bin:/bin:$PATH"
 
 repo_root=$(git rev-parse --show-toplevel)
+missing_headers=0
 
 header_cpp='// Loki, a UCI-compliant chess playing software
 // Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
@@ -41,31 +44,43 @@ insert_header() {
     file=$1
     header=$2
 
+    if [ "${LOKI_LICENSE_HOOK_CHECK_ONLY:-}" = "1" ]; then
+        printf 'missing license header: %s\n' "${file#$repo_root/}"
+        missing_headers=1
+        return
+    fi
+
     tmp_file="${file}.license.$$"
-    printf '%s\n\n' "$header" > "$tmp_file"
-    cat "$file" >> "$tmp_file"
+    if [[ "$file" == *.py ]] && head -n 1 "$file" | grep -q '^#!'; then
+        head -n 1 "$file" > "$tmp_file"
+        printf '\n%s\n\n' "$header" >> "$tmp_file"
+        tail -n +2 "$file" >> "$tmp_file"
+    else
+        printf '%s\n\n' "$header" > "$tmp_file"
+        cat "$file" >> "$tmp_file"
+    fi
     mv "$tmp_file" "$file"
     git add -- "$file"
 }
 
-git diff --cached --name-only -z --diff-filter=AM -- \
-    ':!Loki/__gitversion_autogen.hpp' |
-while IFS= read -r -d '' file; do
+check_file() {
+    file=$1
+
     case "$file" in
-        *.cpp|*.hpp|*.h)
+        *.c|*.cc|*.cpp|*.cxx|*.h|*.hh|*.hpp|*.hxx)
             ;;
         *.py)
             ;;
         *)
-            continue
+            return
             ;;
     esac
 
     abs_file="$repo_root/$file"
-    [ -f "$abs_file" ] || continue
+    [ -f "$abs_file" ] || return
 
     if grep -q 'Copyright (C) 2021  Niels Abildskov' "$abs_file"; then
-        continue
+        return
     fi
 
     case "$file" in
@@ -76,4 +91,16 @@ while IFS= read -r -d '' file; do
             insert_header "$abs_file" "$header_cpp"
             ;;
     esac
-done
+}
+
+while IFS= read -r -d '' file; do
+    check_file "$file"
+done < <(
+    git ls-files -z -- \
+        '*.c' '*.cc' '*.cpp' '*.cxx' \
+        '*.h' '*.hh' '*.hpp' '*.hxx' \
+        '*.py' \
+        ':!Loki/__gitversion_autogen.hpp'
+)
+
+exit "$missing_headers"

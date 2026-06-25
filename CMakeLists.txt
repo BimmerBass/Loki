@@ -60,6 +60,18 @@ set(LOKI_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 file(MAKE_DIRECTORY "${LOKI_GENERATED_DIR}")
 
+if(EXISTS "${LOKI_ROOT_DIR}/.git" AND EXISTS "${LOKI_ROOT_DIR}/.githooks/pre-commit")
+  execute_process(
+    COMMAND git config --local core.hooksPath .githooks
+    WORKING_DIRECTORY "${LOKI_ROOT_DIR}"
+    RESULT_VARIABLE LOKI_GIT_HOOKS_CONFIG_RESULT
+    ERROR_QUIET
+  )
+  if(LOKI_GIT_HOOKS_CONFIG_RESULT)
+    message(WARNING "Could not configure Git hooks. Run `git config --local core.hooksPath .githooks` manually to enable them.")
+  endif()
+endif()
+
 execute_process(
   COMMAND git rev-parse --short=8 HEAD
   WORKING_DIRECTORY "${LOKI_ROOT_DIR}"
