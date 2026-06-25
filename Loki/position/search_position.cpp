@@ -29,11 +29,11 @@ namespace loki::position
 	{
 		auto ptr = new search_position(
 			std::make_unique<game_state>(*state),
-			std::unique_ptr<i_move_generator>(new move_generator(rook_index, bishop_index)));
+			std::unique_ptr<i_move_generator<search_position::position_proxy>>(new move_generator<search_position::position_proxy>(rook_index, bishop_index)));
 		return search_position_t(ptr);
 	}
 
-	search_position::search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::i_move_generator> move_generator)
+	search_position::search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::i_move_generator<position_proxy>> move_generator)
 		: m_state{ std::move(state) }, 
 		m_move_generator{ std::move(move_generator) },
 		m_history{}
@@ -257,21 +257,6 @@ namespace loki::position
 		m_state->full_move_cnt -= me == BLACK ? 1 : 0;
 		m_state->en_passant_sq = metadata.ep_sq;
 	}
-
-	class position_proxy final : public i_position_view
-	{
-	private:
-		const search_position* m_pos;
-	public:
-		position_proxy(const search_position* pos) : m_pos{ pos }
-		{}
-
-		bitboard_t piece_bb(side s, piece p) const { return m_pos->m_piecebbs[s][p]; }
-		bitboard_t all_pieces(side s) const { return m_pos->m_all_pieces[s]; }
-		bitboard_t all_pieces() const { return m_pos->m_all_pieces[WHITE] | m_pos->m_all_pieces[BLACK]; }
-		e_square king_square(side s) const { return m_pos->m_king_squares[s]; }
-		const position::game_state* game_state() const { return m_pos->m_state.get(); }
-	};
 
 	bool search_position::in_check() const
 	{

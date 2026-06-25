@@ -48,7 +48,23 @@ namespace loki::position
 	class search_position final
 	{
 		CHILD_EXCEPTION(position_error, loki_exception);
-		friend class position_proxy;
+
+		class position_proxy final : public i_position_view
+		{
+		private:
+			const search_position* m_pos;
+		public:
+			position_proxy(const search_position* pos) : m_pos{ pos }
+			{
+			}
+
+			bitboard_t piece_bb(side s, piece p) const noexcept { return m_pos->m_piecebbs[s][p]; }
+			bitboard_t all_pieces(side s) const noexcept { return m_pos->m_all_pieces[s]; }
+			bitboard_t all_pieces() const noexcept { return m_pos->m_all_pieces[WHITE] | m_pos->m_all_pieces[BLACK]; }
+			e_square king_square(side s) const noexcept { return m_pos->m_king_squares[s]; }
+			const position::game_state* game_state() const noexcept { return m_pos->m_state.get(); }
+		};
+
 		friend search_position_t make(
 			game_state_t state,
 			movegen::magics::magic_index_t bishop_index,
@@ -61,9 +77,9 @@ namespace loki::position
 
 		position_history<constants::MAX_GAME_MOVES> m_history;
 
-		std::unique_ptr<movegen::i_move_generator> m_move_generator;
+		std::unique_ptr<movegen::i_move_generator<position_proxy>> m_move_generator;
 	private:
-		search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::i_move_generator> move_generator);
+		search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::i_move_generator<position_proxy>> move_generator);
 
 	public:
 		/// <summary>

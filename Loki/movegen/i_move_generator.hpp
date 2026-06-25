@@ -22,9 +22,20 @@
 
 namespace loki::movegen
 {
+	template<class T>
+	concept position_view =
+		requires(const T& pos, side s, piece p)
+	{
+		{ pos.piece_bb(s, p) } noexcept -> std::same_as<position::bitboard_t>;
+		{ pos.all_pieces(s) } noexcept -> std::same_as<position::bitboard_t>;
+		{ pos.all_pieces() } noexcept -> std::same_as<position::bitboard_t>;
+		{ pos.king_square(s) } noexcept -> std::same_as<position::e_square>;
+		{ pos.game_state() } noexcept -> std::same_as<const position::game_state*>;
+	};
+
+	template<position_view pos_t>
 	class i_move_generator
 	{
-		using pos_t = position::i_position_view;
 		using ml_t = move_list;
 	public:
 		/// <summary>

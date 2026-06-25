@@ -76,7 +76,7 @@ namespace loki::position
 	/// <param name="i">The index at which to check</param>
 	/// <returns>true if the i'th bit is 1, false otherwise.</returns>
 	template<typename tIdx>
-	constexpr bool is_one_at(bitboard_t x, tIdx i) noexcept
+	[[nodiscard]] constexpr bool is_one_at(bitboard_t x, tIdx i) noexcept
 	{
 		rt_assert(i >= 0 && i <= 63);
 		return ((x >> i) & 1) != 0;
@@ -87,7 +87,7 @@ namespace loki::position
 	/// </summary>
 	/// <param name="x">The bitboard</param>
 	/// <returns>The number of bits set to 1</returns>
-	constexpr size_t popcount(bitboard_t x) noexcept
+	[[nodiscard]] constexpr size_t popcount(bitboard_t x) noexcept
 	{
 		return static_cast<size_t>(std::popcount<uint64_t>(x));
 	}
@@ -97,14 +97,24 @@ namespace loki::position
 	/// </summary>
 	/// <param name="x">The bitboard</param>
 	/// <returns>index.</returns>
-	std::optional<size_t> scan_lsb(bitboard_t x) noexcept;
+	[[nodiscard]] constexpr std::optional<size_t> scan_lsb(bitboard_t x) noexcept
+	{
+		if (x == 0)
+			return std::nullopt;
+		return static_cast<size_t>(std::countr_zero(x));
+	}
 
 	/// <summary>
 	/// Find the index of the most significant 1-bit.
 	/// </summary>
 	/// <param name="x">The bitboard</param>
 	/// <returns>index.</returns>
-	std::optional<size_t> scan_msb(bitboard_t x) noexcept;
+	[[nodiscard]] constexpr std::optional<size_t> scan_msb(bitboard_t x) noexcept
+	{
+		if (x == 0)
+			return std::nullopt;
+		return static_cast<size_t>(std::bit_width(x) - 1);
+	}
 
 	/// <summary>
 	/// Shift a bitboard in a given direction.
@@ -112,7 +122,7 @@ namespace loki::position
 	/// <typeparam name="D">Direction to shift</typeparam>
 	/// <returns>A new bitboard instance.</returns>
 	template<e_direction D>
-	constexpr bitboard_t shift(bitboard_t bb) noexcept
+	[[nodiscard]] constexpr bitboard_t shift(bitboard_t bb) noexcept
 	{
 		switch (D)
 		{
@@ -127,13 +137,13 @@ namespace loki::position
 	}
 
 	template<e_direction D1, e_direction D2>
-	constexpr bitboard_t shift(bitboard_t bb) noexcept
+	[[nodiscard]] constexpr bitboard_t shift(bitboard_t bb) noexcept
 	{
 		return shift<D1>(shift<D2>(bb));
 	}
 
 	template<e_direction D>
-	constexpr bitboard_t shift_combine(bitboard_t bb) noexcept
+	[[nodiscard]] constexpr bitboard_t shift_combine(bitboard_t bb) noexcept
 	{
 		return shift<D>(bb);
 	}
@@ -146,7 +156,7 @@ namespace loki::position
 	/// <param name="bb">The bitboard</param>
 	/// <returns>A bitboard with the "path" given by D and Ds set to ones.</returns>
 	template<e_direction D1, e_direction D2, e_direction... Ds>
-	constexpr bitboard_t shift_combine(bitboard_t bb) noexcept
+	[[nodiscard]] constexpr bitboard_t shift_combine(bitboard_t bb) noexcept
 	{
 		auto shifted = shift_combine<D1>(bb);
 		return shifted |  shift_combine<D2, Ds...>(shifted);
@@ -160,7 +170,7 @@ namespace loki::position
 	/// <param name="i">Index at which to set the bit to 1</param>
 	/// <returns>a reference to the current object.</returns>
 	template<typename tIdx>
-	constexpr bitboard_t set_one_at(bitboard_t x, tIdx i) noexcept
+	[[nodiscard]] constexpr bitboard_t set_one_at(bitboard_t x, tIdx i) noexcept
 	{
 		rt_assert(i >= 0 && i <= 63);
 		x |= bitboard_t(1) << i;
@@ -175,11 +185,19 @@ namespace loki::position
 	/// <param name="i">The index to toggle</param>
 	/// <returns>a reference to the current object.</returns>
 	template<typename tIdx>
-	constexpr bitboard_t toggle_at(bitboard_t x, tIdx i) noexcept
+	[[nodiscard]] constexpr bitboard_t toggle_at(bitboard_t x, tIdx i) noexcept
 	{
 		rt_assert(i >= 0 && i <= 63);
 		x ^= bitboard_t(1) << i;
 		return x;
+	}
+
+	[[nodiscard]] constexpr size_t pop_lsb_nonzero(bitboard_t& x) noexcept
+	{
+		rt_assert(x != 0);
+		const auto sq = static_cast<size_t>(std::countr_zero(x));
+		x ^= 1ULL << sq;
+		return sq;
 	}
 
 	/// <summary>
@@ -188,19 +206,10 @@ namespace loki::position
 	/// </summary>
 	/// <param name="x">The bitboard</param>
 	/// <returns>An optional size_t, having a value if *this != 0ULL</returns>
-	inline std::optional<size_t> pop_lsb(bitboard_t& x) noexcept
+	[[nodiscard]] constexpr std::optional<size_t> pop_lsb(bitboard_t& x) noexcept
 	{
-		// scan_lsb guarantees the bit is 1 so we can XOR without worrying about setting a 0 to 1..
-		auto i = scan_lsb(x);
-		if (i.has_value())
-			x ^= bitboard_t(1) << i.value();
-		return i;
+		if (x == 0)
+			return std::nullopt;
+		return pop_lsb_nonzero(x);
 	}
-
-
-	/// <summary>
-	/// Print a bitboard to the console.
-	/// </summary>
-	/// <param name="bb">The bitboard to print</param>
-	void print_bitboard(bitboard_t bb);
 }
