@@ -1,19 +1,25 @@
 {
-  "testMate.cpp.test.advancedExecutables": [
-    {
-      "name": "${filename}",
-      "pattern": "build/**/bin/Loki.Tests.exe",
-      "cwd": "${absDirpath}",
-      "catch2": {
-        "testGrouping": {
-          "groupBySource": {
-              "label": "Source: ${sourceRelPath[2:]}",
-              "groupByTags": {
-                "tags": [],
-                "label": "[${tag}]"
-              }
+    "testMate.cpp.test.advancedExecutables": [
+        {
+            "name": "${filename}",
+            "pattern": "build/**/bin/Loki.Tests.exe",
+            "cwd": "${absDirpath}",
+            "catch2": {
+                "testGrouping": {
+                    "groupBySource": {
+                        "label": "Source: ${sourceRelPath[2:]}",
+                        "groupByTags": {
+                            "tags": [
+                                "bitboard",
+                                "movegen",
+                                "position",
+                                "uci"
+                            ],
+                            "label": "[${tag}]"
+                        }
+                    }
+                }
+            }
         }
-      }
-    }
-  ]
+    ]
 }
