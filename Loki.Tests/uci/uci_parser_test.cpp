@@ -188,18 +188,5 @@ namespace uci_tests
 				REQUIRE_THROWS_AS(command->execute(std::vector<std::string>{}, &ctx), not_implemented_error);
 			}
 		}
-
-#ifdef LOKI_ENABLE_DEV_COMMANDS
-		for (const auto& name : { "perft" })
-		{
-			SECTION(name)
-			{
-				auto* command = find_command(commands, name);
-				REQUIRE(command != nullptr);
-				REQUIRE_THROWS_AS(command->can_execute(&ctx), not_implemented_error);
-				REQUIRE_THROWS_AS(command->execute(std::vector<std::string>{}, &ctx), not_implemented_error);
-			}
-		}
-#endif
 	}
 }

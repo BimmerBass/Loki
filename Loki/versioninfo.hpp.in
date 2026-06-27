@@ -1,0 +1,21 @@
+#pragma once
+
+#include "__gitversion_autogen.hpp"
+
+#define VERSION_MAJOR "@PROJECT_VERSION_MAJOR@"
+#define VERSION_MINOR "@PROJECT_VERSION_MINOR@"
+#define VERSION_PATCH "@PROJECT_VERSION_PATCH@"
+
+#ifndef NDEBUG
+#define VERSION_BUILD "-" GIT_CUR_COMMIT "@" GIT_BRANCH
+#else
+#define VERSION_BUILD ""
+#endif
+
+constexpr const char* NAME = "@PROJECT_NAME@";
+constexpr const char* AUTHOR = "Niels Abildskov (BimmerBass)";
+constexpr const char* VERSION =
+	VERSION_MAJOR "."
+	VERSION_MINOR "."
+	VERSION_PATCH
+	VERSION_BUILD;

@@ -29,21 +29,21 @@ namespace movegen_tests
 	public:
 		explicit position_view_fake(const position::game_state* state) : m_state(state) {}
 
-		bitboard_t piece_bb(side, piece) const override { return 0ULL; }
-		bitboard_t all_pieces(side) const override { return 0ULL; }
-		bitboard_t all_pieces() const override { return 0ULL; }
-		e_square king_square(side) const override { return NO_SQ; }
-		const position::game_state* game_state() const override { return m_state; }
+		bitboard_t piece_bb(side, piece) const noexcept override { return 0ULL; }
+		bitboard_t all_pieces(side) const noexcept override { return 0ULL; }
+		bitboard_t all_pieces() const noexcept override { return 0ULL; }
+		e_square king_square(side) const noexcept override { return NO_SQ; }
+		const position::game_state* game_state() const noexcept override { return m_state; }
 
 	private:
 		const position::game_state* m_state;
 	};
 
-	class mock_move_generator final : public i_move_generator
+	class mock_move_generator final : public i_move_generator<position_view_fake>
 	{
 	public:
-		MAKE_CONST_MOCK5(generate_internal, size_t(const position::i_position_view*, move_list*, side, move_type, piece), override);
-		MAKE_CONST_MOCK4(attackers_to_internal, bitboard_t(const position::i_position_view*, e_square, side, piece), override);
+		MAKE_CONST_MOCK5(generate_internal, size_t(const position_view_fake*, move_list*, side, move_type, piece), override);
+		MAKE_CONST_MOCK4(attackers_to_internal, bitboard_t(const position_view_fake*, e_square, side, piece), override);
 	};
 
 	TEST_CASE("i_move_generator wrapper templates forward to the virtual implementation", "[movegen][interface][trompeloeil]")

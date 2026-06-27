@@ -1,98 +1,74 @@
 {
   "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 24,
+    "patch": 0
+  },
   "configurePresets": [
     {
-      "name": "windows-msvc",
-      "displayName": "Windows MSVC",
+      "name": "debug",
+      "displayName": "Debug",
+      "description": "Configure an unoptimized Debug build with dev commands enabled by default.",
       "generator": "Visual Studio 18 2026",
-      "architecture": "x64",
-      "binaryDir": "${sourceDir}/build/windows-msvc",
+      "binaryDir": "${sourceDir}/build/debug",
+      "architecture": {
+        "value": "x64"
+      },
       "cacheVariables": {
-        "LOKI_BUILD_TESTS": "ON",
-        "LOKI_ENABLE_COVERAGE": "OFF"
+        "CMAKE_CONFIGURATION_TYPES": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/debug/install",
+        "LOKI_DEV_COMMANDS": "AUTO"
       }
     },
     {
-      "name": "gcc",
-      "displayName": "GCC",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/gcc",
+      "name": "release",
+      "displayName": "Release",
+      "description": "Configure a speed-optimized Release build with dev commands disabled by default.",
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/build/release",
+      "architecture": {
+        "value": "x64"
+      },
       "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_BUILD_TYPE": "Debug",
-        "LOKI_BUILD_TESTS": "ON",
-        "LOKI_ENABLE_COVERAGE": "OFF"
-      }
-    },
-    {
-      "name": "gcc-release",
-      "displayName": "GCC Release",
-      "inherits": "gcc",
-      "binaryDir": "${sourceDir}/build/gcc-release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "gcc-coverage",
-      "displayName": "GCC Coverage",
-      "inherits": "gcc",
-      "cacheVariables": {
-        "LOKI_ENABLE_COVERAGE": "ON"
+        "CMAKE_CONFIGURATION_TYPES": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/build/release/install",
+        "LOKI_DEV_COMMANDS": "AUTO"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "windows-msvc",
-      "configurePreset": "windows-msvc",
-      "configuration": "Debug",
-      "jobs": 24
+      "name": "debug",
+      "displayName": "Debug",
+      "configurePreset": "debug",
+      "configuration": "Debug"
     },
     {
-      "name": "windows-msvc-release",
-      "configurePreset": "windows-msvc",
-      "configuration": "Release",
-      "jobs": 24
-    },
-    {
-      "name": "gcc",
-      "configurePreset": "gcc",
-      "jobs": 24
-    },
-    {
-      "name": "gcc-release",
-      "configurePreset": "gcc-release",
-      "jobs": 24
-    },
-    {
-      "name": "gcc-coverage",
-      "configurePreset": "gcc-coverage",
-      "jobs": 24
+      "name": "release",
+      "displayName": "Release",
+      "configurePreset": "release",
+      "configuration": "Release"
     }
   ],
   "testPresets": [
     {
-      "name": "windows-msvc",
-      "configurePreset": "windows-msvc",
-      "configuration": "Debug"
+      "name": "debug",
+      "displayName": "Debug",
+      "configurePreset": "debug",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
     },
     {
-      "name": "windows-msvc-release",
-      "configurePreset": "windows-msvc",
-      "configuration": "Release"
-    },
-    {
-      "name": "gcc",
-      "configurePreset": "gcc"
-    },
-    {
-      "name": "gcc-release",
-      "configurePreset": "gcc-release"
-    },
-    {
-      "name": "gcc-coverage",
-      "configurePreset": "gcc-coverage"
+      "name": "release",
+      "displayName": "Release",
+      "configurePreset": "release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }

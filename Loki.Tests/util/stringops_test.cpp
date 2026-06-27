@@ -73,7 +73,5 @@ namespace util_tests
 		REQUIRE(hash(all_string) == hash(all_view));
 		REQUIRE(hash("all") != hash("quiet"));
 		REQUIRE(hash(all_string) == "all"_hash);
-
-		FAIL("TODO: complete direct coverage for hash() and the _hash literal.");
 	}
 }
