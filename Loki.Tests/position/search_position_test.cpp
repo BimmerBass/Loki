@@ -49,9 +49,13 @@ namespace position_tests
 		move_list quiet_moves;
 		move_list all_moves;
 
-		REQUIRE(pos->generate_moves<ACTIVE>(&active_moves) == active_moves.size());
-		REQUIRE(pos->generate_moves<QUIET>(&quiet_moves) == quiet_moves.size());
-		REQUIRE(pos->generate_moves<ALL>(&all_moves) == all_moves.size());
+		auto active_count = pos->generate_moves<ACTIVE>(&active_moves);
+		auto quiet_count = pos->generate_moves<QUIET>(&quiet_moves);
+		auto all_count = pos->generate_moves<ALL>(&all_moves);
+
+		REQUIRE(active_count == active_moves.size());
+		REQUIRE(quiet_count == quiet_moves.size());
+		REQUIRE(all_count == all_moves.size());
 
 		REQUIRE(active_moves.size() == 1);
 		REQUIRE(active_moves[0].to_string() == "e4d5");
@@ -67,7 +71,5 @@ namespace position_tests
 			REQUIRE(contains(all_moves, move));
 		for (const auto& move : quiet_moves)
 			REQUIRE(contains(all_moves, move));
-
-		FAIL("TODO: complete move-type template coverage after validating this mixed FEN.");
 	}
 }

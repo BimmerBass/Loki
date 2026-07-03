@@ -60,9 +60,18 @@ namespace util_tests
 		REQUIRE(uppercase("AbC123") == "ABC123");
 	}
 
-	TEST_CASE("collapse_whitespace still needs direct coverage", "[util][stringops][stub]")
+	TEST_CASE("collapse_whitespace removes redundant whitespace characters", "[util][stringops][stub]")
 	{
-		FAIL("TODO: add direct coverage for collapse_whitespace() now that it is used by the UCI parser.");
+		SECTION("no whitespace")
+		{
+			REQUIRE(collapse_whitespace("uci") == "uci");
+			REQUIRE(collapse_whitespace("") == "");
+		}
+		SECTION("mixed whitespace")
+		{
+			REQUIRE(collapse_whitespace("  go\tdepth\n12  ") == " go depth 12 ");
+			REQUIRE(collapse_whitespace(" \t\n") == " ");
+		}
 	}
 
 	TEST_CASE("hash and _hash agree for equivalent strings", "[util][stringops][stub]")
