@@ -162,12 +162,22 @@ namespace loki::position
 			m_state->en_passant_sq = me == WHITE ? move.to() - 8 : move.to() + 8;
 
 		// update all_pieces bitboards
-		m_all_pieces[WHITE] = std::accumulate(
-			m_piecebbs[WHITE], m_piecebbs[WHITE] + std::size(m_piecebbs[WHITE]), 0ULL,
-			[](bitboard_t acc, uint64_t bb) { return acc | bb; });
-		m_all_pieces[BLACK] = std::accumulate(
-			m_piecebbs[BLACK], m_piecebbs[BLACK] + std::size(m_piecebbs[BLACK]), 0ULL,
-			[](bitboard_t acc, uint64_t bb) { return acc | bb; });
+		// Manually OR each piece bitboard for each side. This avoids the overhead of std::accumulate
+		// and the lambda call per element which was visible in profiling.
+		m_all_pieces[WHITE] =
+			m_piecebbs[WHITE][PAWN] |
+			m_piecebbs[WHITE][KNIGHT] |
+			m_piecebbs[WHITE][BISHOP] |
+			m_piecebbs[WHITE][ROOK] |
+			m_piecebbs[WHITE][QUEEN] |
+			m_piecebbs[WHITE][KING];
+		m_all_pieces[BLACK] =
+			m_piecebbs[BLACK][PAWN] |
+			m_piecebbs[BLACK][KNIGHT] |
+			m_piecebbs[BLACK][BISHOP] |
+			m_piecebbs[BLACK][ROOK] |
+			m_piecebbs[BLACK][QUEEN] |
+			m_piecebbs[BLACK][KING];
 
 		// move counter updates
 		m_state->fifty_move_cnt++;
@@ -198,16 +208,26 @@ namespace loki::position
 		m_state->side_to_move = !m_state->side_to_move;
 		side me = m_state->side_to_move;
 
+		// cache squares and masks to avoid repeated calls
+		auto from_sq = move.from();
+		auto to_sq = move.to();
+		const bitboard_t from_mask = bitboard_t(1) << from_sq;
+		const bitboard_t to_mask = bitboard_t(1) << to_sq;
+
 		// place piece moved at origin and remove from destination.
 		auto dest_piece = move.type() == PROMOTION ? move.promotion_piece() : metadata.moved;
-		m_state->piece_placements[me][move.to()] = NO_PIECE;
-		m_piecebbs[me][dest_piece] = toggle_at(m_piecebbs[me][dest_piece], move.to());
+		m_state->piece_placements[me][to_sq] = NO_PIECE;
+		m_piecebbs[me][dest_piece] = toggle_at(m_piecebbs[me][dest_piece], to_sq);
+		// toggle overall occupancy for the side at destination
+		m_all_pieces[me] ^= to_mask;
 
-		m_state->piece_placements[me][move.from()] = metadata.moved;
-		m_piecebbs[me][metadata.moved] = toggle_at(m_piecebbs[me][metadata.moved], move.from());
+		m_state->piece_placements[me][from_sq] = metadata.moved;
+		m_piecebbs[me][metadata.moved] = toggle_at(m_piecebbs[me][metadata.moved], from_sq);
+		// toggle overall occupancy for the side at origin
+		m_all_pieces[me] ^= from_mask;
 
 		if (metadata.moved == KING)
-			m_king_squares[me] = move.from();
+			m_king_squares[me] = from_sq;
 
 		// handle special moves
 		e_square pawn_sq;
@@ -220,6 +240,7 @@ namespace loki::position
 			pawn_sq = me == WHITE ? metadata.ep_sq.value() - 8 : metadata.ep_sq.value() + 8;
 			m_state->piece_placements[!me][pawn_sq] = PAWN;
 			m_piecebbs[!me][PAWN] = toggle_at(m_piecebbs[!me][PAWN], pawn_sq);
+			m_all_pieces[!me] ^= (bitboard_t(1) << pawn_sq);
 			break;
 		case CASTLING:
 			is_kingside = move.to() > move.from();
@@ -230,10 +251,12 @@ namespace loki::position
 			// remove rook from dest.
 			m_state->piece_placements[me][rk_to.value()] = NO_PIECE;
 			m_piecebbs[me][ROOK] = toggle_at(m_piecebbs[me][ROOK], rk_to.value());
+			m_all_pieces[me] ^= (bitboard_t(1) << rk_to.value());
 
 			// add rook to corner
 			m_state->piece_placements[me][rk_from.value()] = ROOK;
 			m_piecebbs[me][ROOK] = toggle_at(m_piecebbs[me][ROOK], rk_from.value());
+			m_all_pieces[me] ^= (bitboard_t(1) << rk_from.value());
 			break;
 		default: break;
 		}
@@ -241,17 +264,12 @@ namespace loki::position
 		// handle captured piece
 		if (metadata.captured != NO_PIECE)
 		{
-			m_state->piece_placements[!me][move.to()] = metadata.captured;
-			m_piecebbs[!me][metadata.captured] = toggle_at(m_piecebbs[!me][metadata.captured], move.to());
+			m_state->piece_placements[!me][to_sq] = metadata.captured;
+			m_piecebbs[!me][metadata.captured] = toggle_at(m_piecebbs[!me][metadata.captured], to_sq);
+			m_all_pieces[!me] ^= to_mask;
 		}
 
-		// update all_pieces bitboards and lost info
-		m_all_pieces[WHITE] = std::accumulate(
-			m_piecebbs[WHITE], m_piecebbs[WHITE] + std::size(m_piecebbs[WHITE]), 0ULL,
-			[](bitboard_t acc, uint64_t bb) { return acc | bb; });
-		m_all_pieces[BLACK] = std::accumulate(
-			m_piecebbs[BLACK], m_piecebbs[BLACK] + std::size(m_piecebbs[BLACK]), 0ULL,
-			[](bitboard_t acc, uint64_t bb) { return acc | bb; });
+		// update lost info (m_all_pieces updated incrementally above)
 		m_state->castling_rights = metadata.castle_rights;
 		m_state->fifty_move_cnt = metadata.fifty_move;
 		m_state->full_move_cnt -= me == BLACK ? 1 : 0;

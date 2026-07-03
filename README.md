@@ -80,7 +80,6 @@ cmake --preset gcc
 cmake --build --preset gcc
 ctest --preset gcc
 ```
-
 Coverage is available through the CMake presets as well. GCC coverage is wired through `gcovr`, and the Visual Studio path is designed to work with `OpenCppCoverage` when it is installed locally.
 
 The build is split into three CMake files:
@@ -90,6 +89,19 @@ The build is split into three CMake files:
 
 
 The active test suite only targets code under `Loki/`. `Loki.Deprecated/` remains reference material only and is intentionally excluded from the Catch2 migration. The shared perft dataset in `tests/perft.epd` is kept unchanged for integration-style validation.
+
+### Profiling with Visual Studio
+Build a release binary with symbols and dev UCI commands enabled:
+
+```powershell
+cmake --preset release `
+  -DLOKI_DEV_COMMANDS=ON `
+  -DCMAKE_CXX_FLAGS_RELEASE="/Zi /O2 /Ob3 /Oi /Ot /GL /fp:fast /arch:AVX2 /GS- /DNDEBUG" `
+  -DCMAKE_EXE_LINKER_FLAGS_RELEASE="/DEBUG:FULL /LTCG /OPT:REF /OPT:ICF"
+
+cmake --build --preset release
+```
+Open Visual Studio, navigate to the Performance Profiler and run.
 
 ##### TO-DO
 - Try the following additions:
