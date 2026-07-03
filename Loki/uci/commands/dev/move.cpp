@@ -19,6 +19,8 @@
 #include "util/exception.hpp"
 #include "uci/uci_parser.hpp"
 #include "uci/move_parsing.hpp"
+#include "movegen/move_list.hpp"
+#include <algorithm>
 
 #ifdef LOKI_ENABLE_DEV_COMMANDS
 
@@ -46,7 +48,13 @@ public:
 
 		const auto& gs = ctx->engine.position()->make_view()->game_state();
 		auto move = parse_move_token(arguments[0], *gs);
-		if (!ctx->engine.position()->make_move(move))
+		movegen::move_list moves;
+		ctx->engine.position()->generate_moves(&moves);
+		const auto pseudo_legal = std::ranges::find(moves, move);
+		if (pseudo_legal == moves.end())
+			throw_msg<uci_parser::uci_error>("move '{}' is illegal in the current position", move.to_string());
+
+		if (!ctx->engine.position()->make_move(*pseudo_legal))
 			throw_msg<uci_parser::uci_error>("move '{}' is illegal in the current position", move.to_string());
 	}
 	
