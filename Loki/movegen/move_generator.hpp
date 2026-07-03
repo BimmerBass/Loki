@@ -71,6 +71,11 @@ namespace loki::movegen
 		template<side S, move_type MT> void generate_queen(const pos_t* pos, ml_t* ml) const;
 		template<side S, move_type MT> void generate_king(const pos_t* pos, ml_t* ml) const;
 
+		
+		template<side S, position::castling_direction D> 
+		bool castle_is_safe(const pos_t* pos) const;
+		template<side S> bool square_attacked(const pos_t* pos, position::e_square sq) const;
+
 		template<side S, move_type MT>
 		void generate_all(const pos_t* pos, ml_t* ml, piece pt) const;
 
@@ -399,7 +404,7 @@ namespace loki::movegen
 			valid_attacks |= attacks & ~pos->all_pieces(!S);
 
 			// castling
-			if (pos->game_state()->castling_rights.can_castle<S, KINGSIDE>())
+			if (pos->game_state()->castling_rights.can_castle<S, KINGSIDE>() && castle_is_safe<S, KINGSIDE>(pos))
 			{
 				auto f_sq = square(first_rank, FILE_F);
 				auto g_sq = square(first_rank, FILE_G);
@@ -410,7 +415,7 @@ namespace loki::movegen
 					ml->push_back(move(king_sq, S == WHITE ? G1 : G8, CASTLING, KNIGHT));
 				}
 			}
-			if (pos->game_state()->castling_rights.can_castle<S, QUEENSIDE>())
+			if (pos->game_state()->castling_rights.can_castle<S, QUEENSIDE>() && castle_is_safe<S, QUEENSIDE>(pos))
 			{
 				auto b_sq = square(first_rank, FILE_B);
 				auto c_sq = square(first_rank, FILE_C);
@@ -428,6 +433,54 @@ namespace loki::movegen
 			auto to_sq = pop_lsb_nonzero(valid_attacks);
 			ml->push_back(move(king_sq, to_sq));
 		}
+	}
+
+	template<position_view pos_t>
+	template<side S, position::castling_direction D>
+	bool move_generator<pos_t>::castle_is_safe(const pos_t* pos) const
+	{
+		auto king_sq = pos->king_square(S);
+
+		if (square_attacked<!S>(pos, king_sq))
+			return false;
+
+		if constexpr (D == KINGSIDE)
+		{
+			auto f_sq = square(S == WHITE ? RANK_1 : RANK_8, FILE_F);
+			auto g_sq = square(S == WHITE ? RANK_1 : RANK_8, FILE_G);
+			if (square_attacked<!S>(pos, f_sq.value()) || square_attacked<!S>(pos, g_sq.value()))
+				return false;
+		}
+		else if constexpr (D == QUEENSIDE)
+		{
+			auto c_sq = square(S == WHITE ? RANK_1 : RANK_8, FILE_C);
+			auto d_sq = square(S == WHITE ? RANK_1 : RANK_8, FILE_D);
+			auto b_sq = square(S == WHITE ? RANK_1 : RANK_8, FILE_B);
+			if (square_attacked<!S>(pos, c_sq.value()) || square_attacked<!S>(pos, d_sq.value()) || square_attacked<!S>(pos, b_sq.value()))
+				return false;
+		}
+		return true;
+	}
+
+	template<position_view pos_t>
+	template<side S> 
+	bool move_generator<pos_t>::square_attacked(const pos_t* pos, position::e_square sq) const
+	{
+		if (pawn_attackers(pos, sq, S) != 0)
+			return true;
+		if (knight_attackers(pos, sq, S) != 0)
+			return true;
+		if (bishop_attackers(pos, sq, S) != 0)
+			return true;
+		if (rook_attackers(pos, sq, S) != 0)
+			return true;
+		if (queen_attackers(pos, sq, S) != 0)
+			return true;
+		if (king_attackers(pos, sq, S) != 0)
+			return true;
+
+		return false;
+
 	}
 
 
