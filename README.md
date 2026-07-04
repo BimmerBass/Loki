@@ -83,9 +83,9 @@ ctest --preset gcc
 Coverage is available through the CMake presets as well. GCC coverage is wired through `gcovr`, and the Visual Studio path is designed to work with `OpenCppCoverage` when it is installed locally.
 
 The build is split into three CMake files:
-- [`CMakeLists.txt`](/C:/Users/nva/Desktop/Code/Loki/CMakeLists.txt) sets up shared configuration and adds the subdirectories.
-- [`Loki/CMakeLists.txt`](/C:/Users/nva/Desktop/Code/Loki/Loki/CMakeLists.txt) defines the engine target.
-- [`Loki.Tests/CMakeLists.txt`](/C:/Users/nva/Desktop/Code/Loki/Loki.Tests/CMakeLists.txt) defines the test target and test dependencies.
+- [`CMakeLists.txt`](CMakeLists.txt) sets up shared configuration and adds the subdirectories.
+- [`Loki/CMakeLists.txt`](Loki/CMakeLists.txt) defines the engine target.
+- [`Loki.Tests/CMakeLists.txt`](Loki.Tests/CMakeLists.txt) defines the test target and test dependencies.
 
 
 The active test suite only targets code under `Loki/`. `Loki.Deprecated/` remains reference material only and is intentionally excluded from the Catch2 migration. The shared perft dataset in `tests/perft.epd` is kept unchanged for integration-style validation.
