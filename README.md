@@ -103,6 +103,36 @@ cmake --build --preset release
 ```
 Open Visual Studio, navigate to the Performance Profiler and run.
 
+### Perft benchmark
+The Python benchmark TUI runs Loki's dev `perft` command against the shared `tests/perft.epd` dataset. Build a release binary with dev UCI commands enabled before running it:
+
+```powershell
+cmake --preset release -DLOKI_DEV_COMMANDS=ON
+cmake --build --preset release
+```
+
+Set up the Python environment from the repository root:
+
+```powershell
+python -m venv benchmark\.venv
+benchmark\.venv\Scripts\Activate.ps1
+python -m pip install -r benchmark\requirements.txt
+```
+
+Run the benchmark by pointing it at the Loki executable:
+
+```powershell
+python benchmark\perft_benchmark.py --engine .\build\release\bin\Loki.exe --jobs 4
+```
+
+Useful options:
+- `--jobs N` runs up to `N` positions in parallel, using one Loki process per worker.
+- `--limit N` runs only the first `N` positions.
+- `--epd PATH` uses a different EPD dataset instead of `tests/perft.epd`.
+- `--json-out PATH` writes results, warnings, and errors to a JSON file.
+
+For each selected position, the benchmark runs every depth from `1` through the highest depth annotated for that FEN. Missing expected node counts are reported as warnings, while incorrect perft results and runtime errors are grouped by FEN in the final TUI summary.
+
 ##### TO-DO
 - Try the following additions:
     - Singular extensions.
