@@ -2,7 +2,7 @@
 name: Performance Issue
 about: Improve the performance of a part of Loki
 title: ''
-labels: ''
+labels: performance
 assignees: BimmerBass
 
 ---
