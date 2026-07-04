@@ -455,8 +455,7 @@ namespace loki::movegen
 		{
 			auto c_sq = square(S == WHITE ? RANK_1 : RANK_8, FILE_C);
 			auto d_sq = square(S == WHITE ? RANK_1 : RANK_8, FILE_D);
-			auto b_sq = square(S == WHITE ? RANK_1 : RANK_8, FILE_B);
-			if (square_attacked<!S>(pos, c_sq.value()) || square_attacked<!S>(pos, d_sq.value()) || square_attacked<!S>(pos, b_sq.value()))
+			if (square_attacked<!S>(pos, c_sq.value()) || square_attacked<!S>(pos, d_sq.value()))
 				return false;
 		}
 		return true;
