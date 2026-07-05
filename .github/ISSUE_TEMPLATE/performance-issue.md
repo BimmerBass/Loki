@@ -53,6 +53,7 @@ What change or measurement will test the hypothesis?
 
 ## Validation
 
+- [ ] Self-play
 - [ ] Unit tests
 - [ ] Perft/regression tests
 - [ ] Benchmark comparison

@@ -32,6 +32,7 @@ Describe the intended implementation direction, if known.
 
 How should this be checked?
 
+- [ ] Self-play
 - [ ] Unit tests
 - [ ] Perft/regression tests
 - [ ] Benchmarks
