@@ -2,7 +2,7 @@
 name: Engineering Task
 about: Used for non-bug-related tasks that should be done
 title: ''
-labels: ''
+labels: Task
 assignees: BimmerBass
 
 ---
