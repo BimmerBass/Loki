@@ -1,4 +1,9 @@
-# Loki
+<p align="center">
+  <img src="Logo.png" style="width: 30%" />
+</p>
+
+---
+
 Loki is a UCI-compliant chess engine written in C++23. The current source tree is the 4.0.0 rewrite, focused on the modern CMake build, UCI plumbing, position representation, legal move generation, and perft validation.
 
 The last tested pre-rewrite playing release listed here is version 3.5.0, which reached 2490 Elo on CCRL 40/15. The current 4.0.0 code does not yet have the full search and evaluation stack wired back in.
