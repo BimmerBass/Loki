@@ -1,0 +1,25 @@
+name: Unit Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-2025-vs2026
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure
+        run: cmake --preset debug
+
+      - name: Build tests
+        run: cmake --build --preset debug --target Loki.Tests
+
+      - name: Run tests
+        run: ctest --preset debug
