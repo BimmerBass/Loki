@@ -23,19 +23,13 @@ using namespace loki::uci;
 class stop_command final : public uci_command<stop_command>
 {
 public:
-	static std::string name()
-	{
-		return "stop";
-	}
+	static std::string name() { return "stop"; }
+	bool can_execute(const context* ctx) override { return ctx->state == UCI_STATE::Searching; }
 
-	bool can_execute(const context* /**/) override
+	void execute(std::vector<std::string>, context* ctx) override
 	{
-		loki::throw_msg<loki::not_implemented_error>("not implemented");
-	}
-
-	void execute(std::vector<std::string>, context* /**/) override
-	{
-		loki::throw_msg<loki::not_implemented_error>("not implemented");
+		ctx->engine.stop_search();
+		ctx->state = UCI_STATE::Ready;
 	}
 };
 

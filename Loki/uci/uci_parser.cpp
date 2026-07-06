@@ -25,7 +25,7 @@
 namespace loki::uci
 {
 	uci_parser::uci_parser()
-		: context{ loki_engine{}, UCI_STATE::Boot, std::cin, std::cout, std::cerr }, m_handlers{}
+		: context{ UCI_STATE::Boot, std::cin, std::cout, std::cerr }, m_handlers{}
 	{
 		auto handlers = std::move(command_registry::instance().commands());
 		for (auto& handler : handlers)

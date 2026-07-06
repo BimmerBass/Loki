@@ -19,6 +19,7 @@
 #include "position/search_position.hpp"
 #include "movegen/move.hpp"
 #include "movegen/magics/magic_index.hpp"
+#include "search/limits.hpp"
 
 #include <iostream>
 #include <optional>
@@ -26,12 +27,24 @@
 
 namespace loki
 {
-	class loki_engine final
+	class i_loki_engine
+	{
+	public:
+		virtual ~i_loki_engine() = default;
+
+		virtual bool set_position(const position::game_state& state, const std::vector<movegen::move>& moves) = 0;
+		virtual void set_position(position::search_position_t state) = 0;
+		virtual position::search_position_t make_position(const position::game_state& state) const = 0;
+		virtual void search(const search::limits limits) const = 0;
+		virtual void stop_search() = 0;
+		virtual size_t perft(size_t depth, std::ostream& out) const = 0;
+		virtual const position::search_position_t& position() const = 0;
+	};
+
+	class loki_engine final : public i_loki_engine
 	{
 	public:
 		loki_engine();
-
-		//void reset_state();
 
 		/// <summary>
 		/// Set a position a given initial state and a list of moves to be applied
@@ -39,30 +52,44 @@ namespace loki
 		/// <param name="state"></param>
 		/// <param name="moves"></param>
 		/// <returns></returns>
-		bool set_position(const position::game_state& state, const std::vector<movegen::move>& moves);
+		bool set_position(const position::game_state& state, const std::vector<movegen::move>& moves) override;
 
 		/// <summary>
 		/// Set the position given a complete initial state.
 		/// </summary>
 		/// <param name="state"></param>
-		void set_position(position::search_position_t state);
+		void set_position(position::search_position_t state) override;
 
 		/// <summary>
 		/// Make a new position pointer using the already-initialized rook and bishop index.
 		/// </summary>
 		/// <param name="state"></param>
 		/// <returns></returns>
-		position::search_position_t make_position(const position::game_state& state) const;
+		position::search_position_t make_position(const position::game_state& state) const override;
+
+		void search(const search::limits) const override
+		{
+			throw not_implemented_error("");
+		}
+
+		/// <summary>
+		/// Stop the current search. If no search is running, this method does nothing.
+		/// </summary>
+		void stop_search() override
+		{
+			throw not_implemented_error("");
+		}
 
 		[[maybe_unused]]
-		size_t perft(size_t depth, std::ostream& out) const;
+		size_t perft(size_t depth, std::ostream& out) const override;
 
-		const position::search_position_t& position() const
+		const position::search_position_t& position() const override
 		{
 			if (!_position.has_value())
 				throw_msg<loki_exception>("position has not been initialized.");
 			return _position.value();
 		}
+
 	private:
 		const movegen::magics::magic_index_t rook_index;
 		const movegen::magics::magic_index_t bishop_index;

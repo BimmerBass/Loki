@@ -16,12 +16,31 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #pragma once
+#include "movegen/move.hpp"
 
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+#include <tuple>
+#include <vector>
 
 namespace loki::search
 {
 	struct limits
 	{
+		using time_t = std::tuple<uint64_t, uint64_t>; // time, increment
 
+		std::vector<movegen::move> searchmoves{};
+		bool pondering = false;
+
+		std::optional<time_t> wtime = std::nullopt;
+		std::optional<time_t> btime = std::nullopt;
+		std::optional<time_t> movetime = std::nullopt;
+		bool infinite = false;
+
+		std::optional<size_t> movestogo = std::nullopt;
+		std::optional<size_t> depth = std::nullopt;
+		std::optional<size_t> nodes = std::nullopt;
+		std::optional<size_t> mate = std::nullopt;
 	};
 }

@@ -17,6 +17,7 @@
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 #include <iostream>
+#include <memory>
 #include "loki_engine.hpp"
 
 namespace loki::uci
@@ -31,15 +32,23 @@ namespace loki::uci
 
 	class context
 	{
+	private:
+		std::unique_ptr<i_loki_engine> m_owned_engine;
+
 	public:
-		loki_engine engine;
+		i_loki_engine& engine;
 		UCI_STATE state;
 		std::istream& in;
 		std::ostream& out;
 		std::ostream& error;
 
-		context(loki_engine eng, UCI_STATE ctx_state, std::istream& input, std::ostream& output, std::ostream& err)
-			: engine{ eng }, state{ ctx_state }, in{ input }, out{ output }, error{ err }
+		context(UCI_STATE ctx_state, std::istream& input, std::ostream& output, std::ostream& err)
+			: m_owned_engine{ std::make_unique<loki_engine>() }, engine{ *m_owned_engine }, state{ ctx_state }, in{ input }, out{ output }, error{ err }
+		{
+		}
+
+		context(i_loki_engine& eng, UCI_STATE ctx_state, std::istream& input, std::ostream& output, std::ostream& err)
+			: m_owned_engine{ nullptr }, engine{ eng }, state{ ctx_state }, in{ input }, out{ output }, error{ err }
 		{
 		}
 	};
