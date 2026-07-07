@@ -21,9 +21,11 @@ Working standard commands include:
 - `uci`
 - `isready`
 - `position`
+- `ucinewgame`
 - `quit`
 
 The `position` command supports both `position startpos` and `position fen ...`, including a following `moves` list.
+The `ucinewgame` command clears engine-owned state and restores the standard starting position.
 
 Registered placeholder commands currently include:
 - `go`
@@ -32,7 +34,6 @@ Registered placeholder commands currently include:
 - `stop`
 - `ponderhit`
 - `register`
-- `ucinewgame`
 
 Dev-only commands are compiled when `LOKI_ENABLE_DEV_COMMANDS` is set through the `LOKI_DEV_COMMANDS` CMake option:
 - `perft DEPTH`

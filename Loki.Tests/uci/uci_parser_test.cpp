@@ -40,10 +40,16 @@ namespace uci_tests
 	{
 	public:
 		mutable std::optional<search::limits> searched_limits;
+		size_t clear_count = 0;
 
 		bool set_position(const position::game_state& state, const std::vector<movegen::move>& moves) override
 		{
 			return m_engine.set_position(state, moves);
+		}
+
+		void set_position(const position::game_state& state) override
+		{
+			m_engine.set_position(state);
 		}
 
 		void set_position(position::search_position_t state) override
@@ -54,6 +60,12 @@ namespace uci_tests
 		position::search_position_t make_position(const position::game_state& state) const override
 		{
 			return m_engine.make_position(state);
+		}
+
+		void clear() override
+		{
+			++clear_count;
+			m_engine.clear();
 		}
 
 		void search(const search::limits limits) const override
@@ -195,6 +207,34 @@ namespace uci_tests
 		const auto& state = ctx.engine.position()->make_view()->game_state();
 		REQUIRE(loki::position::game_state::to_fen(std::make_shared<loki::position::game_state>(*state))
 			== "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2");
+	}
+
+	TEST_CASE("ucinewgame command clears engine state and sets the starting position", "[uci][commands][ucinewgame]")
+	{
+		const auto commands = command_registry::instance().commands();
+		auto* position = find_command(commands, "position");
+		auto* ucinewgame = find_command(commands, "ucinewgame");
+		REQUIRE(position != nullptr);
+		REQUIRE(ucinewgame != nullptr);
+
+		std::stringstream input;
+		std::stringstream output;
+		std::stringstream error;
+		search_spy_engine engine;
+		context ctx{ engine, UCI_STATE::Boot, input, output, error };
+
+		position->execute(std::vector<std::string>{ "startpos", "moves", "e2e4", "e7e5" }, &ctx);
+		REQUIRE(ctx.state == UCI_STATE::Ready);
+		REQUIRE(ucinewgame->can_execute(&ctx));
+
+		ucinewgame->execute(std::vector<std::string>{}, &ctx);
+
+		REQUIRE(ctx.state == UCI_STATE::Ready);
+		REQUIRE(engine.clear_count == 1);
+
+		const auto& state = ctx.engine.position()->make_view()->game_state();
+		REQUIRE(loki::position::game_state::to_fen(std::make_shared<loki::position::game_state>(*state))
+			== constants::START_FEN);
 	}
 
 	TEST_CASE("go command parses UCI search parameters", "[uci][commands][go]")
@@ -490,7 +530,7 @@ namespace uci_tests
 		loki_engine engine;
 		context ctx{engine, UCI_STATE::Ready, input, output, error};
 
-		for (const auto& name : {"register", "setoption", "ponderhit", "ucinewgame", "debug"})
+		for (const auto& name : {"register", "setoption", "ponderhit", "debug"})
 		{
 			SECTION(name)
 			{

@@ -34,6 +34,17 @@ namespace loki_tests
 		REQUIRE(position::game_state::to_fen(std::make_shared<position::game_state>(*gs)) == constants::START_FEN);
 	}
 
+	TEST_CASE("loki_engine clear removes the active position", "[engine][loki_engine]")
+	{
+		loki_engine engine;
+		auto state = position::game_state::from_fen(constants::START_FEN);
+		REQUIRE(engine.set_position(*state, std::vector<loki::movegen::move>{}));
+
+		engine.clear();
+
+		REQUIRE_THROWS_AS(engine.position(), loki_exception);
+	}
+
 	TEST_CASE("loki_engine applies a short opening move sequence", "[engine][loki_engine]")
 	{
 		loki_engine engine;

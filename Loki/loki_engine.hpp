@@ -33,8 +33,10 @@ namespace loki
 		virtual ~i_loki_engine() = default;
 
 		virtual bool set_position(const position::game_state& state, const std::vector<movegen::move>& moves) = 0;
+		virtual void set_position(const position::game_state& state) = 0;
 		virtual void set_position(position::search_position_t state) = 0;
 		virtual position::search_position_t make_position(const position::game_state& state) const = 0;
+		virtual void clear() = 0;
 		virtual void search(const search::limits limits) const = 0;
 		virtual void stop_search() = 0;
 		virtual size_t perft(size_t depth, std::ostream& out) const = 0;
@@ -58,6 +60,7 @@ namespace loki
 		/// Set the position given a complete initial state.
 		/// </summary>
 		/// <param name="state"></param>
+		void set_position(const position::game_state& state) override;
 		void set_position(position::search_position_t state) override;
 
 		/// <summary>
@@ -66,6 +69,11 @@ namespace loki
 		/// <param name="state"></param>
 		/// <returns></returns>
 		position::search_position_t make_position(const position::game_state& state) const override;
+
+		/// <summary>
+		/// Clear engine-owned state for a new game.
+		/// </summary>
+		void clear() override;
 
 		void search(const search::limits) const override
 		{

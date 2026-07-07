@@ -51,9 +51,21 @@ position::search_position_t loki_engine::make_position(const position::game_stat
 		bishop_index, rook_index);
 }
 
+void loki_engine::set_position(const position::game_state& state)
+{
+	_position = position::make(
+		std::make_shared<position::game_state>(state),
+		bishop_index, rook_index);
+}
+
 void loki_engine::set_position(position::search_position_t state)
 {
 	_position = std::move(state);
+}
+
+void loki_engine::clear()
+{
+	_position = std::nullopt;
 }
 
 [[maybe_unused]]

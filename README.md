@@ -37,7 +37,7 @@ For more detail, see:
 ## Current status
 The active implementation currently includes:
 - UCI command parsing and command registration.
-- Working `uci`, `isready`, `position`, and `quit` commands.
+- Working `uci`, `isready`, `position`, `ucinewgame`, and `quit` commands.
 - FEN parsing and `position startpos` / `position fen ... moves ...` support.
 - Bitboard-based board state.
 - Magic-bitboard sliding attacks.
@@ -46,7 +46,7 @@ The active implementation currently includes:
 - Dev-only commands for perft, move inspection, manual moves, undo, and position printing.
 - Catch2-based tests and a Python Textual perft benchmark runner.
 
-Search and evaluation are not currently implemented in the active `Loki/` tree. Some UCI commands, including `go`, `setoption`, `debug`, `stop`, `ponderhit`, `register`, and `ucinewgame`, are registered placeholders that currently throw `not_implemented_error`.
+Search and evaluation are not currently implemented in the active `Loki/` tree. Some UCI commands, including `go`, `setoption`, `debug`, `stop`, `ponderhit`, and `register`, are registered placeholders that currently throw `not_implemented_error`.
 
 For deeper technical notes, see [Implementation](docs/implementation.md).
 

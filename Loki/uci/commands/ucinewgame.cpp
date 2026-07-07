@@ -16,26 +16,32 @@
 //
 
 #include "uci/command_registry.hpp"
+#include "uci/uci_parser.hpp"
+#include "position/game_state.hpp"
+#include "position/io/game_state_builder.hpp"
+#include "defs.hpp"
 #include "util/exception.hpp"
 
+#include <cassert>
+
 using namespace loki::uci;
+using namespace loki;
 
 class ucinewgame_command final : public uci_command<ucinewgame_command>
 {
 public:
-	static std::string name()
-	{
-		return "ucinewgame";
-	}
+	static std::string name() { return "ucinewgame"; }
+	bool can_execute(const context* ctx) override { return ctx->state == UCI_STATE::Boot || ctx->state == UCI_STATE::Ready; }
 
-	bool can_execute(const context* /**/) override
+	void execute(std::vector<std::string>, context* ctx) override
 	{
-		loki::throw_msg<loki::not_implemented_error>("not implemented");
-	}
+		assert(can_execute(ctx));
 
-	void execute(std::vector<std::string>, context* /**/) override
-	{
-		loki::throw_msg<loki::not_implemented_error>("not implemented");
+		auto gs = position::game_state::from_fen(constants::START_FEN);
+		ctx->engine.clear();
+		ctx->engine.set_position(*gs);
+
+		ctx->state = UCI_STATE::Ready;
 	}
 };
 
