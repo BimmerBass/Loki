@@ -31,20 +31,27 @@ namespace loki::position::io
 		CHILD_EXCEPTION(fen_parsing_error, loki_exception);
 
 		using bb_t = base_builder<std::string, game_state>;
+		struct splitted_fen
+		{
+			splitted_fen() = default;
+			splitted_fen(const std::string& fen);
+
+			std::string piece_placements;
+			char side_to_move;
+			std::string castling_abilities;
+			std::string en_passant_sq;
+			std::string halfmove_clock;
+			std::string fullmove_clock;
+		};
+
 	private:
-		std::string m_piece_placements;
-		char m_side_to_move;
-		std::string m_castling_abilities;
-		std::string m_en_passant_sq;
-		std::string m_halfmove_clock;
-		std::string m_fullmove_clock;
+		splitted_fen sf;
 
 	protected:
 		void reset_internal() override;
 
 	public:
-		game_state_builder() :
-			m_piece_placements{}, m_castling_abilities{}, m_en_passant_sq{}, m_halfmove_clock{}, m_fullmove_clock{}, m_side_to_move{ '\0' }
+		game_state_builder() : sf{}
 		{}
 		virtual ~game_state_builder() {}
 
@@ -56,12 +63,12 @@ namespace loki::position::io
 		virtual base_builder& fullmove_clock() override;
 
 		// Necessary for testing
-		const std::string& get_piece_placements() const { return m_piece_placements; }
-		char get_side_to_move() const { return m_side_to_move; }
-		const std::string& get_castling_abilities() const { return m_castling_abilities; }
-		const std::string& get_en_passant_sq() const { return m_en_passant_sq; }
-		const std::string& get_halfmove_clock() const { return m_halfmove_clock; }
-		const std::string& get_fullmove_clock() const { return m_fullmove_clock; }
+		const std::string& get_piece_placements() const { return sf.piece_placements; }
+		char get_side_to_move() const { return sf.side_to_move; }
+		const std::string& get_castling_abilities() const { return sf.castling_abilities; }
+		const std::string& get_en_passant_sq() const { return sf.en_passant_sq; }
+		const std::string& get_halfmove_clock() const { return sf.halfmove_clock; }
+		const std::string& get_fullmove_clock() const { return sf.fullmove_clock; }
 
 	private:
 		void parse_row(e_rank rank, const std::string& fen_row);

@@ -17,6 +17,7 @@
 //
 #include "game_state.hpp"
 #include "io/fen_string_builder.hpp"
+#include "io/flipped_fen_builder.hpp"
 #include "io/game_state_builder.hpp"
 #include <cassert>
 
@@ -71,5 +72,21 @@ namespace loki::position
 			.halfmove_clock()
 			.fullmove_clock()
 			.get_product();
+	}
+
+	std::string game_state::flip_fen(const std::string& fen)
+	{
+		io::flipped_fen_builder builder;
+		auto sPtr = std::make_shared<std::string>(fen);
+		builder.reset(sPtr, std::make_shared<std::string>(""));
+		auto fenPtr = builder
+			.piece_placements()
+			.side_to_move()
+			.castling_ability()
+			.en_passant_square()
+			.halfmove_clock()
+			.fullmove_clock()
+			.get_product();
+		return *fenPtr;
 	}
 }

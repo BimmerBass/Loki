@@ -38,19 +38,27 @@ namespace loki::position::io
 
 		if (m_resource != nullptr)
 		{
-			std::istringstream iss(*m_resource);
-			if (!(iss >> m_piece_placements >> m_side_to_move >> m_castling_abilities))
-				throw_msg<fen_parsing_error>("invalid fen (missing either pieces, side to move or castling rights): '{}'", *m_resource);
-
-			if (!(iss >> m_en_passant_sq))
-				m_en_passant_sq = "-";
-			if (!(iss >> m_halfmove_clock >> m_fullmove_clock))
-				m_halfmove_clock = m_fullmove_clock = "-";
+			sf = splitted_fen(*m_resource);
 		}
 	}
+
+	game_state_builder::splitted_fen::splitted_fen(const std::string& fen)
+	{
+		std::istringstream iss(fen);
+		if (!(iss >> piece_placements >> side_to_move >> castling_abilities))
+			throw_msg<game_state_builder::fen_parsing_error>(
+				"invalid fen (missing either pieces, side to move or castling rights): '{}'",
+				fen);
+
+		if (!(iss >> en_passant_sq))
+			en_passant_sq = "-";
+		if (!(iss >> halfmove_clock >> fullmove_clock))
+			halfmove_clock = fullmove_clock = "-";
+	}
+
 	game_state_builder::bb_t& game_state_builder::piece_placements()
 	{
-		auto rows = util::split(m_piece_placements, '/');
+		auto rows = util::split(sf.piece_placements, '/');
 		std::reverse(rows.begin(), rows.end());
 		if (rows.size() != NUM_RANKS)
 			throw_msg<fen_parsing_error>("invalid piece placements. the string represents '{}' ranks, expected '{}'", rows.size(), (int)NUM_RANKS);
@@ -64,25 +72,25 @@ namespace loki::position::io
 	}
 	game_state_builder::bb_t& game_state_builder::side_to_move()
 	{
-		if (m_side_to_move == 'w')
+		if (sf.side_to_move == 'w')
 			m_product->side_to_move = WHITE;
-		else if (m_side_to_move == 'b')
+		else if (sf.side_to_move == 'b')
 			m_product->side_to_move = BLACK;
 		else
-			throw_msg<fen_parsing_error>("invalid side to move: '{}'", m_side_to_move);
+			throw_msg<fen_parsing_error>("invalid side to move: '{}'", sf.side_to_move);
 		return *this;
 	}
 	game_state_builder::bb_t& game_state_builder::castling_ability()
 	{
 		m_product->castling_rights = castle_rights();
-		if (m_castling_abilities == "-")
+		if (sf.castling_abilities == "-")
 			return *this;
-		else if (m_castling_abilities.find_first_not_of("KQkq") != std::string::npos)
-			throw_msg<fen_parsing_error>("invalid non-empty castling string: '{}'", m_castling_abilities);
+		else if (sf.castling_abilities.find_first_not_of("KQkq") != std::string::npos)
+			throw_msg<fen_parsing_error>("invalid non-empty castling string: '{}'", sf.castling_abilities);
 		
 		// now "KQkq" are the only possible elements in the string.
 		// and the object in our product is empty.
-		for (auto c : m_castling_abilities)
+		for (auto c : sf.castling_abilities)
 		{
 			switch (c)
 			{
@@ -99,22 +107,22 @@ namespace loki::position::io
 	game_state_builder::bb_t& game_state_builder::en_passant_square()
 	{
 		m_product->en_passant_sq = NO_SQ;
-		if (m_en_passant_sq != "-")
-			m_product->en_passant_sq = square(m_en_passant_sq);
+		if (sf.en_passant_sq != "-")
+			m_product->en_passant_sq = square(sf.en_passant_sq);
 		return *this;
 	}
 	game_state_builder::bb_t& game_state_builder::halfmove_clock()
 	{
 		m_product->fifty_move_cnt = 0;
-		if (m_halfmove_clock != "-")
-			m_product->fifty_move_cnt = std::stoll(m_halfmove_clock);
+		if (sf.halfmove_clock != "-")
+			m_product->fifty_move_cnt = std::stoll(sf.halfmove_clock);
 		return *this;
 	}
 	game_state_builder::bb_t& game_state_builder::fullmove_clock()
 	{
 		m_product->full_move_cnt = 0;
-		if (m_fullmove_clock != "-")
-			m_product->full_move_cnt = std::stoll(m_fullmove_clock);
+		if (sf.fullmove_clock != "-")
+			m_product->full_move_cnt = std::stoll(sf.fullmove_clock);
 		return *this;
 	}
 

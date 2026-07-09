@@ -80,5 +80,12 @@ namespace loki::position
 		/// <param name="fen">The string to parse.</param>
 		/// <returns>A std::shared_ptr to the game_state instance.</returns>
 		static game_state_t from_builder(io::base_builder<std::string, game_state>* bPtr, const std::string& fen);
+
+		/// <summary>
+		/// Flip a FEN vertically to mirror the position.
+		/// </summary>
+		/// <param name="fen">The position to flip.</param>
+		/// <returns>A flipped version of the input</returns>
+		static std::string flip_fen(const std::string& fen);
 	};
 }

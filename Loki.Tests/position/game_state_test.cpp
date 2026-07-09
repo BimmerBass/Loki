@@ -86,4 +86,26 @@ namespace position_tests
 			REQUIRE_THROWS_AS(gs.get_piece(F6, &s), loki_exception);
 		}
 	}
+
+	TEST_CASE_METHOD(game_state_fixture, "game_state::flip_fen returns flipped fen", "[position][game_state]")
+	{
+		SECTION("single fen gets mirrored properly")
+		{
+			auto fen = "r2q1rk1/pp3ppp/1bpN1n2/4n3/1PP1P1b1/P1N2PP1/6BP/R1BQK2R b KQ - 60 30";
+			auto flipped = "r1bqk2r/6bp/p1n2pp1/1pp1p1B1/4N3/1BPn1N2/PP3PPP/R2Q1RK1 w kq - 60 30";
+			REQUIRE(game_state::flip_fen(fen) == flipped);
+		}
+
+		SECTION("fen flipping is symmetrical")
+		{
+			for (const auto& test_case : fens)
+			{
+				SECTION(test_case.fen)
+				{
+					auto flipped_case = game_state::flip_fen(test_case.fen);
+					REQUIRE(game_state::flip_fen(flipped_case) == test_case.fen);
+				}
+			}
+		}
+	}
 }
