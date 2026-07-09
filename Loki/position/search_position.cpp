@@ -70,6 +70,16 @@ namespace loki::position
 		m_king_squares[BLACK] = static_cast<e_square>(scan_lsb(m_piecebbs[BLACK][KING]).value());
 	}
 
+	std::unique_ptr<search_position> search_position::clone() const
+	{
+		auto mg = new move_generator<position_proxy>(m_move_generator->rook_index(), m_move_generator->bishop_index());
+		auto ptr = new search_position(
+			std::make_unique<game_state>(*m_state),
+			std::unique_ptr<i_move_generator<position_proxy>>(mg));
+		
+		return std::unique_ptr<search_position>(ptr);
+	}
+
 	bool search_position::make_move(const move& move)
 	{
 		auto me = m_state->side_to_move;

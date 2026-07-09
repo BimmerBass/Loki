@@ -82,6 +82,11 @@ namespace loki::position
 		search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::i_move_generator<position_proxy>> move_generator);
 
 	public:
+		search_position(const search_position&) = delete;
+		search_position& operator=(const search_position&) = delete;
+		search_position(search_position&&) = default;
+		search_position& operator=(search_position&&) = default;
+		
 		/// <summary>
 		/// Perform a move on the position.
 		/// </summary>
@@ -128,6 +133,13 @@ namespace loki::position
 		/// </summary>
 		/// <returns>true if a move has been made, false if not.</returns>
 		inline bool has_made_move() const noexcept { return m_history.size() > 0; }
+
+		/// <summary>
+		/// Clone the current object for use in a single search_worker.
+		/// Note: This is expensive, so do not use during search.
+		/// </summary>
+		/// <returns>a unique_ptr to a copy of the current object.</returns>
+		std::unique_ptr<search_position> clone() const;
 	};
 
 	extern template size_t search_position::generate_moves<movegen::ALL>(movegen::move_list*) const;

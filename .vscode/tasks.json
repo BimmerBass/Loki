@@ -1,0 +1,70 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Configure Debug",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--preset",
+                "debug"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Configure Release",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--preset",
+                "release"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Loki Debug",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "--preset",
+                "debug",
+                "--target",
+                "Loki"
+            ],
+            "dependsOn": "Configure Debug",
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Loki Release",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "--preset",
+                "release",
+                "--target",
+                "Loki"
+            ],
+            "dependsOn": "Configure Release",
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "Build Loki.Tests Debug",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "--preset",
+                "debug",
+                "--target",
+                "Loki.Tests"
+            ],
+            "dependsOn": "Configure Debug",
+            "group": "build",
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

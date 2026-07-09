@@ -57,7 +57,7 @@ namespace loki::uci
 				}
 				catch (const uci_error& e)
 				{
-					out << "Error: " << e.what() << std::endl;
+					out << "info string error: " << e.what() << std::endl;
 					continue;
 				}
 			}

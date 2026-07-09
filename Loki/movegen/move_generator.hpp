@@ -54,11 +54,16 @@ namespace loki::movegen
 		}
 
 		move_generator(const move_generator&) = delete;
-		move_generator(move_generator&&) = delete;
+		move_generator& operator=(const move_generator&) = delete;
+
+		move_generator(move_generator&&) noexcept = delete;
+		move_generator& operator=(const move_generator&&) noexcept = delete;
 
 		size_t generate_internal(const pos_t* pos, ml_t* ml, side s, move_type mt, piece pt) const;
 		position::bitboard_t attackers_to_internal(const pos_t* pos, position::e_square sq, side s, piece pt) const;
 
+		inline magics::magic_index_t bishop_index() const noexcept override { return m_bishop_index; }
+		inline magics::magic_index_t rook_index() const noexcept override { return m_rook_index; }
 	private:
 		void init_knight_table();
 		void init_king_table();

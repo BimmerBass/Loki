@@ -61,4 +61,7 @@ namespace loki
 	ENABLE_BASE_OPERATORS_ON(piece);
 	ENABLE_INCR_OPERATORS_ON(piece);
 	ENABLE_STRINGIFY(piece, "P", "N", "B", "R", "Q", "K", "NP", "-");
+
+	// score type for readability
+	using score_t = std::int32_t;
 }

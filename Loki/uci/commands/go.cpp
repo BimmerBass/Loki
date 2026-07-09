@@ -34,6 +34,7 @@
 
 using namespace loki;
 using namespace loki::uci;
+using namespace loki::search;
 
 namespace
 {
@@ -108,7 +109,21 @@ public:
 	{
 		assert(can_execute(ctx));
 		auto limits = parse_limits(tokens, ctx);
-		ctx->engine.search(limits);
+		ctx->engine.search(limits, [&](search_result_t result)
+			{
+				ctx->state = UCI_STATE::Ready;
+				if (!result)
+				{
+					try
+					{
+						std::rethrow_exception(result.error());
+					}
+					catch (const std::exception& e)
+					{
+						ctx->out << "info string search failed: " << e.what() << std::endl;
+					}
+				}
+			});
 		ctx->state = UCI_STATE::Searching;
 	}
 

@@ -29,7 +29,7 @@ public:
 	void execute(std::vector<std::string>, context* ctx) override
 	{
 		if (ctx->state == UCI_STATE::Searching)
-			loki::throw_msg<loki::not_implemented_error>("not implemented");
+			ctx->engine.stop_search(true);
 		ctx->state = UCI_STATE::Quit;
 	}
 };

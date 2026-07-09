@@ -80,6 +80,9 @@ namespace loki::movegen
 			return attackers_to_internal(pos, sq, s, PT);
 		}
 
+		virtual magics::magic_index_t rook_index() const noexcept = 0;
+		virtual magics::magic_index_t bishop_index() const noexcept = 0;
+
 		virtual ~i_move_generator() {}
 
 	protected:

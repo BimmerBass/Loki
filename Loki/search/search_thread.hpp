@@ -1,0 +1,115 @@
+// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
+#pragma once
+#include "position/search_position.hpp"
+#include "limits.hpp"
+#include "search_worker.hpp"
+#include <thread>
+#include <mutex>
+#include <functional>
+
+namespace loki::search
+{
+
+	class search_thread
+	{
+	public:
+		CHILD_EXCEPTION(thread_exception, loki_exception);
+
+		using callback_t = std::function<void(search_result_t)>;
+	private:
+		struct search_context
+		{
+			std::unique_ptr<position::search_position> position;
+			const limits limits;
+			std::stop_source stop_source;
+
+			callback_t finished_callback;
+		};
+	public:
+		search_thread(size_t id);
+		~search_thread() {
+			join();
+		}
+
+		// make the thread search
+		virtual void search(
+			const position::search_position_t& position,
+			const limits& limits,
+			callback_t callback)
+		{
+			std::unique_lock<std::mutex> lock(_mtx);
+			if (_context.has_value())
+				throw_msg<thread_exception>("search requested on active thread");
+			_context.emplace(search_context
+				{
+					.position = position->clone(),
+					.limits = limits,
+					.stop_source = std::stop_source{},
+					.finished_callback = std::move(callback)
+				});
+
+			lock.unlock();
+			_cv.notify_one();
+		}
+
+		// Stop the current search.
+		void stop_search()
+		{
+			std::scoped_lock<std::mutex> lock(_mtx);
+			if (!_context.has_value())
+				throw_msg<thread_exception>("stop requested on idle thread");
+			_context.value().stop_source.request_stop();
+		}
+
+		void wait_for_finished_search()
+		{
+			std::unique_lock<std::mutex> lock(_mtx);
+			_cv.wait(lock, [&]() { return _context == std::nullopt; });
+		}
+
+	private:
+		// stop the search and join.
+		void join() noexcept
+		{
+			std::unique_lock<std::mutex> lock(_mtx);
+
+			if (_thread.joinable())
+			{
+				if (_context != std::nullopt)
+					_context.value().stop_source.request_stop();
+
+				_thread.request_stop();
+				lock.unlock();
+
+				_thread.join();
+			}
+		}
+		void thread_loop(std::stop_token token);
+
+		size_t thread_id;
+		std::condition_variable _cv;
+		std::mutex _mtx;
+
+		search_worker _worker;
+		std::optional<search_context> _context;
+
+		// must be declared last!
+		std::jthread _thread;
+	};
+}

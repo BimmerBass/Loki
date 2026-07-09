@@ -20,6 +20,7 @@
 #include "movegen/move.hpp"
 #include "movegen/magics/magic_index.hpp"
 #include "search/limits.hpp"
+#include "search/search_thread.hpp"
 
 #include <iostream>
 #include <optional>
@@ -37,8 +38,8 @@ namespace loki
 		virtual void set_position(position::search_position_t state) = 0;
 		virtual position::search_position_t make_position(const position::game_state& state) const = 0;
 		virtual void clear() = 0;
-		virtual void search(const search::limits limits) const = 0;
-		virtual void stop_search() = 0;
+		virtual void search(const search::limits limits, search::search_thread::callback_t finished_callback) = 0;
+		virtual void stop_search(bool wait = false) = 0;
 		virtual size_t perft(size_t depth, std::ostream& out) const = 0;
 		virtual const position::search_position_t& position() const = 0;
 	};
@@ -75,17 +76,18 @@ namespace loki
 		/// </summary>
 		void clear() override;
 
-		void search(const search::limits) const override
-		{
-			throw not_implemented_error("");
-		}
+		void search(
+			const search::limits limits,
+			search::search_thread::callback_t finished_callback) override;
 
 		/// <summary>
 		/// Stop the current search. If no search is running, this method does nothing.
 		/// </summary>
-		void stop_search() override
+		void stop_search(bool wait = false) override
 		{
-			throw not_implemented_error("");
+			_main_thread.stop_search();
+			if (wait)
+				_main_thread.wait_for_finished_search();
 		}
 
 		[[maybe_unused]]
@@ -103,6 +105,7 @@ namespace loki
 		const movegen::magics::magic_index_t bishop_index;
 
 		std::optional<position::search_position_t> _position;
+		search::search_thread _main_thread;
 	};
 
 }

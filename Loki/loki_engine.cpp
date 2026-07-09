@@ -22,13 +22,14 @@
 
 using namespace loki;
 using namespace movegen;
+using namespace search;
 
 loki_engine::loki_engine()
 	:	_position{ std::nullopt }, 
 		rook_index{ std::make_shared<magics::hardcoded_index<ROOK>>() },
-		bishop_index{ std::make_shared<magics::hardcoded_index<BISHOP>>() }
+		bishop_index{ std::make_shared<magics::hardcoded_index<BISHOP>>() },
+		_main_thread(0)
 { }
-
 
 bool loki_engine::set_position(const position::game_state& state, const std::vector<move>& moves)
 {
@@ -67,6 +68,17 @@ void loki_engine::clear()
 {
 	_position = std::nullopt;
 }
+
+
+void loki_engine::search(
+	const limits limits,
+	search_thread::callback_t finished_callback)
+{
+	if (!_position.has_value())
+		throw_msg<loki_exception>("cannot search without a position object");
+	_main_thread.search(_position.value(), limits, finished_callback);
+}
+
 
 [[maybe_unused]]
 size_t loki_engine::perft(size_t depth, std::ostream& out) const
