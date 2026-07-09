@@ -17,6 +17,7 @@
 
 #include "pch.hpp"
 #include "Loki/movegen/i_move_generator.hpp"
+#include "Loki/movegen/magics/magic_index.hpp"
 
 namespace movegen_tests
 {
@@ -44,6 +45,8 @@ namespace movegen_tests
 	public:
 		MAKE_CONST_MOCK5(generate_internal, size_t(const position_view_fake*, move_list*, side, move_type, piece), override);
 		MAKE_CONST_MOCK4(attackers_to_internal, bitboard_t(const position_view_fake*, e_square, side, piece), override);
+		MAKE_CONST_MOCK0(rook_index, magics::magic_index_t(), noexcept override);
+		MAKE_CONST_MOCK0(bishop_index, magics::magic_index_t(), noexcept override);
 	};
 
 	TEST_CASE("i_move_generator wrapper templates forward to the virtual implementation", "[movegen][interface][trompeloeil]")

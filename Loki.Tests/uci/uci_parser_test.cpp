@@ -68,14 +68,14 @@ namespace uci_tests
 			m_engine.clear();
 		}
 
-		void search(const search::limits limits) const override
+		void search(const search::limits limits, search::search_thread::callback_t) override
 		{
 			searched_limits = limits;
 		}
 
-		void stop_search() override
+		void stop_search(bool wait = false) override
 		{
-			m_engine.stop_search();
+			m_engine.stop_search(wait);
 		}
 
 		size_t perft(size_t depth, std::ostream& out) const override
