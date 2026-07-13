@@ -96,6 +96,13 @@ namespace position_tests
 			REQUIRE(game_state::flip_fen(fen) == flipped);
 		}
 
+		SECTION("en passant rank is mirrored as a digit")
+		{
+			auto fen = "8/8/8/8/8/8/8/8 w - f6 0 1";
+			auto flipped = "8/8/8/8/8/8/8/8 b - f3 0 1";
+			REQUIRE(game_state::flip_fen(fen) == flipped);
+		}
+
 		SECTION("fen flipping is symmetrical")
 		{
 			for (const auto& test_case : fens)

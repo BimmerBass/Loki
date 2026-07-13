@@ -102,7 +102,7 @@ namespace loki::position::io
 		}
 
 		auto en_passant_sq = splitted.en_passant_sq;
-		en_passant_sq[1] = (char)('9' - en_passant_sq[1]);
+		en_passant_sq[1] = (char)('0' + '9' - en_passant_sq[1]);
 		m_product->append(en_passant_sq + " ");
 		return *this;
 	}
