@@ -45,6 +45,7 @@ namespace loki
 	{
 		return s == WHITE ? BLACK : WHITE;
 	}
+
 	ENABLE_STRINGIFY(side, "W", "B", "-");
 
 	enum piece

@@ -28,7 +28,7 @@
 namespace loki::movegen
 {
 
-	template<position_view pos_t>
+	template<position::position_view pos_t>
 	class move_generator final : public i_move_generator<pos_t>
 	{
 		CHILD_EXCEPTION(movegen_exception, loki_exception);

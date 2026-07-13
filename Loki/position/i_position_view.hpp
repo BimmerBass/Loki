@@ -21,14 +21,26 @@
 
 namespace loki::position
 {
+
+	template<class T>
+	concept position_view =
+		requires(const T& pos, side s, piece p)
+	{
+		{ pos.piece_bb(s, p) } noexcept -> std::same_as<position::bitboard_t>;
+		{ pos.all_pieces(s) } noexcept -> std::same_as<position::bitboard_t>;
+		{ pos.all_pieces() } noexcept -> std::same_as<position::bitboard_t>;
+		{ pos.king_square(s) } noexcept -> std::same_as<position::e_square>;
+		{ pos.game_state() } noexcept -> std::same_as<const position::game_state*>;
+	};
+
 	class i_position_view
 	{
 	public:
-		virtual bitboard_t piece_bb(side s, piece p) const = 0;
-		virtual bitboard_t all_pieces(side s) const = 0;
-		virtual bitboard_t all_pieces() const = 0;
-		virtual e_square king_square(side s) const = 0;
-		virtual const game_state* game_state() const = 0;
+		virtual bitboard_t piece_bb(side s, piece p) const noexcept = 0;
+		virtual bitboard_t all_pieces(side s) const noexcept = 0;
+		virtual bitboard_t all_pieces() const noexcept = 0;
+		virtual e_square king_square(side s) const noexcept = 0;
+		virtual const game_state* game_state() const noexcept = 0;
 
 		virtual ~i_position_view() {}
 	};
