@@ -23,24 +23,39 @@
 #include <optional>
 #include <tuple>
 #include <vector>
+#include <chrono>
 
 namespace loki::search
 {
 	struct limits
 	{
-		using time_t = std::tuple<uint64_t, uint64_t>; // time, increment
+		using clock_t = std::chrono::steady_clock;
+		using timepoint_t = clock_t::time_point;
+		using playtime_t = std::tuple<uint64_t, uint64_t>; // time, increment
 
 		std::vector<movegen::move> searchmoves{};
 		bool pondering = false;
 
-		std::optional<time_t> wtime = std::nullopt;
-		std::optional<time_t> btime = std::nullopt;
-		std::optional<time_t> movetime = std::nullopt;
+		std::optional<playtime_t> wtime = std::nullopt;
+		std::optional<playtime_t> btime = std::nullopt;
+		std::optional<playtime_t> movetime = std::nullopt;
 		bool infinite = false;
 
 		std::optional<size_t> movestogo = std::nullopt;
 		std::optional<size_t> depth = std::nullopt;
 		std::optional<size_t> nodes = std::nullopt;
 		std::optional<size_t> mate = std::nullopt;
+
+		timepoint_t start_time = clock_t::now();
+
+		/// <summary> 
+		/// Calculate the time elapsed since the search startes in milliseconds.
+		/// </summary>
+		/// <returns>A std::chrono::milliseconds duration.</returns>
+		std::chrono::milliseconds time_elapsed() const noexcept
+		{
+			auto duration = clock_t::now() - start_time;
+			return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+		}
 	};
 }

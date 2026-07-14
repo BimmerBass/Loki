@@ -73,6 +73,8 @@ namespace loki::position
 	std::unique_ptr<search_position> search_position::clone() const
 	{
 		auto mg = new move_generator<position_proxy>(m_move_generator->rook_index(), m_move_generator->bishop_index());
+		// Do not copy m_history here. Its size defines the search ply, so every
+		// cloned search position must begin with an empty history at ply zero.
 		auto ptr = new search_position(
 			std::make_unique<game_state>(*m_state),
 			std::unique_ptr<i_move_generator<position_proxy>>(mg));

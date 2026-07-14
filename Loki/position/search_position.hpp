@@ -117,6 +117,15 @@ namespace loki::position
 		[[maybe_unused]] size_t generate_moves(movegen::move_list* ml) const;
 
 		/// <summary>
+		/// Get the side to move.
+		/// </summary>
+		/// <returns>The side to move...</returns>
+		inline side side_to_move() const noexcept
+		{
+			return m_state->side_to_move;
+		}
+
+		/// <summary>
 		/// Represent the position as a FEN.
 		/// Note that this is *very* inefficient and should never be executed along a critical path!
 		/// </summary>
@@ -139,6 +148,12 @@ namespace loki::position
 		/// </summary>
 		/// <returns>true if a move has been made, false if not.</returns>
 		inline bool has_made_move() const noexcept { return m_history.size() > 0; }
+
+		/// <summary>
+		/// Get the current ply relative to the root of the search.
+		/// </summary>
+		/// <returns>The number of moves made since this search position was cloned.</returns>
+		[[nodiscard]] inline ply_t ply() const noexcept { return (ply_t)m_history.size(); }
 
 		/// <summary>
 		/// Clone the current object for use in a single search_worker.

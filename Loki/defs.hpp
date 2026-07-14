@@ -27,15 +27,31 @@
 // This file contains the most common type and constant definitions in Loki.
 namespace loki
 {
+	// score and depth type for readability
+	using score_t = std::int32_t;
+	using depth_t = std::size_t;
+
 	namespace constants
 	{
 		constexpr const char* START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-		
+
 		constexpr size_t MAX_POSITION_MOVES = 256; // TODO: Remove this restriction
 		constexpr size_t MAX_GAME_MOVES = 1024; // TODO: Remove this restriction
+
+		constexpr score_t SCORE_INF = 1'000'000;
+		constexpr score_t SCORE_MATE = SCORE_INF - 1'000;
+		constexpr depth_t MAX_DEPTH = 100;
 	}
-	
-	enum side {
+
+	enum ply_t : depth_t
+	{
+		ROOT_PLY = 0,
+		MAX_PLY = constants::MAX_GAME_MOVES
+	};
+	ENABLE_BASE_OPERATORS_ON(ply_t);
+
+	enum side
+	{
 		WHITE = 0,
 		BLACK,
 		NUM_SIDES
@@ -62,7 +78,4 @@ namespace loki
 	ENABLE_BASE_OPERATORS_ON(piece);
 	ENABLE_INCR_OPERATORS_ON(piece);
 	ENABLE_STRINGIFY(piece, "P", "N", "B", "R", "Q", "K", "NP", "-");
-
-	// score type for readability
-	using score_t = std::int32_t;
 }

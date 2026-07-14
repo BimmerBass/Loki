@@ -53,7 +53,14 @@ namespace loki::evaluation
 			trace.score = evaluate<S>(trace, position);
 			return trace;
 		}
+		
+		constexpr score_t to_centipawns(score_t raw) const noexcept
+		{
+			using layout_t = term_layout<evaluation_term::MATERIAL>;
+			const auto pawn_value = _features[layout_t::id<PAWN>()];
 
+			return static_cast<score_t>(raw * 100 / pawn_value);
+		}
 
 	private:
 
