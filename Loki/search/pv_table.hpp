@@ -29,7 +29,7 @@ namespace loki::search
 	class pv_table
 	{
 	private:
-		inline static constexpr size_t current_ply_pv_length = MAX_PLY - P;
+		inline static constexpr size_t current_ply_pv_length = constants::MAX_DEPTH - P;
 
 		pv_table<P + 1> _successor;
 		std::array<movegen::move, current_ply_pv_length> _pv;
@@ -89,8 +89,8 @@ namespace loki::search
 			return _successor.get_pv(ply);
 		}
 
-		inline auto cbegin() noexcept { return _pv.cbegin(); }
-		inline auto cend() noexcept { return _pv.begin() + _size; }
+		inline auto begin() noexcept { return _pv.begin(); }
+		inline auto end() noexcept { return _pv.begin() + _size; }
 	};
 
 	template<>
@@ -104,10 +104,10 @@ namespace loki::search
 	public:
 		inline void update_pv(ply_t, movegen::move) noexcept {}
 		inline void clear() noexcept {}
-		inline void reset_for_ply(ply_t) {}
+		inline void reset_for_ply(depth_t) {}
 
-		inline auto cbegin() noexcept { return _pv.cbegin(); }
-		inline auto cend() noexcept { return _pv.cbegin(); }
+		inline auto begin() noexcept { return _pv.begin(); }
+		inline auto end() noexcept { return _pv.begin(); }
 
 		std::vector<movegen::move> get_pv(ply_t) const noexcept { return std::vector<movegen::move>{}; }
 	};
