@@ -87,8 +87,6 @@ namespace Eval {
 			// Safety points from king pawn scoring.
 			Score king_pawn_safety[2];
 		};
-		// The constant ZeroData is used to quickly clear our evaluation data.
-		const EvalData ZeroData;
 		EvalData Data;
 
 		// Scores for middlegame and endgame respectively

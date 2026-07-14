@@ -252,6 +252,8 @@ namespace Eval {
 	/// </summary>
 	template<EvalType T>
 	void Evaluate<T>::clear() {
+		// The constant ZeroData is used to quickly clear our evaluation data.
+		static const EvalData ZeroData;
 		// Clear the EvalData.
 		Data = ZeroData;
 

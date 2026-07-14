@@ -84,7 +84,7 @@ class SearchThread_t {
 public:
 	GameState_t* pos = new GameState_t;
 	SearchInfo_t* info = new SearchInfo_t;
-	Eval::Evaluate<NORMAL>* eval = new Eval::Evaluate<NORMAL>;
+	Eval::Evaluate<NORMAL>* eval = new Eval::Evaluate<NORMAL>();
 
 	int thread_id = 0;
 
