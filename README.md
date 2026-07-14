@@ -3,6 +3,7 @@
 </p>
 
 ---
+[![Unit Tests](https://github.com/BimmerBass/Loki/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/BimmerBass/Loki/actions/workflows/unit-tests.yml)
 
 Loki is a UCI-compliant chess engine written in C++23. The current source tree is the 4.0.0 rewrite, focused on the modern CMake build, UCI plumbing, position representation, legal move generation, and perft validation.
 
