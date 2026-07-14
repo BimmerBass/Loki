@@ -151,9 +151,9 @@ namespace evaluation_tests
 				const auto position = make(
 					game_state::from_fen(fen), bishop_index, rook_index);
 				const auto position_view = position->make_view();
-				const auto expected = expected_trace_counts(*position_view);
+				const auto expected = expected_trace_counts(position_view);
 
-				require_trace_contract(evaluator, *position_view, expected);
+				require_trace_contract(evaluator, position_view, expected);
 			}
 		}
 	}

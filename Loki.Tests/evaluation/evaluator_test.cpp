@@ -57,8 +57,8 @@ namespace evaluation_tests
 			const auto position_view = position->make_view();
 			const auto flipped_position_view = flipped_position->make_view();
 
-			const auto score = eval_runtime(evaluator, *position_view);
-			const auto flipped_score = eval_runtime(evaluator, *flipped_position_view);
+			const auto score = eval_runtime(evaluator, position_view);
+			const auto flipped_score = eval_runtime(evaluator, flipped_position_view);
 
 			REQUIRE(score == flipped_score);
 			has_non_zero_evaluation |= score != 0 || flipped_score != 0;

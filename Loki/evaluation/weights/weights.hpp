@@ -39,7 +39,7 @@ namespace loki::evaluation
 	class i_weight_source
 	{
 	public:
-		~i_weight_source() = default;
+		virtual ~i_weight_source() = default;
 
 		[[nodiscard]]
 		virtual weights load() const = 0;

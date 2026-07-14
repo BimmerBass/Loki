@@ -46,7 +46,8 @@ public:
 		if (arguments.empty())
 			throw_msg<uci_parser::uci_error>("move cannot have zero arguments");
 
-		const auto& gs = ctx->engine.position()->make_view()->game_state();
+		const auto view = ctx->engine.position()->make_view();
+		const auto* gs = view.game_state();
 		auto move = parse_move_token(arguments[0], *gs);
 		movegen::move_list moves;
 		ctx->engine.position()->generate_moves(&moves);

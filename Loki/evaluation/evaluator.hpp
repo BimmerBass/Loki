@@ -34,7 +34,7 @@ namespace loki::evaluation
 			: _features{ builtin_weight_source::defaults() }
 		{}
 
-		explicit evaluator(i_weight_source src)
+		explicit evaluator(const i_weight_source& src)
 			: _features{ src.load() }
 		{}
 

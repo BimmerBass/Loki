@@ -30,7 +30,8 @@ namespace loki_tests
 		auto state = position::game_state::from_fen(constants::START_FEN);
 		REQUIRE(engine.set_position(*state, std::vector<loki::movegen::move>{}));
 
-		const auto& gs = engine.position()->make_view()->game_state();
+		const auto view = engine.position()->make_view();
+		const auto* gs = view.game_state();
 		REQUIRE(position::game_state::to_fen(std::make_shared<position::game_state>(*gs)) == constants::START_FEN);
 	}
 
@@ -56,7 +57,8 @@ namespace loki_tests
 
 		REQUIRE(engine.set_position(*state, moves));
 
-		const auto& gs = engine.position()->make_view()->game_state();
+		const auto view = engine.position()->make_view();
+		const auto* gs = view.game_state();
 		const auto result = position::game_state::to_fen(std::make_shared<position::game_state>(*gs));
 		REQUIRE(result == "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2");
 	}

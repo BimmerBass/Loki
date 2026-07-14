@@ -204,7 +204,8 @@ namespace uci_tests
 		position->execute(std::vector<std::string>{"startpos", "moves", "e2e4", "e7e5"}, &ctx);
 		REQUIRE(ctx.state == UCI_STATE::Ready);
 
-		const auto& state = ctx.engine.position()->make_view()->game_state();
+		const auto view = ctx.engine.position()->make_view();
+		const auto* state = view.game_state();
 		REQUIRE(loki::position::game_state::to_fen(std::make_shared<loki::position::game_state>(*state))
 			== "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2");
 	}
@@ -232,7 +233,8 @@ namespace uci_tests
 		REQUIRE(ctx.state == UCI_STATE::Ready);
 		REQUIRE(engine.clear_count == 1);
 
-		const auto& state = ctx.engine.position()->make_view()->game_state();
+		const auto view = ctx.engine.position()->make_view();
+		const auto* state = view.game_state();
 		REQUIRE(loki::position::game_state::to_fen(std::make_shared<loki::position::game_state>(*state))
 			== constants::START_FEN);
 	}

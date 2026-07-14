@@ -128,11 +128,11 @@ namespace loki::position
 		/// </summary>
 		/// <returns></returns>
 		[[nodiscard]] 
-		std::unique_ptr<position_proxy> make_view() const&
+		position_proxy make_view() const& noexcept
 		{
-			return std::make_unique<position_proxy>(this);
+			return position_proxy(this);
 		}
-		std::unique_ptr<position_proxy> make_view() const&& = delete;
+		position_proxy make_view() const&& = delete;
 
 		/// <summary>
 		/// Find out if a move has been made on this object by checking for emptiness on the history stack.

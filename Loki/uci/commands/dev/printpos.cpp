@@ -34,8 +34,8 @@ public:
 	{
 		ctx->out << "POSITION: " << std::endl;
 
-		const auto& view = ctx->engine.position()->make_view();
-		const auto& game_state = view->game_state();
+		const auto view = ctx->engine.position()->make_view();
+		const auto* game_state = view.game_state();
 		const auto& fen = position::game_state::to_fen(std::make_shared<position::game_state>(*game_state));
 
 		for (auto rank = position::RANK_8; rank >= position::RANK_1; rank--)

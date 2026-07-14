@@ -94,9 +94,10 @@ public:
 			// move parsing
 			if (const auto moves_it = std::find(tokens.begin(), tokens.end(), "moves"); moves_it != tokens.end())
 			{
+				const auto view = new_pos->make_view();
 				for (auto move_it = std::next(moves_it); move_it != tokens.end(); ++move_it)
 				{
-					const auto state = new_pos->make_view()->game_state();
+					const auto state = view.game_state();
 					auto move = parse_move_token(*move_it, *state);
 					if (!new_pos->make_move(move))
 						throw uci_parser::uci_error("move sequence contains one or more invalid moves");

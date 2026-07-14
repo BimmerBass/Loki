@@ -232,7 +232,8 @@ private:
 		if (it == end || is_go_option(*it))
 			throw_msg<uci_parser::uci_error>("searchmoves needs at least one move.");
 
-		const auto* state = ctx->engine.position()->make_view()->game_state();
+		const auto view = ctx->engine.position()->make_view();
+		const auto* state = view.game_state();
 		movegen::move_list legal_moves;
 		ctx->engine.position()->generate_moves(&legal_moves);
 
