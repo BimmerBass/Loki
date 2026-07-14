@@ -47,9 +47,10 @@ namespace loki::position
 	/// </summary>
 	class search_position final
 	{
+	public:
 		CHILD_EXCEPTION(position_error, loki_exception);
 
-		class position_proxy final : public i_position_view
+		class position_proxy final
 		{
 		private:
 			const search_position* m_pos;
@@ -65,11 +66,12 @@ namespace loki::position
 			const position::game_state* game_state() const noexcept { return m_pos->m_state.get(); }
 		};
 
+	private:
 		friend search_position_t make(
 			game_state_t state,
 			movegen::magics::magic_index_t bishop_index,
 			movegen::magics::magic_index_t rook_index);
-	private:
+		
 		std::unique_ptr<game_state> m_state;
 		bitboard_t m_piecebbs[NUM_SIDES][NUM_PIECES];
 		bitboard_t m_all_pieces[NUM_SIDES];
@@ -125,8 +127,12 @@ namespace loki::position
 		/// Create a position view to read data from the object.
 		/// </summary>
 		/// <returns></returns>
-		std::unique_ptr<i_position_view> make_view() const&;
-		std::unique_ptr<i_position_view> make_view() const&& = delete;
+		[[nodiscard]] 
+		std::unique_ptr<position_proxy> make_view() const&
+		{
+			return std::make_unique<position_proxy>(this);
+		}
+		std::unique_ptr<position_proxy> make_view() const&& = delete;
 
 		/// <summary>
 		/// Find out if a move has been made on this object by checking for emptiness on the history stack.

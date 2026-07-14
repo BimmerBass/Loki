@@ -302,9 +302,4 @@ namespace loki::position
 	template size_t search_position::generate_moves<movegen::ALL>(movegen::move_list*) const;
 	template size_t search_position::generate_moves<movegen::ACTIVE>(movegen::move_list*) const;
 	template size_t search_position::generate_moves<movegen::QUIET>(movegen::move_list*) const;
-
-	std::unique_ptr<i_position_view> search_position::make_view() const&
-	{
-		return std::make_unique<position_proxy>(this);
-	}
 }

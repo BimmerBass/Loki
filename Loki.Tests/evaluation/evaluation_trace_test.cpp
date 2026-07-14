@@ -32,7 +32,7 @@ namespace evaluation_tests
 	template<piece P> requires (P < KING)
 	void count_material_feature(
 		side_feature_counts& counts,
-		const i_position_view& position)
+		const search_position::position_proxy& position)
 	{
 		using layout_t = term_layout<evaluation_term::MATERIAL>;
 		constexpr auto id = layout_t::id<P>();
@@ -42,7 +42,7 @@ namespace evaluation_tests
 
 	void count_material_features(
 		side_feature_counts& counts,
-		const i_position_view& position)
+		const search_position::position_proxy& position)
 	{
 		count_material_feature<PAWN>(counts, position);
 		count_material_feature<KNIGHT>(counts, position);
@@ -51,7 +51,7 @@ namespace evaluation_tests
 		count_material_feature<QUEEN>(counts, position);
 	}
 
-	side_feature_counts expected_trace_counts(const i_position_view& position)
+	side_feature_counts expected_trace_counts(const search_position::position_proxy& position)
 	{
 		side_feature_counts counts{};
 		count_material_features(counts, position);
@@ -59,8 +59,8 @@ namespace evaluation_tests
 	}
 
 	feature_trace evaluate_trace_for_side_to_move(
-		const evaluator<i_position_view>& evaluator,
-		const i_position_view& position)
+		const evaluator<search_position::position_proxy>& evaluator,
+		const search_position::position_proxy& position)
 	{
 		return position.game_state()->side_to_move == WHITE
 			? evaluator.evaluate_trace<WHITE>(position)
@@ -68,8 +68,8 @@ namespace evaluation_tests
 	}
 
 	score_t evaluate_for_side_to_move(
-		const evaluator<i_position_view>& evaluator,
-		const i_position_view& position)
+		const evaluator<search_position::position_proxy>& evaluator,
+		const search_position::position_proxy& position)
 	{
 		return position.game_state()->side_to_move == WHITE
 			? evaluator.evaluate<WHITE>(position)
@@ -116,8 +116,8 @@ namespace evaluation_tests
 	}
 
 	void require_trace_contract(
-		const evaluator<i_position_view>& evaluator,
-		const i_position_view& position,
+		const evaluator<search_position::position_proxy>& evaluator,
+		const search_position::position_proxy& position,
 		const side_feature_counts& expected)
 	{
 		const auto trace = evaluate_trace_for_side_to_move(evaluator, position);
@@ -136,7 +136,7 @@ namespace evaluation_tests
 	{
 		const auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
 		const auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
-		const evaluator<i_position_view> evaluator;
+		const evaluator<search_position::position_proxy> evaluator;
 
 		for (const auto& test_case : fens)
 		{

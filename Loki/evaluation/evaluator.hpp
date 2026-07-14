@@ -18,7 +18,7 @@
 #pragma once
 #include "terms.hpp"
 #include "trace.hpp"
-#include "position/i_position_view.hpp"
+#include "position/position_view.hpp"
 #include "weights/builtin_weight_source.hpp"
 #include <array>
 

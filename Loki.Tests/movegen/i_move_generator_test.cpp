@@ -25,16 +25,16 @@ namespace movegen_tests
 	using namespace loki::movegen;
 	using namespace loki::position;
 
-	class position_view_fake final : public position::i_position_view
+	class position_view_fake final
 	{
 	public:
 		explicit position_view_fake(const position::game_state* state) : m_state(state) {}
 
-		bitboard_t piece_bb(side, piece) const noexcept override { return 0ULL; }
-		bitboard_t all_pieces(side) const noexcept override { return 0ULL; }
-		bitboard_t all_pieces() const noexcept override { return 0ULL; }
-		e_square king_square(side) const noexcept override { return NO_SQ; }
-		const position::game_state* game_state() const noexcept override { return m_state; }
+		bitboard_t piece_bb(side, piece) const noexcept { return 0ULL; }
+		bitboard_t all_pieces(side) const noexcept { return 0ULL; }
+		bitboard_t all_pieces() const noexcept { return 0ULL; }
+		e_square king_square(side) const noexcept { return NO_SQ; }
+		const position::game_state* game_state() const noexcept { return m_state; }
 
 	private:
 		const position::game_state* m_state;

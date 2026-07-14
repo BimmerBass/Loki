@@ -16,7 +16,7 @@
 //
 
 #pragma once
-#include "position/i_position_view.hpp"
+#include "position/position_view.hpp"
 #include "position/game_state.hpp"
 #include "magics/magic_index.hpp"
 #include "move_list.hpp"

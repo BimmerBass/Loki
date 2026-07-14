@@ -28,7 +28,7 @@ namespace evaluation_tests
 	using namespace loki::movegen::magics;
 	using namespace loki::position;
 
-	score_t eval_runtime(const evaluator<i_position_view>& evaluator, const i_position_view& position)
+	score_t eval_runtime(const evaluator<search_position::position_proxy>& evaluator, const search_position::position_proxy& position)
 	{
 		return position.game_state()->side_to_move == WHITE
 			? evaluator.evaluate<WHITE>(position)
@@ -41,7 +41,7 @@ namespace evaluation_tests
 	{
 		const auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
 		const auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
-		const evaluator<i_position_view> evaluator;
+		const evaluator<search_position::position_proxy> evaluator;
 		bool has_non_zero_evaluation = false;
 
 		for (const auto& test_case : fens)
