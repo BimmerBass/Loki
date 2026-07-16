@@ -39,7 +39,7 @@ namespace uci_tests
 		sink.info(8, cp_score{ 42 }, 12, std::chrono::milliseconds{ 345 }, 6789, 19678, pv);
 
 		REQUIRE(output.str() ==
-			"info depth 8 score cp seldepth 12 time 345 nodes 6789 nps 19678 pv e2e4 e7e5\n");
+			"info depth 8 score cp 42 seldepth 12 time 345 nodes 6789 nps 19678 pv e2e4 e7e5\n");
 	}
 
 	TEST_CASE("uci sink writes mate search information through its context", "[uci][sink]")
@@ -55,7 +55,7 @@ namespace uci_tests
 			std::chrono::milliseconds{ 345 }, 6789, 19678, {});
 
 		REQUIRE(output.str() ==
-			"info depth 8 score mate seldepth 12 time 345 nodes 6789 nps 19678\n");
+			"info depth 8 score mate 2 seldepth 12 time 345 nodes 6789 nps 19678\n");
 	}
 
 	TEST_CASE("uci sink writes best and null moves through its context", "[uci][sink]")

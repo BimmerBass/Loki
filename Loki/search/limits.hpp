@@ -70,7 +70,7 @@ namespace loki::search
 		{
 			if (stop_source.has_value())
 			{
-				if (!infinite && (nodes_searched & 1024) == 0)
+				if (!infinite && (nodes_searched & 1023) == 0)
 					check_time();
 
 				if (nodes && nodes_searched >= *nodes)
