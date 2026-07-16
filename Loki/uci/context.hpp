@@ -16,6 +16,7 @@
 //	You should have received a copy of the GNU General Public License
 //	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
+#include <atomic>
 #include <iostream>
 #include <memory>
 #include "loki_engine.hpp"
@@ -37,7 +38,7 @@ namespace loki::uci
 
 	public:
 		i_loki_engine& engine;
-		UCI_STATE state;
+		std::atomic<UCI_STATE> state;
 		std::istream& in;
 		std::ostream& out;
 		std::ostream& error;

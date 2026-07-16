@@ -15,22 +15,31 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
-#include "uci/command_registry.hpp"
-#include "util/exception.hpp"
+#pragma once
 
-using namespace loki::uci;
+#include "search/info_sink.hpp"
+#include "uci/context.hpp"
 
-class quit_command final : public uci_command<quit_command>
+namespace loki::uci
 {
-public:
-	static std::string name() { return "quit"; }
-	bool can_execute(const context*) override { return true; }
-
-	void execute(std::vector<std::string>, context* ctx) override
+	class uci_sink final : public search::info_sink
 	{
-		ctx->engine.stop_search(true);
-		ctx->state.store(UCI_STATE::Quit);
-	}
-};
+	public:
+		explicit uci_sink(context& ctx) noexcept : m_context{ ctx }
+		{}
 
-static command_registration<quit_command> reg;
+		void info(
+			size_t depth,
+			search_score_t score,
+			size_t seldepth,
+			std::chrono::milliseconds time,
+			size_t nodes,
+			size_t nps,
+			std::vector<movegen::move> pv) override;
+
+		void bestmove(movegen::move move) override;
+
+	private:
+		context& m_context;
+	};
+}

@@ -35,8 +35,9 @@ namespace loki::position
 
 	search_position::search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::i_move_generator<position_proxy>> move_generator)
 		: m_state{ std::move(state) }, 
-		m_move_generator{ std::move(move_generator) },
-		m_history{}
+		m_history{},
+		m_ply{ ROOT_PLY },
+		m_move_generator{ std::move(move_generator) }
 	{
 		// Fill m_piecebbs
 		for (auto side = WHITE; side <= BLACK; side++)
@@ -73,11 +74,11 @@ namespace loki::position
 	std::unique_ptr<search_position> search_position::clone() const
 	{
 		auto mg = new move_generator<position_proxy>(m_move_generator->rook_index(), m_move_generator->bishop_index());
-		// Do not copy m_history here. Its size defines the search ply, so every
-		// cloned search position must begin with an empty history at ply zero.
 		auto ptr = new search_position(
 			std::make_unique<game_state>(*m_state),
 			std::unique_ptr<i_move_generator<position_proxy>>(mg));
+		ptr->m_history = m_history;
+		ptr->m_ply = m_ply;
 		
 		return std::unique_ptr<search_position>(ptr);
 	}
@@ -99,6 +100,7 @@ namespace loki::position
 			m_state->castling_rights.get(),
 			m_state->fifty_move_cnt,
 			m_state->en_passant_sq);
+		m_ply += 1;
 
 		// remove from origin
 		m_piecebbs[me][piece_moved] = toggle_at(m_piecebbs[me][piece_moved], move.from());
@@ -214,6 +216,8 @@ namespace loki::position
 	void search_position::undo_last_move()
 	{
 		const auto& [raw_move, metadata] = m_history.pop();
+		if (m_ply > ROOT_PLY)
+			m_ply -= 1;
 		move move = raw_move;
 		
 		// toggle side to move
@@ -294,11 +298,42 @@ namespace loki::position
 		return m_move_generator->attackers_to(&proxy, m_king_squares[m_state->side_to_move], !m_state->side_to_move);
 	}
 
+	bool search_position::is_draw() const noexcept
+	{
+		return m_state->fifty_move_cnt >= 100 || is_material_draw() || is_repetition();
+	}
+
+	bool search_position::is_material_draw() const noexcept
+	{
+		return false;
+	}
+
+	bool search_position::is_repetition() const noexcept
+	{
+		return false;
+	}
+
 	template<move_type MT>
 	[[maybe_unused]] size_t search_position::generate_moves(movegen::move_list* ml) const
 	{
 		position_proxy proxy = this;
 		return m_move_generator->generate<MT>(&proxy, ml);
+	}
+
+	[[maybe_unused]] size_t search_position::generate_all_legals(movegen::move_list* ml)
+	{
+		ml->clear();
+		movegen::move_list pseudolegals;
+		generate_moves(&pseudolegals);
+
+		for (const auto& move : pseudolegals)
+		{
+			if (!make_move(move))
+				continue;
+			ml->push_back(move);
+			undo_last_move();
+		}
+		return ml->size();
 	}
 
 	template size_t search_position::generate_moves<movegen::ALL>(movegen::move_list*) const;

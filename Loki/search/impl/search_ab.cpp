@@ -1,0 +1,110 @@
+// Loki, a UCI-compliant chess playing software
+// Copyright (C) 2021  Niels Abildskov (https://github.com/BimmerBass)
+//
+// Loki is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Loki is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//
+
+#pragma once
+#include <algorithm>
+#include "../search_worker.hpp"
+
+namespace loki::search
+{
+	template<side S, search_worker::node Node> requires (S < NUM_SIDES)
+	score_t search_worker::search_ab(
+		position::search_position& position,
+		const limits& limits,
+		std::stop_token stop_token,
+		size_t depth,
+		score_t alpha,
+		score_t beta)
+	{
+		assert(S == position.side_to_move());
+		
+		limits.check_stopping_conditions(statistics.nodes);
+		if (stop_token.stop_requested())
+			return 0;
+
+		statistics.pv_table.reset_for_ply(position.ply());
+		statistics.selective_depth = std::max(statistics.selective_depth, (size_t)position.ply());
+		statistics.nodes++;
+
+		if constexpr (Node == node::INTERNAL)
+		{
+			if (position.is_draw())
+				return 0;
+		}
+
+		if (depth == 0)
+		{
+			return evaluator.evaluate<S>(position.make_view());
+		}
+
+		size_t legal_moves = 0;
+		movegen::move_list moves;
+		position.generate_moves(&moves);
+		auto best_score = -constants::SCORE_INF;
+
+		for (const auto& move : moves)
+		{
+			if constexpr (Node == node::ROOT)
+			{
+				auto move_allowed =
+					limits.searchmoves.empty() ||
+					std::ranges::find(limits.searchmoves, move) != limits.searchmoves.end();
+				if (!move_allowed)
+					continue;
+			}
+
+			if (!position.make_move(move))
+				continue;
+
+			legal_moves++;
+			auto score = -search_ab<!S, node::INTERNAL>(position, limits, stop_token, depth - 1, -beta, -alpha);
+			position.undo_last_move();
+
+			if (stop_token.stop_requested())
+				return 0;
+
+			best_score = std::max(best_score, score);
+			
+			if (score > alpha)
+			{
+				alpha = score;
+				statistics.pv_table.update_pv(position.ply(), move);
+			}
+				
+			if (score >= beta)
+				return best_score;
+		}
+
+		if (legal_moves == 0)
+		{
+			if (position.in_check())
+				return mate_in(position.ply());
+			return 0;
+		}
+
+		return best_score;
+	}
+
+	template score_t search_worker::search_ab<WHITE, search_worker::node::ROOT>(
+		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
+	template score_t search_worker::search_ab<WHITE, search_worker::node::INTERNAL>(
+		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
+	template score_t search_worker::search_ab<BLACK, search_worker::node::ROOT>(
+		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
+	template score_t search_worker::search_ab<BLACK, search_worker::node::INTERNAL>(
+		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
+}

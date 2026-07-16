@@ -78,6 +78,7 @@ namespace loki::position
 		e_square m_king_squares[NUM_SIDES];
 
 		position_history<constants::MAX_GAME_MOVES> m_history;
+		ply_t m_ply;
 
 		std::unique_ptr<movegen::i_move_generator<position_proxy>> m_move_generator;
 	private:
@@ -109,12 +110,36 @@ namespace loki::position
 		bool in_check() const;
 
 		/// <summary>
-		/// Generate all pseudo-legal moves for the current side.
+		/// Determine whether the current position is drawn.
+		/// </summary>
+		bool is_draw() const noexcept;
+
+		/// <summary>
+		/// Determine whether neither side has sufficient material to mate.
+		/// TODO: Implement material draw detection.
+		/// </summary>
+		bool is_material_draw() const noexcept;
+
+		/// <summary>
+		/// Determine whether the current position has occurred before.
+		/// TODO: Implement after position hashing is available.
+		/// </summary>
+		bool is_repetition() const noexcept;
+
+		/// <summary>
+		/// Generate pseudo-legal moves for the current side.
 		/// </summary>
 		/// <param name="ml">A pointer to the move list object</param>
 		/// <returns>The number of moves generated.</returns>
 		template<movegen::move_type MT = movegen::ALL>
 		[[maybe_unused]] size_t generate_moves(movegen::move_list* ml) const;
+
+		/// <summary>
+		/// Generate all legal moves for the current side. This is expensive and shouldn't be used in search.
+		/// </summary>
+		/// <param name="ml">A pointer to the move list object</param>
+		/// <returns>The number of moves generated.</returns>
+		[[maybe_unused]] size_t generate_all_legals(movegen::move_list* ml);
 
 		/// <summary>
 		/// Get the side to move.
@@ -152,8 +177,14 @@ namespace loki::position
 		/// <summary>
 		/// Get the current ply relative to the root of the search.
 		/// </summary>
-		/// <returns>The number of moves made since this search position was cloned.</returns>
-		[[nodiscard]] inline ply_t ply() const noexcept { return (ply_t)m_history.size(); }
+		/// <returns>A mutable reference to the current search ply.</returns>
+		[[nodiscard]] inline ply_t& ply() noexcept { return m_ply; }
+
+		/// <summary>
+		/// Get the current ply relative to the root of the search.
+		/// </summary>
+		/// <returns>The current search ply.</returns>
+		[[nodiscard]] inline ply_t ply() const noexcept { return m_ply; }
 
 		/// <summary>
 		/// Clone the current object for use in a single search_worker.

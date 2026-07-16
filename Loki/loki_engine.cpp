@@ -72,11 +72,12 @@ void loki_engine::clear()
 
 void loki_engine::search(
 	const limits limits,
-	search_thread::callback_t finished_callback)
+	search_thread::callback_t finished_callback,
+	info_sink_t sink)
 {
 	if (!_position.has_value())
 		throw_msg<loki_exception>("cannot search without a position object");
-	_main_thread.search(_position.value(), limits, finished_callback);
+	_main_thread.search(_position.value(), limits, finished_callback, std::move(sink));
 }
 
 

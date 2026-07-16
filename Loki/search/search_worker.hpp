@@ -21,6 +21,8 @@
 #include <chrono>
 #include <thread>
 #include <expected>
+#include <algorithm>
+#include <variant>
 
 #include "defs.hpp"
 #include "position/search_position.hpp"
@@ -32,8 +34,6 @@
 
 namespace loki::search
 {
-	using search_result_t = std::expected<score_t, std::exception_ptr>;
-
 	/// <summary>
 	/// search_worker is the class responsible for the actual alpha-beta search.
 	/// </summary>
@@ -43,11 +43,16 @@ namespace loki::search
 			position::search_position::position_proxy>;
 		CHILD_EXCEPTION(search_error, loki_exception);
 
+		enum class node
+		{
+			ROOT,
+			INTERNAL
+		};
 	private:
 		info_sink_t _info_sink;
 		search_statistics statistics;
 		const evaluator_t evaluator;
-		
+
 	public:
 		search_worker() : evaluator(), _info_sink{ std::make_unique<null_sink>() }, statistics{}
 		{}
@@ -61,46 +66,63 @@ namespace loki::search
 		search_result_t search(
 			std::unique_ptr<position::search_position> position,
 			const limits& limits,
-			std::stop_token stop_token) noexcept
+			std::stop_token stop_token,
+			info_sink_t sink) noexcept
 		{
 			try
 			{
 				if (!position)
 					throw_msg<search_error>("null position");
+				if (!sink)
+					throw_msg<search_error>("null info sink");
+				_info_sink = std::move(sink);
 
 				// Preprocess to clear any earlier search statistics.
-				preprocess_search();
-				
-				auto max_depth = limits.depth.value_or(constants::MAX_DEPTH);
-				score_t score = -(constants::SCORE_MATE - 1);
-				movegen::move bestmove;
+				preprocess_search(*position);
+
+				const auto max_depth = std::min(
+					limits.depth.value_or(constants::MAX_DEPTH),
+					constants::MAX_DEPTH);
+				search_score_t last_it_score = cp_score{ -(constants::SCORE_MATE - 1) };
+				movegen::move bestmove = movegen::MOVE_NULL;
 
 				for (depth_t depth = 1; depth <= max_depth; depth++)
 				{
-					score = position->side_to_move() == WHITE
-						? search_ab<WHITE>(*position, limits, stop_token, depth, -constants::SCORE_INF, constants::SCORE_INF)
-						: search_ab<BLACK>(*position, limits, stop_token, depth, -constants::SCORE_INF, constants::SCORE_INF);
+					const auto score = position->side_to_move() == WHITE
+						? search_ab<WHITE, node::ROOT>(*position, limits, stop_token, depth, -constants::SCORE_INF, constants::SCORE_INF)
+						: search_ab<BLACK, node::ROOT>(*position, limits, stop_token, depth, -constants::SCORE_INF, constants::SCORE_INF);
 
 					if (stop_token.stop_requested())
 						break;
 
+					if (is_mate(score))
+						last_it_score = mate_score(score);
+					else
+						last_it_score = cp_score{ score };
 
 					auto time = limits.time_elapsed();
-					auto seconds = static_cast<double>(time.count()) / 1000.0;
+					auto seconds = static_cast<double>(std::max(time.count(), 1LL)) / 1000.0;
 					auto nps = static_cast<size_t>(
 						static_cast<double>(statistics.nodes) / seconds);
+
+					const auto pv = statistics.pv_table.get_pv(ROOT_PLY);
+					if (!pv.empty())
+						bestmove = pv.front();
+
+					
 					_info_sink->info(
 						depth,
+						last_it_score,
 						statistics.selective_depth,
 						time,
 						statistics.nodes,
 						nps,
-						statistics.pv_table.get_pv(ROOT_PLY));
+						pv);
 				}
 
 				_info_sink->bestmove(bestmove);
 
-				return score;
+				return last_it_score;
 			}
 			catch (...)
 			{
@@ -109,23 +131,29 @@ namespace loki::search
 		}
 
 	private:
-		void preprocess_search()
+		void preprocess_search(position::search_position& position)
 		{
 			statistics.clear();
+			position.ply() = ROOT_PLY;
 		}
-		
-		template<side S> requires (S < NUM_SIDES)
-		[[nodiscard]]
+
+		template<side S, node Node> requires (S < NUM_SIDES)
+			[[nodiscard]]
 		score_t search_ab(
 			position::search_position& position,
 			const limits& limits,
 			std::stop_token stop_token,
 			size_t depth,
 			score_t alpha,
-			score_t beta)
-		{
-			assert(S == position.side_to_move());
-			return 0;
-		}
+			score_t beta);
 	};
+
+	extern template score_t search_worker::search_ab<WHITE, search_worker::node::ROOT>(
+		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
+	extern template score_t search_worker::search_ab<WHITE, search_worker::node::INTERNAL>(
+		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
+	extern template score_t search_worker::search_ab<BLACK, search_worker::node::ROOT>(
+		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
+	extern template score_t search_worker::search_ab<BLACK, search_worker::node::INTERNAL>(
+		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
 }

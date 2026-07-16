@@ -17,6 +17,7 @@
 
 #include "uci/command_registry.hpp"
 #include "uci/move_parsing.hpp"
+#include "uci/uci_sink.hpp"
 #include "uci/uci_parser.hpp"
 #include "util/exception.hpp"
 #include "movegen/move_list.hpp"
@@ -29,7 +30,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <tuple>
 #include <vector>
 
 using namespace loki;
@@ -103,15 +103,16 @@ class go_command final : public uci_command<go_command>
 public:
 	static std::string name() { return "go"; }
 
-	bool can_execute(const context* ctx) override { return ctx->state == UCI_STATE::Ready; }
+	bool can_execute(const context* ctx) override { return ctx->state.load() == UCI_STATE::Ready; }
 
 	void execute(std::vector<std::string> tokens, context* ctx) override
 	{
 		assert(can_execute(ctx));
 		auto limits = parse_limits(tokens, ctx);
-		ctx->engine.search(limits, [&](search_result_t result)
+		ctx->state.store(UCI_STATE::Searching);
+		ctx->engine.search(limits, [ctx](search_result_t result)
 			{
-				ctx->state = UCI_STATE::Ready;
+				ctx->state.store(UCI_STATE::Ready);
 				if (!result)
 				{
 					try
@@ -123,8 +124,7 @@ public:
 						ctx->out << "info string search failed: " << e.what() << std::endl;
 					}
 				}
-			});
-		ctx->state = UCI_STATE::Searching;
+			}, std::make_unique<uci_sink>(*ctx));
 	}
 
 private:
@@ -146,10 +146,17 @@ private:
 		while (it != tokens.cend())
 			parse_option(it, tokens.cend(), ctx, limits, wtime, btime, winc, binc, seen);
 
-		if (wtime.has_value() || winc.has_value())
-			limits.wtime = std::make_tuple(wtime.value_or(0), winc.value_or(0));
-		if (btime.has_value() || binc.has_value())
-			limits.btime = std::make_tuple(btime.value_or(0), binc.value_or(0));
+		auto stm = ctx->engine.position()->side_to_move();
+		if (stm == WHITE)
+		{
+			limits.time = wtime;
+			limits.inc = winc;
+		}
+		else
+		{
+			limits.time = btime;
+			limits.inc = binc;
+		}
 
 		return limits;
 	}
@@ -213,7 +220,7 @@ private:
 		{
 			require_unique(seen.movetime, option);
 			const auto movetime = parse_numeric_option(it, end);
-			limits.movetime = std::make_tuple(movetime, 0ULL);
+			limits.movetime = movetime;
 			break;
 		}
 		case "infinite"_hash:
@@ -235,7 +242,7 @@ private:
 		const auto view = ctx->engine.position()->make_view();
 		const auto* state = view.game_state();
 		movegen::move_list legal_moves;
-		ctx->engine.position()->generate_moves(&legal_moves);
+		ctx->engine.position()->generate_all_legals(&legal_moves);
 
 		while (it != end && !is_go_option(*it))
 		{

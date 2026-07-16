@@ -55,15 +55,17 @@ namespace search_tests
 				++callback_count;
 				callback_called.notify_all();
 			};
+		limits search_limits{};
+		search_limits.depth = 2;
 
-		thread.search(position, limits{}, callback);
+		thread.search(position, search_limits, callback);
 		{
 			std::unique_lock lock{ mutex };
 			REQUIRE(callback_called.wait_for(lock, 1s, [&]() { return callback_count == 1; }));
 		}
 		thread.wait_for_finished_search();
 
-		thread.search(position, limits{}, callback);
+		thread.search(position, search_limits, callback);
 		{
 			std::unique_lock lock{ mutex };
 			REQUIRE(callback_called.wait_for(lock, 1s, [&]() { return callback_count == 2; }));
@@ -76,39 +78,20 @@ namespace search_tests
 		search_thread thread{ 0 };
 		auto position = make_start_position();
 
-		std::mutex mutex;
-		std::condition_variable callback_entered;
-		std::condition_variable callback_can_return;
-		bool callback_was_entered = false;
-		bool allow_callback_to_return = false;
-
-		thread.search(position, limits{}, [&](search_result_t)
-			{
-				std::unique_lock lock{ mutex };
-				callback_was_entered = true;
-				callback_entered.notify_all();
-				callback_can_return.wait(lock, [&]() { return allow_callback_to_return; });
-			});
-
-		{
-			std::unique_lock lock{ mutex };
-			REQUIRE(callback_entered.wait_for(lock, 1s, [&]() { return callback_was_entered; }));
-		}
+		limits search_limits{};
+		search_limits.infinite = true;
+		thread.search(position, search_limits, nullptr);
 
 		REQUIRE_THROWS_AS(thread.search(position, limits{}, nullptr), search_thread::thread_exception);
 
-		{
-			std::scoped_lock lock{ mutex };
-			allow_callback_to_return = true;
-		}
-		callback_can_return.notify_all();
+		thread.stop_search();
 		thread.wait_for_finished_search();
 	}
 
-	TEST_CASE("search_thread rejects stopping while idle", "[search][search_thread]")
+	TEST_CASE("search_thread ignores stop requests while idle", "[search][search_thread]")
 	{
 		search_thread thread{ 0 };
 
-		REQUIRE_THROWS_AS(thread.stop_search(), search_thread::thread_exception);
+		REQUIRE_NOTHROW(thread.stop_search());
 	}
 }

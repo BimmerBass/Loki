@@ -72,4 +72,67 @@ namespace position_tests
 		for (const auto& move : quiet_moves)
 			REQUIRE(contains(all_moves, move));
 	}
+
+	TEST_CASE("search_position clone preserves move history independently of search ply", "[position][search_position]")
+	{
+		auto state = game_state::from_fen(constants::START_FEN);
+		auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
+		auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
+		auto pos = make(state, bishop_index, rook_index);
+
+		move_list moves;
+		pos->generate_all_legals(&moves);
+		const auto e2e4 = moves.find("e2e4");
+		REQUIRE(e2e4.has_value());
+		REQUIRE(pos->make_move(*e2e4));
+		REQUIRE(pos->ply() == static_cast<ply_t>(1));
+
+		auto clone = pos->clone();
+		REQUIRE(clone->ply() == static_cast<ply_t>(1));
+		clone->undo_last_move();
+		REQUIRE(clone->ply() == ROOT_PLY);
+		REQUIRE(clone->to_fen() == constants::START_FEN);
+
+		REQUIRE(pos->ply() == static_cast<ply_t>(1));
+		REQUIRE(pos->to_fen() != constants::START_FEN);
+	}
+
+	TEST_CASE("search_position caps ply at zero while undoing pre-root history", "[position][search_position]")
+	{
+		auto state = game_state::from_fen(constants::START_FEN);
+		auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
+		auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
+		auto pos = make(state, bishop_index, rook_index);
+
+		move_list moves;
+		pos->generate_all_legals(&moves);
+		const auto e2e4 = moves.find("e2e4");
+		REQUIRE(e2e4.has_value());
+		REQUIRE(pos->make_move(*e2e4));
+		pos->ply() = ROOT_PLY;
+
+		pos->undo_last_move();
+		REQUIRE(pos->ply() == ROOT_PLY);
+		REQUIRE(pos->to_fen() == constants::START_FEN);
+	}
+
+	TEST_CASE("search_position detects fifty-move draws", "[position][search_position][draw]")
+	{
+		auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
+		auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
+
+		auto drawn = make(
+			game_state::from_fen("8/8/8/8/8/8/4K3/7k w - - 100 1"),
+			bishop_index,
+			rook_index);
+		REQUIRE(drawn->is_draw());
+		REQUIRE_FALSE(drawn->is_material_draw());
+		REQUIRE_FALSE(drawn->is_repetition());
+
+		auto not_drawn = make(
+			game_state::from_fen("8/8/8/8/8/8/4K3/7k w - - 99 1"),
+			bishop_index,
+			rook_index);
+		REQUIRE_FALSE(not_drawn->is_draw());
+	}
 }

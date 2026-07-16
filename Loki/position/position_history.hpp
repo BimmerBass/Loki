@@ -76,7 +76,9 @@ namespace loki::position
             return m_size;
         }
 
-        position_history(const position_history&) = delete;
+        position_history(const position_history&) = default;
+        position_history& operator=(const position_history&) = default;
         position_history(position_history&&) = delete;
+        position_history& operator=(position_history&&) = delete;
     };
 }

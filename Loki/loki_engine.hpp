@@ -38,7 +38,10 @@ namespace loki
 		virtual void set_position(position::search_position_t state) = 0;
 		virtual position::search_position_t make_position(const position::game_state& state) const = 0;
 		virtual void clear() = 0;
-		virtual void search(const search::limits limits, search::search_thread::callback_t finished_callback) = 0;
+		virtual void search(
+			const search::limits limits,
+			search::search_thread::callback_t finished_callback,
+			search::info_sink_t sink) = 0;
 		virtual void stop_search(bool wait = false) = 0;
 		virtual size_t perft(size_t depth, std::ostream& out) const = 0;
 		virtual const position::search_position_t& position() const = 0;
@@ -78,7 +81,8 @@ namespace loki
 
 		void search(
 			const search::limits limits,
-			search::search_thread::callback_t finished_callback) override;
+			search::search_thread::callback_t finished_callback,
+			search::info_sink_t sink) override;
 
 		/// <summary>
 		/// Stop the current search. If no search is running, this method does nothing.

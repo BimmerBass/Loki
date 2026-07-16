@@ -40,6 +40,7 @@ namespace uci_tests
 	{
 	public:
 		mutable std::optional<search::limits> searched_limits;
+		search::search_thread::callback_t finished_callback;
 		size_t clear_count = 0;
 
 		bool set_position(const position::game_state& state, const std::vector<movegen::move>& moves) override
@@ -68,9 +69,13 @@ namespace uci_tests
 			m_engine.clear();
 		}
 
-		void search(const search::limits limits, search::search_thread::callback_t) override
+		void search(
+			const search::limits limits,
+			search::search_thread::callback_t callback,
+			search::info_sink_t) override
 		{
 			searched_limits = limits;
+			finished_callback = std::move(callback);
 		}
 
 		void stop_search(bool wait = false) override
@@ -277,6 +282,16 @@ namespace uci_tests
 			REQUIRE_FALSE(go->can_execute(&quit_ctx));
 		}
 
+		SECTION("completion resets the context to Ready")
+		{
+			execute_go({ "movetime", "10000", "depth", "3" });
+			REQUIRE(engine.finished_callback);
+
+			engine.finished_callback(search_result_t{ search_score_t{ cp_score{ 0 } } });
+
+			REQUIRE(ctx.state == UCI_STATE::Ready);
+		}
+
 		SECTION("parses searchmoves")
 		{
 			const auto& limits = execute_go({ "searchmoves", "e2e4", "d2d4" });
@@ -297,36 +312,34 @@ namespace uci_tests
 		{
 			const auto& limits = execute_go({ "wtime", "60000" });
 
-			REQUIRE(limits.wtime.has_value());
-			REQUIRE(std::get<0>(*limits.wtime) == 60000);
-			REQUIRE(std::get<1>(*limits.wtime) == 0);
+			REQUIRE(limits.time.has_value());
+			REQUIRE(*limits.time == 60000);
 		}
 
 		SECTION("parses btime")
 		{
+			position->execute(std::vector<std::string>{ "startpos", "moves", "e2e4" }, &ctx);
 			const auto& limits = execute_go({ "btime", "45000" });
 
-			REQUIRE(limits.btime.has_value());
-			REQUIRE(std::get<0>(*limits.btime) == 45000);
-			REQUIRE(std::get<1>(*limits.btime) == 0);
+			REQUIRE(limits.time.has_value());
+			REQUIRE(*limits.time == 45000);
 		}
 
 		SECTION("parses winc")
 		{
 			const auto& limits = execute_go({ "winc", "1000" });
 
-			REQUIRE(limits.wtime.has_value());
-			REQUIRE(std::get<0>(*limits.wtime) == 0);
-			REQUIRE(std::get<1>(*limits.wtime) == 1000);
+			REQUIRE(limits.inc.has_value());
+			REQUIRE(*limits.inc == 1000);
 		}
 
 		SECTION("parses binc")
 		{
+			position->execute(std::vector<std::string>{ "startpos", "moves", "e2e4" }, &ctx);
 			const auto& limits = execute_go({ "binc", "500" });
 
-			REQUIRE(limits.btime.has_value());
-			REQUIRE(std::get<0>(*limits.btime) == 0);
-			REQUIRE(std::get<1>(*limits.btime) == 500);
+			REQUIRE(limits.inc.has_value());
+			REQUIRE(*limits.inc == 500);
 		}
 
 		SECTION("parses movestogo")
@@ -366,8 +379,7 @@ namespace uci_tests
 			const auto& limits = execute_go({ "movetime", "2500" });
 
 			REQUIRE(limits.movetime.has_value());
-			REQUIRE(std::get<0>(*limits.movetime) == 2500);
-			REQUIRE(std::get<1>(*limits.movetime) == 0);
+			REQUIRE((*limits.movetime) == 2500);
 		}
 
 		SECTION("parses infinite")
@@ -398,12 +410,10 @@ namespace uci_tests
 			REQUIRE(limits.searchmoves[0].to_string() == "e2e4");
 			REQUIRE(limits.searchmoves[1].to_string() == "d2d4");
 			REQUIRE(limits.pondering);
-			REQUIRE(limits.wtime.has_value());
-			REQUIRE(std::get<0>(*limits.wtime) == 60000);
-			REQUIRE(std::get<1>(*limits.wtime) == 1000);
-			REQUIRE(limits.btime.has_value());
-			REQUIRE(std::get<0>(*limits.btime) == 45000);
-			REQUIRE(std::get<1>(*limits.btime) == 500);
+			REQUIRE(limits.time.has_value());
+			REQUIRE(*limits.time == 60000);
+			REQUIRE(limits.inc.has_value());
+			REQUIRE(*limits.inc == 1000);
 			REQUIRE(limits.movestogo.has_value());
 			REQUIRE(*limits.movestogo == 20);
 			REQUIRE(limits.depth.has_value());
@@ -413,8 +423,7 @@ namespace uci_tests
 			REQUIRE(limits.mate.has_value());
 			REQUIRE(*limits.mate == 3);
 			REQUIRE(limits.movetime.has_value());
-			REQUIRE(std::get<0>(*limits.movetime) == 2500);
-			REQUIRE(std::get<1>(*limits.movetime) == 0);
+			REQUIRE((*limits.movetime) == 2500);
 			REQUIRE(limits.infinite);
 		}
 

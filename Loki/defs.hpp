@@ -19,6 +19,8 @@
 #include <cstdint>
 #include <cassert>
 #include <memory>
+#include <variant>
+#include <expected>
 
 #include "position/bitboard.hpp"
 #include "util/stringops.hpp"
@@ -39,7 +41,7 @@ namespace loki
 		constexpr size_t MAX_GAME_MOVES = 1024; // TODO: Remove this restriction
 
 		constexpr score_t SCORE_INF = 1'000'000;
-		constexpr score_t SCORE_MATE = SCORE_INF - 1'000;
+		constexpr score_t SCORE_MATE = SCORE_INF - MAX_GAME_MOVES;
 		constexpr depth_t MAX_DEPTH = 100;
 	}
 
@@ -49,6 +51,32 @@ namespace loki
 		MAX_PLY = constants::MAX_GAME_MOVES
 	};
 	ENABLE_BASE_OPERATORS_ON(ply_t);
+
+	inline constexpr score_t mate_in(ply_t ply) noexcept
+	{
+		return -constants::SCORE_INF + (score_t)ply;
+	}
+	inline bool is_mate(score_t score) noexcept
+	{
+		return std::abs(score) > constants::SCORE_MATE;
+	}
+
+	struct mate_score
+	{
+		mate_score(score_t s)
+		{
+			assert(is_mate(s));
+			const auto plies = constants::SCORE_INF - std::abs(s);
+			const auto moves = (plies + 1) / 2;
+			in_moves = s > 0 ? moves : -moves;
+		}
+		int in_moves;
+	};
+	struct cp_score { score_t cp; };
+
+	using search_score_t = std::variant<mate_score, cp_score>;
+	using search_result_t = std::expected<search_score_t, std::exception_ptr>;
+
 
 	enum side
 	{

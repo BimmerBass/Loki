@@ -36,10 +36,10 @@ namespace loki::search
 		struct search_context
 		{
 			std::unique_ptr<position::search_position> position;
-			const limits limits;
-			std::stop_source stop_source;
+			limits limits;
 
 			callback_t finished_callback;
+			info_sink_t info_sink;
 		};
 	public:
 		search_thread(size_t id);
@@ -51,7 +51,8 @@ namespace loki::search
 		virtual void search(
 			const position::search_position_t& position,
 			const limits& limits,
-			callback_t callback)
+			callback_t callback,
+			info_sink_t sink = std::make_unique<null_sink>())
 		{
 			std::unique_lock<std::mutex> lock(_mtx);
 			if (_context.has_value())
@@ -60,9 +61,10 @@ namespace loki::search
 				{
 					.position = position->clone(),
 					.limits = limits,
-					.stop_source = std::stop_source{},
-					.finished_callback = std::move(callback)
+					.finished_callback = std::move(callback),
+					.info_sink = std::move(sink)
 				});
+			_context.value().limits.stop_source = std::stop_source{};
 
 			lock.unlock();
 			_cv.notify_one();
@@ -73,14 +75,14 @@ namespace loki::search
 		{
 			std::scoped_lock<std::mutex> lock(_mtx);
 			if (!_context.has_value())
-				throw_msg<thread_exception>("stop requested on idle thread");
-			_context.value().stop_source.request_stop();
+				return;
+			_context.value().limits.stop_source.value().request_stop();
 		}
 
 		void wait_for_finished_search()
 		{
 			std::unique_lock<std::mutex> lock(_mtx);
-			_cv.wait(lock, [&]() { return _context == std::nullopt; });
+			_cv.wait(lock, [&]() { return _context == std::nullopt && !_callback_running; });
 		}
 
 	private:
@@ -92,7 +94,7 @@ namespace loki::search
 			if (_thread.joinable())
 			{
 				if (_context != std::nullopt)
-					_context.value().stop_source.request_stop();
+					_context.value().limits.stop_source.value().request_stop();
 
 				_thread.request_stop();
 				lock.unlock();
@@ -108,6 +110,7 @@ namespace loki::search
 
 		search_worker _worker;
 		std::optional<search_context> _context;
+		bool _callback_running = false;
 
 		// must be declared last!
 		std::jthread _thread;

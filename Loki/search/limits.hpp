@@ -24,21 +24,26 @@
 #include <tuple>
 #include <vector>
 #include <chrono>
+#include <thread>
 
 namespace loki::search
 {
 	struct limits
 	{
+		friend class search_thread;
+	private:
+		mutable std::optional<std::stop_source> stop_source = std::nullopt;
+	public:
+		
 		using clock_t = std::chrono::steady_clock;
 		using timepoint_t = clock_t::time_point;
-		using playtime_t = std::tuple<uint64_t, uint64_t>; // time, increment
 
 		std::vector<movegen::move> searchmoves{};
 		bool pondering = false;
 
-		std::optional<playtime_t> wtime = std::nullopt;
-		std::optional<playtime_t> btime = std::nullopt;
-		std::optional<playtime_t> movetime = std::nullopt;
+		std::optional<uint64_t> time = std::nullopt;
+		std::optional<uint64_t> inc = std::nullopt;
+		std::optional<uint64_t> movetime = std::nullopt;
 		bool infinite = false;
 
 		std::optional<size_t> movestogo = std::nullopt;
@@ -56,6 +61,50 @@ namespace loki::search
 		{
 			auto duration = clock_t::now() - start_time;
 			return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+		}
+
+		/// <summary>
+		/// Check if the time has expired and optionally set the stop token
+		/// </summary>
+		void check_stopping_conditions(size_t nodes_searched) const noexcept
+		{
+			if (stop_source.has_value())
+			{
+				if (!infinite && (nodes_searched & 1024) == 0)
+					check_time();
+
+				if (nodes && nodes_searched >= *nodes)
+					stop_source.value().request_stop();
+			}
+		}
+
+	private:
+		inline bool has_time_limit() const noexcept
+		{
+			return movetime || time || inc;
+		}
+
+		
+		void check_time() const noexcept
+		{
+			if (stop_source.has_value() && has_time_limit() && clock_t::now() >= endtime())
+				stop_source.value().request_stop();
+		}
+
+		// Use time management heuristics (very simple ATM) to calculate the remaining search time for the given limits.
+		timepoint_t endtime() const noexcept
+		{
+			if (movetime.has_value())
+				return start_time + std::chrono::milliseconds(movetime.value());
+
+			auto mtg_estimate = movestogo.value_or(45);
+			if (mtg_estimate == 0)
+				mtg_estimate = 1;
+
+			auto total_time = (time.value_or(0) / mtg_estimate) + inc.value_or(0);
+
+			assert(total_time >= 0);
+			return start_time + std::chrono::milliseconds(total_time);
 		}
 	};
 }

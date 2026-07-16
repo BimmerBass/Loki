@@ -59,7 +59,11 @@ public:
 		auto i = 1;
 		for (const auto& m : ml)
 		{
+			if (!ctx->engine.position()->make_move(m))
+				continue;
+
 			ctx->out << std::format("[{}] {}", i++, m.to_string()) << std::endl;
+			ctx->engine.position()->undo_last_move();
 		}
 	}
 };

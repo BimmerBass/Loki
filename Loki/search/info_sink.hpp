@@ -19,6 +19,7 @@
 #include "movegen/move.hpp"
 
 #include <chrono>
+#include <memory>
 #include <vector>
 
 namespace loki::search
@@ -31,6 +32,7 @@ namespace loki::search
 
 		virtual void info(
 			size_t depth,
+			search_score_t score,
 			size_t seldepth,
 			std::chrono::milliseconds time,
 			size_t nodes,
@@ -46,6 +48,7 @@ namespace loki::search
 	public:
 		void info(
 			size_t depth,
+			search_score_t score,
 			size_t seldepth,
 			std::chrono::milliseconds time,
 			size_t nodes,
