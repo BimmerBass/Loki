@@ -27,8 +27,8 @@ namespace loki::search
 	struct search_statistics
 	{
 		pv_table<> pv_table;
-		size_t selective_depth;
-		size_t nodes;
+		size_t selective_depth = 0;
+		size_t nodes = 0;
 
 		void clear() noexcept
 		{

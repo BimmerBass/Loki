@@ -43,6 +43,8 @@ namespace loki::search
 		};
 	public:
 		search_thread(size_t id);
+		// The injected worker must outlive this search thread.
+		search_thread(size_t id, std::unique_ptr<i_search_worker> worker);
 		~search_thread() {
 			join();
 		}
@@ -54,6 +56,9 @@ namespace loki::search
 			callback_t callback,
 			info_sink_t sink = std::make_unique<null_sink>())
 		{
+			if (!position)
+				throw_msg<thread_exception>("search requested with null position");
+
 			std::unique_lock<std::mutex> lock(_mtx);
 			if (_context.has_value())
 				throw_msg<thread_exception>("search requested on active thread");
@@ -102,13 +107,14 @@ namespace loki::search
 				_thread.join();
 			}
 		}
+		void start_thread();
 		void thread_loop(std::stop_token token);
 
 		size_t thread_id;
 		std::condition_variable _cv;
 		std::mutex _mtx;
 
-		search_worker _worker;
+		std::unique_ptr<i_search_worker> _search_worker;
 		std::optional<search_context> _context;
 		bool _callback_running = false;
 

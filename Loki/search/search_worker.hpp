@@ -34,10 +34,22 @@
 
 namespace loki::search
 {
+	class i_search_worker
+	{
+	public:
+		virtual ~i_search_worker() = default;
+
+		virtual search_result_t search(
+			std::unique_ptr<position::search_position> position,
+			const limits& limits,
+			std::stop_token stop_token,
+			info_sink_t sink) noexcept = 0;
+	};
+
 	/// <summary>
 	/// search_worker is the class responsible for the actual alpha-beta search.
 	/// </summary>
-	class search_worker final
+	class search_worker final : public i_search_worker
 	{
 		using evaluator_t = evaluation::evaluator<
 			position::search_position::position_proxy>;
@@ -67,7 +79,7 @@ namespace loki::search
 			std::unique_ptr<position::search_position> position,
 			const limits& limits,
 			std::stop_token stop_token,
-			info_sink_t sink) noexcept
+			info_sink_t sink) noexcept override
 		{
 			try
 			{

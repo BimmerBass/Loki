@@ -60,6 +60,14 @@ For deeper technical notes, see [Implementation](docs/implementation.md).
 | 3.0.0 | 2466 | 2'+1" |
 | 3.5.0 | 2490 | 40/15 |
 
+## Generative AI disclosure
+
+Loki releases through version 3.5.0 were written without generative AI assistance. Version 3.5.0 was released in May 2021, long before LLMs became any good at software development.
+
+For the current rewrite, the chess-engine design and core implementation (i.e. Loki itself) are written by me. Generative AI tools (e.g. Claude Code, Codex, Copilot etc.) have been used extensively to assist with unit tests, GitHub Actions workflows, benchmark scripts, etc. I review and take responsibility for all contributions included in the repository.
+
+I also use LLMs as research aids when exploring algorithms and C++ language features. The resulting designs and core engine code are implemented and validated by me.
+
 ## Roadmap
 Current rewrite tasks and future engine work are tracked in [Roadmap](docs/roadmap.md).
 

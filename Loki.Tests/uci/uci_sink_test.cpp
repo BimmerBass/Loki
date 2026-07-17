@@ -68,8 +68,8 @@ namespace uci_tests
 		uci_sink sink{ ctx };
 
 		sink.bestmove(movegen::move{ position::G1, position::F3 });
-		sink.bestmove(movegen::move{ movegen::MOVE_NULL });
+		sink.bestmove(movegen::move{ position::G1, position::F3 }, movegen::move{position::A7, position::A6});
 
-		REQUIRE(output.str() == "bestmove g1f3\nbestmove 0000\n");
+		REQUIRE(output.str() == "bestmove g1f3\nbestmove g1f3 ponder a7a6\n");
 	}
 }

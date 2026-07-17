@@ -22,11 +22,26 @@ using namespace loki::search;
 using namespace loki::position;
 
 search_thread::search_thread(size_t id) :
-	_worker{},
 	thread_id{id},
 	_cv{},
 	_mtx{},
+	_search_worker{ std::make_unique<search_worker>() },
 	_context{std::nullopt}
+{
+	start_thread();
+}
+
+search_thread::search_thread(size_t id, std::unique_ptr<i_search_worker> worker) :
+	thread_id{id},
+	_cv{},
+	_mtx{},
+	_search_worker{std::move(worker)},
+	_context{std::nullopt}
+{
+	start_thread();
+}
+
+void search_thread::start_thread()
 {
 	_thread = std::jthread([this](std::stop_token tk)
 		{
@@ -59,7 +74,11 @@ void search_thread::thread_loop(std::stop_token token)
 
 		// unlock while searching to allow for cancellation.
 		lock.unlock();
-		auto result = _worker.search(std::move(search_pos), limits, search_stop, std::move(info_sink));
+		auto result = _search_worker->search(
+			std::move(search_pos),
+			limits,
+			search_stop,
+			std::move(info_sink));
 
 		// Mark the search idle before publishing completion through the callback.
 		// This allows the callback to make the engine Ready without exposing an

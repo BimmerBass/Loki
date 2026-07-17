@@ -57,10 +57,25 @@ namespace loki::search
 		/// Calculate the time elapsed since the search startes in milliseconds.
 		/// </summary>
 		/// <returns>A std::chrono::milliseconds duration.</returns>
-		std::chrono::milliseconds time_elapsed() const noexcept
+		std::chrono::milliseconds time_elapsed(timepoint_t now = clock_t::now()) const noexcept
 		{
-			auto duration = clock_t::now() - start_time;
+			auto duration = now - start_time;
 			return std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+		}
+
+		/// <summary>
+		/// Determine whether a configured node or time limit has been reached.
+		/// This function is side-effect free so callers can supply a deterministic
+		/// clock value when testing time management policy.
+		/// </summary>
+		bool should_stop(size_t nodes_searched, timepoint_t now = clock_t::now()) const noexcept
+		{
+			if (nodes && nodes_searched >= *nodes)
+				return true;
+
+			const bool should_check_time =
+				!infinite && !mate && (nodes_searched & 1023) == 0;
+			return should_check_time && has_time_limit() && now >= endtime();
 		}
 
 		/// <summary>
@@ -68,27 +83,14 @@ namespace loki::search
 		/// </summary>
 		void check_stopping_conditions(size_t nodes_searched) const noexcept
 		{
-			if (stop_source.has_value())
-			{
-				if (!infinite && !mate && (nodes_searched & 1023) == 0)
-					check_time();
-
-				if (nodes && nodes_searched >= *nodes)
-					stop_source.value().request_stop();
-			}
+			if (stop_source.has_value() && should_stop(nodes_searched))
+				stop_source.value().request_stop();
 		}
 
 	private:
 		inline bool has_time_limit() const noexcept
 		{
 			return movetime || time || inc;
-		}
-
-		
-		void check_time() const noexcept
-		{
-			if (stop_source.has_value() && has_time_limit() && clock_t::now() >= endtime())
-				stop_source.value().request_stop();
 		}
 
 		// Use time management heuristics (very simple ATM) to calculate the remaining search time for the given limits.
