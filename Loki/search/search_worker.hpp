@@ -84,7 +84,7 @@ namespace loki::search
 					limits.depth.value_or(constants::MAX_DEPTH),
 					constants::MAX_DEPTH);
 				search_score_t last_it_score = cp_score{ -(constants::SCORE_MATE - 1) };
-				movegen::move bestmove = movegen::MOVE_NULL;
+				std::vector<movegen::move> last_it_pv{};
 
 				for (depth_t depth = 1; depth <= max_depth; depth++)
 				{
@@ -105,10 +105,7 @@ namespace loki::search
 					auto nps = static_cast<size_t>(
 						static_cast<double>(statistics.nodes) / seconds);
 
-					const auto pv = statistics.pv_table.get_pv(ROOT_PLY);
-					if (!pv.empty())
-						bestmove = pv.front();
-
+					last_it_pv = statistics.pv_table.get_pv(ROOT_PLY);
 					
 					_info_sink->info(
 						depth,
@@ -117,10 +114,21 @@ namespace loki::search
 						time,
 						statistics.nodes,
 						nps,
-						pv);
+						last_it_pv);
+
+					if (limits.mate && std::holds_alternative<mate_score>(last_it_score)
+						&& std::get<mate_score>(last_it_score).in_moves == *limits.mate)
+					{
+						break;
+					}
 				}
 
-				_info_sink->bestmove(bestmove);
+				if (last_it_pv.empty())
+					throw_msg<search_error>("search returned no principal variation");
+				else if (last_it_pv.size() >= 2)
+					_info_sink->bestmove(last_it_pv[0], last_it_pv[1]);
+				else
+					_info_sink->bestmove(last_it_pv.front());
 
 				return last_it_score;
 			}

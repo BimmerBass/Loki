@@ -37,7 +37,7 @@ namespace loki::uci
 			size_t nps,
 			std::vector<movegen::move> pv) override;
 
-		void bestmove(movegen::move move) override;
+		void bestmove(movegen::move move, std::optional<movegen::move> ponder = std::nullopt) override;
 
 	private:
 		context& m_context;

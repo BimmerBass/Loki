@@ -58,12 +58,10 @@ void uci_sink::info(
 	m_context.out << std::endl;
 }
 
-void uci_sink::bestmove(movegen::move move)
+void uci_sink::bestmove(movegen::move move, std::optional<movegen::move> ponder)
 {
-	m_context.out << "bestmove ";
-	if (move == movegen::MOVE_NULL)
-		m_context.out << "0000";
-	else
-		m_context.out << move.to_string();
+	m_context.out << "bestmove " << move.to_string();
+	if (ponder)
+		m_context.out << " ponder " << (*ponder).to_string();
 	m_context.out << std::endl;
 }

@@ -38,7 +38,7 @@ namespace loki::search
 			size_t nodes,
 			size_t nps,
 			std::vector<movegen::move> pv) = 0;
-		virtual void bestmove(movegen::move move) = 0;
+		virtual void bestmove(movegen::move move, std::optional<movegen::move> ponder = std::nullopt) = 0;
 	};
 
 	using info_sink_t = std::unique_ptr<info_sink>;
@@ -56,7 +56,7 @@ namespace loki::search
 			std::vector<movegen::move> pv) override
 		{}
 
-		void bestmove(movegen::move move) override
+		void bestmove(movegen::move move, std::optional<movegen::move> ponder) override
 		{}
 	};
 }
