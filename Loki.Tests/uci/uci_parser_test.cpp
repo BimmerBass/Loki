@@ -78,6 +78,11 @@ namespace uci_tests
 			finished_callback = std::move(callback);
 		}
 
+		void ponderhit() override
+		{
+			m_engine.ponderhit();
+		}
+
 		void stop_search(bool wait = false) override
 		{
 			m_engine.stop_search(wait);

@@ -39,7 +39,7 @@ namespace loki::search
 		using timepoint_t = clock_t::time_point;
 
 		std::vector<movegen::move> searchmoves{};
-		bool pondering = false;
+		std::atomic_bool pondering = false;
 
 		std::optional<uint64_t> time = std::nullopt;
 		std::optional<uint64_t> inc = std::nullopt;
@@ -65,11 +65,12 @@ namespace loki::search
 
 		/// <summary>
 		/// Determine whether a configured node or time limit has been reached.
-		/// This function is side-effect free so callers can supply a deterministic
-		/// clock value when testing time management policy.
 		/// </summary>
 		bool should_stop(size_t nodes_searched, timepoint_t now = clock_t::now()) const noexcept
 		{
+			if (pondering.load(std::memory_order_relaxed))
+				return false;
+			
 			if (nodes && nodes_searched >= *nodes)
 				return true;
 
@@ -87,6 +88,11 @@ namespace loki::search
 				stop_source.value().request_stop();
 		}
 
+		limits();
+		limits(const limits& other);
+		limits& operator=(const limits& other);
+		limits(limits&&) noexcept;
+		limits& operator=(limits&&) noexcept;
 	private:
 		inline bool has_time_limit() const noexcept
 		{

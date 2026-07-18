@@ -23,19 +23,12 @@ using namespace loki::uci;
 class ponderhit_command final : public uci_command<ponderhit_command>
 {
 public:
-	static std::string name()
-	{
-		return "ponderhit";
-	}
+	static std::string name() { return "ponderhit"; }
+	bool can_execute(const context* ctx) override { return ctx->state == UCI_STATE::Searching; }
 
-	bool can_execute(const context* /**/) override
+	void execute(std::vector<std::string>, context* ctx) override
 	{
-		loki::throw_msg<loki::not_implemented_error>("not implemented");
-	}
-
-	void execute(std::vector<std::string>, context* /**/) override
-	{
-		loki::throw_msg<loki::not_implemented_error>("not implemented");
+		ctx->engine.ponderhit();
 	}
 };
 

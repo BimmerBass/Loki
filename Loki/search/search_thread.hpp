@@ -75,6 +75,16 @@ namespace loki::search
 			_cv.notify_one();
 		}
 
+		void ponderhit(){
+			std::lock_guard<std::mutex> lock(_mtx);
+			if (!_context || _callback_running || !_current_limits)
+				throw_msg<thread_exception>("got ponderhit on idle thread.");
+			auto limits = _current_limits.value()();
+
+			limits->pondering = false;
+			limits->start_time = limits::clock_t::now();
+		}
+
 		// Stop the current search.
 		void stop_search()
 		{
@@ -87,6 +97,8 @@ namespace loki::search
 		void wait_for_finished_search()
 		{
 			std::unique_lock<std::mutex> lock(_mtx);
+			if (!_context && !_callback_running)
+				return;
 			_cv.wait(lock, [&]() { return _context == std::nullopt && !_callback_running; });
 		}
 
@@ -116,6 +128,7 @@ namespace loki::search
 
 		std::unique_ptr<i_search_worker> _search_worker;
 		std::optional<search_context> _context;
+		std::optional<std::function<limits*()>> _current_limits;
 		bool _callback_running = false;
 
 		// must be declared last!

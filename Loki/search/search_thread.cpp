@@ -68,6 +68,7 @@ void search_thread::thread_loop(std::stop_token token)
 		search_context& ctx = _context.value();
 		std::unique_ptr<position::search_position> search_pos = ctx.position->clone();
 		limits limits = ctx.limits;
+		_current_limits = [&]() { return &limits; };
 		std::stop_token search_stop = (*ctx.limits.stop_source).get_token();
 		callback_t callback = std::move(ctx.finished_callback);
 		info_sink_t info_sink = std::move(ctx.info_sink);
@@ -85,6 +86,7 @@ void search_thread::thread_loop(std::stop_token token)
 		// active search context to the next command.
 		lock.lock();
 		_context = std::nullopt;
+		_current_limits = std::nullopt;
 		_callback_running = static_cast<bool>(callback);
 		lock.unlock();
 

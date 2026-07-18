@@ -42,6 +42,7 @@ namespace loki
 			const search::limits limits,
 			search::search_thread::callback_t finished_callback,
 			search::info_sink_t sink) = 0;
+		virtual void ponderhit() = 0;
 		virtual void stop_search(bool wait = false) = 0;
 		virtual size_t perft(size_t depth, std::ostream& out) const = 0;
 		virtual const position::search_position_t& position() const = 0;
@@ -84,6 +85,11 @@ namespace loki
 			search::search_thread::callback_t finished_callback,
 			search::info_sink_t sink) override;
 
+		void ponderhit() override
+		{
+			_main_thread.ponderhit();
+		}
+		
 		/// <summary>
 		/// Stop the current search. If no search is running, this method does nothing.
 		/// </summary>
