@@ -323,4 +323,72 @@ namespace search_tests
 			thread.search(position, limits{}, nullptr),
 			search_thread::thread_exception);
 	}
+
+	TEST_CASE("ponderhit converts an active ponder search to timed search", "[search][search_thread][ponder]")
+	{
+		std::mutex mutex;
+		std::condition_variable cv;
+		bool entered = false;
+		bool release = false;
+		bool observed_pondering = true;
+		limits::timepoint_t observed_start{};
+
+		auto worker = std::unique_ptr<i_search_worker>(new functional_worker{ [&] (
+			std::unique_ptr<search_position>,
+			const limits& active_limits,
+			std::stop_token,
+			info_sink_t)
+			{
+				{
+					std::unique_lock lock{ mutex };
+					entered = true;
+					cv.notify_all();
+					cv.wait(lock, [&]() { return release; });
+				}
+
+				observed_pondering = active_limits.pondering.load(std::memory_order_acquire);
+				observed_start = active_limits.start_time;
+				return successful_result();
+			} });
+		search_thread thread{ 0, std::move(worker) };
+		auto position = make_start_position();
+
+		limits search_limits{};
+		search_limits.pondering = true;
+		search_limits.start_time = limits::timepoint_t{};
+		thread.search(position, search_limits, nullptr);
+
+		{
+			std::unique_lock lock{ mutex };
+			REQUIRE(cv.wait_for(lock, 1s, [&]() { return entered; }));
+		}
+
+		const auto before_hit = limits::clock_t::now();
+		thread.ponderhit();
+
+		{
+			std::scoped_lock lock{ mutex };
+			release = true;
+		}
+		cv.notify_all();
+		thread.wait_for_finished_search();
+
+		REQUIRE_FALSE(observed_pondering);
+		REQUIRE(observed_start >= before_hit);
+	}
+
+	TEST_CASE("ponderhit rejects an idle search thread", "[search][search_thread][ponder]")
+	{
+		auto worker = std::unique_ptr<i_search_worker>(new functional_worker{ [] (
+			std::unique_ptr<search_position>,
+			const limits&,
+			std::stop_token,
+			info_sink_t)
+			{
+				return successful_result();
+			} });
+		search_thread thread{ 0, std::move(worker) };
+
+		REQUIRE_THROWS_AS(thread.ponderhit(), search_thread::thread_exception);
+	}
 }

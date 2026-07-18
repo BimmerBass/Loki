@@ -119,4 +119,38 @@ namespace search_tests
 			REQUIRE(search_limits.should_stop(10, expired));
 		}
 	}
+
+	TEST_CASE("pondering suppresses node and time limits", "[search][limits][ponder]")
+	{
+		auto search_limits = timed_limits();
+		search_limits.pondering = true;
+		search_limits.nodes = 10;
+		search_limits.movetime = 100;
+
+		REQUIRE_FALSE(search_limits.should_stop(10, START + 100ms));
+		REQUIRE_FALSE(search_limits.should_stop(100, START + 10s));
+	}
+
+	TEST_CASE("limits resume after pondering ends", "[search][limits][ponder]")
+	{
+		auto search_limits = timed_limits();
+		search_limits.pondering = true;
+		search_limits.nodes = 10;
+
+		REQUIRE_FALSE(search_limits.should_stop(10, START));
+
+		search_limits.pondering.store(false, std::memory_order_release);
+
+		REQUIRE(search_limits.should_stop(10, START));
+	}
+
+	TEST_CASE("copying limits preserves pondering state", "[search][limits][ponder]")
+	{
+		limits original;
+		original.pondering = true;
+
+		limits copy{ original };
+
+		REQUIRE(copy.pondering.load(std::memory_order_acquire));
+	}
 }

@@ -42,6 +42,7 @@ namespace uci_tests
 		mutable std::optional<search::limits> searched_limits;
 		search::search_thread::callback_t finished_callback;
 		size_t clear_count = 0;
+		size_t ponderhit_count = 0;
 
 		bool set_position(const position::game_state& state, const std::vector<movegen::move>& moves) override
 		{
@@ -80,7 +81,7 @@ namespace uci_tests
 
 		void ponderhit() override
 		{
-			m_engine.ponderhit();
+			++ponderhit_count;
 		}
 
 		void stop_search(bool wait = false) override
@@ -546,7 +547,7 @@ namespace uci_tests
 		loki_engine engine;
 		context ctx{engine, UCI_STATE::Ready, input, output, error};
 
-		for (const auto& name : {"register", "setoption", "ponderhit", "debug"})
+		for (const auto& name : {"register", "setoption", "debug"})
 		{
 			SECTION(name)
 			{
@@ -556,5 +557,39 @@ namespace uci_tests
 				REQUIRE_THROWS_AS(command->execute(std::vector<std::string>{}, &ctx), not_implemented_error);
 			}
 		}
+	}
+
+	TEST_CASE("ponderhit is accepted while searching and forwarded", "[uci][commands][ponderhit]")
+	{
+		const auto commands = command_registry::instance().commands();
+		auto* ponderhit = find_command(commands, "ponderhit");
+		REQUIRE(ponderhit != nullptr);
+
+		std::stringstream input;
+		std::stringstream output;
+		std::stringstream error;
+		search_spy_engine engine;
+		context ctx{ engine, UCI_STATE::Searching, input, output, error };
+
+		REQUIRE(ponderhit->can_execute(&ctx));
+
+		ponderhit->execute({}, &ctx);
+
+		REQUIRE(engine.ponderhit_count == 1);
+	}
+
+	TEST_CASE("ponderhit is unavailable outside a search", "[uci][commands][ponderhit]")
+	{
+		const auto commands = command_registry::instance().commands();
+		auto* ponderhit = find_command(commands, "ponderhit");
+		REQUIRE(ponderhit != nullptr);
+
+		std::stringstream input;
+		std::stringstream output;
+		std::stringstream error;
+		search_spy_engine engine;
+		context ctx{ engine, UCI_STATE::Ready, input, output, error };
+
+		REQUIRE_FALSE(ponderhit->can_execute(&ctx));
 	}
 }

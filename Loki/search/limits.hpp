@@ -68,7 +68,7 @@ namespace loki::search
 		/// </summary>
 		bool should_stop(size_t nodes_searched, timepoint_t now = clock_t::now()) const noexcept
 		{
-			if (pondering.load(std::memory_order_relaxed))
+			if (pondering.load(std::memory_order_acquire))
 				return false;
 			
 			if (nodes && nodes_searched >= *nodes)

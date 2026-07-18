@@ -81,8 +81,8 @@ namespace loki::search
 				throw_msg<thread_exception>("got ponderhit on idle thread.");
 			auto limits = _current_limits.value()();
 
-			limits->pondering = false;
 			limits->start_time = limits::clock_t::now();
+			limits->pondering.store(false, std::memory_order_release);
 		}
 
 		// Stop the current search.
