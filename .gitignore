@@ -343,6 +343,8 @@ healthchecksdb
 /Loki.Tests/vcpkg_installed/x64-windows
 /build/*
 /out/*
+/benchmark/results/
+/benchmark/workloads/*.local.json
 CMakeFiles/cmake.check_cache
 CMakeFiles/CMakeConfigureLog.yaml
 CMakeFiles/generate.stamp

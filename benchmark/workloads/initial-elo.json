@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "name": "loki-4-initial-elo",
+  "tools": {
+    "fastchess": "${FASTCHESS_EXE}",
+    "ordo": "${ORDO_EXE}"
+  },
+  "subject": {
+    "name": "Loki",
+    "command": "${LOKI_EXE}",
+    "args": [],
+    "working_directory": "../..",
+    "uci_options": {}
+  },
+  "opponents": [
+    {
+      "name": "Cicada",
+      "command": "${CICADA_EXE}",
+      "args": [],
+      "working_directory": "../..",
+      "uci_options": {},
+      "rating": {
+        "elo": 1434,
+        "source": "CCRL 40/4",
+        "retrieved": "2026-07-17"
+      }
+    },
+    {
+      "name": "Pulse 1.6.1",
+      "command": "${PULSE_EXE}",
+      "args": [],
+      "working_directory": "../..",
+      "uci_options": {},
+      "rating": {
+        "elo": 1516,
+        "source": "CCRL 40/4",
+        "retrieved": "2026-07-17"
+      }
+    },
+    {
+      "name": "Shallow Blue",
+      "command": "${SHALLOWBLUE_EXE}",
+      "args": [],
+      "working_directory": "../..",
+      "uci_options": {},
+      "rating": {
+        "elo": 1617,
+        "source": "CCRL 40/4",
+        "retrieved": "2026-07-17"
+      }
+    }
+  ],
+  "match": {
+    "games_per_opponent": 200,
+    "concurrency": 11,
+    "time_control": "10+0.1",
+    "time_margin_ms": 100,
+    "max_moves": 400,
+    "recover": true,
+    "openings": {
+      "path": "${OPENINGS_EPD}",
+      "format": "pgn",
+      "order": "random",
+      "seed": 1
+    }
+  },
+  "rating": {
+    "interval_games": 20
+  }
+}
