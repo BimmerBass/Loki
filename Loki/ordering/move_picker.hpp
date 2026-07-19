@@ -30,8 +30,8 @@ namespace loki::ordering
 		CHILD_EXCEPTION(ordering_error, loki_exception);
 
 		inline static constexpr uint16_t HISTORY_MAX = 10'000;
-		inline static constexpr uint16_t KILLER_ONE = HISTORY_MAX + 1;
-		inline static constexpr uint16_t KILLER_TWO = KILLER_ONE + 1;
+		inline static constexpr uint16_t KILLER_TWO = HISTORY_MAX + 1;
+		inline static constexpr uint16_t KILLER_ONE = KILLER_TWO + 1;
 		static_assert(KILLER_TWO <= 0x7FFF);
 
 	private:

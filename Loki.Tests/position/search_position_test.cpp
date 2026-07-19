@@ -42,9 +42,9 @@ namespace position_tests
 			REQUIRE(generated_move->is_active() == expected);
 		}
 
-		bool contains_move_string(const move_list& moves, const std::string& move_string)
+		bool contains_move_string(move_list& moves, const std::string& move_string)
 		{
-			return std::ranges::any_of(moves, [&move_string](const move& generated_move)
+			return std::ranges::any_of(moves, [&move_string](move& generated_move)
 				{
 					return generated_move.to_string() == move_string;
 				});
