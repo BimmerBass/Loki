@@ -78,7 +78,8 @@ move loki::uci::parse_move_token(const std::string& token, const position::game_
 		}
 	}
 
-	move candidate(from_sq.value(), to_sq.value(), type, promotion_piece);
+	auto isactive = state.piece_placements[!state.side_to_move][to_sq.value()] != NO_PIECE;
+	move candidate(from_sq.value(), to_sq.value(), type, promotion_piece, isactive);
 	candidate.type(infer_move_attr(state, candidate));
 	return candidate;
 }

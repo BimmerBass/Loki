@@ -32,11 +32,11 @@ namespace move_tests
 			{
 				REQUIRE(ml.size() == i);
 				ml.push_back(move_t(i + 1));
-				REQUIRE(ml[i].get_raw() == i + 1);
+				REQUIRE(ml[i].get_move() == i + 1);
 				if (i > 0)
-					REQUIRE(ml[i - 1].get_raw() == i);
+					REQUIRE(ml[i - 1].get_move() == i);
 				if (i < ml.max_size - 1)
-					REQUIRE_THROWS_AS(ml[i + 1].get_raw(), move_list::move_list_error);
+					REQUIRE_THROWS_AS(ml[i + 1].get_move(), move_list::move_list_error);
 			}
 			REQUIRE(ml.size() == ml.max_size);
 			REQUIRE_THROWS_AS(ml.push_back(move_t(0)), move_list::move_list_error);
@@ -61,7 +61,7 @@ namespace move_tests
 			size_t expected = 1;
 			for (const auto& move : ml)
 			{
-				REQUIRE(move.get_raw() == expected);
+				REQUIRE(move.get_move() == expected);
 				++expected;
 			}
 		}

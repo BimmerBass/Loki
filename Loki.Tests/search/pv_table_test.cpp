@@ -30,11 +30,11 @@ namespace pv_table_tests
 		constexpr ply_t FIRST_PLY = static_cast<ply_t>(1);
 		constexpr ply_t SECOND_PLY = static_cast<ply_t>(2);
 
-		const move ROOT_MOVE{ E2, E4 };
-		const move FIRST_MOVE{ E7, E5 };
-		const move SECOND_MOVE{ G1, F3 };
-		const move REPLACEMENT_ROOT_MOVE{ D2, D4 };
-		const move REPLACEMENT_FIRST_MOVE{ C7, C5 };
+		const move ROOT_MOVE{ E2, E4 , false};
+		const move FIRST_MOVE{ E7, E5 , false};
+		const move SECOND_MOVE{ G1, F3 , false};
+		const move REPLACEMENT_ROOT_MOVE{ D2, D4, false };
+		const move REPLACEMENT_FIRST_MOVE{ C7, C5 , false};
 	}
 
 	TEST_CASE("pv_table starts empty", "[search][pv_table]")

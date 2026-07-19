@@ -95,7 +95,7 @@ namespace loki::position
 
 		// Save data than can't be inferred from the resulting position
 		m_history.push(
-			move.get_raw(),
+			move.get_move(),
 			piece_captured, piece_moved,
 			m_state->castling_rights.get(),
 			m_state->fifty_move_cnt,

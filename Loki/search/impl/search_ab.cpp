@@ -19,6 +19,8 @@
 #include <algorithm>
 #include "../search_worker.hpp"
 
+using namespace loki::movegen;
+
 namespace loki::search
 {
 	template<side S, search_worker::node Node> requires (S < NUM_SIDES)
@@ -52,7 +54,7 @@ namespace loki::search
 		}
 
 		size_t legal_moves = 0;
-		movegen::move_list moves;
+		move_list moves;
 		position.generate_moves(&moves);
 		auto best_score = -constants::SCORE_INF;
 
@@ -78,15 +80,25 @@ namespace loki::search
 				return 0;
 
 			best_score = std::max(best_score, score);
-			
+
 			if (score > alpha)
 			{
 				alpha = score;
 				statistics.pv_table.update_pv(position.ply(), move);
 			}
-				
+
 			if (score >= beta)
+			{
+
+				if (!move.is_active())
+				{
+					auto& killer_entry = statistics.killer_moves[position.ply()];
+					if (std::get<0>(killer_entry) != MOVE_NULL)
+						std::get<1>(killer_entry) = std::get<0>(killer_entry);
+					std::get<0>(killer_entry) = move.get_move();
+				}
 				return best_score;
+			}
 		}
 
 		if (legal_moves == 0)

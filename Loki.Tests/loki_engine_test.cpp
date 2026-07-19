@@ -51,8 +51,8 @@ namespace loki_tests
 		loki_engine engine;
 		auto state = position::game_state::from_fen(constants::START_FEN);
 		const std::vector<loki::movegen::move> moves{
-			{position::E2, position::E4},
-			{position::E7, position::E5},
+			{position::E2, position::E4, false},
+			{position::E7, position::E5, false},
 		};
 
 		REQUIRE(engine.set_position(*state, moves));

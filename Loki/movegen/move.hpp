@@ -43,30 +43,45 @@ namespace loki::movegen
 	};
 	ENABLE_COMP_OPERATORS_ON(move_t);
 
+	// Encodes a move_t as the lower 16 bits, an activity flag and the remaining 15 bits as the score.
+	enum scored_move_t : uint32_t
+	{
+	};
+
+	/// <summary>Wrapper class for move_t with utility get/set functions</summary>
 	class move final
 	{
 	private:
-		move_t m_move;
+		scored_move_t m_move;
 
 	public:
-		move() noexcept = default;
+		move() noexcept : m_move{ MOVE_NULL }
+		{}
 		constexpr move(move_t m) : m_move{ m }
-		{ }
-		constexpr move(position::e_square from, position::e_square to, move_attr type, piece promotion_piece) noexcept
-			: m_move{0}
+		{}
+		constexpr move(
+			position::e_square from,
+			position::e_square to,
+			move_attr type,
+			piece promotion_piece,
+			bool isactive,
+			uint16_t score = 0) noexcept
+			: m_move{ 0 }
 		{
 			this->from(from);
 			this->to(to);
 			this->type(type);
 			this->promotion_piece(promotion_piece);
+			this->active(isactive);
+			this->score(score);
 		}
-		constexpr move(size_t from, size_t to)
-			: move(static_cast<position::e_square>(from), static_cast<position::e_square>(to))
+		constexpr move(size_t from, size_t to, bool isactive)
+			: move(static_cast<position::e_square>(from), static_cast<position::e_square>(to), isactive)
 		{
 
 		}
-		constexpr move(position::e_square from, position::e_square to)
-			: move(from, to, NORMAL, KNIGHT)
+		constexpr move(position::e_square from, position::e_square to, bool isactive)
+			: move(from, to, NORMAL, KNIGHT, isactive)
 		{ }
 
 		move(const move& src) noexcept : m_move{ src.m_move } {}
@@ -88,6 +103,17 @@ namespace loki::movegen
 		{
 			m_move = nmasked_or((int)p - 1, 0x0003, 0);
 		}
+		constexpr void active(bool isactive) noexcept
+		{
+			uint32_t value = isactive ? 0x1 : 0x0;
+			m_move = nmasked_or(value, 0x10000, 16);
+		}
+		constexpr void score(uint16_t score)
+		{
+			if (score > 0x7FFF)
+				throw loki_exception("score value out of range");
+			m_move = nmasked_or(score, 0xFFFE0000, 17);
+		}
 #pragma endregion
 #pragma region getters
 		constexpr position::e_square from() const noexcept
@@ -106,10 +132,18 @@ namespace loki::movegen
 		{
 			return get<piece>(0x0003, 0) + 1;
 		}
-
-		constexpr move_t get_raw() const noexcept
+		constexpr bool is_active() const noexcept
 		{
-			return m_move;
+			return get<bool>(0x1, 16);
+		}
+		constexpr uint16_t score() const noexcept
+		{
+			return get<uint16_t>(0x7FFF, 17);
+		}
+
+		constexpr move_t get_move() const noexcept
+		{
+			return static_cast<move_t>(m_move & 0xFFFF);
 		}
 #pragma endregion
 
@@ -139,15 +173,15 @@ namespace loki::movegen
 	private:
 
 		template<typename T>
-		constexpr T get(uint16_t mask, size_t shift) const noexcept
+		constexpr T get(uint32_t mask, size_t shift) const noexcept
 		{
 			return static_cast<T>((m_move >> shift) & mask);
 		}
 
 		template<typename T>
-		constexpr move_t nmasked_or(T value, uint16_t mask, size_t shift) const noexcept
+		constexpr scored_move_t nmasked_or(T value, uint32_t mask, size_t shift) const noexcept
 		{
-			return static_cast<move_t>((m_move & ~mask) | ((uint16_t)value << shift));
+			return static_cast<scored_move_t>((m_move & ~mask) | ((uint16_t)value << shift));
 		}
 	};
 }

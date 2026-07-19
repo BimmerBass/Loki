@@ -26,8 +26,8 @@ namespace search_tests
 		search_statistics statistics;
 		statistics.nodes = 42;
 		statistics.selective_depth = 3;
-		statistics.pv_table.update_pv(static_cast<ply_t>(1), move{ E7, E5 });
-		statistics.pv_table.update_pv(ROOT_PLY, move{ E2, E4 });
+		statistics.pv_table.update_pv(static_cast<ply_t>(1), move{ E7, E5, false });
+		statistics.pv_table.update_pv(ROOT_PLY, move{ E2, E4, false });
 
 		statistics.clear();
 
@@ -37,15 +37,15 @@ namespace search_tests
 		REQUIRE(statistics.pv_table.get_pv(static_cast<ply_t>(1)).empty());
 
 		statistics.nodes = 1;
-		statistics.pv_table.update_pv(ROOT_PLY, move{ D2, D4 });
+		statistics.pv_table.update_pv(ROOT_PLY, move{ D2, D4, false });
 		REQUIRE(statistics.nodes == 1);
-		REQUIRE(statistics.pv_table.get_pv(ROOT_PLY) == std::vector<move>{ move{ D2, D4 } });
+		REQUIRE(statistics.pv_table.get_pv(ROOT_PLY) == std::vector<move>{ move{ D2, D4 , false} });
 	}
 
 	TEST_CASE("null_sink accepts search reports", "[search][info_sink]")
 	{
 		null_sink sink;
-		const std::vector<move> pv{ move{ E2, E4 }, move{ E7, E5 } };
+		const std::vector<move> pv{ move{ E2, E4 , false}, move{ E7, E5 , false} };
 
 		REQUIRE_NOTHROW(sink.info(
 			1,

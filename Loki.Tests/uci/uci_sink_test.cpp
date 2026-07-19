@@ -33,8 +33,8 @@ namespace uci_tests
 		uci_sink sink{ ctx };
 
 		const std::vector pv{
-			movegen::move{ position::E2, position::E4 },
-			movegen::move{ position::E7, position::E5 }
+			movegen::move{ position::E2, position::E4 , false},
+			movegen::move{ position::E7, position::E5 , false}
 		};
 		sink.info(8, cp_score{ 42 }, 12, std::chrono::milliseconds{ 345 }, 6789, 19678, pv);
 
@@ -67,8 +67,8 @@ namespace uci_tests
 		context ctx{ engine, UCI_STATE::Searching, input, output, error };
 		uci_sink sink{ ctx };
 
-		sink.bestmove(movegen::move{ position::G1, position::F3 });
-		sink.bestmove(movegen::move{ position::G1, position::F3 }, movegen::move{position::A7, position::A6});
+		sink.bestmove(movegen::move{ position::G1, position::F3, false });
+		sink.bestmove(movegen::move{ position::G1, position::F3 , false}, movegen::move{position::A7, position::A6, false});
 
 		REQUIRE(output.str() == "bestmove g1f3\nbestmove g1f3 ponder a7a6\n");
 	}

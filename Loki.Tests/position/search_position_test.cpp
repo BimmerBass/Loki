@@ -26,51 +26,138 @@ namespace position_tests
 	using namespace loki::movegen;
 	using namespace loki::movegen::magics;
 
+	namespace
+	{
+		search_position_t make_position(const std::string& fen)
+		{
+			auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
+			auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
+			return make(game_state::from_fen(fen), bishop_index, rook_index);
+		}
+
+		void require_activity(const move_list& moves, const std::string& move_string, bool expected)
+		{
+			const auto generated_move = moves.find(move_string);
+			REQUIRE(generated_move.has_value());
+			REQUIRE(generated_move->is_active() == expected);
+		}
+
+		bool contains_move_string(const move_list& moves, const std::string& move_string)
+		{
+			return std::ranges::any_of(moves, [&move_string](const move& generated_move)
+				{
+					return generated_move.to_string() == move_string;
+				});
+		}
+
+		void generate_and_require_activity_partitions(search_position& position, move_list& all_moves)
+		{
+			move_list active_moves;
+			move_list quiet_moves;
+
+			const auto active_count = position.generate_moves<ACTIVE>(&active_moves);
+			const auto quiet_count = position.generate_moves<QUIET>(&quiet_moves);
+			const auto all_count = position.generate_moves<ALL>(&all_moves);
+
+			REQUIRE(active_count == active_moves.size());
+			REQUIRE(quiet_count == quiet_moves.size());
+			REQUIRE(all_count == all_moves.size());
+			REQUIRE(all_count == active_count + quiet_count);
+
+			for (const auto& generated_move : active_moves)
+				REQUIRE(generated_move.is_active());
+			for (const auto& generated_move : quiet_moves)
+				REQUIRE_FALSE(generated_move.is_active());
+
+			for (const auto& generated_move : all_moves)
+			{
+				const auto move_string = generated_move.to_string();
+				const bool appears_in_active = contains_move_string(active_moves, move_string);
+				const bool appears_in_quiet = contains_move_string(quiet_moves, move_string);
+
+				REQUIRE(appears_in_active != appears_in_quiet);
+				REQUIRE(generated_move.is_active() == appears_in_active);
+			}
+		}
+	}
+
 	TEST_CASE("search_position can generate moves from the initial position", "[position][search_position]")
 	{
-		auto state = game_state::from_fen(constants::START_FEN);
-		auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
-		auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
-		auto pos = make(state, bishop_index, rook_index);
+		auto pos = make_position(constants::START_FEN);
 
 		move_list moves;
 		REQUIRE(pos->generate_moves(&moves) == 20);
+		REQUIRE(std::ranges::none_of(moves, [](const move& generated_move)
+			{
+				return generated_move.is_active();
+			}));
 		REQUIRE_FALSE(pos->in_check());
 	}
 
-	TEST_CASE("search_position move-type templates partition active and quiet moves", "[position][search_position][stub]")
+	TEST_CASE("search_position move-type templates partition active and quiet moves", "[position][search_position]")
 	{
-		auto state = game_state::from_fen("8/8/8/3p4/4P3/8/8/4K2k w - - 0 1");
-		auto bishop_index = std::make_shared<hardcoded_index<BISHOP>>();
-		auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
-		auto pos = make(state, bishop_index, rook_index);
-
-		move_list active_moves;
-		move_list quiet_moves;
+		auto pos = make_position("8/8/8/3p4/4P3/8/8/4K2k w - - 0 1");
 		move_list all_moves;
+		generate_and_require_activity_partitions(*pos, all_moves);
 
-		auto active_count = pos->generate_moves<ACTIVE>(&active_moves);
-		auto quiet_count = pos->generate_moves<QUIET>(&quiet_moves);
-		auto all_count = pos->generate_moves<ALL>(&all_moves);
+		require_activity(all_moves, "e4d5", true);
+		require_activity(all_moves, "e4e5", false);
+	}
 
-		REQUIRE(active_count == active_moves.size());
-		REQUIRE(quiet_count == quiet_moves.size());
-		REQUIRE(all_count == all_moves.size());
+	TEST_CASE("search_position assigns activity flags to generated move categories", "[position][search_position][movegen]")
+	{
+		SECTION("sliding piece captures and quiet moves")
+		{
+			auto pos = make_position("7k/8/3p4/8/3R4/8/8/K7 w - - 0 1");
+			move_list moves;
+			generate_and_require_activity_partitions(*pos, moves);
 
-		REQUIRE(active_moves.size() == 1);
-		REQUIRE(active_moves[0].to_string() == "e4d5");
-		REQUIRE(std::ranges::none_of(quiet_moves, [](const move& m) { return m.to_string() == "e4d5"; }));
-		REQUIRE(all_moves.size() == active_moves.size() + quiet_moves.size());
+			require_activity(moves, "d4d6", true);
+			require_activity(moves, "d4d5", false);
+		}
 
-		const auto contains = [](const move_list& moves, const move& expected)
+		SECTION("king captures and quiet moves")
+		{
+			auto pos = make_position("7k/8/8/5p2/4K3/8/8/8 w - - 0 1");
+			move_list moves;
+			generate_and_require_activity_partitions(*pos, moves);
+
+			require_activity(moves, "e4f5", true);
+			require_activity(moves, "e4d4", false);
+		}
+
+		SECTION("en passant")
+		{
+			auto pos = make_position("7k/8/8/3pP3/8/8/8/7K w - d6 0 1");
+			move_list moves;
+			generate_and_require_activity_partitions(*pos, moves);
+
+			require_activity(moves, "e5d6", true);
+			require_activity(moves, "e5e6", false);
+		}
+
+		SECTION("capturing and non-capturing promotions")
+		{
+			auto pos = make_position("1r5k/P7/8/8/8/8/8/7K w - - 0 1");
+			move_list moves;
+			generate_and_require_activity_partitions(*pos, moves);
+
+			for (const char promotion_piece : { 'n', 'b', 'r', 'q' })
 			{
-				return std::ranges::any_of(moves, [&expected](const move& actual) { return actual == expected; });
-			};
+				require_activity(moves, std::string("a7a8") + promotion_piece, true);
+				require_activity(moves, std::string("a7b8") + promotion_piece, true);
+			}
+		}
 
-		for (const auto& move : active_moves)
-			REQUIRE(contains(all_moves, move));
-		for (const auto& move : quiet_moves)
-			REQUIRE(contains(all_moves, move));
+		SECTION("castling")
+		{
+			auto pos = make_position("4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1");
+			move_list moves;
+			generate_and_require_activity_partitions(*pos, moves);
+
+			require_activity(moves, "e1g1", false);
+			require_activity(moves, "e1c1", false);
+		}
 	}
 
 	TEST_CASE("search_position clone preserves move history independently of search ply", "[position][search_position]")

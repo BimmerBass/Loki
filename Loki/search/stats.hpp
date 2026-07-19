@@ -30,11 +30,18 @@ namespace loki::search
 		size_t selective_depth = 0;
 		size_t nodes = 0;
 
+		// Move ordering heuristics
+		std::array<
+			std::tuple<movegen::move_t, movegen::move_t>, MAX_PLY
+		> killer_moves;
+
 		void clear() noexcept
 		{
 			pv_table.clear();
 			selective_depth = 0;
 			nodes = 0;
+
+			killer_moves.fill(std::make_tuple(movegen::MOVE_NULL, movegen::MOVE_NULL));
 		}
 	};
 }

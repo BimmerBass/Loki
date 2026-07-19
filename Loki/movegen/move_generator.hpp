@@ -101,10 +101,10 @@ namespace loki::movegen
 
 		void add_promotions(position::e_square from, position::e_square to, ml_t* ml) const
 		{
-			ml->push_back(move(from, to, PROMOTION, KNIGHT));
-			ml->push_back(move(from, to, PROMOTION, BISHOP));
-			ml->push_back(move(from, to, PROMOTION, ROOK));
-			ml->push_back(move(from, to, PROMOTION, QUEEN));
+			ml->push_back(move(from, to, PROMOTION, KNIGHT, true));
+			ml->push_back(move(from, to, PROMOTION, BISHOP, true));
+			ml->push_back(move(from, to, PROMOTION, ROOK, true));
+			ml->push_back(move(from, to, PROMOTION, QUEEN, true));
 		}
 	};
 
@@ -207,7 +207,8 @@ namespace loki::movegen
 		while (valid_attacks != 0)
 		{
 			auto to_sq = position::pop_lsb_nonzero(valid_attacks);
-			ml->push_back(move(from_sq, to_sq));
+			bool isactive = ((1ULL << to_sq) & pos->all_pieces(!S)) != 0;
+			ml->push_back(move(from_sq, to_sq, isactive));
 		}
 	}
 
@@ -259,12 +260,12 @@ namespace loki::movegen
 			while (one_up)
 			{
 				auto inx = pop_lsb_nonzero(one_up);
-				ml->push_back(move(S == WHITE ? inx - 8 : inx + 8, inx));
+				ml->push_back(move(S == WHITE ? inx - 8 : inx + 8, inx, false));
 			}
 			while (two_up)
 			{
 				auto inx = pop_lsb_nonzero(two_up);
-				ml->push_back(move(S == WHITE ? inx - 16 : inx + 16, inx));
+				ml->push_back(move(S == WHITE ? inx - 16 : inx + 16, inx, false));
 			}
 		}
 		if constexpr (MT == ACTIVE || MT == ALL) // attacks, en-passant, promotions
@@ -281,7 +282,7 @@ namespace loki::movegen
 				if (inx.rank() == last_rank) // promotion capture.
 					add_promotions(static_cast<e_square>(inx.value() - left_attack_origin), inx.value(), ml);
 				else
-					ml->push_back(move(inx.value() - left_attack_origin, inx.value()));
+					ml->push_back(move(inx.value() - left_attack_origin, inx.value(), true));
 			}
 			while (right_attacks)
 			{
@@ -290,7 +291,7 @@ namespace loki::movegen
 				if (inx.rank() == last_rank) // promotion capture.
 					add_promotions(static_cast<e_square>(inx.value() - right_attack_origin), inx.value(), ml);
 				else
-					ml->push_back(move(inx.value() - right_attack_origin, inx.value()));
+					ml->push_back(move(inx.value() - right_attack_origin, inx.value(), true));
 			}
 
 			// Promotions
@@ -307,9 +308,9 @@ namespace loki::movegen
 				bitboard_t ep_board = 1ULL << en_passant_sq;
 
 				if (shift<down, left>(ep_board) & pawns) // we use right attack origin since from the attacker's perspective it is a right-attack
-					ml->push_back(move(en_passant_sq - right_attack_origin, en_passant_sq, ENPASSANT, KNIGHT));
+					ml->push_back(move(en_passant_sq - right_attack_origin, en_passant_sq, ENPASSANT, KNIGHT, true));
 				if (shift<down, right>(ep_board) & pawns)
-					ml->push_back(move(en_passant_sq - left_attack_origin, en_passant_sq, ENPASSANT, KNIGHT));
+					ml->push_back(move(en_passant_sq - left_attack_origin, en_passant_sq, ENPASSANT, KNIGHT, true));
 			}
 		}
 	}
@@ -417,7 +418,7 @@ namespace loki::movegen
 				if (!is_one_at(occupancy, f_sq.value()) &&
 					!is_one_at(occupancy, g_sq.value()))
 				{
-					ml->push_back(move(king_sq, S == WHITE ? G1 : G8, CASTLING, KNIGHT));
+					ml->push_back(move(king_sq, S == WHITE ? G1 : G8, CASTLING, KNIGHT, false));
 				}
 			}
 			if (pos->game_state()->castling_rights.can_castle<S, QUEENSIDE>() && castle_is_safe<S, QUEENSIDE>(pos))
@@ -429,14 +430,15 @@ namespace loki::movegen
 					!is_one_at(occupancy, c_sq.value()) &&
 					!is_one_at(occupancy, d_sq.value()))
 				{
-					ml->push_back(move(king_sq, S == WHITE ? C1 : C8, CASTLING, KNIGHT));
+					ml->push_back(move(king_sq, S == WHITE ? C1 : C8, CASTLING, KNIGHT, false));
 				}
 			}
 		}
 		while (valid_attacks != 0)
 		{
 			auto to_sq = pop_lsb_nonzero(valid_attacks);
-			ml->push_back(move(king_sq, to_sq));
+			bool isactive = ((1ULL << to_sq) & pos->all_pieces(!S)) != 0;
+			ml->push_back(move(king_sq, to_sq, isactive));
 		}
 	}
 

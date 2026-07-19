@@ -28,11 +28,15 @@ namespace move_tests
 	{
 		SECTION("all zero")
 		{
-			move zero(move_t{0});
+			const move_t raw_move{ 0 };
+			move zero(raw_move);
 			REQUIRE(zero.from() == A1);
 			REQUIRE(zero.to() == A1);
 			REQUIRE(zero.type() == NORMAL);
 			REQUIRE(zero.promotion_piece() == KNIGHT);
+			REQUIRE(zero.get_move() == raw_move);
+			REQUIRE_FALSE(zero.is_active());
+			REQUIRE(zero.score() == 0);
 		}
 
 		SECTION("mixed value")
@@ -43,6 +47,9 @@ namespace move_tests
 			REQUIRE(random.to() == H4);
 			REQUIRE(random.type() == CASTLING);
 			REQUIRE(random.promotion_piece() == ROOK);
+			REQUIRE(random.get_move() == random_move);
+			REQUIRE_FALSE(random.is_active());
+			REQUIRE(random.score() == 0);
 		}
 
 		SECTION("all bits set")
@@ -53,6 +60,9 @@ namespace move_tests
 			REQUIRE(full.to() == H8);
 			REQUIRE(full.type() == PROMOTION);
 			REQUIRE(full.promotion_piece() == QUEEN);
+			REQUIRE(full.get_move() == full_move);
+			REQUIRE_FALSE(full.is_active());
+			REQUIRE(full.score() == 0);
 		}
 	}
 
@@ -89,5 +99,72 @@ namespace move_tests
 			m.promotion_piece(ROOK);
 			REQUIRE(m.promotion_piece() == ROOK);
 		}
+	}
+
+	TEST_CASE("move activity flag can be set without changing other encoded values", "[movegen][move]")
+	{
+		move m(A5, H4, CASTLING, ROOK, true, 12'345);
+		const auto raw_move = m.get_move();
+
+		REQUIRE(m.is_active());
+		REQUIRE(m.score() == 12'345);
+
+		m.active(false);
+		REQUIRE_FALSE(m.is_active());
+		REQUIRE(m.score() == 12'345);
+		REQUIRE(m.get_move() == raw_move);
+
+		m.active(true);
+		REQUIRE(m.is_active());
+		REQUIRE(m.score() == 12'345);
+		REQUIRE(m.get_move() == raw_move);
+	}
+
+	TEST_CASE("move score can be set without changing other encoded values", "[movegen][move]")
+	{
+		move m(A5, H4, CASTLING, ROOK, true);
+		const auto raw_move = m.get_move();
+
+		REQUIRE(m.score() == 0);
+
+		m.score(1);
+		REQUIRE(m.score() == 1);
+		REQUIRE(m.is_active());
+		REQUIRE(m.get_move() == raw_move);
+
+		m.score(12'345);
+		REQUIRE(m.score() == 12'345);
+		REQUIRE(m.is_active());
+		REQUIRE(m.get_move() == raw_move);
+
+		m.score(0x7FFF);
+		REQUIRE(m.score() == 0x7FFF);
+		REQUIRE(m.is_active());
+		REQUIRE(m.get_move() == raw_move);
+	}
+
+	TEST_CASE("move score rejects values that do not fit in 15 bits", "[movegen][move]")
+	{
+		move m(move_t{ 0 });
+
+		REQUIRE_THROWS(m.score(0x8000));
+	}
+
+	TEST_CASE("move constructor keeps move, activity, and score fields independent", "[movegen][move]")
+	{
+		const auto expected_move = move_t(
+			((uint16_t)32 << 10)
+			| ((uint16_t)31 << 4)
+			| (CASTLING << 2)
+			| (ROOK - 1));
+		move m(A5, H4, CASTLING, ROOK, true, 0x7FFF);
+
+		REQUIRE(m.from() == A5);
+		REQUIRE(m.to() == H4);
+		REQUIRE(m.type() == CASTLING);
+		REQUIRE(m.promotion_piece() == ROOK);
+		REQUIRE(m.is_active());
+		REQUIRE(m.score() == 0x7FFF);
+		REQUIRE(m.get_move() == expected_move);
 	}
 }
