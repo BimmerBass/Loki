@@ -33,9 +33,9 @@ namespace loki::movegen
 	private:
 		std::array<move, max_size> m_collection;
 		size_t m_size;
-
-		using cit = std::array<move, max_size>::const_iterator;
 	public:
+		using it = std::array<move, max_size>::iterator;
+
 		move_list()
 			: m_size{0}, m_collection{}
 		{}
@@ -55,8 +55,8 @@ namespace loki::movegen
 			return m_collection[inx];
 		}
 		constexpr size_t size() const noexcept { return m_size; }
-		constexpr cit begin() const noexcept { return m_collection.begin(); }
-		constexpr cit end() const noexcept { return m_collection.begin() + m_size; }
+		constexpr it begin() noexcept { return m_collection.begin(); }
+		constexpr it end() noexcept { return m_collection.begin() + m_size; }
 
 		std::optional<move> find(const std::string& move_string) const;
 

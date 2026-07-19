@@ -18,6 +18,8 @@
 #include "movegen/move.hpp"
 #include "movegen/move_list.hpp"
 #include "position/search_position.hpp"
+#include "search/stats.hpp"
+#include <optional>
 
 namespace loki::ordering
 {
@@ -26,12 +28,25 @@ namespace loki::ordering
 	class move_picker final
 	{
 		CHILD_EXCEPTION(ordering_error, loki_exception);
+
+		inline static constexpr uint16_t HISTORY_MAX = 10'000;
+		inline static constexpr uint16_t KILLER_ONE = HISTORY_MAX + 1;
+		inline static constexpr uint16_t KILLER_TWO = KILLER_ONE + 1;
+		static_assert(KILLER_TWO <= 0x7FFF);
+
 	private:
+		const search::search_statistics& statistics;
 		const position::search_position& position;
 		movegen::move_list moves;
-		movegen::move_list::cit current_move_it;
+		movegen::move_list::it current_move_it;
 
 	public:
+		move_picker(
+			const position::search_position& pos,
+			const search::search_statistics& stats)
+			: position{ pos }, statistics{ stats }, moves{}, current_move_it{}
+		{}
+
 		/// <summary>
 		/// Generate and score the moves.
 		/// </summary>
@@ -42,7 +57,18 @@ namespace loki::ordering
 			position.generate_moves<MT>(&moves);
 			current_move_it = moves.begin();
 
-			throw not_implemented_error();
+			// TODO: Score moves in move_generator instead of here!!!
+			const auto& killers = statistics.killer_moves[position.ply()];
+			for (auto& move : moves)
+			{
+				if (!move.is_active())
+				{
+					if (move.get_move() == std::get<0>(killers))
+						move.score(KILLER_ONE);
+					else if (move.get_move() == std::get<1>(killers))
+						move.score(KILLER_TWO);
+				}
+			}
 		}
 
 		/// <summary>
@@ -51,11 +77,30 @@ namespace loki::ordering
 		/// the best one at the current element of the list.
 		/// </summary>
 		/// <returns>The next move, if there are any left.</returns>
-		std::optional<move> get_next_move()
+		std::optional<movegen::move> get_next_move() noexcept
 		{
 			if (current_move_it == moves.end())
 				return std::nullopt;
-			throw not_implemented_error();
+
+
+			// explicitly copy the iterator
+			auto best_it = current_move_it;
+			auto best_score = current_move_it->score();
+
+
+			// again, copy
+			for (auto it = std::next(current_move_it); it != moves.end(); ++it)
+			{
+				if (it->score() > best_score)
+				{
+					best_it = it;
+					best_score = it->score();
+				}
+			}
+
+			// swap the placements.
+			std::iter_swap(current_move_it, best_it);
+			return *current_move_it++;
 		}
 	};
 }

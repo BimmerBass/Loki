@@ -17,8 +17,10 @@
 
 #pragma once
 #include <algorithm>
+#include "ordering/move_picker.hpp"
 #include "../search_worker.hpp"
 
+using namespace loki::ordering;
 using namespace loki::movegen;
 
 namespace loki::search
@@ -54,12 +56,15 @@ namespace loki::search
 		}
 
 		size_t legal_moves = 0;
-		move_list moves;
-		position.generate_moves(&moves);
+		move_picker<ALL> mp(position, statistics);
+		mp.generate_moves();
+
 		auto best_score = -constants::SCORE_INF;
 
-		for (const auto& move : moves)
+		std::optional<movegen::move> move_opt;
+		while ((move_opt = mp.get_next_move()) != std::nullopt)
 		{
+			const auto move = move_opt.value();
 			if constexpr (Node == node::ROOT)
 			{
 				auto move_allowed =
