@@ -67,6 +67,7 @@ void loki_engine::set_position(position::search_position_t state)
 void loki_engine::clear()
 {
 	_position = std::nullopt;
+	_main_thread.newgame_clear();
 }
 
 

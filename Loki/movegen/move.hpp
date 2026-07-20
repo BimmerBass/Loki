@@ -43,10 +43,11 @@ namespace loki::movegen
 	};
 	ENABLE_COMP_OPERATORS_ON(move_t);
 
-	// Encodes a move_t as the lower 16 bits, an activity flag and the remaining 15 bits as the score.
+	// Encodes a move_t as the lower 16 bits, an activity flag and the remaining 15 bits as a signed score.
 	enum scored_move_t : uint32_t
 	{
 	};
+	using move_score_t = int16_t;
 
 	/// <summary>Wrapper class for move_t with utility get/set functions</summary>
 	class move final
@@ -65,7 +66,7 @@ namespace loki::movegen
 			move_attr type,
 			piece promotion_piece,
 			bool isactive,
-			uint16_t score = 0) noexcept
+			move_score_t score = 0)
 			: m_move{ 0 }
 		{
 			this->from(from);
@@ -108,9 +109,9 @@ namespace loki::movegen
 			uint32_t value = isactive ? 0x1 : 0x0;
 			m_move = nmasked_or(value, 0x10000, 16);
 		}
-		constexpr void score(uint16_t score)
+		constexpr void score(move_score_t score)
 		{
-			if (score > 0x7FFF)
+			if (score < -0x4000 || score > 0x3FFF)
 				throw loki_exception("score value out of range");
 			m_move = nmasked_or(score, 0xFFFE0000, 17);
 		}
@@ -136,9 +137,12 @@ namespace loki::movegen
 		{
 			return get<bool>(0x1, 16);
 		}
-		constexpr uint16_t score() const noexcept
+		constexpr move_score_t score() const noexcept
 		{
-			return get<uint16_t>(0x7FFF, 17);
+			const auto encoded_score = get<uint32_t>(0x7FFF, 17);
+			return encoded_score & 0x4000
+				? static_cast<move_score_t>(static_cast<int32_t>(encoded_score) - 0x8000)
+				: static_cast<move_score_t>(encoded_score);
 		}
 
 		constexpr move_t get_move() const noexcept
@@ -181,7 +185,8 @@ namespace loki::movegen
 		template<typename T>
 		constexpr scored_move_t nmasked_or(T value, uint32_t mask, size_t shift) const noexcept
 		{
-			return static_cast<scored_move_t>((m_move & ~mask) | ((uint16_t)value << shift));
+			const auto shifted_value = static_cast<uint32_t>(value) << shift;
+			return static_cast<scored_move_t>((m_move & ~mask) | (shifted_value & mask));
 		}
 	};
 }

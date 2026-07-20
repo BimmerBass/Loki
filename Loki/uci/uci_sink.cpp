@@ -32,7 +32,8 @@ void uci_sink::info(
 	std::chrono::milliseconds time,
 	size_t nodes,
 	size_t nps,
-	std::vector<movegen::move> pv)
+	std::vector<movegen::move> pv,
+	size_t fail_high, size_t fail_high_first_move)
 {
 	const auto to_string_v = overloads
 	{
@@ -54,6 +55,11 @@ void uci_sink::info(
 		for (const auto& move : pv)
 			m_context.out << ' ' << move.to_string();
 	}
+
+#ifdef LOKI_ENABLE_DEV_COMMANDS
+	if (fail_high != 0)
+		m_context.out << " fhf " << static_cast<double>(fail_high_first_move) / static_cast<double>(fail_high);
+#endif
 
 	m_context.out << std::endl;
 }

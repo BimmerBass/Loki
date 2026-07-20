@@ -94,15 +94,32 @@ namespace loki::search
 
 			if (score >= beta)
 			{
+				statistics.fail_high++;
+				if (legal_moves == 1) // first move
+					statistics.fail_high_first_move++;
 
 				if (!move.is_active())
 				{
 					auto& killer_entry = statistics.killer_moves[position.ply()];
-					if (std::get<0>(killer_entry) != MOVE_NULL)
+					if (std::get<0>(killer_entry) != move.get_move())
+					{
 						std::get<1>(killer_entry) = std::get<0>(killer_entry);
-					std::get<0>(killer_entry) = move.get_move();
+						std::get<0>(killer_entry) = move.get_move();
+					}
+
+					// reward good quiet, penalize bad ones.
+					const int32_t history_bonus = depth * depth;
+					statistics.update_history<S>(move, history_bonus);
+					for (const auto& prev_quiet : mp.searched_quiets())
+						statistics.update_history<S>(prev_quiet, -history_bonus);
 				}
 				return best_score;
+			}
+
+			// save non-cutoff quiet move
+			if (!move.is_active())
+			{
+				mp.searched_quiets().push_back(move);
 			}
 		}
 

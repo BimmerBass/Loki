@@ -137,17 +137,28 @@ namespace move_tests
 		REQUIRE(m.is_active());
 		REQUIRE(m.get_move() == raw_move);
 
-		m.score(0x7FFF);
-		REQUIRE(m.score() == 0x7FFF);
+		m.score(-12'345);
+		REQUIRE(m.score() == -12'345);
+		REQUIRE(m.is_active());
+		REQUIRE(m.get_move() == raw_move);
+
+		m.score(0x3FFF);
+		REQUIRE(m.score() == 0x3FFF);
+		REQUIRE(m.is_active());
+		REQUIRE(m.get_move() == raw_move);
+
+		m.score(-0x4000);
+		REQUIRE(m.score() == -0x4000);
 		REQUIRE(m.is_active());
 		REQUIRE(m.get_move() == raw_move);
 	}
 
-	TEST_CASE("move score rejects values that do not fit in 15 bits", "[movegen][move]")
+	TEST_CASE("move score rejects values that do not fit in a signed 15-bit value", "[movegen][move]")
 	{
 		move m(move_t{ 0 });
 
-		REQUIRE_THROWS(m.score(0x8000));
+		REQUIRE_THROWS(m.score(0x4000));
+		REQUIRE_THROWS(m.score(-0x4001));
 	}
 
 	TEST_CASE("move constructor keeps move, activity, and score fields independent", "[movegen][move]")
@@ -157,14 +168,14 @@ namespace move_tests
 			| ((uint16_t)31 << 4)
 			| (CASTLING << 2)
 			| (ROOK - 1));
-		move m(A5, H4, CASTLING, ROOK, true, 0x7FFF);
+		move m(A5, H4, CASTLING, ROOK, true, -0x4000);
 
 		REQUIRE(m.from() == A5);
 		REQUIRE(m.to() == H4);
 		REQUIRE(m.type() == CASTLING);
 		REQUIRE(m.promotion_piece() == ROOK);
 		REQUIRE(m.is_active());
-		REQUIRE(m.score() == 0x7FFF);
+		REQUIRE(m.score() == -0x4000);
 		REQUIRE(m.get_move() == expected_move);
 	}
 }

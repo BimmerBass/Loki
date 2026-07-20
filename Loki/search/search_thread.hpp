@@ -102,6 +102,10 @@ namespace loki::search
 			_cv.wait(lock, [&]() { return _context == std::nullopt && !_callback_running; });
 		}
 
+		void newgame_clear() {
+			std::lock_guard<std::mutex> lock(_mtx);
+			_search_worker->newgame_clear();
+		}
 	private:
 		// stop the search and join.
 		void join() noexcept

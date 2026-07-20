@@ -37,7 +37,8 @@ namespace loki::search
 			std::chrono::milliseconds time,
 			size_t nodes,
 			size_t nps,
-			std::vector<movegen::move> pv) = 0;
+			std::vector<movegen::move> pv,
+			size_t fail_high = 0, size_t fail_high_first_move = 0) = 0;
 		virtual void bestmove(movegen::move move, std::optional<movegen::move> ponder = std::nullopt) = 0;
 	};
 
@@ -53,7 +54,8 @@ namespace loki::search
 			std::chrono::milliseconds time,
 			size_t nodes,
 			size_t nps,
-			std::vector<movegen::move> pv) override
+			std::vector<movegen::move> pv,
+			size_t fail_high = 0, size_t fail_high_first_move = 0) override
 		{}
 
 		void bestmove(movegen::move move, std::optional<movegen::move> ponder) override

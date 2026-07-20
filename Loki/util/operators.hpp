@@ -27,7 +27,7 @@ constexpr _Ty operator+(_Ty v1, _Ty v2) noexcept {return static_cast<_Ty>((long 
 template<typename T> requires(!std::is_same_v<T, _Ty>)													\
 constexpr _Ty operator-(_Ty v1, T v2) noexcept { return static_cast<_Ty>((T)v1 - v2); }			\
 constexpr _Ty operator-(_Ty v1, _Ty v2) noexcept {return static_cast<_Ty>((long long)v1 - (long long)v2);} \
-constexpr _Ty operator-(_Ty rhs) noexcept { return static_cast<_Ty>(-long long(rhs)); }				\
+constexpr _Ty operator-(_Ty rhs) noexcept { return static_cast<_Ty>(-(long long)rhs); }				\
 constexpr _Ty& operator+=(_Ty& v, long long rhs) noexcept { return v = v + rhs; }						\
 constexpr _Ty& operator-=(_Ty& v, long long rhs) noexcept { return v = v - rhs; }
 

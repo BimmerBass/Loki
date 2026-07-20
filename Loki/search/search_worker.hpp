@@ -44,6 +44,7 @@ namespace loki::search
 			const limits& limits,
 			std::stop_token stop_token,
 			info_sink_t sink) noexcept = 0;
+		virtual void newgame_clear() = 0;
 	};
 
 	/// <summary>
@@ -100,6 +101,8 @@ namespace loki::search
 
 				for (depth_t depth = 1; depth <= max_depth; depth++)
 				{
+					statistics.fail_high = statistics.fail_high_first_move = 0;
+					
 					const auto score = position->side_to_move() == WHITE
 						? search_ab<WHITE, node::ROOT>(*position, limits, stop_token, depth, -constants::SCORE_INF, constants::SCORE_INF)
 						: search_ab<BLACK, node::ROOT>(*position, limits, stop_token, depth, -constants::SCORE_INF, constants::SCORE_INF);
@@ -126,7 +129,8 @@ namespace loki::search
 						time,
 						statistics.nodes,
 						nps,
-						last_it_pv);
+						last_it_pv,
+						statistics.fail_high, statistics.fail_high_first_move);
 
 					if (limits.mate && std::holds_alternative<mate_score>(last_it_score)
 						&& std::get<mate_score>(last_it_score).in_moves == *limits.mate)
@@ -150,6 +154,11 @@ namespace loki::search
 			}
 		}
 
+		/// <summary>Clear all search statistics</summary>
+		void newgame_clear() override 
+		{
+			statistics.clear(true);
+		}
 	private:
 		void preprocess_search(position::search_position& position)
 		{

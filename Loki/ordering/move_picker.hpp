@@ -19,6 +19,7 @@
 #include "movegen/move_list.hpp"
 #include "position/search_position.hpp"
 #include "search/stats.hpp"
+#include "move_scores.hpp"
 #include <optional>
 
 namespace loki::ordering
@@ -28,23 +29,18 @@ namespace loki::ordering
 	class move_picker final
 	{
 		CHILD_EXCEPTION(ordering_error, loki_exception);
-
-		inline static constexpr uint16_t HISTORY_MAX = 10'000;
-		inline static constexpr uint16_t KILLER_TWO = HISTORY_MAX + 1;
-		inline static constexpr uint16_t KILLER_ONE = KILLER_TWO + 1;
-		static_assert(KILLER_TWO <= 0x7FFF);
-
 	private:
 		const search::search_statistics& statistics;
 		const position::search_position& position;
 		movegen::move_list moves;
 		movegen::move_list::it current_move_it;
 
+		movegen::move_list _searched_quiets;
 	public:
 		move_picker(
 			const position::search_position& pos,
 			const search::search_statistics& stats)
-			: position{ pos }, statistics{ stats }, moves{}, current_move_it{}
+			: position{ pos }, statistics{ stats }, moves{}, current_move_it{}, _searched_quiets{}
 		{}
 
 		/// <summary>
@@ -61,14 +57,20 @@ namespace loki::ordering
 			const auto& killers = statistics.killer_moves[position.ply()];
 			for (auto& move : moves)
 			{
-				if (!move.is_active())
+				if (move.is_active())
+					move.score(GOOD_CAPTURE);
+				else
 				{
 					if (move.get_move() == std::get<0>(killers))
 						move.score(KILLER_ONE);
 					else if (move.get_move() == std::get<1>(killers))
 						move.score(KILLER_TWO);
+					else
+						move.score(statistics.history_score(position.side_to_move(), move));
 				}
 			}
+
+			_searched_quiets.clear();
 		}
 
 		/// <summary>
@@ -102,5 +104,8 @@ namespace loki::ordering
 			std::iter_swap(current_move_it, best_it);
 			return *current_move_it++;
 		}
+
+		const movegen::move_list& searched_quiets() const { return _searched_quiets; }
+		movegen::move_list& searched_quiets() { return _searched_quiets; }
 	};
 }

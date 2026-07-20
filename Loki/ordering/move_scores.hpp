@@ -16,31 +16,14 @@
 //
 
 #pragma once
+#include "movegen/move.hpp"
 
-#include "search/info_sink.hpp"
-#include "uci/context.hpp"
-
-namespace loki::uci
+namespace loki::ordering
 {
-	class uci_sink final : public search::info_sink
-	{
-	public:
-		explicit uci_sink(context& ctx) noexcept : m_context{ ctx }
-		{}
+	static constexpr movegen::move_score_t HISTORY_MAX = 8000; // history \in [-8000;8000]
+	static constexpr movegen::move_score_t KILLER_TWO = HISTORY_MAX + 1;
+	static constexpr movegen::move_score_t KILLER_ONE = KILLER_TWO + 1;
+	static constexpr movegen::move_score_t GOOD_CAPTURE = KILLER_ONE + 1;
 
-		void info(
-			size_t depth,
-			search_score_t score,
-			size_t seldepth,
-			std::chrono::milliseconds time,
-			size_t nodes,
-			size_t nps,
-			std::vector<movegen::move> pv,
-			size_t fail_high = 0, size_t fail_high_first_move = 0) override;
-
-		void bestmove(movegen::move move, std::optional<movegen::move> ponder = std::nullopt) override;
-
-	private:
-		context& m_context;
-	};
+	static_assert(-HISTORY_MAX > -0x4000 && GOOD_CAPTURE <= 0x7FFF);
 }

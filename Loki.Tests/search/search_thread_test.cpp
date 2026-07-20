@@ -42,7 +42,7 @@ namespace search_tests
 				std::chrono::milliseconds,
 				size_t,
 				size_t,
-				std::vector<move>) override
+				std::vector<move>, size_t, size_t) override
 			{
 			}
 
@@ -86,6 +86,7 @@ namespace search_tests
 					std::move(sink));
 			}
 
+			void newgame_clear() override {}
 		private:
 			function_t _function;
 		};

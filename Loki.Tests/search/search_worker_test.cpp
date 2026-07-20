@@ -45,7 +45,8 @@ namespace search_tests
 				std::chrono::milliseconds time,
 				size_t nodes,
 				size_t nps,
-				std::vector<move> pv) override
+				std::vector<move> pv,
+				size_t fh, size_t fhf) override
 			{
 				_state->events.push_back({ depth, seldepth, time, nodes, nps, std::move(pv) });
 			}
