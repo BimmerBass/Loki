@@ -165,20 +165,26 @@ namespace ordering_tests
 
 		search_statistics statistics;
 		statistics.clear();
-		statistics.killer_moves[position->ply()] = { active_killer.get_move(), quiet_killer.get_move() };
+		statistics.killer_moves[position->ply()] = { quiet_killer.get_move(), active_killer.get_move() };
 
 		move_picker<ALL> picker{ *position, statistics };
 		picker.generate_moves();
 		const auto picked = drain(picker);
 
 		REQUIRE_FALSE(picked.empty());
-		REQUIRE(picked.front().get_move() == quiet_killer.get_move());
+		const auto first_quiet = std::ranges::find_if(picked, [](const move& generated_move)
+			{
+				return !generated_move.is_active();
+			});
+		REQUIRE(first_quiet != picked.end());
+		REQUIRE(first_quiet->get_move() == quiet_killer.get_move());
+		REQUIRE(first_quiet->score() == KILLER_ONE);
 		const auto returned_active = std::ranges::find_if(picked, [&](const move& generated_move)
 			{
 				return generated_move.get_move() == active_killer.get_move();
 			});
 		REQUIRE(returned_active != picked.end());
-		REQUIRE(returned_active->score() == 0);
+		REQUIRE(returned_active->score() > KILLER_ONE);
 		REQUIRE(raw_moves(picked) == directly_generated_moves<ALL>(*position));
 	}
 }
