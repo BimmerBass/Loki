@@ -57,8 +57,8 @@ namespace loki::ordering
 			const auto& killers = statistics.killer_moves[position.ply()];
 			for (auto& move : moves)
 			{
-				if (move.is_active())
-					move.score(GOOD_CAPTURE);
+				if (move.is_active() && position.move_is_capture(move))
+					move.score(score_capture(move));
 				else
 				{
 					if (move.get_move() == std::get<0>(killers))
@@ -107,5 +107,32 @@ namespace loki::ordering
 
 		const movegen::move_list& searched_quiets() const { return _searched_quiets; }
 		movegen::move_list& searched_quiets() { return _searched_quiets; }
+
+	private:
+		movegen::move_score_t score_capture(const movegen::move& move) const noexcept
+		{
+			assert(move.is_active() && position.move_is_capture(move));
+
+			// indexed by captured piece and capturer
+			static util::nested_array_t<movegen::move_score_t, NUM_PIECES, NUM_PIECES> mvvlva = { {
+				{ 10, 9, 9, 8, 7, 6}, // pawn: attackers: PNBRQK
+				{ 20, 19, 19, 18, 17, 16 }, // knight
+				{ 20, 19, 19, 18, 17, 16 }, // bishop
+				{ 30, 29, 29, 28, 27, 26 }, // rook
+				{ 40, 39, 39, 38, 37, 36 }, // queen
+				{ -GOOD_CAPTURE * 2, -GOOD_CAPTURE * 2,-GOOD_CAPTURE * 2,-GOOD_CAPTURE * 2,-GOOD_CAPTURE * 2,-GOOD_CAPTURE * 2} // king -> zero: obviously illegal so bad capture
+			} };
+			auto view = position.make_view();
+
+			auto stm = position.side_to_move();
+			auto piece_captured = view.game_state()->piece_placements[!stm][move.to()];
+			if (move.type() == movegen::ENPASSANT)
+				piece_captured = PAWN;
+			
+			auto piece_capturing = view.game_state()->piece_placements[stm][move.from()];
+			if (move.type() == movegen::PROMOTION)
+				piece_capturing = move.promotion_piece();
+			return GOOD_CAPTURE + mvvlva[piece_captured][piece_capturing];
+		}
 	};
 }

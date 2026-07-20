@@ -192,6 +192,19 @@ namespace loki::position
 		/// </summary>
 		/// <returns>a unique_ptr to a copy of the current object.</returns>
 		std::unique_ptr<search_position> clone() const;
+
+		/// <summary>
+		/// Determine if a move is a capture.
+		/// Note that en-passants are also counted, so it cannot be assumed that a piece is automatically
+		/// at move.to()
+		/// </summary>
+		/// <param name="move">The move</param>
+		/// <returns>true if the move is a capture, otherwise false.</returns>
+		inline bool move_is_capture(const movegen::move& move) const noexcept
+		{
+			return move.type() == movegen::ENPASSANT
+				|| m_state->piece_placements[!m_state->side_to_move][move.to()] != NO_PIECE;
+		}
 	};
 
 	extern template size_t search_position::generate_moves<movegen::ALL>(movegen::move_list*) const;
