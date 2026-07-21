@@ -76,6 +76,11 @@ namespace loki::position
 		return static_cast<e_file>(sq % static_cast<e_square>(NUM_FILES));
 	}
 
+	constexpr e_square vertical_flip(e_square sq) noexcept
+	{
+		return static_cast<e_square>(sq ^ 56);
+	}
+
 	class square final
 	{
 	private:
@@ -103,7 +108,7 @@ namespace loki::position
 			m_value = static_cast<e_square>(rank * 8 + file);
 		}
 		
-		constexpr e_square value() const { return m_value; }
+		constexpr e_square value() const noexcept { return m_value; }
 		constexpr e_rank rank() const { return rank_of(m_value); }
 		constexpr e_file file() const { return file_of(m_value); }
 

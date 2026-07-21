@@ -67,8 +67,20 @@ namespace loki::evaluation
 		template<side S, feature_sink sink_t>
 		inline score_t evaluate(sink_t& sink, const pos_t& position) const noexcept
 		{
-			auto score = material<S>(sink, position) - material<!S>(sink, position);
+			auto score =
+				material<S>(sink, position) - material<!S>(sink, position)
+				+ psqt<S>(sink, position) - psqt<!S>(sink, position);
 			return score;
+		}
+
+		template<side S, feature_sink sink_t>
+		inline score_t add_feature(sink_t& sink, id_t id, size_t count) const noexcept
+		{
+			if constexpr (sink_t::enabled)
+			{
+				sink.add_feature<S>(id, count);
+			}
+			return _features[id] * count;
 		}
 
 		template<side S, feature_sink sink_t>
@@ -88,13 +100,36 @@ namespace loki::evaluation
 		}
 
 		template<side S, feature_sink sink_t>
-		inline score_t add_feature(sink_t& sink, id_t id, size_t count) const noexcept
+		inline score_t psqt(sink_t& sink, const pos_t& position) const noexcept
 		{
-			if constexpr (sink_t::enabled)
+			const auto psqt_score =
+				psqt_piece<S, PAWN>(sink, position)
+				+ psqt_piece<S, KNIGHT>(sink, position)
+				+ psqt_piece<S, BISHOP>(sink, position)
+				+ psqt_piece<S, ROOK>(sink, position)
+				+ psqt_piece<S, QUEEN>(sink, position)
+				+ psqt_piece<S, KING>(sink, position);
+			return psqt_score;
+		}
+
+		template<side S, piece P, feature_sink sink_t>
+		inline score_t psqt_piece(sink_t& sink, const pos_t& position) const noexcept
+		{
+			using namespace loki::position;
+			using layout_t = term_layout<evaluation_term::PSQT>;
+
+			score_t score = 0;
+			auto bb = position.piece_bb(S, P);
+
+			while (bb)
 			{
-				sink.add_feature<S>(id, count);
+				const auto inx = pop_lsb_nonzero(bb);
+				score += add_feature<S>(
+					sink,
+					layout_t::id<S, P>(static_cast<e_square>(inx)),
+					1);
 			}
-			return _features[id] * count;
+			return score;
 		}
 	};
 }

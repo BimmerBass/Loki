@@ -51,10 +51,48 @@ namespace evaluation_tests
 		count_material_feature<QUEEN>(counts, position);
 	}
 
+	template<side S, piece P> requires (S < NUM_SIDES && P < NUM_PIECES)
+	void count_psqt_feature(
+		side_feature_counts& counts,
+		const search_position::position_proxy& position)
+	{
+		using layout_t = term_layout<evaluation_term::PSQT>;
+
+		auto bb = position.piece_bb(S, P);
+		while (bb)
+		{
+			const auto sq = static_cast<position::e_square>(pop_lsb_nonzero(bb));
+			const auto id = layout_t::id<S, P>(sq);
+			counts[S][id]++;
+		}
+	}
+
+	template<side S> requires (S < NUM_SIDES)
+	void count_psqt_features_for_side(
+		side_feature_counts& counts,
+		const search_position::position_proxy& position)
+	{
+		count_psqt_feature<S, PAWN>(counts, position);
+		count_psqt_feature<S, KNIGHT>(counts, position);
+		count_psqt_feature<S, BISHOP>(counts, position);
+		count_psqt_feature<S, ROOK>(counts, position);
+		count_psqt_feature<S, QUEEN>(counts, position);
+		count_psqt_feature<S, KING>(counts, position);
+	}
+
+	void count_psqt_features(
+		side_feature_counts& counts,
+		const search_position::position_proxy& position)
+	{
+		count_psqt_features_for_side<WHITE>(counts, position);
+		count_psqt_features_for_side<BLACK>(counts, position);
+	}
+
 	side_feature_counts expected_trace_counts(const search_position::position_proxy& position)
 	{
 		side_feature_counts counts{};
 		count_material_features(counts, position);
+		count_psqt_features(counts, position);
 		return counts;
 	}
 
@@ -99,6 +137,17 @@ namespace evaluation_tests
 		require_material_feature_counts<QUEEN>(trace, expected);
 	}
 
+	void require_all_feature_counts(const feature_trace& trace, const side_feature_counts& expected)
+	{
+		for (id_t id = 0; id < feature_count(); ++id)
+		{
+			CAPTURE(id);
+			REQUIRE(trace.features[id].id == id);
+			REQUIRE(trace.features[id].count<WHITE>() == expected[WHITE][id]);
+			REQUIRE(trace.features[id].count<BLACK>() == expected[BLACK][id]);
+		}
+	}
+
 	score_t expected_feature_dot_product(const side_feature_counts& counts, side relative_to)
 	{
 		constexpr auto feature_weights = builtin_weight_source::defaults();
@@ -128,6 +177,7 @@ namespace evaluation_tests
 		REQUIRE(trace.score == expected_feature_dot_product(expected, trace.relative_to));
 
 		require_material_counts(trace, expected);
+		require_all_feature_counts(trace, expected);
 	}
 
 	TEST_CASE_METHOD(position_tests::io_tests::fen_reader,

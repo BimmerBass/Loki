@@ -16,6 +16,7 @@
 //
 
 #pragma once
+#include "position/square.hpp"
 #include "defs.hpp"
 
 namespace loki::evaluation
@@ -25,9 +26,11 @@ namespace loki::evaluation
 	enum class evaluation_term
 	{
 		MATERIAL,
+		PSQT,
 
 		TERM_NB
 	};
+	ENABLE_BASE_OPERATORS_ON(evaluation_term);
 
 	// No default implementation.
 	template<evaluation_term T>
@@ -41,10 +44,36 @@ namespace loki::evaluation
 		static constexpr id_t num_features = static_cast<id_t>(KING);
 		
 		template<piece P> requires (P < KING)
-		static constexpr id_t id() noexcept
+		inline static constexpr id_t id() noexcept
 		{
 			auto relative_id = static_cast<size_t>(P);
 			return static_cast<id_t>(offset + relative_id);
+		}
+	};
+
+	template<>
+	struct term_layout<evaluation_term::PSQT>
+	{
+		using prev_term = term_layout<evaluation_term::PSQT - 1>;
+
+		static constexpr id_t offset = prev_term::offset + prev_term::num_features;
+		static constexpr id_t num_features = static_cast<id_t>(NUM_PIECES * static_cast<size_t>(position::NUM_SQUARES));
+
+		template<side S, piece P> requires (S < NUM_SIDES && P < NUM_PIECES)
+		inline static constexpr id_t id(position::e_square sq) noexcept
+		{
+			const auto relative_sq = mirror<S>(sq);
+			const auto relative_id = static_cast<size_t>(P * position::NUM_SQUARES + relative_sq);
+			return static_cast<id_t>(offset + relative_id);
+		}
+
+		template<side S>
+		inline static constexpr position::e_square mirror(position::e_square sq) noexcept
+		{
+			if constexpr (S == WHITE)
+				return sq;
+			else
+				return position::vertical_flip(sq);
 		}
 	};
 
