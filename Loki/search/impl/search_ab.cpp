@@ -78,7 +78,16 @@ namespace loki::search
 				continue;
 
 			legal_moves++;
-			auto score = -search_ab<!S, node::INTERNAL>(position, limits, stop_token, depth - 1, -beta, -alpha);
+			score_t score;
+			if (legal_moves == 1) // first move --> always full window
+					score = -search_ab<!S, node::INTERNAL>(position, limits, stop_token, depth - 1, -beta, -alpha);
+			else
+			{
+				// zero-window
+				score = -search_ab<!S, node::INTERNAL>(position, limits, stop_token, depth - 1, -alpha - 1, -alpha);
+				if (score > alpha && score < beta)
+					score = -search_ab<!S, node::INTERNAL>(position, limits, stop_token, depth - 1, -beta, -alpha);
+			}
 			position.undo_last_move();
 
 			if (stop_token.stop_requested())

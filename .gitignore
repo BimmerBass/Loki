@@ -302,6 +302,7 @@ paket-files/
 __pycache__/
 *.pyc
 */.venv/
+*/.env/
 
 # Cake - Uncomment if you are using it
 # tools/**
