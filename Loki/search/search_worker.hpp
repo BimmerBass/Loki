@@ -175,8 +175,18 @@ namespace loki::search
 			size_t depth,
 			score_t alpha,
 			score_t beta);
+
+		template<side S, movegen::move_type MT = movegen::ACTIVE>
+			requires (S < NUM_SIDES&& MT != movegen::QUIET)
+		[[nodiscard]]
+		score_t qsearch(
+			position::search_position& position,
+			score_t alpha,
+			score_t beta);
+
 	};
 
+#pragma region Template Instantiations
 	extern template score_t search_worker::search_ab<WHITE, search_worker::node::ROOT>(
 		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
 	extern template score_t search_worker::search_ab<WHITE, search_worker::node::INTERNAL>(
@@ -185,4 +195,10 @@ namespace loki::search
 		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
 	extern template score_t search_worker::search_ab<BLACK, search_worker::node::INTERNAL>(
 		position::search_position&, const limits&,std::stop_token, size_t, score_t, score_t);
+
+	extern template score_t search_worker::qsearch<WHITE, movegen::ALL>(position::search_position&, score_t, score_t);
+	extern template score_t search_worker::qsearch<WHITE, movegen::ACTIVE>(position::search_position&, score_t, score_t);
+	extern template score_t search_worker::qsearch<BLACK, movegen::ALL>(position::search_position&, score_t, score_t);
+	extern template score_t search_worker::qsearch<BLACK, movegen::ACTIVE>(position::search_position&, score_t, score_t);
+#pragma endregion
 }

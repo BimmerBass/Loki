@@ -38,7 +38,7 @@ namespace loki::search
 		
 		limits.check_stopping_conditions(statistics.nodes);
 		if (stop_token.stop_requested())
-			return 0;
+			return constants::SCORE_ZERO;
 
 		statistics.pv_table.reset_for_ply(position.ply());
 		statistics.selective_depth = std::max(statistics.selective_depth, (size_t)position.ply());
@@ -47,12 +47,12 @@ namespace loki::search
 		if constexpr (Node == node::INTERNAL)
 		{
 			if (position.is_draw())
-				return 0;
+				return constants::SCORE_ZERO;
 		}
 
 		if (depth == 0)
 		{
-			return evaluator.evaluate<S>(position.make_view());
+			return qsearch<S>(position, alpha, beta);
 		}
 
 		size_t legal_moves = 0;
@@ -82,7 +82,7 @@ namespace loki::search
 			position.undo_last_move();
 
 			if (stop_token.stop_requested())
-				return 0;
+				return constants::SCORE_ZERO;
 
 			best_score = std::max(best_score, score);
 
@@ -127,7 +127,7 @@ namespace loki::search
 		{
 			if (position.in_check())
 				return mate_in(position.ply());
-			return 0;
+			return constants::SCORE_ZERO;
 		}
 
 		return best_score;
