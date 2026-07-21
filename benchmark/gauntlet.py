@@ -27,8 +27,6 @@ import hashlib
 import json
 import os
 import re
-import shutil
-import signal
 import subprocess
 import sys
 import time
@@ -36,20 +34,27 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
-
-ENV_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
-HEADER_RE = re.compile(r'^\[(\w+)\s+"(.*)"\]$')
-START_RE = re.compile(r"Started game\s+(\d+)(?:\s+of\s+(\d+))?\s+\((.+?)\s+vs\s+(.+?)\)", re.I)
-FINISH_RE = re.compile(r"Finished game\s+(\d+)\s+\((.+?)\s+vs\s+(.+?)\):\s+(1-0|0-1|1/2-1/2|\*)(?:\s+\{(.*)\})?", re.I)
-LOKI_FAILURE_WORDS = (
-    "internal error", "info string error:", "crash", "illegal move", "disconnect",
-    "timed out", "timeout", "time forfeit", "time loss", "protocol", "stalled",
-    "loses on time", "forfeit", "failed to", "failure", "unexpected exit", "exited with", "doesn't respond",
+from match_runner import (
+    COMMON_MATCH_CSS,
+    ENGINE_FAILURE_WORDS as LOKI_FAILURE_WORDS,
+    FINISH_RE,
+    START_RE,
+    ConfigError,
+    compose_match_view,
+    configure_game_table,
+    engine_args,
+    executable_exists,
+    expand_env,
+    load_env_file,
+    load_textual,
+    parse_games,
+    path_value,
+    pgn_blocks,
+    refresh_game_table,
+    result_stats,
+    safe_name,
+    stop_process_tree,
 )
-
-
-class ConfigError(Exception):
-    pass
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -59,41 +64,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--resume-state", type=Path, help="gauntlet-state.json from a paused run.")
     parser.add_argument("--output-dir", type=Path, help="Output directory for a new run.")
     return parser.parse_args(argv)
-
-
-def load_env_file(path: Path | None) -> dict[str, str]:
-    if path is None:
-        return {}
-    try:
-        values = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ConfigError(f"could not read environment file: {exc}") from exc
-    if not isinstance(values, dict) or not all(isinstance(key, str) and isinstance(value, str) for key, value in values.items()):
-        raise ConfigError("environment file must be a JSON object containing string values")
-    base = path.resolve().parent
-    return {key: path_value(base, value) for key, value in values.items()}
-
-
-def expand_env(value: Any, local_env: dict[str, str]) -> Any:
-    if isinstance(value, str):
-        def replace(match: re.Match[str]) -> str:
-            name = match.group(1)
-            if name in local_env:
-                return local_env[name]
-            if name not in os.environ:
-                raise ConfigError(f"environment variable is not set: {name}")
-            return os.environ[name]
-        return ENV_RE.sub(replace, value)
-    if isinstance(value, list):
-        return [expand_env(item, local_env) for item in value]
-    if isinstance(value, dict):
-        return {key: expand_env(item, local_env) for key, item in value.items()}
-    return value
-
-
-def path_value(base: Path, value: str) -> str:
-    path = Path(value)
-    return str((base / path).resolve() if not path.is_absolute() else path.resolve())
 
 
 def load_workload(path: Path, local_env: dict[str, str] | None = None) -> tuple[dict[str, Any], list[str]]:
@@ -188,10 +158,6 @@ def load_workload(path: Path, local_env: dict[str, str] | None = None) -> tuple[
     return cfg, warnings
 
 
-def executable_exists(command: str) -> bool:
-    return Path(command).is_file() if any(sep in command for sep in ("/", "\\")) else shutil.which(command) is not None
-
-
 def validate_paths(cfg: dict[str, Any]) -> None:
     for tool in ("fastchess", "ordo"):
         if not executable_exists(cfg["tools"][tool]):
@@ -213,18 +179,6 @@ def workload_fingerprint(cfg: dict[str, Any]) -> str:
         engine["working_directory"] = ""
     encoded = json.dumps(stable, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(encoded).hexdigest()
-
-
-def safe_name(value: str) -> str:
-    return re.sub(r"[^A-Za-z0-9_.-]+", "-", value).strip("-.") or "gauntlet"
-
-
-def engine_args(engine: dict[str, Any]) -> list[str]:
-    values = [f"cmd={engine['command']}", f"name={engine['name']}", f"dir={engine['working_directory']}"]
-    if engine["args"]:
-        values.append(f"args={subprocess.list2cmdline(engine['args'])}")
-    values.extend(f"option.{name}={value}" for name, value in engine["uci_options"].items())
-    return values
 
 
 def build_command(cfg: dict[str, Any], paths: dict[str, Path], resume: bool) -> list[str]:
@@ -260,49 +214,6 @@ def build_command(cfg: dict[str, Any], paths: dict[str, Path], resume: bool) -> 
     if match["recover"]:
         command.append("-recover")
     return command
-
-
-def pgn_blocks(path: Path) -> list[bytes]:
-    if not path.is_file():
-        return []
-    data = path.read_bytes()
-    starts = [match.start() for match in re.finditer(br"(?m)^\[Event\s+\"", data)]
-    blocks: list[bytes] = []
-    for index, start in enumerate(starts):
-        end = starts[index + 1] if index + 1 < len(starts) else len(data)
-        block = data[start:end]
-        header = re.search(br'(?m)^\[Result\s+"(1-0|0-1|1/2-1/2|\*)"\]$', block)
-        if header and re.search(br"(?:^|\s)(1-0|0-1|1/2-1/2|\*)\s*$", block.rstrip()):
-            blocks.append(block.rstrip() + b"\n\n")
-    return blocks
-
-
-def parse_games(path: Path) -> list[dict[str, str]]:
-    games: list[dict[str, str]] = []
-    for block in pgn_blocks(path):
-        headers: dict[str, str] = {}
-        for raw in block.decode("utf-8", errors="replace").splitlines():
-            match = HEADER_RE.match(raw)
-            if match:
-                headers[match.group(1)] = match.group(2)
-        games.append({
-            "white": headers.get("White", "?"), "black": headers.get("Black", "?"),
-            "result": headers.get("Result", "*"), "termination": headers.get("Termination", ""),
-        })
-    return games
-
-
-def result_stats(games: list[dict[str, str]], subject: str, opponent: str | None = None) -> dict[str, int]:
-    selected = [game for game in games if opponent is None or opponent in (game["white"], game["black"])]
-    wins = draws = losses = 0
-    for game in selected:
-        if game["result"] == "1/2-1/2":
-            draws += 1
-        elif (game["white"] == subject and game["result"] == "1-0") or (game["black"] == subject and game["result"] == "0-1"):
-            wins += 1
-        else:
-            losses += 1
-    return {"played": len(selected), "wins": wins, "draws": draws, "losses": losses}
 
 
 def write_anchors(cfg: dict[str, Any], path: Path) -> None:
@@ -361,41 +272,16 @@ def parse_ordo(csv_path: Path, text_path: Path, subject: str) -> tuple[float, fl
     raise ValueError(f"could not find an Ordo rating for {subject}")
 
 
-def load_textual() -> dict[str, Any]:
-    try:
-        from textual.app import App, ComposeResult
-        from textual.containers import Container, Horizontal, Vertical, VerticalScroll
-        from textual.widgets import DataTable, Footer, Header, ProgressBar, RichLog, Static
-    except ImportError as exc:
-        raise ConfigError("Textual is not installed. Run: python -m pip install -r benchmark/requirements.txt") from exc
-    return locals()
-
-
 def make_app(
     textual: dict[str, Any], cfg: dict[str, Any], paths: dict[str, Path], command: list[str],
     warnings: list[str], resume_state: dict[str, Any] | None,
 ):
     App, ComposeResult = textual["App"], textual["ComposeResult"]
-    Container, Horizontal, Vertical = textual["Container"], textual["Horizontal"], textual["Vertical"]
-    VerticalScroll = textual["VerticalScroll"]
-    DataTable, Footer, Header = textual["DataTable"], textual["Footer"], textual["Header"]
+    DataTable = textual["DataTable"]
     ProgressBar, RichLog, Static = textual["ProgressBar"], textual["RichLog"], textual["Static"]
 
     class GauntletApp(App):
-        CSS = """
-        Screen { layout: vertical; }
-        #run_view, #final_view { height: 1fr; layout: vertical; }
-        #summary { height: 4; padding: 0 1; content-align: left middle; }
-        #progress { height: 3; margin: 0 1; }
-        #tables { height: 1fr; }
-        #opponents_panel { width: 48%; min-width: 46; height: 1fr; }
-        #games_panel { width: 52%; height: 1fr; }
-        #opponents, #games { height: 1fr; margin: 0 1 1 1; }
-        #event_log { height: 9; margin: 0 1 1 1; border: solid $accent; }
-        #final_summary { height: 6; padding: 0 1; }
-        #diagnostics { height: 1fr; margin: 0 1 1 1; border: solid $accent; }
-        .hidden { display: none; }
-        """
+        CSS = COMMON_MATCH_CSS
         BINDINGS = [("p", "pause", "Pause/save"), ("q", "quit", "Quit"), ("ctrl+c", "quit", "Cancel/Quit")]
 
         def __init__(self) -> None:
@@ -422,23 +308,7 @@ def make_app(
             self.total = cfg["match"]["games_per_opponent"] * len(cfg["opponents"])
 
         def compose(self) -> ComposeResult:
-            yield Header(show_clock=True)
-            with Container(id="run_view"):
-                yield Static(id="summary")
-                yield ProgressBar(total=self.total, id="progress")
-                with Horizontal(id="tables"):
-                    with Vertical(id="opponents_panel"):
-                        yield Static("Opponents")
-                        yield DataTable(id="opponents")
-                    with Vertical(id="games_panel"):
-                        yield Static("Recent games")
-                        yield DataTable(id="games")
-                yield RichLog(id="event_log", wrap=True, highlight=True, markup=True)
-            with Container(id="final_view", classes="hidden"):
-                yield Static(id="final_summary")
-                with VerticalScroll():
-                    yield RichLog(id="diagnostics", wrap=True, highlight=True, markup=True)
-            yield Footer()
+            yield from compose_match_view(textual, self.total, "Opponents", "opponents")
 
         async def on_mount(self) -> None:
             self.title = "Loki Elo Gauntlet"
@@ -448,8 +318,7 @@ def make_app(
             for opponent in cfg["opponents"]:
                 opponent_table.add_row(opponent["name"], str(opponent["rating"]["elo"]), "0", "0", "0", "0", "-", key=opponent["name"])
             game_table = self.query_one("#games", DataTable)
-            for name in ("#", "White", "Black", "Result", "Termination"):
-                game_table.add_column(name, key=name.lower())
+            configure_game_table(game_table)
             self._refresh_games()
             for warning in warnings:
                 self._log(f"[yellow]Warning: {warning}[/yellow]")
@@ -487,9 +356,7 @@ def make_app(
                 for key, value in values.items():
                     table.update_cell(name, key, str(value))
             recent = self.query_one("#games", DataTable)
-            recent.clear()
-            for index, game in list(enumerate(self.games, 1))[-100:]:
-                recent.add_row(str(index), game["white"], game["black"], game["result"], game["termination"], key=f"game-{index}")
+            refresh_game_table(recent, self.games)
             self._render_summary()
 
         def _game_log(self, line: str) -> None:
@@ -622,21 +489,7 @@ def make_app(
         async def _stop_process(self, delay: float = 0.0) -> None:
             if delay:
                 await asyncio.sleep(delay)
-            proc = self.proc
-            if proc is None or proc.returncode is not None:
-                return
-            if os.name == "nt":
-                await asyncio.to_thread(subprocess.run, ["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True, check=False)
-            else:
-                try: os.killpg(proc.pid, signal.SIGTERM)
-                except ProcessLookupError: return
-            try:
-                await asyncio.wait_for(proc.wait(), timeout=2.0)
-            except asyncio.TimeoutError:
-                if os.name != "nt":
-                    try: os.killpg(proc.pid, signal.SIGKILL)
-                    except ProcessLookupError: pass
-                await proc.wait()
+            await stop_process_tree(self.proc)
 
         async def action_pause(self) -> None:
             if self.finished or self.finalizing:
@@ -742,7 +595,7 @@ def main(argv: list[str] | None = None) -> int:
                 raise ConfigError("workload does not match the paused gauntlet")
             run_dir = Path(resume_state["run_dir"]).resolve()
         else:
-            root = args.output_dir.resolve() if args.output_dir else Path(__file__).resolve().parent / "results" / safe_name(cfg["name"])
+            root = args.output_dir.resolve() if args.output_dir else Path(__file__).resolve().parent / "results" / safe_name(cfg["name"], "gauntlet")
             run_dir = root / datetime.now().strftime("%Y%m%d-%H%M%S")
         run_dir.mkdir(parents=True, exist_ok=True)
         paths = make_paths(run_dir)

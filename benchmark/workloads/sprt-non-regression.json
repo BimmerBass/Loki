@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "name": "loki-feature-non-regression",
+  "tools": {
+    "fastchess": "${FASTCHESS_EXE}"
+  },
+  "sprt": {
+    "mode": "non_regression",
+    "alpha": 0.05,
+    "beta": 0.05,
+    "model": "normalized"
+  },
+  "engine": {
+    "args": [],
+    "uci_options": {}
+  },
+  "match": {
+    "rounds": 100000,
+    "concurrency": 11,
+    "time_control": "10+0.1",
+    "time_margin_ms": 100,
+    "max_moves": 400,
+    "recover": false,
+    "openings": {
+      "path": "${OPENINGS_FILE}",
+      "format": "pgn",
+      "order": "random",
+      "seed": 1
+    }
+  }
+}
