@@ -116,7 +116,6 @@ namespace loki::position
 
 		/// <summary>
 		/// Determine whether neither side has sufficient material to mate.
-		/// TODO: Implement material draw detection.
 		/// </summary>
 		bool is_material_draw() const noexcept;
 

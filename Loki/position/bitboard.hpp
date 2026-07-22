@@ -67,6 +67,8 @@ namespace loki::position
 
 	constexpr std::array<bitboard_t, 8> FILE_MASKS = init_file_masks();
 	constexpr std::array<bitboard_t, 8> RANK_MASKS = init_rank_masks();
+	constexpr bitboard_t DARK_SQUARES = 12273903644374837845ULL;
+	constexpr bitboard_t LIGHT_SQUARES = ~DARK_SQUARES;
 
 	/// <summary>
 	/// Determine if the i'th bit is 1.

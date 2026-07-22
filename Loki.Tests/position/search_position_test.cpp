@@ -209,7 +209,7 @@ namespace position_tests
 		auto rook_index = std::make_shared<hardcoded_index<ROOK>>();
 
 		auto drawn = make(
-			game_state::from_fen("8/8/8/8/8/8/4K3/7k w - - 100 1"),
+			game_state::from_fen("8/8/8/8/8/8/4KR2/7k w - - 100 1"),
 			bishop_index,
 			rook_index);
 		REQUIRE(drawn->is_draw());
@@ -217,9 +217,38 @@ namespace position_tests
 		REQUIRE_FALSE(drawn->is_repetition());
 
 		auto not_drawn = make(
-			game_state::from_fen("8/8/8/8/8/8/4K3/7k w - - 99 1"),
+			game_state::from_fen("8/8/8/8/8/8/4KR2/7k w - - 99 1"),
 			bishop_index,
 			rook_index);
 		REQUIRE_FALSE(not_drawn->is_draw());
+	}
+
+	TEST_CASE("search_position detects material draws", "[position][search_position][draw]")
+	{
+		struct material_draw_test_case
+		{
+			std::string fen;
+			bool expected;
+		};
+
+		const material_draw_test_case test_cases[] = {
+			{ "8/8/8/8/8/8/4K3/7k w - - 0 1", true },
+			{ "8/8/8/8/8/8/4KB2/7k w - - 0 1", true },
+			{ "8/8/8/8/8/8/4KN2/7k w - - 0 1", true },
+			{ "8/8/8/8/8/8/4KB2/6bk w - - 0 1", true },
+			{ "8/8/8/8/8/8/4KB2/5b1k w - - 0 1", false },
+			{ "8/8/8/8/8/8/4KR2/7k w - - 0 1", false },
+			{ "8/8/8/8/8/8/4KP2/7k w - - 0 1", false },
+		};
+
+		for (const auto& test_case : test_cases)
+		{
+			CAPTURE(test_case.fen);
+			REQUIRE(make_position(test_case.fen)->is_material_draw() == test_case.expected);
+
+			const auto flipped_fen = game_state::flip_fen(test_case.fen);
+			CAPTURE(flipped_fen);
+			REQUIRE(make_position(flipped_fen)->is_material_draw() == test_case.expected);
+		}
 	}
 }

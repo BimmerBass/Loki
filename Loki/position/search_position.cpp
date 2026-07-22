@@ -305,6 +305,30 @@ namespace loki::position
 
 	bool search_position::is_material_draw() const noexcept
 	{
+		// two kings -> immediate draw
+		const auto kings_bb = m_piecebbs[WHITE][KING] | m_piecebbs[BLACK][KING];
+		const auto total_occupancy = m_all_pieces[WHITE] | m_all_pieces[BLACK];
+		if (kings_bb == total_occupancy)
+			return true;
+
+		const auto num_pieces = popcount(total_occupancy);
+
+		// king against single minor and king
+		const auto all_minors =
+			m_piecebbs[WHITE][KNIGHT] | m_piecebbs[WHITE][BISHOP] |
+			m_piecebbs[BLACK][KNIGHT] | m_piecebbs[BLACK][BISHOP];
+		if (num_pieces == 3 && all_minors != 0)
+			return true;
+
+		// king and bishop vs king and bishop is a draw if the bishops are on the same color.
+		const auto white_bishops = popcount(m_piecebbs[WHITE][BISHOP]);
+		const auto black_bishops = popcount(m_piecebbs[BLACK][BISHOP]);
+		const auto white_bishop_dark_square = (m_piecebbs[WHITE][BISHOP] | DARK_SQUARES) == DARK_SQUARES;
+		const auto black_bishop_dark_square = (m_piecebbs[BLACK][BISHOP] | DARK_SQUARES) == DARK_SQUARES;
+
+		if (num_pieces == 4 && white_bishops == 1 && black_bishops == 1 && white_bishop_dark_square == black_bishop_dark_square)
+			return true;
+
 		return false;
 	}
 
