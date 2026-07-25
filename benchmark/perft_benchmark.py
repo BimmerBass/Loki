@@ -176,6 +176,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--epd", type=Path, default=default_epd_path(), help="Path to the perft EPD dataset.")
     parser.add_argument("--limit", type=positive_int, help="Maximum number of positions to run.")
     parser.add_argument("--json-out", type=Path, help="Optional path to write full benchmark results as JSON.")
+    parser.add_argument(
+        "--validate-hashing",
+        action="store_true",
+        help="Recompute and validate the position hash at every perft leaf.",
+    )
     return parser.parse_args(argv)
 
 
@@ -314,8 +319,9 @@ def validate_engine_path(path: Path) -> None:
         raise BenchmarkConfigError(f"engine path is not executable: {path}")
 
 
-def run_preflight(engine_path: Path) -> None:
-    command = "position startpos\nperft 1\nquit\n"
+def run_preflight(engine_path: Path, validate_hashing: bool) -> None:
+    perft_parameter = " hashvalidate" if validate_hashing else ""
+    command = f"position startpos\nperft 1{perft_parameter}\nquit\n"
     try:
         completed = subprocess.run(
             [str(engine_path)],
@@ -345,9 +351,10 @@ def run_preflight(engine_path: Path) -> None:
 
 
 class LokiProcess:
-    def __init__(self, engine_path: Path, worker_id: int) -> None:
+    def __init__(self, engine_path: Path, worker_id: int, validate_hashing: bool = False) -> None:
         self.engine_path = engine_path
         self.worker_id = worker_id
+        self.validate_hashing = validate_hashing
         self.process: asyncio.subprocess.Process | None = None
         self.stderr_queue: asyncio.Queue[str] = asyncio.Queue()
         self.stderr_task: asyncio.Task[None] | None = None
@@ -422,7 +429,8 @@ class LokiProcess:
         while not self.stderr_queue.empty():
             self.stderr_queue.get_nowait()
 
-        command = f"position fen {case.fen}\nperft {case.depth}\n"
+        perft_parameter = " hashvalidate" if self.validate_hashing else ""
+        command = f"position fen {case.fen}\nperft {case.depth}{perft_parameter}\n"
         try:
             process.stdin.write(command.encode())
             await process.stdin.drain()
@@ -518,6 +526,7 @@ def make_benchmark_app(
     warnings: list[BenchmarkWarning],
     worker_count: int,
     json_out: Path | None,
+    validate_hashing: bool,
 ):
     App = textual["App"]
     ComposeResult = textual["ComposeResult"]
@@ -614,6 +623,7 @@ def make_benchmark_app(
             self.cases = [case for job in perft_jobs for case in job.cases]
             self.jobs = min(worker_count, len(perft_jobs))
             self.json_out = json_out
+            self.validate_hashing = validate_hashing
             self.queue: asyncio.Queue[PerftJob] = asyncio.Queue()
             self.cancel_event = asyncio.Event()
             self.loki_processes: list[LokiProcess] = []
@@ -657,6 +667,7 @@ def make_benchmark_app(
                 f"Starting {len(self.perft_jobs)} positions / {len(self.cases)} perft runs with {self.jobs} worker(s)."
             )
             self.log_event(f"Engine: {self.engine_path}")
+            self.log_event(f"Hash validation: {'enabled' if self.validate_hashing else 'disabled'}")
             self.started_at = time.monotonic()
             for job in self.perft_jobs:
                 await self.queue.put(job)
@@ -771,7 +782,7 @@ def make_benchmark_app(
             self.query_one("#event_log", RichLog).write(f"[{timestamp}] {message}")
 
         async def _worker_loop(self, worker_id: int) -> None:
-            process = LokiProcess(self.engine_path, worker_id)
+            process = LokiProcess(self.engine_path, worker_id, self.validate_hashing)
             self.loki_processes.append(process)
             restarts = 0
             try:
@@ -996,6 +1007,7 @@ def make_benchmark_app(
             payload = {
                 "engine": str(self.engine_path),
                 "workers": self.jobs,
+                "validate_hashing": self.validate_hashing,
                 "positions": [
                     {
                         "ordinal": job.ordinal,
@@ -1079,7 +1091,7 @@ def main(argv: list[str] | None = None) -> int:
         validate_engine_path(engine_path)
         positions = parse_epd(epd_path)
         perft_jobs, warnings = select_jobs(positions, args.limit)
-        run_preflight(engine_path)
+        run_preflight(engine_path, args.validate_hashing)
         textual = load_textual()
     except BenchmarkConfigError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -1092,6 +1104,7 @@ def main(argv: list[str] | None = None) -> int:
         warnings=warnings,
         worker_count=args.jobs,
         json_out=json_out,
+        validate_hashing=args.validate_hashing,
     )
     result = app.run()
     return int(result if result is not None else 0)

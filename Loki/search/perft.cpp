@@ -24,6 +24,7 @@ namespace loki::search
 	using namespace position;
 	using namespace movegen;
 
+	template<bool ValidateHash>
 	size_t perft::run(const std::string& fen, size_t depth)
 	{
 		m_fen = fen;
@@ -45,7 +46,7 @@ namespace loki::search
 			legal++;
 			size_t old_nodes = m_nodes;
 
-			run_internal(depth - 1);
+			run_internal<ValidateHash>(depth - 1);
 			m_position->undo_last_move();
 
 			m_os << std::format("[{}] {}\t---> {} nodes.\n", legal, moves[i].to_string(), m_nodes - old_nodes);
@@ -65,10 +66,13 @@ namespace loki::search
 		return m_nodes;
 	}
 
+	template<bool ValidateHash>
 	void perft::run_internal(size_t depth)
 	{
 		if (depth <= 0)
 		{
+			if constexpr (ValidateHash)
+				validate_hashkey();
 			m_nodes++;
 			return;
 		}
@@ -80,9 +84,25 @@ namespace loki::search
 		{
 			if (!m_position->make_move(move))
 				continue;
-			run_internal(depth - 1);
+			run_internal<ValidateHash>(depth - 1);
 			m_position->undo_last_move();
 		}
 	}
 
+	void perft::validate_hashkey() const
+	{
+		const auto incremental = m_position->hashkey();
+		const auto recomputed = m_position->recompute_hashkey();
+		if (incremental != recomputed)
+		{
+			throw_msg<loki_exception>(
+				"incremental position hash {:#018x} does not match recomputed hash {:#018x} for '{}'",
+				incremental,
+				recomputed,
+				m_position->to_fen());
+		}
+	}
+
+	template size_t perft::run<false>(const std::string&, size_t);
+	template size_t perft::run<true>(const std::string&, size_t);
 }

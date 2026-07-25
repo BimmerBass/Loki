@@ -89,9 +89,9 @@ namespace uci_tests
 			m_engine.stop_search(wait);
 		}
 
-		size_t perft(size_t depth, std::ostream& out) const override
+		size_t perft(size_t depth, std::ostream& out, bool validate_hashing = false) const override
 		{
-			return m_engine.perft(depth, out);
+			return m_engine.perft(depth, out, validate_hashing);
 		}
 
 		const position::search_position_t& position() const override

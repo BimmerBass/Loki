@@ -1,14 +1,8 @@
-# Benchmarking and Profiling
+# Benchmarking and profiling
 
-## Perft benchmark
-The Python benchmark runner executes Loki's dev-only `perft` UCI command against the shared [`../tests/perft.epd`](../tests/perft.epd) dataset. Build Loki with dev commands enabled before running the benchmark.
+## Setup
 
-```powershell
-cmake --preset release -DLOKI_DEV_COMMANDS=ON
-cmake --build --preset release
-```
-
-Set up the Python environment from the repository root:
+Create the shared Python environment from the repository root:
 
 ```powershell
 python -m venv benchmark\.venv
@@ -16,47 +10,55 @@ benchmark\.venv\Scripts\Activate.ps1
 python -m pip install -r benchmark\requirements.txt
 ```
 
-Run the benchmark by pointing it at the Loki executable:
+## Perft
+
+Build Loki with development commands enabled:
 
 ```powershell
-python benchmark\perft_benchmark.py --engine .\build\release\bin\Loki.exe --jobs 4
+cmake --preset release -DLOKI_DEV_COMMANDS=ON
+cmake --build --preset release --target Loki
 ```
 
-Useful options:
-- `--jobs N` runs up to `N` Loki worker processes in parallel.
-- `--limit N` runs only the first `N` positions.
-- `--epd PATH` uses a different EPD dataset instead of `tests/perft.epd`.
-- `--json-out PATH` writes full results, warnings, and errors to a JSON file.
+Run the [`perft.epd`](../tests/perft.epd) suite:
 
-For each selected position, the benchmark runs every depth from `1` through the highest depth annotated for that FEN. Missing expected node counts are reported as warnings. Incorrect perft results and runtime errors are grouped by FEN in the final Textual TUI summary.
+```powershell
+python benchmark\perft_benchmark.py `
+  --engine .\build\release\bin\Loki.exe `
+  --jobs 4
+```
+
+Add `--validate-hashing` to recompute and verify the Zobrist key at every leaf:
+
+```powershell
+python benchmark\perft_benchmark.py `
+  --engine .\build\release\bin\Loki.exe `
+  --jobs 4 `
+  --validate-hashing
+```
+
+Hash validation runs to the full requested depth and is substantially slower than normal perft. The equivalent direct development command is:
+
+```text
+perft <depth> hashvalidate
+```
+
+Other useful options are `--limit N`, `--epd PATH`, and `--json-out PATH`. The runner tests every depth through the highest one specified for each FEN, reports missing expectations as warnings, and groups failures by FEN.
 
 ## Elo gauntlet
 
-`benchmark/gauntlet.py` runs Loki as the seed in a paired-opening fastchess gauntlet and uses Ordo to estimate a local Elo from fixed CCRL opponent anchors. Install fastchess and Ordo separately, then install the existing Python requirements shown above.
+[`gauntlet.py`](../benchmark/gauntlet.py) runs paired-opening Fastchess matches and uses Ordo to estimate a local Elo from fixed CCRL anchors. Install Fastchess and Ordo separately.
 
-Copy [`../benchmark/workloads/initial-elo.example.json`](../benchmark/workloads/initial-elo.example.json), fill in the engines and their ratings, and run:
+Copy [`initial-elo.example.json`](../benchmark/workloads/initial-elo.example.json), configure the engines and ratings, then run:
 
 ```powershell
-python benchmark\gauntlet.py --workload path\to\initial-elo.json
+python benchmark\gauntlet.py `
+  --workload path\to\initial-elo.json `
+  --env-file path\to\gauntlet.local.json
 ```
 
-Paths in the workload are relative to the workload file and may contain `${ENV_VAR}` placeholders. Each engine supports `command`, `args`, `working_directory`, and `uci_options`. The match section controls paired games per opponent, concurrency, time control, time margin, opening suite, optional adjudication, and recovery. Score-based draw and resignation adjudication are disabled unless explicitly configured.
+Workload paths are relative to the workload file and may use `${ENV_VAR}` placeholders. An optional local environment JSON file supplies machine-specific paths and takes precedence over process environment variables.
 
-Machine-specific placeholder values can be kept in a separate local JSON file:
-
-```json
-{
-  "FASTCHESS_EXE": "C:/Chess/Tools/fastchess.exe",
-  "ORDO_EXE": "C:/Chess/Tools/ordo.exe",
-  "LOKI_EXE": "../../build/release/bin/Loki.exe",
-  "REFERENCE_ENGINE_EXE": "C:/Chess/Engines/ReferenceEngine.exe",
-  "OPENINGS_EPD": "C:/Chess/Books/openings.epd"
-}
-```
-
-Pass it with `--env-file path\to\gauntlet.local.json`. Values in this file take precedence over actual environment variables; missing names fall back to the process environment. Relative paths in the local file are resolved from the local file's directory. Keep files containing machine-specific paths out of version control.
-
-The Textual interface shows game progress, per-opponent results, warnings, Loki errors, and periodically refreshed Ordo estimates. Press `p` to stop active games and create a durable checkpoint. Continue it with the original workload and the generated state file:
+Press `p` to stop active games and save a checkpoint. Resume with:
 
 ```powershell
 python benchmark\gauntlet.py `
@@ -64,15 +66,11 @@ python benchmark\gauntlet.py `
   --resume-state path\to\gauntlet-state.json
 ```
 
-Incomplete games are discarded when pausing and replayed after continuation. Completed games remain in `gauntlet.pgn`. Pressing `q` or Ctrl+C cancels instead and removes the resumable manager state.
-
-Every run is written below `benchmark/results/` by default. Its artifacts include the PGN, a game-only `gauntlet.log`, the Loki-only `loki-errors.log`, fastchess and manager state, Ordo text/CSV reports, the resolved workload, and `summary.json`. With `recover: true`, Loki failures are flagged and fastchess continues; otherwise the first Loki failure stops the tournament after recording the failed game.
-
-The displayed value is a **local CCRL-calibrated Elo**, not an official CCRL rating. Hardware, time control, openings, opponent versions, and technical forfeits all affect it.
+Results are written below `benchmark/results/` and include PGN, logs, state, Ordo reports, the resolved workload, and `summary.json`. The reported Elo is local to the configured hardware, time control, openings, opponents, and engine versions; it is not an official CCRL rating.
 
 ## Self-play SPRT
 
-`benchmark/sprt.py` tests the Release build of the current working tree against a Release build of a pinned Git revision. The candidate is always listed first. By default the baseline is the current local `HEAD`, so uncommitted engine changes are tested against the commit immediately beneath them:
+[`sprt.py`](../benchmark/sprt.py) compares the Release build of the working tree with a Release build of a local Git revision. The default baseline is `HEAD`, which is useful for testing uncommitted changes:
 
 ```powershell
 python benchmark\sprt.py `
@@ -80,52 +78,39 @@ python benchmark\sprt.py `
   --env-file benchmark\workloads\sprt.local.json
 ```
 
-Pass any locally resolvable Git revision to select another baseline. A committed feature can usually be tested against its parent with `--baseline HEAD^`; a feature branch can be tested against a locally available remote-tracking ref with `--baseline origin/main`.
+Select another local revision with `--baseline`, for example `HEAD^` or `origin/main`. The runner does not fetch or modify the primary worktree; it builds the baseline in a temporary detached worktree and archives both executables before the match.
 
-```powershell
-git fetch origin
-python benchmark\sprt.py `
-  --workload benchmark\workloads\sprt-gainer.json `
-  --env-file benchmark\workloads\sprt.local.json `
-  --baseline origin/main
-```
+The workload must select one mode:
 
-The runner never fetches, pulls, switches, stashes, resets, or otherwise changes the primary worktree. It configures and builds the candidate in the primary worktree, builds the resolved baseline SHA in a temporary detached worktree, then archives both executables into the result directory before starting Fastchess. If the working tree changes during the candidate build or both archived executables are identical, setup fails rather than running an ambiguous test.
+- `gainer` tests for an improvement and defaults to `<0, 10>`.
+- `non_regression` tests against a material loss and defaults to `<-10, 0>`.
 
-Copy `benchmark/workloads/sprt.local.example.json` to an ignored `*.local.json` file and set the Fastchess and opening-suite paths. Workload paths and `${NAME}` placeholders behave like gauntlet workloads. `sprt.mode` is required:
+Default bounds by engine class are:
 
-- `gainer` asks whether the working-tree candidate gains strength and defaults to `<0, 10>`.
-- `non_regression` asks whether the working-tree candidate avoids a material loss and defaults to `<-10, 0>`.
-
-Both use normalized Elo, `alpha=0.05`, and `beta=0.05` by default. Any of `elo0`, `elo1`, `alpha`, `beta`, or `model` may be overridden under `sprt`; `model` may be `normalized` or `logistic`. Bayesian SPRT is rejected because Fastchess cannot combine it with the required pentanomial reporting. Normalized Elo accounts for the match's draw rate and is the unit reported by Fastchess when `model` is `normalized`.
-
-Common bounds used by chess-engine testing projects are:
-
-| Engine class / usage | Gainer bounds | Non-regression bounds |
+| Engine class | Gainer | Non-regression |
 |---|---:|---:|
 | Stockfish LTC | `[0.5, 2.5]` | `[-1.75, 0.25]` |
 | Stockfish STC | `[0, 2]` | `[-1.75, 0.25]` |
-| Top 30 engines | `[0, 3]` | `[-3, 1]` |
-| Top 200 engines | `[0, 5]` | `[-5, 0]` |
-| All other engines | `[0, 10]` | `[-10, 0]` |
+| Top 30 | `[0, 3]` | `[-3, 1]` |
+| Top 200 | `[0, 5]` | `[-5, 0]` |
+| Other, including Loki | `[0, 10]` | `[-10, 0]` |
 
-Loki currently uses the last row. Wider bounds reduce the expected game count for a weaker engine, at the cost of requiring a larger gain to pass or tolerating a larger loss in a non-regression test.
+The defaults use normalized Elo with `alpha=0.05`, `beta=0.05`, and pentanomial reporting. Override `elo0`, `elo1`, `alpha`, `beta`, or `model` under `sprt`.
 
-Fastchess uses its native pentanomial report (`-report penta=true`). The Textual interface also shows configure/build output, pentanomial results, LLR and its decision thresholds, recent games and their termination reasons, and errors attributed to either engine. Press `p` during the match to stop active games and save a checkpoint, then resume without rebuilding:
+Press `p` to save a checkpoint, then resume without rebuilding:
 
 ```powershell
 python benchmark\sprt.py `
   --workload benchmark\workloads\sprt-gainer.json `
   --env-file benchmark\workloads\sprt.local.json `
-  --resume-state benchmark\results\loki-feature-gainer\TIMESTAMP\sprt-state.json
+  --resume-state path\to\sprt-state.json
 ```
 
-Resume verifies the workload fingerprint and hashes of both archived executables. Artifacts include the engines, build log and metadata, PGN, game log, per-engine error log, Fastchess state, resolved workload and command, `summary.json`, and a copyable `result.txt` containing the latest complete native Fastchess report, from its separator and `Results of` heading through the pentanomial and LLR lines. Each attributed engine failure in `engine-errors.log` includes its complete matching PGN so the exact game can be reproduced. When Fastchess cannot identify a completed game for an error, the log says so explicitly instead of attaching an unrelated game. When the final Textual screen is closed with `q`, the result block is also printed to the normal terminal for direct use in a commit message.
+Artifacts include both engines, build metadata, PGN, logs, Fastchess state, the resolved workload, `summary.json`, and `result.txt`. Exit codes are `0` for H1, `1` for H0, `2` for setup errors, `3` for paused, `4` for no decision at the round cap, and `5` for cancellation or runtime failure.
 
-The exit codes are `0` for H1 accepted, `1` for H0 accepted, `2` for configuration/build errors, `3` for a paused test, `4` for reaching the round cap without a decision, and `5` for cancellation, runtime failure, or a compromised result.
+## Visual Studio profiling
 
-## Profiling with Visual Studio
-Build a Release binary with symbols and dev UCI commands enabled:
+Build an optimized binary with symbols and development commands:
 
 ```powershell
 cmake --preset release `
@@ -136,4 +121,4 @@ cmake --preset release `
 cmake --build --preset release
 ```
 
-Open Visual Studio, navigate to the Performance Profiler, and run the generated `Loki` executable. The current active benchmark target is perft, since full search is not yet implemented in the 4.0.0 rewrite.
+Open the generated `Loki` executable with Visual Studio's Performance Profiler.

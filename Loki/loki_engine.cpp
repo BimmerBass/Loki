@@ -83,10 +83,12 @@ void loki_engine::search(
 
 
 [[maybe_unused]]
-size_t loki_engine::perft(size_t depth, std::ostream& out) const
+size_t loki_engine::perft(size_t depth, std::ostream& out, bool validate_hashing) const
 {
 	search::perft runner(out, rook_index, bishop_index);
 	const auto& fen = position()->to_fen();
 
-	return runner.run(fen, depth);
+	return validate_hashing
+		? runner.run<true>(fen, depth)
+		: runner.run<false>(fen, depth);
 }

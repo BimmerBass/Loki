@@ -23,6 +23,7 @@
 #include "movegen/move_list.hpp"
 #include "movegen/i_move_generator.hpp"
 #include "movegen/move.hpp"
+#include "hashing/key_store.hpp"
 #include <defs.hpp>
 
 namespace loki::position
@@ -76,6 +77,7 @@ namespace loki::position
 		bitboard_t m_piecebbs[NUM_SIDES][NUM_PIECES];
 		bitboard_t m_all_pieces[NUM_SIDES];
 		e_square m_king_squares[NUM_SIDES];
+		hashing::hashkey_t m_hashkey;
 
 		position_history<constants::MAX_GAME_MOVES> m_history;
 		ply_t m_ply;
@@ -186,6 +188,17 @@ namespace loki::position
 		[[nodiscard]] inline ply_t ply() const noexcept { return m_ply; }
 
 		/// <summary>
+		/// Get the current position's hash-key.
+		/// </summary>
+		[[nodiscard]] inline hashing::hashkey_t hashkey() const noexcept { return m_hashkey; }
+
+		/// <summary>
+		/// Calculate the position's hash-key from its current state.
+		/// This is significantly slower than reading the incrementally maintained key.
+		/// </summary>
+		[[nodiscard]] hashing::hashkey_t recompute_hashkey() const;
+
+		/// <summary>
 		/// Clone the current object for use in a single search_worker.
 		/// Note: This is expensive, so do not use during search.
 		/// </summary>
@@ -204,6 +217,15 @@ namespace loki::position
 			return move.type() == movegen::ENPASSANT
 				|| m_state->piece_placements[!m_state->side_to_move][move.to()] != NO_PIECE;
 		}
+
+	private:
+		/// <summary>
+		/// Determine if an en-passant square has an adjacent pawn that can capture.
+		/// </summary>
+		/// <param name="opponent">The side that should capture.</param>
+		/// <param name="square">The en-passant square</param>
+		/// <returns>true if so.</returns>
+		bool has_en_passant_capturer(side opponent, e_square square) const;
 	};
 
 	extern template size_t search_position::generate_moves<movegen::ALL>(movegen::move_list*) const;

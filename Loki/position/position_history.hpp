@@ -18,6 +18,7 @@
 #pragma once
 #include "util/exception.hpp"
 #include "movegen/move.hpp"
+#include "hashing/key_store.hpp"
 #include "square.hpp"
 #include "defs.hpp"
 
@@ -32,8 +33,9 @@ namespace loki::position
         CHILD_EXCEPTION(stack_error, loki_exception);
     public:
         struct move_data
-        {
-            piece captured = NO_PIECE, moved = NO_PIECE;
+		{
+			hashing::hashkey_t hash_key;
+			piece captured = NO_PIECE, moved = NO_PIECE;
             uint8_t castle_rights = 0;
             uint16_t fifty_move = 0; // reduced from size_t to uint16_t to lower copy/memory traffic
             square ep_sq = NO_SQ;
@@ -56,12 +58,13 @@ namespace loki::position
             piece moved,
             uint8_t castle_rights,
             size_t fifty_move,
-            square ep) noexcept
-        {
+			square ep,
+			hashing::hashkey_t hashkey) noexcept
+		{
             if (m_size >= MAX_SIZE)
                 throw_msg<stack_error>("push() was called on a full stack!");
             // Use aggregate assignment to minimize individual field writes and allow better optimisation.
-            m_stack[m_size++] = { m, { captured, moved, castle_rights, static_cast<uint16_t>(fifty_move), ep } };
+            m_stack[m_size++] = { m, { hashkey, captured, moved, castle_rights, static_cast<uint16_t>(fifty_move), ep } };
         }
 
         const entry_t& pop()
@@ -74,7 +77,14 @@ namespace loki::position
         inline size_t size() const noexcept
         {
             return m_size;
-        }
+		}
+
+		inline const entry_t& get(ply_t ply) const
+		{
+			if (ply >= m_size)
+				throw_msg<stack_error>("get() was called with a highger argument than the current stack size");
+			return m_stack[ply];
+		}
 
         position_history(const position_history&) = default;
         position_history& operator=(const position_history&) = default;

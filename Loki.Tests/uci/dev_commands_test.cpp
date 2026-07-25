@@ -329,6 +329,23 @@ namespace uci_dev_command_tests
 			REQUIRE(current_fen(test_context.ctx) == before);
 		}
 
+		SECTION("validates hashing when requested")
+		{
+			command_context test_context{ UCI_STATE::Boot, true };
+
+			REQUIRE_NOTHROW(perft->execute(std::vector<std::string>{"2", "hashvalidate"}, &test_context.ctx));
+			REQUIRE(test_context.output.str().find("Nodes visited: 400") != std::string::npos);
+		}
+
+		SECTION("rejects an unknown optional parameter")
+		{
+			command_context test_context{ UCI_STATE::Boot, true };
+
+			REQUIRE_THROWS_AS(
+				perft->execute(std::vector<std::string>{"1", "validate"}, &test_context.ctx),
+				uci_parser::uci_error);
+		}
+
 		SECTION("rejects missing depth")
 		{
 			command_context test_context{ UCI_STATE::Boot, true };

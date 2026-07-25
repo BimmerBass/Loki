@@ -44,7 +44,7 @@ namespace loki
 			search::info_sink_t sink) = 0;
 		virtual void ponderhit() = 0;
 		virtual void stop_search(bool wait = false) = 0;
-		virtual size_t perft(size_t depth, std::ostream& out) const = 0;
+		virtual size_t perft(size_t depth, std::ostream& out, bool validate_hashing = false) const = 0;
 		virtual const position::search_position_t& position() const = 0;
 	};
 
@@ -101,7 +101,7 @@ namespace loki
 		}
 
 		[[maybe_unused]]
-		size_t perft(size_t depth, std::ostream& out) const override;
+		size_t perft(size_t depth, std::ostream& out, bool validate_hashing = false) const override;
 
 		const position::search_position_t& position() const override
 		{

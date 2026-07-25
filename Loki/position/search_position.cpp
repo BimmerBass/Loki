@@ -34,7 +34,7 @@ namespace loki::position
 	}
 
 	search_position::search_position(std::unique_ptr<game_state> state, std::unique_ptr<movegen::i_move_generator<position_proxy>> move_generator)
-		: m_state{ std::move(state) }, 
+		: m_state{ std::move(state) },
 		m_history{},
 		m_ply{ ROOT_PLY },
 		m_move_generator{ std::move(move_generator) }
@@ -69,6 +69,31 @@ namespace loki::position
 		// Fill m_king_squares
 		m_king_squares[WHITE] = static_cast<e_square>(scan_lsb(m_piecebbs[WHITE][KING]).value());
 		m_king_squares[BLACK] = static_cast<e_square>(scan_lsb(m_piecebbs[BLACK][KING]).value());
+
+		m_hashkey = recompute_hashkey();
+	}
+
+	hashing::hashkey_t search_position::recompute_hashkey() const
+	{
+		auto hashkey = m_state->side_to_move == BLACK ? hashing::store.side_to_move() : 0;
+		hashkey ^= hashing::store.get(m_state->castling_rights);
+		if (m_state->en_passant_sq != NO_SQ && has_en_passant_capturer(m_state->side_to_move, m_state->en_passant_sq.value()))
+			hashkey ^= hashing::store.get(m_state->en_passant_sq.value());
+
+		for (auto s = WHITE; s <= BLACK; s++)
+		{
+			for (auto piece = PAWN; piece <= KING; piece++)
+			{
+				auto pieces = m_piecebbs[s][piece];
+				while (pieces != 0)
+				{
+					const auto sq = static_cast<e_square>(pop_lsb_nonzero(pieces));
+					hashkey ^= hashing::store.get(piece, sq, s);
+				}
+			}
+		}
+
+		return hashkey;
 	}
 
 	std::unique_ptr<search_position> search_position::clone() const
@@ -79,7 +104,7 @@ namespace loki::position
 			std::unique_ptr<i_move_generator<position_proxy>>(mg));
 		ptr->m_history = m_history;
 		ptr->m_ply = m_ply;
-		
+
 		return std::unique_ptr<search_position>(ptr);
 	}
 
@@ -89,7 +114,7 @@ namespace loki::position
 		auto piece_moved = m_state->piece_placements[me][move.from()];
 		auto piece_captured = m_state->piece_placements[!me][move.to()];
 		assert(piece_moved >= PAWN && piece_moved <= KING);
-		
+
 		if (piece_captured == KING)
 			return false;
 
@@ -99,19 +124,26 @@ namespace loki::position
 			piece_captured, piece_moved,
 			m_state->castling_rights.get(),
 			m_state->fifty_move_cnt,
-			m_state->en_passant_sq);
+			m_state->en_passant_sq,
+			m_hashkey);
 		m_ply += 1;
+
+		// start by toggling potential existing en-passant
+		if (m_state->en_passant_sq != NO_SQ && has_en_passant_capturer(me, m_state->en_passant_sq.value()))
+			m_hashkey ^= hashing::store.get(m_state->en_passant_sq.value());
 
 		// remove from origin
 		m_piecebbs[me][piece_moved] = toggle_at(m_piecebbs[me][piece_moved], move.from());
 		m_state->piece_placements[me][move.from()] = NO_PIECE;
-		
+		m_hashkey ^= hashing::store.get(piece_moved, move.from(), me);
+
 		// add to destination
 		if (move.type() == PROMOTION)
 		{
 			assert(!is_one_at(m_piecebbs[me][move.promotion_piece()], move.to()));
 			m_piecebbs[me][move.promotion_piece()] = toggle_at(m_piecebbs[me][move.promotion_piece()], move.to());
 			m_state->piece_placements[me][move.to()] = move.promotion_piece();
+			m_hashkey ^= hashing::store.get(move.promotion_piece(), move.to(), me);
 		}
 		else
 		{
@@ -128,6 +160,9 @@ namespace loki::position
 				// add rook
 				m_piecebbs[me][ROOK] = toggle_at(m_piecebbs[me][ROOK], rk_to.value());
 				m_state->piece_placements[me][rk_to.value()] = ROOK;
+
+				m_hashkey ^= hashing::store.get(ROOK, rk_from.value(), me);
+				m_hashkey ^= hashing::store.get(ROOK, rk_to.value(), me);
 			}
 			else if (move.type() == ENPASSANT)
 			{
@@ -135,11 +170,14 @@ namespace loki::position
 				auto cap_sq = me == WHITE ? m_state->en_passant_sq.value() - 8 : m_state->en_passant_sq.value() + 8;
 				m_piecebbs[!me][PAWN] = toggle_at(m_piecebbs[!me][PAWN], cap_sq);
 				m_state->piece_placements[!me][cap_sq] = NO_PIECE;
+
+				m_hashkey ^= hashing::store.get(PAWN, cap_sq, !me);
 			}
 
 			// add moved piece to destination
 			m_piecebbs[me][piece_moved] = toggle_at(m_piecebbs[me][piece_moved], move.to());
 			m_state->piece_placements[me][move.to()] = piece_moved;
+			m_hashkey ^= hashing::store.get(piece_moved, move.to(), me);
 
 			if (piece_moved == KING)
 				m_king_squares[me] = move.to();
@@ -150,9 +188,11 @@ namespace loki::position
 		{
 			m_state->piece_placements[!me][move.to()] = NO_PIECE;
 			m_piecebbs[!me][piece_captured] = toggle_at(m_piecebbs[!me][piece_captured], move.to());
+			m_hashkey ^= hashing::store.get(piece_captured, move.to(), !me);
 		}
 
 		// update castling rights
+		m_hashkey ^= hashing::store.get(m_state->castling_rights);
 		if (piece_moved == KING)
 		{
 			m_state->castling_rights.set<KINGSIDE>(me, false);
@@ -168,12 +208,23 @@ namespace loki::position
 		if (move.to() == H8 || move.from() == H8)
 			m_state->castling_rights.set<BLACK, KINGSIDE>(false);
 
+		// set new castling rights on hashkey
+		m_hashkey ^= hashing::store.get(m_state->castling_rights);
+
 		// update en passant
 		m_state->en_passant_sq = NO_SQ;
 		auto from_rank = static_cast<int>(rank_of(move.from()));
 		auto to_rank = static_cast<int>(rank_of(move.to()));
 		if (piece_moved == PAWN && abs(to_rank - from_rank) == 2)
+		{
 			m_state->en_passant_sq = me == WHITE ? move.to() - 8 : move.to() + 8;
+
+			if (has_en_passant_capturer(!me, m_state->en_passant_sq.value()))
+			{
+				m_hashkey ^= hashing::store.get(
+					m_state->en_passant_sq.value());
+			}
+		}
 
 		// update all_pieces bitboards
 		// Manually OR each piece bitboard for each side. This avoids the overhead of std::accumulate
@@ -197,12 +248,13 @@ namespace loki::position
 		m_state->fifty_move_cnt++;
 		if (me == BLACK)
 			m_state->full_move_cnt++;
-		
+
 		// If the move is a capture or a pawn move, the fifty move counter is reset to zero.
 		if (piece_moved == PAWN || piece_captured != NO_PIECE)
 			m_state->fifty_move_cnt = 0;
 
 		// undo the move if we're in check since its illegal
+		m_hashkey ^= hashing::store.side_to_move();
 		if (in_check())
 		{
 			m_state->side_to_move = !me; // undo_move toggles this
@@ -219,7 +271,7 @@ namespace loki::position
 		if (m_ply > ROOT_PLY)
 			m_ply -= 1;
 		move move = raw_move;
-		
+
 		// toggle side to move
 		m_state->side_to_move = !m_state->side_to_move;
 		side me = m_state->side_to_move;
@@ -229,6 +281,9 @@ namespace loki::position
 		auto to_sq = move.to();
 		const bitboard_t from_mask = bitboard_t(1) << from_sq;
 		const bitboard_t to_mask = bitboard_t(1) << to_sq;
+
+		// replace old hashkey
+		m_hashkey = metadata.hash_key;
 
 		// place piece moved at origin and remove from destination.
 		auto dest_piece = move.type() == PROMOTION ? move.promotion_piece() : metadata.moved;
@@ -334,6 +389,26 @@ namespace loki::position
 
 	bool search_position::is_repetition() const noexcept
 	{
+		const auto history_plies = static_cast<int>(m_history.size());
+		if (history_plies < 2)
+			return false;
+
+		const auto moves_to_last_reset = static_cast<int>(
+			std::min(m_history.size(), m_state->fifty_move_cnt));
+		const auto earliest_ply = history_plies - moves_to_last_reset;
+		size_t occurrences = 1; // current position is one occurrence itself.
+
+		for (int i = history_plies - 2; i >= 0 && i >= earliest_ply; i -= 2)
+		{
+			const auto ply = static_cast<ply_t>(i);
+			if (m_history.get(ply).second.hash_key == m_hashkey)
+			{
+				occurrences++;
+				if (occurrences >= 3)
+					return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -358,6 +433,14 @@ namespace loki::position
 			undo_last_move();
 		}
 		return ml->size();
+	}
+
+	bool search_position::has_en_passant_capturer(side opponnent, e_square square) const
+	{
+		assert(square != NO_SQ);
+
+		position_proxy proxy{ this };
+		return m_move_generator->attackers_to<PAWN>(&proxy, square, opponnent);
 	}
 
 	template size_t search_position::generate_moves<movegen::ALL>(movegen::move_list*) const;

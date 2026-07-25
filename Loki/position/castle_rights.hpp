@@ -29,6 +29,7 @@ namespace loki::position
 	class castle_rights
 	{
 	public:
+		static constexpr uint8_t max_value = 0xF;
 		/// <summary>
 		/// Initialize to no rights.
 		/// </summary>

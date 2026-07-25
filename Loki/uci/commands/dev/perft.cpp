@@ -35,8 +35,12 @@ public:
 		if (arguments.empty())
 			throw_msg<uci_parser::uci_error>("perft needs at least one parameter");
 
+		if (arguments.size() > 2 || (arguments.size() == 2 && arguments[1] != "hashvalidate"))
+			throw_msg<uci_parser::uci_error>("optional perft parameter must be 'hashvalidate'");
+
 		auto depth = std::stoi(arguments[0]);
-		ctx->engine.perft(depth, ctx->out);
+		const bool hashvalidate = arguments.size() == 2;
+		ctx->engine.perft(depth, ctx->out, hashvalidate);
 	}
 };
 

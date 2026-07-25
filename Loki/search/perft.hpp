@@ -44,9 +44,15 @@ namespace loki::search
 			m_nps{ 0 }
 		{}
 		
+		template<bool ValidateHash = false>
 		size_t run(const std::string& fen, size_t depth);
 	private:
+		void validate_hashkey() const;
 
+		template<bool ValidateHash>
 		void run_internal(size_t depth);
 	};
+
+	extern template size_t perft::run<false>(const std::string&, size_t);
+	extern template size_t perft::run<true>(const std::string&, size_t);
 }
