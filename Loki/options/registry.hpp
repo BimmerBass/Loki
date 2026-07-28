@@ -24,8 +24,8 @@ namespace loki::options
 {
 	class registry final
 	{
-		CHILD_EXCEPTION(option_error, loki_exception);
 	public:
+		CHILD_EXCEPTION(option_error, loki_exception);
 		template<value_option_t T, typename F>
 			requires std::invocable<F&, typename std::remove_cvref_t<T>::underlying_type_t>
 		void add(std::string name, T definition, F handler)
@@ -80,36 +80,112 @@ namespace loki::options
 				definition.print(os);
 			}
 		}
+
+		void apply(std::string name, std::optional<std::string> value) const
+		{
+			try
+			{
+				const auto& option = _options.at(name);
+				const auto visitor = overloads
+				{
+					[value](const checkbox&) -> option_value_t
+					{
+						if (!value)
+							throw_msg<option_error>("a value is required for a check-type option");
+						auto lowercased = util::lowercase(*value);
+						std::istringstream is(lowercased);
+						bool b{};
+						if (!(is >> std::boolalpha >> b))
+							throw_msg<option_error>("value '{}' is invalid for a check-type option", *value);
+						is >> std::ws;
+						if (!is.eof())
+							throw_msg<option_error>("value '{}' is invalid for a check-type option", *value);
+						return b;
+					},
+					[&](const spin& opt) -> option_value_t
+					{
+						if (!value)
+							throw_msg<option_error>("a value is required for a spin-type option");
+						int64_t ivalue;
+						std::size_t parsed_characters;
+						try
+						{
+							ivalue = std::stoll(*value, &parsed_characters);
+						}
+						catch (const std::invalid_argument&)
+						{
+							throw_msg<option_error>("value '{}' is invalid for a spin-type option", *value);
+						}
+						catch (const std::out_of_range&)
+						{
+							throw_msg<option_error>("value '{}' is invalid for a spin-type option", *value);
+						}
+						if (parsed_characters != value->size())
+							throw_msg<option_error>("value '{}' is invalid for a spin-type option", *value);
+						if (!opt.is_valid(ivalue))
+							throw_msg<option_error>("value {} is invalid for option '{}' (range=[{}, {}])", ivalue, option.name, opt.min, opt.max);
+						return ivalue;
+					},
+					[&](const combo& opt)->option_value_t
+					{
+						if (!value)
+							throw_msg<option_error>("a value is required for a combo-type option");
+						if (!opt.is_valid(*value))
+							throw_msg<option_error>("value '{}' is invalid for option '{}' (allowed={})", *value, option.name, opt.values);
+						return *value;
+					},
+					[value](const string& opt) -> option_value_t
+					{
+						if (!value)
+							throw_msg<option_error>("a value is required for a string-type option");
+						return *value;
+					},
+					[value](const button&) -> option_value_t
+					{
+						if (value)
+							throw_msg<option_error>("a button-type option does not accept a value");
+						return std::monostate{};
+					}
+				};
+
+				const auto internal_value = std::visit(visitor, option.type);
+				option.apply_callback(internal_value);
+			}
+			catch (std::out_of_range)
+			{
+				throw_msg<option_error>("attempted to set non-existent option '{}'", name);
+			}
+		}
 	private:
 		template<option_t T, typename F>
 		void _add(
-            std::string name,
-            T definition,
-            F handler)
-        {
+			std::string name,
+			T definition,
+			F handler)
+		{
 			if (contains_reserved_token(name))
 			{
 				throw_msg<option_error>(
 					"option name contains a reserved token: {}", name);
 			}
 
-            loki_option registered{
-                .name = name,
-                .type = std::move(definition),
-                .apply_callback = std::move(handler)
-            };
+			loki_option registered{
+				.name = name,
+				.type = std::move(definition),
+				.apply_callback = std::move(handler)
+			};
 
-            auto [iterator, inserted] = _options.emplace(
-                name,
-                std::move(registered));
+			auto [iterator, inserted] = _options.emplace(
+				name,
+				std::move(registered));
 
-            if (!inserted)
-            {
-                throw_msg<option_error>(
-                    "duplicate option registered: {}", name);
-            }
-        }
+			if (!inserted)
+			{
+				throw_msg<option_error>(
+					"duplicate option registered: {}", name);
+			}
+		}
 
-        std::unordered_map<std::string, loki_option> _options;
+		std::unordered_map<std::string, loki_option> _options;
 	};
 }

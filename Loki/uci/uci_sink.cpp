@@ -19,9 +19,6 @@
 
 #include <ostream>
 
-template<class... Ts>
-struct overloads : Ts... { using Ts::operator()...; };
-
 using namespace loki;
 using namespace loki::uci;
 

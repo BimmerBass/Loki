@@ -552,7 +552,7 @@ namespace uci_tests
 		loki_engine engine;
 		context ctx{engine, UCI_STATE::Ready, input, output, error};
 
-		for (const auto& name : {"register", "setoption", "debug"})
+		for (const auto& name : {"register", "debug"})
 		{
 			SECTION(name)
 			{

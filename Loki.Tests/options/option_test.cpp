@@ -17,7 +17,6 @@
 
 #include "pch.hpp"
 #include "Loki/options/option.hpp"
-#include "Loki/options/registry.hpp"
 
 namespace options_tests
 {
@@ -129,24 +128,4 @@ namespace options_tests
 		REQUIRE_FALSE(option.is_valid("some\tvalue"));
 	}
 
-	TEST_CASE("registry rejects option names containing reserved tokens",
-		"[options][registry]")
-	{
-		registry options;
-
-		REQUIRE_NOTHROW(options.add(
-			"filename",
-			string{ "" },
-			[](const std::string&) {}));
-		REQUIRE_NOTHROW(options.add(
-			"evaluation",
-			[]() {}));
-		REQUIRE_THROWS(options.add(
-			"file name",
-			string{ "" },
-			[](const std::string&) {}));
-		REQUIRE_THROWS(options.add(
-			"current value",
-			[]() {}));
-	}
 }

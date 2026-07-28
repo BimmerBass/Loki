@@ -26,6 +26,10 @@
 #include "util/stringops.hpp"
 #include "util/operators.hpp"
 
+// used for std::visit
+template<class... Ts>
+struct overloads : Ts... { using Ts::operator()...; };
+
 // This file contains the most common type and constant definitions in Loki.
 namespace loki
 {
