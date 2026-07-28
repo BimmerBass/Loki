@@ -21,6 +21,8 @@
 #include "movegen/magics/magic_index.hpp"
 #include "search/limits.hpp"
 #include "search/search_thread.hpp"
+#include "options/registry.hpp"
+#include "hashing/transposition_table.hpp"
 
 #include <iostream>
 #include <optional>
@@ -46,6 +48,7 @@ namespace loki
 		virtual void stop_search(bool wait = false) = 0;
 		virtual size_t perft(size_t depth, std::ostream& out, bool validate_hashing = false) const = 0;
 		virtual const position::search_position_t& position() const = 0;
+		virtual const options::registry& options() const = 0;
 	};
 
 	class loki_engine final : public i_loki_engine
@@ -110,10 +113,14 @@ namespace loki
 			return _position.value();
 		}
 
+		const options::registry& options() const override{
+			return _options;
+		}
 	private:
 		const movegen::magics::magic_index_t rook_index;
 		const movegen::magics::magic_index_t bishop_index;
 
+		options::registry _options;
 		std::optional<position::search_position_t> _position;
 		search::search_thread _main_thread;
 	};

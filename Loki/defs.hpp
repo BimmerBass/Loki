@@ -44,6 +44,8 @@ namespace loki
 		constexpr score_t SCORE_ZERO = 0;
 		constexpr score_t SCORE_MATE = SCORE_INF - MAX_GAME_MOVES;
 		constexpr depth_t MAX_DEPTH = 100;
+
+		constexpr size_t MAX_THREADS = 256;
 	}
 
 	enum ply_t : depth_t

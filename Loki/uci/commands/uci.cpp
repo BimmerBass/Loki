@@ -29,6 +29,7 @@ public:
 	{
 		ctx->out << std::format("id name {} {}", NAME, VERSION) << std::endl;
 		ctx->out << std::format("id author {}", AUTHOR) << std::endl;
+		ctx->engine.options().print(ctx->out);
 		ctx->out << "uciok" << std::endl;
 	}
 };

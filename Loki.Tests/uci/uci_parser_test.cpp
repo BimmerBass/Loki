@@ -99,6 +99,11 @@ namespace uci_tests
 			return m_engine.position();
 		}
 
+		const options::registry& options() const override
+		{
+			return m_engine.options();
+		}
+
 	private:
 		loki_engine m_engine;
 	};

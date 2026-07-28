@@ -23,13 +23,31 @@
 using namespace loki;
 using namespace movegen;
 using namespace search;
+using namespace options;
+using namespace hashing;
+using tt = transposition_table;
 
 loki_engine::loki_engine()
-	:	_position{ std::nullopt }, 
-		rook_index{ std::make_shared<magics::hardcoded_index<ROOK>>() },
-		bishop_index{ std::make_shared<magics::hardcoded_index<BISHOP>>() },
-		_main_thread(0)
-{ }
+	: _position{ std::nullopt },
+	rook_index{ std::make_shared<magics::hardcoded_index<ROOK>>() },
+	bishop_index{ std::make_shared<magics::hardcoded_index<BISHOP>>() },
+	_main_thread(0),
+	_options{}
+{
+	_options.add("Ponder", checkbox(false), [](const bool _) {});
+	_options.add("Threads", spin(1, 1, constants::MAX_THREADS), [](const int64_t vaule)
+		{
+			throw_msg<not_implemented_error>("LazySMP not implemented");
+		});
+	_options.add("Hash", spin(tt::SIZE_DEFAULT_MB, tt::SIZE_MIN_MB, tt::SIZE_MAX_MB), [](const int64_t vaule)
+		{
+			throw_msg<not_implemented_error>("Hash table not implemented");
+		});
+	_options.add("Clear Hash", []()
+		{
+			throw_msg<not_implemented_error>("Hash table not implemented");
+		});
+}
 
 bool loki_engine::set_position(const position::game_state& state, const std::vector<move>& moves)
 {
