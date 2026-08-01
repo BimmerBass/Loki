@@ -85,18 +85,17 @@ void loki_engine::set_position(position::search_position_t state)
 void loki_engine::clear()
 {
 	_position = std::nullopt;
-	_main_thread.newgame_clear();
+	_main_thread.clear_context();
 }
 
 
-void loki_engine::search(
+std::future<search_result_t> loki_engine::search(
 	const limits limits,
-	search_thread::callback_t finished_callback,
 	info_sink_t sink)
 {
 	if (!_position.has_value())
 		throw_msg<loki_exception>("cannot search without a position object");
-	_main_thread.search(_position.value(), limits, finished_callback, std::move(sink));
+	return _main_thread.search(_position.value(), limits, std::move(sink));
 }
 
 

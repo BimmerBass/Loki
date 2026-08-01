@@ -21,6 +21,7 @@
 #include "uci/uci_parser.hpp"
 #include "util/exception.hpp"
 #include "movegen/move_list.hpp"
+#include "util/continuations.hpp"
 
 #include <cassert>
 #include <charconv>
@@ -110,7 +111,9 @@ public:
 		assert(can_execute(ctx));
 		auto limits = parse_limits(tokens, ctx);
 		ctx->state.store(UCI_STATE::Searching);
-		ctx->engine.search(limits, [ctx](search_result_t result)
+		util::then(
+			ctx->engine.search(limits, std::make_unique<uci_sink>(*ctx)),
+			[ctx](search_result_t result)
 			{
 				ctx->state.store(UCI_STATE::Ready);
 				if (!result)
@@ -124,7 +127,7 @@ public:
 						ctx->out << "info string search failed: " << e.what() << std::endl;
 					}
 				}
-			}, std::make_unique<uci_sink>(*ctx));
+			});
 	}
 
 private:

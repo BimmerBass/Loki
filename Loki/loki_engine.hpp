@@ -40,9 +40,8 @@ namespace loki
 		virtual void set_position(position::search_position_t state) = 0;
 		virtual position::search_position_t make_position(const position::game_state& state) const = 0;
 		virtual void clear() = 0;
-		virtual void search(
+		virtual std::future<search_result_t>  search(
 			const search::limits limits,
-			search::search_thread::callback_t finished_callback,
 			search::info_sink_t sink) = 0;
 		virtual void ponderhit() = 0;
 		virtual void stop_search(bool wait = false) = 0;
@@ -83,9 +82,8 @@ namespace loki
 		/// </summary>
 		void clear() override;
 
-		void search(
+		std::future<search_result_t>  search(
 			const search::limits limits,
-			search::search_thread::callback_t finished_callback,
 			search::info_sink_t sink) override;
 
 		void ponderhit() override
@@ -122,7 +120,7 @@ namespace loki
 
 		options::registry _options;
 		std::optional<position::search_position_t> _position;
-		search::search_thread _main_thread;
+		search::worker_thread _main_thread;
 	};
 
 }

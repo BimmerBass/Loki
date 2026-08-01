@@ -22,120 +22,84 @@
 #include <thread>
 #include <mutex>
 #include <functional>
+#include <future>
 
 namespace loki::search
 {
-
-	class search_thread
+	struct search_command
 	{
+		search_command() = delete;
+		search_command(const position::search_position_t& _position, const limits& _limits, info_sink_t _sink)
+		{
+			position = _position->clone();
+			limits = _limits;
+			sink = std::move(_sink);
+		}
+		std::unique_ptr<position::search_position> position;
+		limits limits;
+		info_sink_t sink;
+		std::promise<search_result_t> promise;
+
+		search_command(const search_command&) = delete;
+		search_command& operator=(const search_command&) = delete;
+		search_command(search_command&& cmd) noexcept :
+			position{ std::move(cmd.position) },
+			limits{ cmd.limits },
+			sink{ std::move(cmd.sink) },
+			promise{ std::move(cmd.promise) }
+		{}
+		search_command& operator=(search_command&& cmd) noexcept
+		{
+			position = std::move(cmd.position);
+			limits = cmd.limits;
+			sink = std::move(cmd.sink);
+			promise = std::move(cmd.promise);
+
+			return *this;
+		}
+	};
+
+	class worker_thread
+	{
+		friend void thread_loop(std::stop_token, worker_thread&);
+
+		using lock_t = std::unique_lock<std::mutex>;
+		using guard_t = std::lock_guard<std::mutex>;
 	public:
 		CHILD_EXCEPTION(thread_exception, loki_exception);
-
-		using callback_t = std::function<void(search_result_t)>;
 	private:
-		struct search_context
-		{
-			std::unique_ptr<position::search_position> position;
-			limits limits;
-
-			callback_t finished_callback;
-			info_sink_t info_sink;
-		};
+		CHILD_EXCEPTION(stop_requested_exception, thread_exception);
 	public:
-		search_thread(size_t id);
-		// The injected worker must outlive this search thread.
-		search_thread(size_t id, std::unique_ptr<i_search_worker> worker);
-		~search_thread() {
+		worker_thread(size_t id, std::unique_ptr<i_search_worker> worker);
+		worker_thread(size_t id);
+		virtual ~worker_thread()
+		{
 			join();
 		}
 
-		// make the thread search
-		virtual void search(
+		virtual std::future<search_result_t> search(
 			const position::search_position_t& position,
-			const limits& limits,
-			callback_t callback,
-			info_sink_t sink = std::make_unique<null_sink>())
-		{
-			if (!position)
-				throw_msg<thread_exception>("search requested with null position");
+			limits limits,
+			info_sink_t sink);
+		virtual void stop_search() noexcept;
+		virtual void wait_for_finished_search();
+		virtual void clear_context();
 
-			std::unique_lock<std::mutex> lock(_mtx);
-			if (_context.has_value())
-				throw_msg<thread_exception>("search requested on active thread");
-			_context.emplace(search_context
-				{
-					.position = position->clone(),
-					.limits = limits,
-					.finished_callback = std::move(callback),
-					.info_sink = std::move(sink)
-				});
-			_context.value().limits.stop_source = std::stop_source{};
+		virtual void ponderhit();
 
-			lock.unlock();
-			_cv.notify_one();
-		}
-
-		void ponderhit(){
-			std::lock_guard<std::mutex> lock(_mtx);
-			if (!_context || _callback_running || !_current_limits)
-				throw_msg<thread_exception>("got ponderhit on idle thread.");
-			auto limits = _current_limits.value()();
-
-			limits->start_time = limits::clock_t::now();
-			limits->pondering.store(false, std::memory_order_release);
-		}
-
-		// Stop the current search.
-		void stop_search()
-		{
-			std::scoped_lock<std::mutex> lock(_mtx);
-			if (!_context.has_value())
-				return;
-			_context.value().limits.stop_source.value().request_stop();
-		}
-
-		void wait_for_finished_search()
-		{
-			std::unique_lock<std::mutex> lock(_mtx);
-			if (!_context && !_callback_running)
-				return;
-			_cv.wait(lock, [&]() { return _context == std::nullopt && !_callback_running; });
-		}
-
-		void newgame_clear() {
-			std::lock_guard<std::mutex> lock(_mtx);
-			_search_worker->newgame_clear();
-		}
+	protected:
+		virtual void join() noexcept;
 	private:
-		// stop the search and join.
-		void join() noexcept
-		{
-			std::unique_lock<std::mutex> lock(_mtx);
+		search_command&& wait_for_work(std::stop_token tk);
 
-			if (_thread.joinable())
-			{
-				if (_context != std::nullopt)
-					_context.value().limits.stop_source.value().request_stop();
-
-				_thread.request_stop();
-				lock.unlock();
-
-				_thread.join();
-			}
-		}
-		void start_thread();
-		void thread_loop(std::stop_token token);
-
-		size_t thread_id;
-		std::condition_variable _cv;
+		const size_t _id;
 		std::mutex _mtx;
+		std::condition_variable _cv;
+		std::jthread _thread;
+
+		std::optional<search_command> _task;
 
 		std::unique_ptr<i_search_worker> _search_worker;
-		std::optional<search_context> _context;
-		std::optional<std::function<limits*()>> _current_limits;
-		bool _callback_running = false;
-
-		// must be declared last!
-		std::jthread _thread;
+		limits* current_limits = nullptr;
 	};
 }

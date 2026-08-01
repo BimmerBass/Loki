@@ -40,7 +40,7 @@ namespace uci_tests
 	{
 	public:
 		mutable std::optional<search::limits> searched_limits;
-		search::search_thread::callback_t finished_callback;
+		bool delay_search_completion = false;
 		size_t clear_count = 0;
 		size_t ponderhit_count = 0;
 
@@ -70,13 +70,31 @@ namespace uci_tests
 			m_engine.clear();
 		}
 
-		void search(
+		std::future<search_result_t> search(
 			const search::limits limits,
-			search::search_thread::callback_t callback,
 			search::info_sink_t) override
 		{
 			searched_limits = limits;
-			finished_callback = std::move(callback);
+			if (delay_search_completion)
+			{
+				search_promise.emplace();
+				return search_promise->get_future();
+			}
+
+			std::promise<search_result_t> promise;
+			auto future = promise.get_future();
+			promise.set_value(search_score_t{ cp_score{ 0 } });
+			return future;
+		}
+
+		bool has_pending_search() const
+		{
+			return search_promise.has_value();
+		}
+
+		void finish_search(search_result_t result)
+		{
+			search_promise->set_value(std::move(result));
 		}
 
 		void ponderhit() override
@@ -106,7 +124,19 @@ namespace uci_tests
 
 	private:
 		loki_engine m_engine;
+		std::optional<std::promise<search_result_t>> search_promise;
 	};
+
+	void require_state(context& ctx, UCI_STATE expected)
+	{
+		using namespace std::chrono_literals;
+
+		const auto deadline = std::chrono::steady_clock::now() + 1s;
+		while (ctx.state.load() != expected && std::chrono::steady_clock::now() < deadline)
+			std::this_thread::yield();
+
+		REQUIRE(ctx.state.load() == expected);
+	}
 
 	TEST_CASE("command registry exposes the active UCI commands", "[uci][registry]")
 	{
@@ -276,7 +306,7 @@ namespace uci_tests
 		{
 			REQUIRE(go->can_execute(&ctx));
 			go->execute(std::move(tokens), &ctx);
-			REQUIRE(ctx.state == UCI_STATE::Searching);
+			REQUIRE(ctx.state == UCI_STATE::Ready);
 			REQUIRE(engine.searched_limits.has_value());
 			return *engine.searched_limits;
 		};
@@ -295,12 +325,15 @@ namespace uci_tests
 
 		SECTION("completion resets the context to Ready")
 		{
-			execute_go({ "movetime", "10000", "depth", "3" });
-			REQUIRE(engine.finished_callback);
+			engine.delay_search_completion = true;
+			REQUIRE(go->can_execute(&ctx));
+			go->execute({ "movetime", "10000", "depth", "3" }, &ctx);
+			REQUIRE(ctx.state == UCI_STATE::Searching);
+			REQUIRE(engine.has_pending_search());
 
-			engine.finished_callback(search_result_t{ search_score_t{ cp_score{ 0 } } });
+			engine.finish_search(search_score_t{ cp_score{ 0 } });
 
-			REQUIRE(ctx.state == UCI_STATE::Ready);
+			require_state(ctx, UCI_STATE::Ready);
 		}
 
 		SECTION("parses searchmoves")

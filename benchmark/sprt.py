@@ -176,6 +176,13 @@ def load_workload(path: Path, local_env: dict[str, str] | None = None) -> tuple[
     if not isinstance(engine["uci_options"], dict):
         raise ConfigError("engine.uci_options must be an object")
 
+    output = cfg.setdefault("output", {})
+    if not isinstance(output, dict):
+        raise ConfigError("output must be an object")
+    output.setdefault("game_notation", "san")
+    if output["game_notation"] not in ("lan", "san", "uci"):
+        raise ConfigError("output.game_notation must be lan, san, or uci")
+
     match = cfg["match"]
     if not isinstance(match, dict):
         raise ConfigError("match must be an object")
@@ -387,7 +394,7 @@ def build_fastchess_command(cfg: dict[str, Any], paths: dict[str, Path], resume:
         "-sprt", f"elo0={sprt['elo0']:g}", f"elo1={sprt['elo1']:g}",
         f"alpha={sprt['alpha']:g}", f"beta={sprt['beta']:g}", f"model={sprt['model']}",
         "-report", "penta=true",
-        "-pgnout", f"file={paths['pgn']}", "notation=san", "append=false",
+        "-pgnout", f"file={paths['pgn']}", f"notation={cfg['output']['game_notation']}", "append=false",
         "-log", f"file={paths['trace']}", "level=trace", "append=false", "realtime=true", "engine=true",
         "-config", f"outname={paths['fastchess_state']}", "stats=true", "-autosaveinterval", "1",
     ])

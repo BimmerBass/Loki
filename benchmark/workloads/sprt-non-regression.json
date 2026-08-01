@@ -14,6 +14,9 @@
     "args": [],
     "uci_options": {}
   },
+  "output": {
+    "game_notation": "san"
+  },
   "match": {
     "rounds": 100000,
     "concurrency": 11,

@@ -30,7 +30,8 @@ namespace loki::search
 {
 	struct limits
 	{
-		friend class search_thread;
+		friend class worker_thread;
+		friend void thread_loop(std::stop_token, worker_thread&);
 	private:
 		mutable std::optional<std::stop_source> stop_source = std::nullopt;
 	public:

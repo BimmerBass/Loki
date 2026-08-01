@@ -28,7 +28,7 @@ public:
 
 	void execute(std::vector<std::string>, context* ctx) override
 	{
-		ctx->engine.stop_search();
+		ctx->engine.stop_search(true);
 		ctx->state = UCI_STATE::Ready;
 	}
 };
